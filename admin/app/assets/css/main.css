@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #4f46e5;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  
+  --color-background-light: #f6f6f8;
+  --color-background-dark: #111421;
+  
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  
+  --color-primary-glow: rgba(79, 70, 229, 0.3);
+}
+
+/* Material Symbols Helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+
+@layer base {
+  body {
+    @apply antialiased bg-slate-50 text-slate-900;
+  }
+  
+  .dark body {
+    @apply bg-background-dark text-slate-100;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+  }
+  
+  .dark .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mesh-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.4;
+    filter: blur(80px);
+    background: 
+      radial-gradient(circle at 0% 0%, var(--color-primary-500) 0%, transparent 35%),
+      radial-gradient(circle at 100% 100%, #7c3aed 0%, transparent 35%),
+      radial-gradient(circle at 100% 0%, #3b82f6 0%, transparent 25%);
+  }
+
+  .dark .mesh-gradient {
+    opacity: 0.15;
+  }
+}
+

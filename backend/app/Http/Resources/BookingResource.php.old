@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class BookingResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'booking_code' => $this->booking_code,
+            'tour' => [
+                'id' => $this->tour_id,
+                'title' => $this->tour_title,
+                'slug' => $this->tour?->slug,
+            ],
+            'tour_date' => $this->tour_date->format('Y-m-d'),
+            'tour_time' => $this->tour_time,
+            'customer' => [
+                'name' => $this->customer_name,
+                'email' => $this->customer_email,
+                'phone' => $this->customer_phone,
+                'country' => $this->customer_country,
+                'notes' => $this->customer_notes,
+            ],
+            'participants' => [
+                'adults' => $this->adults,
+                'children' => $this->children,
+                'infants' => $this->infants,
+                'total' => $this->total_participants,
+            ],
+            'pricing' => [
+                'currency' => $this->currency,
+                'subtotal' => (float) $this->subtotal,
+                'discount' => (float) $this->discount,
+                'total' => (float) $this->total,
+            ],
+            'payment' => [
+                'method' => $this->payment_method,
+                'status' => $this->payment_status,
+                'id' => $this->payment_id,
+                'paid_at' => $this->paid_at?->format('Y-m-d H:i:s'),
+            ],
+            'status' => $this->status,
+            'pickup_location' => $this->pickup_location,
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+        ];
+    }
+}

@@ -1,0 +1,23 @@
+    // For now, create booking for the first item
+    // TODO: Support multiple bookings in one transaction
+    const response = await bookingStore.createBooking(bookings[0])
+
+    if (!response || !response.booking) {
+      throw new Error('Failed to create booking')
+    }
+
+    const booking = response.booking
+
+    // Redirect to payment page based on payment method
+    const paymentMethod = formData.payment_method || 'culqi'
+
+    console.log('Booking created successfully:', booking.booking_code)
+    console.log('Redirecting to payment page...')
+
+    if (paymentMethod === 'culqi') {
+      await router.push(`/payment/culqi?booking=${booking.booking_code}`)
+    } else if (paymentMethod === 'paypal') {
+      await router.push(`/payment/paypal?booking=${booking.booking_code}`)
+    } else {
+      throw new Error('Invalid payment method')
+    }

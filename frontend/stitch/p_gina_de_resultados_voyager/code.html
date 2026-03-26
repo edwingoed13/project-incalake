@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0077cc",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<title>Voyager - Search Results</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-4 md:px-10 py-3">
+<div class="mx-auto flex max-w-7xl items-center justify-between gap-8">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">explore</span>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Voyager</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Tours</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Destinations</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Bookings</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Support</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end items-center gap-4">
+<div class="hidden lg:flex flex-col min-w-64">
+<div class="flex w-full items-stretch rounded-xl bg-slate-100 dark:bg-slate-800 h-10 border border-transparent focus-within:border-primary/50 transition-all">
+<div class="text-slate-400 flex items-center justify-center pl-3">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="w-full border-none bg-transparent focus:ring-0 text-sm placeholder:text-slate-500" placeholder="Search destinations..." type="text"/>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined text-xl">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="bg-primary/10 border-2 border-primary/20 aspect-square rounded-full size-10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User profile picture with blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQyHd7khKddZqxtqNlq__0p216RuDDgHMu2oU143l-EM-b0CgRVny58crsk5dcgW17peyKicqBjzIdcYw9WV5DBWAMcgDwgojIC4tvbPHH05YTZrtgGxMIzVC_9xpjik94Z9tPgLmQq0b8sJ3GbMpZflYRycPEi3K5LZncNIO12X1axNsugXkDUKfDpSFzPGBLFTZ_Jxyb9uCsZVPnjIB6U_mi5J2pqLhZUuUeOlLLZbbQvW5FBrpaM7KusVoN8AXj-QJgb7rZQ09w"/>
+</div>
+</div>
+</div>
+</header>
+<main class="mx-auto w-full max-w-7xl flex flex-col md:flex-row gap-8 px-4 md:px-10 py-8">
+<!-- Sidebar Filters -->
+<aside class="w-full md:w-72 shrink-0 flex flex-col gap-8">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold">Filters</h3>
+<button class="text-primary text-sm font-medium hover:underline">Clear all</button>
+</div>
+<!-- Price Range -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl">payments</span>
+<span class="text-sm font-semibold">Price Range</span>
+</div>
+<div class="px-2 pt-2 pb-6">
+<div class="relative h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full">
+<div class="absolute h-full bg-primary rounded-full left-[10%] right-[30%]"></div>
+<div class="absolute -top-1.5 left-[10%] size-4 rounded-full bg-white border-2 border-primary shadow-md cursor-pointer"></div>
+<div class="absolute -top-1.5 right-[30%] size-4 rounded-full bg-white border-2 border-primary shadow-md cursor-pointer"></div>
+</div>
+<div class="flex justify-between mt-4 text-xs font-medium text-slate-500">
+<span>$0</span>
+<span>$1,000+</span>
+</div>
+</div>
+</div>
+<!-- Duration -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl">schedule</span>
+<span class="text-sm font-semibold">Duration</span>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 text-xs font-medium rounded-lg bg-primary text-white">0-3h</button>
+<button class="px-4 py-2 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">3-5h</button>
+<button class="px-4 py-2 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">Full Day</button>
+</div>
+</div>
+<!-- Rating -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl">star</span>
+<span class="text-sm font-semibold">Minimum Rating</span>
+</div>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-5 h-5 text-primary border-slate-300 focus:ring-primary/20" name="rating" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900">4 Stars &amp; Up</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-5 h-5 text-primary border-slate-300 focus:ring-primary/20" name="rating" type="radio"/>
+<span class="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900">3 Stars &amp; Up</span>
+</label>
+</div>
+</div>
+<!-- Experience Type -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl">map</span>
+<span class="text-sm font-semibold">Type of Experience</span>
+</div>
+<div class="space-y-3">
+<label class="flex items-center gap-3 cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-primary/20 border-slate-300" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-400">Culture &amp; History</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary/20 border-slate-300" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-400">Adventure &amp; Sport</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="rounded text-primary focus:ring-primary/20 border-slate-300" type="checkbox"/>
+<span class="text-sm text-slate-600 dark:text-slate-400">Food &amp; Drink</span>
+</label>
+</div>
+</div>
+<!-- Language -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl">translate</span>
+<span class="text-sm font-semibold">Language</span>
+</div>
+<select class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary">
+<option>English</option>
+<option>Spanish</option>
+<option>French</option>
+<option>German</option>
+</select>
+</div>
+<!-- Free Cancellation Toggle -->
+<div class="flex items-center justify-between py-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+<span class="text-sm font-semibold">Free Cancellation</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</aside>
+<!-- Results Section -->
+<div class="flex-1">
+<!-- Grid Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+<div>
+<h1 class="text-2xl font-bold text-slate-900 dark:text-white">Tours in Barcelona</h1>
+<p class="text-slate-500 text-sm mt-1">128 experiences found</p>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Sort by</span>
+<select class="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:ring-primary focus:border-primary pr-10">
+<option>Popularity</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Highest Rating</option>
+</select>
+</div>
+</div>
+<!-- Tour Cards Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Famous Sagrada Familia cathedral in Barcelona sunshine" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDepQSFdo1wPf_Xt5Dj1VHpw88tCpAvnk41Qx_h-ffMT9TPVox6JWQzfao7FlUFv7nDQGNy05Lm1aGBMIQUwIMGTFHygnZuA7Jkd2DQ_BbpoarHEViTu6Z-7e3jcHel8hvrx8e5xNc4EXm3uy8vuRccLRUxI3BcU-fHIgsbgFSXbq_7QUnqcwRImFAXMUJoWCCD8LRdtPd_tZZliPIWQqO2JPz71sZdbr488plKSLUJ0hfkgXiAPBg5PnSyefTS-ZNRZLyqZoifLZe1"/>
+<div class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Best Seller</div>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">4.9</span>
+<span class="text-xs text-slate-500">(1,240 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Sagrada Familia Fast-Track Access with Guided Tour</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>1.5 hours</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>Free cancellation</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$45 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Gothic Quarter street in Barcelona with historic architecture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAReWpSNgi8vjVSJqPDvbisp4A2YAiWEvWSp7cMVV5dGXjP44CNecjQQ9PiiponlB2PLxdtSV-rxYqXUq4MOVUGHtedhYzT2OxU-I8U--timDIW49Qh4kFGwavNSmw7eI6jRo9NuVWkUxx_fTZKkDOL39AFRIVnGIMzEdFxyIqtTez7Ld6eIcXxXmjRRGIwevqsRWADoVDzXrdsIoLVxiJC-08neR4i-CGDzJAJ0wQutNh4osvyR4NOZBZfnLCeyKJfiQ6wAfPLF2e6"/>
+<div class="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Top Rated</div>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">4.8</span>
+<span class="text-xs text-slate-500">(856 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Hidden Gems of the Gothic Quarter: Walking Tour</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>3 hours</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">translate</span>
+<span>Multiple languages</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$29 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Traditional Spanish tapas spread with wine on table" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9sspFDkh-w0BCLha8tCJ9cbCQhm3VrkZlrUWDvdAqCqKDeR_KUXKIR-gHYdqSSZPjQpPKwQdO8dS6a6AK8M_k3P1eayEfTH-G9Xk5CAUUjmDs_MqcKVsGi46Tb8zyf0iVnO_pUdaMqf9Nww5YwqsLI5yHTtJKy7mZ5cc4nUxjdswHt5xg7djw2vOI6zD8bz0SZd5lZYODNAHmKyHAMiHm3xruLdOaWSM6nCT7NNi9E8YLWJcTZLcgNDi7rNgRSpm9UFzswshf5UM5"/>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">5.0</span>
+<span class="text-xs text-slate-500">(412 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Private Wine &amp; Tapas Tasting in El Born</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>2.5 hours</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">group</span>
+<span>Small group only</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$68 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Panoramic view of Barcelona city from Park Guell" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBotWS0muR9qMO8rGHnf0xvuv4AX1YE5pdJ6uN2_lOBbDyLrFaULpoTy-EIlhFy33MCbbISSwfGrg06Ro03nTbTb45-T4JiD0KkdIISKLqbIZErp12WwkRmwQ542CdW4CTsX0kYvCTddZldirS79kIuSmQ5CKqw51xHPpoftYuCF46KqrCQ1iNbLOjMrLqYJyaXcALSLFC9DZNROg_OkTZuzdV-FMreqEv_Z-E4AwhON4xhi4Q9Spo87ATqNde2o-e3njqtGS7ZEoro"/>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">4.7</span>
+<span class="text-xs text-slate-500">(2,105 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Park Guell Monumental Zone Guided Tour</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>1.5 hours</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">bolt</span>
+<span>Instant confirmation</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$32 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Flamenco dancer performing in traditional costume" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDg_I-K6rAA4raTRTGUKI1AwcAzIM-SVVEWfoMfgpy-XB0e8wcTOunWK_Glcy9XaZ5XG2cz3UhDLqkszbC1FCnmfIxK49M3W67xZavoa-2yl3N9EhfYi1WfVyA2jLGmSxqivUQCROYD4k9WOGNPLlb2jbE3QtVEfOHSuVtB_lBkpTNVsJxYlaSnkkPoV1Z3Zk2RfPnH9DzWHk07FmMZIxieef-ikxiQi4mdpRA4YN4-r_NJQtNYp3Jy26Hjy8mWxv-sJtgC9zqVqld9"/>
+<div class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">Best Seller</div>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">4.8</span>
+<span class="text-xs text-slate-500">(1,550 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Traditional Flamenco Show at City Center Tablao</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>1 hour</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">local_bar</span>
+<span>Includes drink</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$38 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="relative aspect-[4/3] overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Montserrat mountains and monastery near Barcelona" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8fPcMtOsQV7aQHQ1Ea7zpzmL0zOdNY7qOJzqTKERPjbZgEWtlK5RRqpvRsEUvyaqOIdKLjwITyZMV23YPeRfuzL0ZD4sPmiWUeL0HnSnVqV68STLuw8VU01i6UqL2itycX2lXvs3vQN7pVeEHtg6Q_MXcnUK8TihAo6cAU5mImc3gfWsaNXFvGIEPJ_W4b2g8eMoWHH268V8IVwp8XQksyqQvucGHYYqTknvM1NWeJuGuwr5XDrSVBNobrOA3hvh6T64TGYGUgLTM"/>
+<button class="absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-slate-700 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<div class="flex items-center gap-1 text-amber-500 mb-2">
+<span class="material-symbols-outlined text-sm fill-1">star</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">4.9</span>
+<span class="text-xs text-slate-500">(2,780 reviews)</span>
+</div>
+<h3 class="font-bold text-lg leading-snug mb-2 group-hover:text-primary transition-colors">Montserrat Half-Day Trip with Monastery &amp; Cogwheel Train</h3>
+<div class="flex items-center gap-2 text-slate-500 text-xs mb-4">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>6 hours</span>
+<span class="mx-1">•</span>
+<span class="material-symbols-outlined text-sm">directions_bus</span>
+<span>Transportation incl.</span>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+<div>
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">From</p>
+<p class="text-xl font-bold text-primary">$85 <span class="text-xs font-normal text-slate-500">per person</span></p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">View Details</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex justify-center">
+<nav class="flex items-center gap-2">
+<button class="size-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
+<button class="size-10 flex items-center justify-center rounded-lg border border-transparent hover:border-slate-200 text-slate-600 dark:text-slate-400">2</button>
+<button class="size-10 flex items-center justify-center rounded-lg border border-transparent hover:border-slate-200 text-slate-600 dark:text-slate-400">3</button>
+<span class="px-2 text-slate-400">...</span>
+<button class="size-10 flex items-center justify-center rounded-lg border border-transparent hover:border-slate-200 text-slate-600 dark:text-slate-400">12</button>
+<button class="size-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</nav>
+</div>
+</div>
+</main>
+<!-- Footer Footer -->
+<footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark py-12">
+<div class="mx-auto max-w-7xl px-4 md:px-10 flex flex-col md:flex-row justify-between gap-12">
+<div class="max-w-xs">
+<div class="flex items-center gap-2 text-primary mb-6">
+<span class="material-symbols-outlined text-3xl font-bold">explore</span>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold">Voyager</h2>
+</div>
+<p class="text-slate-500 text-sm leading-relaxed">
+                        Discover and book unforgettable travel experiences worldwide. From city walks to mountain adventures, find your next journey with Voyager.
+                    </p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
+<div>
+<h4 class="font-bold text-sm mb-4">Marketplace</h4>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">Tours</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Activities</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Destinations</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-sm mb-4">Support</h4>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Cancellations</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-sm mb-4">Business</h4>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">Become a Partner</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Affiliate Program</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Merchant Help</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="mx-auto max-w-7xl px-4 md:px-10 mt-12 pt-8 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-4">
+<p class="text-xs text-slate-400">© 2024 Voyager Inc. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-xl">social_leaderboard</span></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-xl">camera</span></a>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

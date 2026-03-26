@@ -1,0 +1,40 @@
+{
+  "name": "tour-nuxt3",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3001",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/i18n": "^10.2.4",
+    "@nuxtjs/seo": "^3.4.0",
+    "@nuxtjs/sitemap": "^7.6.0",
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "autoprefixer": "^10.4.20",
+    "nuxt": "^4.4.2",
+    "nuxt-schema-org": "^5.0.10",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "@headlessui/vue": "^1.7.23",
+    "@heroicons/vue": "^2.2.0",
+    "@nuxt/image": "^1.10.1",
+    "@paypal/paypal-js": "^9.4.0",
+    "@pinia/nuxt": "^0.11.3",
+    "@vueuse/nuxt": "^12.0.0",
+    "dayjs": "^1.11.19",
+    "dompurify": "^3.3.1",
+    "leaflet": "^1.9.4",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.0",
+    "vue-router": "^5.0.0"
+  }
+}

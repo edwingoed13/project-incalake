@@ -1,0 +1,182 @@
+/**
+ * TipTap Editor Styles
+ * Estilos personalizados para el editor TipTap
+ */
+
+/* Contenedor del editor */
+.tiptap-wrapper {
+    @apply rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700;
+}
+
+/* Toolbar */
+.tiptap-toolbar {
+    @apply border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2 rounded-t-lg flex flex-wrap gap-1;
+}
+
+.tiptap-toolbar button {
+    @apply p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
+}
+
+.tiptap-toolbar button.is-active {
+    @apply bg-indigo-600 text-white;
+}
+
+.tiptap-toolbar button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+/* Editor content - ProseMirror */
+.ProseMirror {
+    @apply outline-none text-gray-900 dark:text-gray-100;
+}
+
+.ProseMirror > * + * {
+    @apply mt-3;
+}
+
+/* Negrita EXTREMADAMENTE visible */
+.ProseMirror strong,
+.ProseMirror b {
+    font-weight: 900 !important;
+    color: #000 !important;
+    text-shadow:
+        0.5px 0 0 currentColor,
+        -0.5px 0 0 currentColor,
+        0 0.5px 0 currentColor,
+        0 -0.5px 0 currentColor !important;
+    letter-spacing: -0.02em !important;
+    /* Fondo sutil para mayor contraste */
+    background: rgba(99, 102, 241, 0.1);
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.dark .ProseMirror strong,
+.dark .ProseMirror b {
+    color: #fff !important;
+    text-shadow:
+        0.5px 0 0 currentColor,
+        -0.5px 0 0 currentColor,
+        0 0.5px 0 currentColor,
+        0 -0.5px 0 currentColor !important;
+    background: rgba(99, 102, 241, 0.2);
+}
+
+/* Cursiva EXTREMADAMENTE visible */
+.ProseMirror em,
+.ProseMirror i {
+    font-style: italic !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    color: #1e40af !important;
+    font-size: 1.02em;
+}
+
+.dark .ProseMirror em,
+.dark .ProseMirror i {
+    color: #93c5fd !important;
+}
+
+/* Subrayado */
+.ProseMirror u {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
+/* Alineación de texto */
+.ProseMirror p[style*="text-align: left"],
+.ProseMirror h1[style*="text-align: left"],
+.ProseMirror h2[style*="text-align: left"],
+.ProseMirror h3[style*="text-align: left"] {
+    text-align: left !important;
+}
+
+.ProseMirror p[style*="text-align: center"],
+.ProseMirror h1[style*="text-align: center"],
+.ProseMirror h2[style*="text-align: center"],
+.ProseMirror h3[style*="text-align: center"] {
+    text-align: center !important;
+}
+
+.ProseMirror p[style*="text-align: right"],
+.ProseMirror h1[style*="text-align: right"],
+.ProseMirror h2[style*="text-align: right"],
+.ProseMirror h3[style*="text-align: right"] {
+    text-align: right !important;
+}
+
+.ProseMirror p[style*="text-align: justify"],
+.ProseMirror h1[style*="text-align: justify"],
+.ProseMirror h2[style*="text-align: justify"],
+.ProseMirror h3[style*="text-align: justify"] {
+    text-align: justify !important;
+}
+
+/* Títulos */
+.ProseMirror h1 {
+    @apply text-3xl font-bold mt-6 mb-4;
+}
+
+.ProseMirror h2 {
+    @apply text-2xl font-bold mt-5 mb-3;
+}
+
+.ProseMirror h3 {
+    @apply text-xl font-bold mt-4 mb-2;
+}
+
+/* Listas */
+.ProseMirror ul {
+    @apply list-disc list-inside ml-4;
+}
+
+.ProseMirror ol {
+    @apply list-decimal list-inside ml-4;
+}
+
+.ProseMirror li {
+    @apply my-1;
+}
+
+/* Enlaces */
+.ProseMirror a {
+    @apply text-blue-600 dark:text-blue-400 underline cursor-pointer;
+}
+
+.ProseMirror a:hover {
+    @apply text-blue-800 dark:text-blue-300;
+}
+
+/* Code */
+.ProseMirror code {
+    @apply bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.ProseMirror pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+}
+
+.ProseMirror pre code {
+    @apply bg-transparent p-0;
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+    @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic;
+}
+
+/* Horizontal Rule */
+.ProseMirror hr {
+    @apply my-6 border-t-2 border-gray-300 dark:border-gray-600;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply text-gray-400 dark:text-gray-500 float-left h-0 pointer-events-none;
+}
+
+/* Selección */
+.ProseMirror ::selection {
+    @apply bg-blue-200 dark:bg-blue-800;
+}

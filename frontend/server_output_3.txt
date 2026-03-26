@@ -1,0 +1,161 @@
+│
+●  [32mNuxt [1m4.4.2[22m[39m[90m (with [39m[90mNitro [1m2.13.2[22m[39m[90m, Vite [1m7.3.1[22m[39m[90m and Vue [1m3.5.30[22m[39m[90m)[39m
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3000[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+[90m[[90mnuxt:tailwindcss[90m][39m [36mℹ[39m Using default Tailwind CSS file
+[33m  ➜ DevTools: [39m[2mpress [22m[32mShift[39m[2m + [22m[32mAlt[39m[2m + [22m[32mD[39m[2m in the browser (v4.0.0-alpha.3)[22m
+
+
+[90m[[90m@nuxtjs/og-image[90m][39m [43m[30m WARN [39m[49m Nuxt OG Image is enabled but SSR is disabled.
+
+You should enable SSR ([36mssr: true[39m) or disable the module ([36mogImage: { enabled: false }[39m).
+
+
+[90m[[90mnuxt-schema-org[90m][39m [43m[30m WARN [39m[49m You are using Schema.org with SSR disabled. This is not recommended, Google may not detect your Schema.org, and it adds extra page weight
+
+[36mℹ[39m Re-optimizing dependencies because lockfile has changed
+[32m✔[39m Vite client built in 127ms
+[32m✔[39m Vite server built in 193ms
+[90m[[90mnitro[90m][39m [32m✔[39m Nuxt Nitro server built in 2076ms
+[36mℹ[39m Vite client warmed up in 2ms
+[33m[34mℹ[33m Websocket client connected. [0] [undefined] (untrusted) authToken=cold-dryers-act trustedKeys=[] isClientAuthDisabled=false[39m
+│
+◇  [1m[33m Vite DevTools Permission Request [39m[22m ─────────────────────────────────────────╮
+│                                                                              │
+│  [0mA browser is requesting permissions to connect to the Vite DevTools.[0m        │
+│  [0m[0m                                                                            │
+│  [0mUser Agent   : [33m[1mChrome 143.0.0.0 | Windows 10[22m[39m[0m                                │
+│  [0mOrigin       : [33m[1mhttp://localhost:3000[22m[39m[0m                                        │
+│  [0mClient Token : [32m[1mcold-dryers-act[22m[39m[0m                                              │
+│  [0m[0m                                                                            │
+│  [0mManual Auth URL   :                                                         │
+│  [36m[4mhttp://localhost:5173/.devtools/auth?id=bright-canyons-admire[24m[39m[0m               │
+│  [0mManual Auth Token : [36m[1mbright-canyons-admire[22m[39m[0m                                   │
+│  [0m[0m                                                                            │
+│  [0mThis will allow the browser to interact with the server, make file changes  │
+│   and run commands.[0m                                                          │
+│  [0m[31m[1mYou should only trust your local development browsers.[22m[39m[0m                      │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────╯
+
+[41m[30m ERROR [39m[49m [31m⬢ RPC error on executing "[1mdevtoolskit:internal:logs:list[22m":[39m
+
+
+[41m[30m ERROR [39m[49m Unauthorized access to method "devtoolskit:internal:logs:list" from client [0]
+
+    [90mat [39mObject.<anonymous> ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@vitejs/devtools/dist/server-BuWZ1h8p.js:122:12[39m)
+    [90mat [39monMessage ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/birpc/dist/index.mjs:173:23[39m)
+    [90mat [39mprocess.processTicksAndRejections ([36mnode:internal/process/task_queues:105:5[39m)
+
+[36mℹ[39m Vite discovered new dependencies at runtime:
+  [90m./virtual:nuxt:C%3A%2Fxampp%2Fhtdocs%2Fweb%2Ftour-nuxt4%2F.nuxt%2Fruntime.vue-devtools-client.zwj9RQIWEiZGrfMCzaNzOUa2cBthysDA1OtHt0XiExw.js[39m
+    [36m@vue/devtools-core[39m
+    [36m@vue/devtools-kit[39m
+
+Pre-bundle them in your [36mnuxt.config.ts[39m to avoid page reloads:
+
+[90mexport default defineNuxtConfig({
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+      ]
+    }
+  }
+})
+
+[39mLearn more: https://vite.dev/guide/dep-pre-bundling.html
+[33m[34mℹ[33m Websocket client connected. [1] [undefined] (untrusted) authToken=cold-dryers-act trustedKeys=[] isClientAuthDisabled=false[39m
+│
+◇  [1m[33m Vite DevTools Permission Request [39m[22m ─────────────────────────────────────────╮
+│                                                                              │
+│  [0mA browser is requesting permissions to connect to the Vite DevTools.[0m        │
+│  [0m[0m                                                                            │
+│  [0mUser Agent   : [33m[1mChrome 143.0.0.0 | Windows 10[22m[39m[0m                                │
+│  [0mOrigin       : [33m[1mhttp://localhost:3000[22m[39m[0m                                        │
+│  [0mClient Token : [32m[1mcold-dryers-act[22m[39m[0m                                              │
+│  [0m[0m                                                                            │
+│  [0mManual Auth URL   :                                                         │
+│  [36m[4mhttp://localhost:5173/.devtools/auth?id=bright-canyons-admire[24m[39m[0m               │
+│  [0mManual Auth Token : [36m[1mbright-canyons-admire[22m[39m[0m                                   │
+│  [0m[0m                                                                            │
+│  [0mThis will allow the browser to interact with the server, make file changes  │
+│   and run commands.[0m                                                          │
+│  [0m[31m[1mYou should only trust your local development browsers.[22m[39m[0m                      │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────╯
+
+[41m[30m ERROR [39m[49m [31m⬢ RPC error on executing "[1mdevtoolskit:internal:logs:list[22m":[39m
+
+
+[41m[30m ERROR [39m[49m Unauthorized access to method "devtoolskit:internal:logs:list" from client [1]
+
+    [90mat [39mObject.<anonymous> ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@vitejs/devtools/dist/server-BuWZ1h8p.js:122:12[39m)
+    [90mat [39monMessage ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/birpc/dist/index.mjs:173:23[39m)
+    [90mat [39mprocess.processTicksAndRejections ([36mnode:internal/process/task_queues:105:5[39m)
+
+[33m[34mℹ[33m Websocket client connected. [2] [undefined] (untrusted) authToken=tidy-guests-tease trustedKeys=[] isClientAuthDisabled=false[39m
+│
+◇  [1m[33m Vite DevTools Permission Request [39m[22m ─────────────────────────────────────────╮
+│                                                                              │
+│  [0mA browser is requesting permissions to connect to the Vite DevTools.[0m        │
+│  [0m[0m                                                                            │
+│  [0mUser Agent   : [33m[1mChrome 143.0.0.0 | Windows 10[22m[39m[0m                                │
+│  [0mOrigin       : [33m[1mhttp://localhost:3000[22m[39m[0m                                        │
+│  [0mClient Token : [32m[1mtidy-guests-tease[22m[39m[0m                                            │
+│  [0m[0m                                                                            │
+│  [0mManual Auth URL   :                                                         │
+│  [36m[4mhttp://localhost:5173/.devtools/auth?id=bright-canyons-admire[24m[39m[0m               │
+│  [0mManual Auth Token : [36m[1mbright-canyons-admire[22m[39m[0m                                   │
+│  [0m[0m                                                                            │
+│  [0mThis will allow the browser to interact with the server, make file changes  │
+│   and run commands.[0m                                                          │
+│  [0m[31m[1mYou should only trust your local development browsers.[22m[39m[0m                      │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────╯
+
+[41m[30m ERROR [39m[49m [31m⬢ RPC error on executing "[1mdevtoolskit:internal:logs:list[22m":[39m
+
+
+[41m[30m ERROR [39m[49m Unauthorized access to method "devtoolskit:internal:logs:list" from client [2]
+
+    [90mat [39mObject.<anonymous> ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@vitejs/devtools/dist/server-BuWZ1h8p.js:122:12[39m)
+    [90mat [39monMessage ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/birpc/dist/index.mjs:173:23[39m)
+    [90mat [39mprocess.processTicksAndRejections ([36mnode:internal/process/task_queues:105:5[39m)
+
+[31m[34mℹ[31m Websocket client disconnected. [1][39m
+[33m[34mℹ[33m Websocket client connected. [3] [undefined] (untrusted) authToken=cold-dryers-act trustedKeys=["bright-canyons-admire"] isClientAuthDisabled=false[39m
+│
+◇  [1m[33m Vite DevTools Permission Request [39m[22m ─────────────────────────────────────────╮
+│                                                                              │
+│  [0mA browser is requesting permissions to connect to the Vite DevTools.[0m        │
+│  [0m[0m                                                                            │
+│  [0mUser Agent   : [33m[1mChrome 143.0.0.0 | Windows 10[22m[39m[0m                                │
+│  [0mOrigin       : [33m[1mhttp://localhost:3000[22m[39m[0m                                        │
+│  [0mClient Token : [32m[1mcold-dryers-act[22m[39m[0m                                              │
+│  [0m[0m                                                                            │
+│  [0mManual Auth URL   :                                                         │
+│  [36m[4mhttp://localhost:5173/.devtools/auth?id=fifty-cars-learn[24m[39m[0m                    │
+│  [0mManual Auth Token : [36m[1mfifty-cars-learn[22m[39m[0m                                        │
+│  [0m[0m                                                                            │
+│  [0mThis will allow the browser to interact with the server, make file changes  │
+│   and run commands.[0m                                                          │
+│  [0m[31m[1mYou should only trust your local development browsers.[22m[39m[0m                      │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────╯
+
+[41m[30m ERROR [39m[49m [31m⬢ RPC error on executing "[1mdevtoolskit:internal:logs:list[22m":[39m
+
+
+[41m[30m ERROR [39m[49m Unauthorized access to method "devtoolskit:internal:logs:list" from client [3]
+
+    [90mat [39mObject.<anonymous> ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@vitejs/devtools/dist/server-BuWZ1h8p.js:122:12[39m)
+    [90mat [39monMessage ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/birpc/dist/index.mjs:173:23[39m)
+    [90mat [39mprocess.processTicksAndRejections ([36mnode:internal/process/task_queues:105:5[39m)
+
+[31m[34mℹ[31m Websocket client disconnected. [3][39m
+[31m[34mℹ[31m Websocket client disconnected. [0][39m
+[31m[34mℹ[31m Websocket client disconnected. [2][39m

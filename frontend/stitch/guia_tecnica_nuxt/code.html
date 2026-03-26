@@ -1,0 +1,47 @@
+<div style="font-family: 'Inter', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: auto; line-height: 1.6;">
+    <h1 style="color: #0077cc; border-bottom: 2px solid #eee; padding-bottom: 10px;">Guía de Implementación Técnica: Marketplace de Turismo (Nuxt.js)</h1>
+    
+    <p>Para asegurar que los diseños se traduzcan fielmente a tu aplicación Nuxt, he preparado estas directrices organizadas por capas.</p>
+
+    <h2 style="color: #0077cc; margin-top: 30px;">1. Configuración de Estilos y Tematización</h2>
+    <p>Utiliza <strong>Tailwind CSS</strong> para una implementación rápida y coherente con los diseños:</p>
+    <ul>
+        <li><strong>Colores:</strong> Define el azul turístico como <code>primary: #0077cc</code> en tu <code>tailwind.config.js</code>.</li>
+        <li><strong>Tipografía:</strong> Configura <strong>Inter</strong> como la fuente principal para mantener la legibilidad moderna.</li>
+        <li><strong>Bordes:</strong> Aplica un radio de curvatura estándar de <code>12px</code> (<code>rounded-xl</code> en Tailwind) para botones y tarjetas.</li>
+    </ul>
+
+    <h2 style="color: #0077cc; margin-top: 30px;">2. Arquitectura de Componentes (Atomic Design)</h2>
+    <p>Divide la interfaz en componentes reutilizables:</p>
+    <ul>
+        <li><strong>UI Base:</strong> <code>VButton</code>, <code>VCard</code>, <code>VBadge</code> (para "Best Seller"), <code>VInput</code>, <code>VRating</code>.</li>
+        <li><strong>Bloques:</strong> <code>TourCard</code>, <code>SearchNavbar</code>, <code>FilterSidebar</code>, <code>BookingWidget</code>.</li>
+        <li><strong>Secciones:</strong> <code>HeroSection</code>, <code>ReviewList</code>, <code>ImageGallery</code>.</li>
+    </ul>
+
+    <h2 style="color: #0077cc; margin-top: 30px;">3. Estrategia de Fetching de Datos (Nuxt 3)</h2>
+    <p>Para maximizar el SEO en las páginas de destino y detalles:</p>
+    <ul>
+        <li><strong>useAsyncData o useFetch:</strong> Implementa estas funciones en la página de resultados y detalle del tour para renderizado del lado del servidor (SSR).</li>
+        <li><strong>Estado Global:</strong> Utiliza <strong>Pinia</strong> para gestionar el carrito de compra y la información del usuario durante el flujo de checkout.</li>
+    </ul>
+
+    <h2 style="color: #0077cc; margin-top: 30px;">4. Detalles de Implementación por Página</h2>
+    <h3>Home & Resultados</h3>
+    <ul>
+        <li><strong>Imágenes:</strong> Usa el componente <code>&lt;NuxtImg&gt;</code> para optimización automática, lazy loading y formatos modernos (WebP).</li>
+        <li><strong>Filtros:</strong> Implementa los filtros mediante parámetros en la URL (Query Params).</li>
+    </ul>
+
+    <h3>Detalle del Tour</h3>
+    <ul>
+        <li><strong>Sticky Sidebar:</strong> Asegura que el widget de reserva use <code>position: sticky</code> con un margen superior adecuado.</li>
+        <li><strong>Galería:</strong> Considera usar una librería liviana para el modal de fotos o impleméntalo con transiciones nativas de Vue.</li>
+    </ul>
+
+    <h2 style="color: #0077cc; margin-top: 30px;">5. UX & Micro-interacciones</h2>
+    <ul>
+        <li><strong>Hover States:</strong> Añade transiciones suaves (<code>transition-all duration-300</code>) en las <code>TourCard</code>.</li>
+        <li><strong>Loading States:</strong> Implementa esqueletos de carga (Skeletons) mientras se obtienen los resultados.</li>
+    </ul>
+</div>

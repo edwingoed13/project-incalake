@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sagrada Familia Fast-Track Access with Guided Tour - Voyager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0077cc",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl">explore</span>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Voyager</h1>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Tours</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Destinations</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">My Bookings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-64" placeholder="Search destinations..." type="text"/>
+</div>
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Image Gallery -->
+<div class="grid grid-cols-4 grid-rows-2 gap-4 h-[500px] mb-8 overflow-hidden rounded-xl">
+<div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Wide exterior shot of Sagrada Familia cathedral" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAAoJNVDijjkclGptfa8EwuvfH6kW_0LUdd4yBgRiSbhC6DwOp_QBZowmZ0CMMjFmBhiws2iRoX_0EXE05HTH1WBTnZXHfx-x68oi9kPrnt4B4WzlWDjFtOYsaVwcV1XA-tVlLiW4MWEo31EI-Nq-1VKhjVx0e5CRNNwYOZ9bwCXrpUYb_epJUE5KBgtum6hm-dj2OsX7emVQZ030LDD6pHYA60AKgpa5uDt5UkJflhlr6RGQG55bCndY0PYqXqFAcIx934tV2IWak"/>
+</div>
+<div class="col-span-1 row-span-1 relative group cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Interior view of colorful stained glass windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJixOyaeidBYOZB3WUO_DP2IZrmP66WWTjJhI0kLQoJk9Dz1vO1SOa2fql4IZCgA1C4JJJd8Imt_0zttv1CqPqmN3IMWR7CKa5o63GaK9p4gcGrA_N4SzG4gXvC08qe0TgO6vmFA_v98bnNC5JjijHOhHZrCqOMANxyK0cQYr5QZ773a-G9-ldT96X5BgfR2Qn56vz62VV_RD5vAYdGzgI182FEvnR95T4TyUCZVKslt_kRs0Lz21YlECTQMYEmWpld6xyfqw7n37R"/>
+</div>
+<div class="col-span-1 row-span-1 relative group cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Close up detail of architectural stone carvings" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_va_pp4evB0iNhiwKfFGY4x7TaSYMWkhFDvdar5Rn06lnRGsch1pLLsbdyx9inblx5RC_52Q2UVIEQCZbpZUNyNr8cKrHw8PEgid0l9uaZ7dCtAURmQRY5xvgL8UEdiVtLidnFb2IoQY6ibjFoVt_dyvUuUm41ByKhp7Mxvob9K_Kr3t5c9411Ghi2SW1nDuJ2e-f_1p6c8CmKE1DSkut2MJOzh9Uo9yIcll2sW5gDlpNsZTHAhicWoOO6b2heewT9XCAoni2R6CO"/>
+</div>
+<div class="col-span-1 row-span-1 relative group cursor-pointer overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Looking up at the branching columns inside" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_J4_bhDVXPxv-mRt6oXxe85aFLW9GImUUZh0nJFSkVfTgJ2pfDBbvhoEs9kVNNn8AGOPcIcAYFwiZ4tUYkjVe5gF4Y4qsY6VTCMN9tdKBD2zAncVFAe3yE3-RZH_lAnoXHNY1-57yyrIKfLQBot2105t6y27fwWAS1mab54ZTXaSgpuEGM62h2ibTjAumVpJiUuRC0_aLtwF9AlJ1kuxyLswCm6szhBSg65-iUYqiRcJH5ASEtz5s8XIOYrsFzMaUEODDLYbtOl-U"/>
+</div>
+<div class="col-span-1 row-span-1 relative group cursor-pointer overflow-hidden">
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center z-10 group-hover:bg-black/50 transition-colors">
+<span class="text-white font-bold">+12 Photos</span>
+</div>
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Aerial view of Barcelona city landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBkWxOrNyAkt0HWGsiw3Crlph0INbiVK5MEy9u6-WiLnagFRUXuhuYZ0oGNKJ1wRrHidTDbcVId7zs3LxSc55iEUq5iT89LdMEPpEZaOkku77cb5WLqrOXJsnq_1lNsTG0QrqptUutqv46PhBOk8PBnDv9bYBw7CMRA42_sUmrNZ3otOzlaA-qOB5IGM_9j7l-3WwgwPZxmmYk0jkOlRrkicBJp2YM_Elvw6kArQ18ynSRNoEy9qGqFGfFpu5V0WY3Nd5I0nsp7361"/>
+</div>
+</div>
+<!-- Title & Basic Info -->
+<div class="flex flex-col lg:flex-row justify-between gap-8 mb-8">
+<div class="flex-1">
+<h1 class="text-3xl md:text-4xl font-black mb-4 leading-tight">Sagrada Familia Fast-Track Access with Guided Tour</h1>
+<div class="flex flex-wrap items-center gap-4 text-sm font-medium">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-yellow-500 fill-1">star</span>
+<span>4.9</span>
+<span class="text-slate-500 underline">(1,240 reviews)</span>
+</div>
+<span class="text-slate-300">•</span>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-slate-500">location_on</span>
+<span>Barcelona, Spain</span>
+</div>
+<span class="text-slate-300">•</span>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-slate-500">schedule</span>
+<span>1.5 Hours</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">share</span>
+                    Share
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">favorite</span>
+                    Save
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+<!-- Main Content Area -->
+<div class="lg:col-span-2 space-y-10">
+<!-- Highlights -->
+<section>
+<h3 class="text-xl font-bold mb-4">Highlights</h3>
+<ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary">bolt</span>
+<span class="text-slate-600 dark:text-slate-400">Skip the long ticket lines and save time</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary">groups</span>
+<span class="text-slate-600 dark:text-slate-400">Guided tour with an expert historian</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary">architecture</span>
+<span class="text-slate-600 dark:text-slate-400">Learn about Gaudi's unique symbolism</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary">verified</span>
+<span class="text-slate-600 dark:text-slate-400">Official Sagrada Familia authorized tour</span>
+</li>
+</ul>
+</section>
+<hr class="border-slate-200 dark:border-slate-800"/>
+<!-- Description -->
+<section>
+<h3 class="text-xl font-bold mb-4">Description</h3>
+<div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 leading-relaxed">
+<p>Join an expert guide and explore the Sagrada Familia, Gaudi's masterpiece and Barcelona's most iconic landmark. On this 1.5-hour guided tour, you'll learn about the history of the basilica and the man who spent 40 years of his life building it.</p>
+<p class="mt-4">See the Nativity and Passion facades, and go inside the church to see the stunning stained-glass windows and columns that look like trees. Your guide will explain the symbolism behind the architecture and why the project remains unfinished over 140 years later.</p>
+</div>
+</section>
+<!-- What's Included -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<h3 class="text-xl font-bold mb-4">What's included</h3>
+<ul class="space-y-3">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span class="text-slate-600 dark:text-slate-400">Fast-track entrance ticket</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span class="text-slate-600 dark:text-slate-400">Professional bilingual guide</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span class="text-slate-600 dark:text-slate-400">Radio guide system</span>
+</li>
+</ul>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-4">What's not included</h3>
+<ul class="space-y-3">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400">cancel</span>
+<span class="text-slate-600 dark:text-slate-400">Tower access</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400">cancel</span>
+<span class="text-slate-600 dark:text-slate-400">Food and drinks</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400">cancel</span>
+<span class="text-slate-600 dark:text-slate-400">Hotel pickup/drop-off</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- Itinerary -->
+<section>
+<h3 class="text-xl font-bold mb-6">Itinerary</h3>
+<div class="space-y-0 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+<div class="relative pl-10 pb-8">
+<div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-sm">flag</span>
+</div>
+<h4 class="font-bold">Meeting Point</h4>
+<p class="text-sm text-slate-500 mb-2">15 minutes before start</p>
+<p class="text-slate-600 dark:text-slate-400">Meet your guide at the corner of Carrer de Mallorca and Carrer de la Marina.</p>
+</div>
+<div class="relative pl-10 pb-8">
+<div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-sm">church</span>
+</div>
+<h4 class="font-bold">The Nativity Facade</h4>
+<p class="text-sm text-slate-500 mb-2">30 minutes</p>
+<p class="text-slate-600 dark:text-slate-400">Explore the only part of the cathedral directly supervised by Gaudi himself.</p>
+</div>
+<div class="relative pl-10 pb-8">
+<div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+</div>
+<h4 class="font-bold">Interior Exploration</h4>
+<p class="text-sm text-slate-500 mb-2">45 minutes</p>
+<p class="text-slate-600 dark:text-slate-400">Step inside the 'forest' of stone columns and witness the play of light.</p>
+</div>
+<div class="relative pl-10">
+<div class="absolute left-0 top-1.5 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white z-10">
+<span class="material-symbols-outlined text-sm">emoji_flags</span>
+</div>
+<h4 class="font-bold">Passion Facade &amp; End of Tour</h4>
+<p class="text-sm text-slate-500 mb-2">15 minutes</p>
+<p class="text-slate-600 dark:text-slate-400">The tour concludes at the Passion facade. You can stay inside as long as you like.</p>
+</div>
+</div>
+</section>
+<!-- Location Map -->
+<section>
+<h3 class="text-xl font-bold mb-4">Location</h3>
+<div class="w-full h-72 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 relative">
+<img class="w-full h-full object-cover opacity-50" data-alt="Map showing Sagrada Familia location in Barcelona" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn34IfdelM6V1Z3EeSy2ywhtM3YlSU6j6lUQqUMga5AKxynHIeJTVCNIneKRAodi0SnCj8l67V-bkbuKGItNT40pNOrREMUoT5CGI9-cISEO3jk_bFDOYZEfTw0eic2wtTGieFYtgn_-YKuHtgD-soWWBQdYWboQebMj4LXNW-7ZiyKJZlnGzYArmrOwralVVg2rhUumBMd7z9AR1PWxxrJYkcjVW_EF8hl0u_qVnaWZ3MckcmowPB9RfK7vX7MH7thvEPbMhobApV"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-xl flex items-center gap-3">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">location_on</span>
+</div>
+<div>
+<p class="font-bold">Sagrada Familia</p>
+<p class="text-xs text-slate-500">Carrer de Mallorca, 401, Barcelona</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-slate-200 dark:border-slate-800"/>
+<!-- Reviews Section -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold">Customer Reviews</h3>
+<div class="flex items-center gap-2">
+<span class="font-bold text-2xl">4.9</span>
+<div class="flex">
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+</div>
+</div>
+</div>
+<div class="space-y-8">
+<div class="border-b border-slate-100 dark:border-slate-800 pb-8">
+<div class="flex items-center gap-4 mb-3">
+<div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">JD</div>
+<div>
+<h4 class="font-bold">John Doe</h4>
+<p class="text-xs text-slate-500">2 days ago • Verified Booking</p>
+</div>
+</div>
+<p class="text-slate-600 dark:text-slate-400">Our guide, Marta, was exceptional. Her passion for the architecture was contagious. Definitely recommend the fast-track option as the lines were incredibly long.</p>
+</div>
+<div class="border-b border-slate-100 dark:border-slate-800 pb-8">
+<div class="flex items-center gap-4 mb-3">
+<div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600">SM</div>
+<div>
+<h4 class="font-bold">Sarah Miller</h4>
+<p class="text-xs text-slate-500">1 week ago • Verified Booking</p>
+</div>
+</div>
+<p class="text-slate-600 dark:text-slate-400">Incredible experience. The radio guides made it very easy to hear everything even when it was crowded inside. A must-do in Barcelona!</p>
+</div>
+</div>
+<button class="mt-6 font-bold text-primary hover:underline text-sm">View all 1,240 reviews</button>
+</section>
+</div>
+<!-- Sticky Booking Sidebar -->
+<div class="lg:col-span-1">
+<div class="sticky top-24 space-y-4">
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-2xl font-black text-primary">€45</span>
+<span class="text-slate-500">per person</span>
+</div>
+<div class="space-y-4 mb-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Select Date</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">calendar_today</span>
+<input class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary" type="text" value="Oct 24, 2023"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Travelers</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">group</span>
+<select class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary focus:border-primary appearance-none">
+<option>2 Adults</option>
+<option>3 Adults</option>
+<option>4 Adults</option>
+</select>
+</div>
+</div>
+</div>
+<div class="space-y-2 mb-6 border-t border-slate-100 dark:border-slate-800 pt-4">
+<div class="flex justify-between text-sm">
+<span class="text-slate-600 dark:text-slate-400">€45 x 2 Adults</span>
+<span class="font-bold">€90</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-600 dark:text-slate-400">Booking fee</span>
+<span class="font-bold">€0</span>
+</div>
+<div class="flex justify-between text-lg font-black border-t border-slate-100 dark:border-slate-800 pt-2">
+<span>Total</span>
+<span>€90</span>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-4">
+                            Book Now
+                        </button>
+<p class="text-center text-xs text-slate-500 flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-xs">verified_user</span>
+                            Free cancellation up to 24 hours before
+                        </p>
+</div>
+<div class="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">electric_bolt</span>
+<div>
+<p class="text-sm font-bold text-primary">Reserve now, pay later</p>
+<p class="text-xs text-slate-600 dark:text-slate-400">Book your spot today and pay nothing until you're closer to your trip.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Related Tours -->
+<section class="mt-20">
+<h2 class="text-2xl font-black mb-8">You might also like</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Tour Card 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Park Guell monumental zone at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3ysSIejtxSupzV_OgQT_hInKfrwAAxTZ1Opb4kOJ6kkyyRpputgS_kykhBZrAHTMZD5QZGaGF0LWq9S2Qdxt5ZodbmbCbslveAZ-_rqiEyuK8s0dBtG6rvt-mmzT4TyvRu-Ua8hHu8FGWJgQFOn95A9kTd8s34tfjb-QSRSr-ESIoVOIXKeGUhvdwAUAcU61QUw5V3td-ycNcsletEN1Q9t-ej5kqOL_ZfbcLbOjwQtNl_zh-VKusu2NG2gmt4UVPBSGknyhO-IgQ"/>
+<button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Barcelona</p>
+<h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Park Guell Fast-Track Access with Guide</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
+<span class="text-sm font-bold">4.8</span>
+<span class="text-xs text-slate-500">(856)</span>
+</div>
+<p class="mt-2 font-black text-slate-900 dark:text-white">From €25</p>
+</div>
+<!-- Tour Card 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Tapas and wine on a table in Madrid" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj0Jith1RIXQ29Y6QKDlshgZ2Ac10lmWaXjH7CrJMg6snmN9D63hyqUN1VZZ2mWKglwbw408TGDumEisnp1yCrlszlBptvtoJ3SkId-tLu4so50yLxzRNcquXG9oSFoS3Yk-jYm-Ixdl6OtWdxOU1mINZ9LJbLOwFuEeDGht5EAlzi-F7I5ps8_YcjoYFn2HHMQ4_YLUp44-Jierk34ghdZG5ni4ZPA-e29XmicBnWA9iKUiZn6h1Ge5BebkUti89ud3HaOziOViik"/>
+<button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Barcelona</p>
+<h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Gothic Quarter Tapas &amp; Wine Tasting Tour</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
+<span class="text-sm font-bold">4.9</span>
+<span class="text-xs text-slate-500">(2,103)</span>
+</div>
+<p class="mt-2 font-black text-slate-900 dark:text-white">From €65</p>
+</div>
+<!-- Tour Card 3 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Montserrat mountains landscape" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnvzURCW65F9nnF44g_V7lla0PuZ-FfaXgivud7-wSxeMEtDD7brzZM5eYb-SnodeW2xmHI8PioQG0DI8nUN5yvfRqqie42T6z23OYSuLmb9qa1XKJPDEEeL9sHRXV9ZqFxu9Fz0NZaUTJgN4Uud8OqSnbiiKjPJajgROz5T0gsvOPu1jMH2zowoDRZ9BNmdKrzgnTm-fXF21ZAhS4soe5sIJXiz33VT5jOSUYK-VQzZBtRyI1LxbQXTx1Unz36Xd9BXn1SxYk1O9J"/>
+<button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Day Trip</p>
+<h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Montserrat Monastery Tour with Cogwheel Train</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
+<span class="text-sm font-bold">4.7</span>
+<span class="text-xs text-slate-500">(3,412)</span>
+</div>
+<p class="mt-2 font-black text-slate-900 dark:text-white">From €89</p>
+</div>
+<!-- Tour Card 4 -->
+<div class="group cursor-pointer">
+<div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Camp Nou stadium interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEQYbK_DoM-v7euNlL1c5ZyK94WHU2-F3PST84VvV3mZGD2yvPysQbUBF4RdkORGnd2pNuD8YDpx057HeLoqVufa8agjcEM0WaUm3yOsbC4IZVZPHpzHK_tY6rV_bWlLBDsa4Ic3KsvYoZz9_T_FjH4FUpg9H8AfvbBgXjTgxVGM6ontXZORiBlu8YgTcPZMpesSFYNB7pfv-UdbxF5z_0vdxk3iGBtyJgOvpOQWZq4Dq0m2cQE9dQtrjRvRp4Dn_tNVdw0qbH6kgD"/>
+<button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
+<span class="material-symbols-outlined text-xl">favorite</span>
+</button>
+</div>
+<p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Sports</p>
+<h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">FC Barcelona Camp Nou Museum &amp; Stadium Tour</h4>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
+<span class="text-sm font-bold">4.6</span>
+<span class="text-xs text-slate-500">(5,820)</span>
+</div>
+<p class="mt-2 font-black text-slate-900 dark:text-white">From €32</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 mt-20 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">explore</span>
+<h2 class="text-xl font-bold tracking-tight">Voyager</h2>
+</div>
+<p class="text-sm text-slate-500">Unforgettable travel experiences, guided by locals who love their city.</p>
+</div>
+<div>
+<h3 class="font-bold mb-4">Destinations</h3>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">Barcelona</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Rome</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Paris</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">London</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold mb-4">Company</h3>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Blog</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Gift Cards</a></li>
+</ul>
+</div>
+<div>
+<h3 class="font-bold mb-4">Support</h3>
+<ul class="space-y-2 text-sm text-slate-500">
+<li><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Cancellation Policy</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Contact Us</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Terms of Use</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-8 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-xs text-slate-500">© 2023 Voyager. All rights reserved.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary">language</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary">currency_exchange</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

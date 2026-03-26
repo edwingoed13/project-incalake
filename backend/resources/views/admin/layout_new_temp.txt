@@ -1,0 +1,2 @@
+<!DOCTYPE html>
+<html lang="es" x-cloak x-data="{ darkMode: $persist(true) }" :class="{ 'dark': darkMode }">

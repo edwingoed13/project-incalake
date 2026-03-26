@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tour Wizard - Step 5: Multimedia &amp; Gallery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#330df2",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#131022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2d2a45;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<!-- Top Sticky Header -->
+<header class="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-primary/20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-6 py-4">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg text-white">
+<span class="material-symbols-outlined text-2xl">auto_awesome</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight">Tour Wizard</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-lg bg-slate-200 dark:bg-primary/10 hover:bg-slate-300 dark:hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-slate-700 dark:text-slate-300">dark_mode</span>
+</button>
+<div class="h-8 w-px bg-slate-200 dark:bg-primary/20"></div>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium hidden sm:block">Agent Dashboard</span>
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 overflow-hidden" data-alt="User avatar profile picture">
+<img alt="Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATFjuhXjeMjYT1O348LUXMpP3Lcjt8rYpR3afZ4gKo9o1k9FkVpb3sn6i1yN7fHcL2KfaNoOJFmCMkA60f3zpNjSFCPwBPC2YCsH7MzU8v4nEBNTGtjl4yKgYdjYzO8keL-83U0ZQfabWC_HeS0LY82g5z3P00pgKJq4b2SZC3HmQ0oJkyDqmL3OCV9EG3VWFqWTSlfJJVjLtv8IjCvTMVyuGaay4L1syKdLX9Hgbov3VDK71W8KiCmaplQ7_h2lmvpQLvrk6SxXpd"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row min-h-[calc(100-73px)]">
+<!-- Left Sidebar Navigation -->
+<aside class="w-full md:w-72 border-r border-slate-200 dark:border-primary/10 p-6 flex flex-col gap-8 shrink-0">
+<div class="flex flex-col gap-2">
+<p class="text-xs font-bold uppercase tracking-widest text-primary/70 mb-2">Progress Overview</p>
+<div class="flex items-center justify-between text-sm mb-1">
+<span class="font-medium">Step 5 of 5</span>
+<span class="text-primary font-bold">100%</span>
+</div>
+<div class="w-full h-2 bg-slate-200 dark:bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full shadow-[0_0_10px_rgba(51,13,242,0.5)]"></div>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-xl">info</span>
+<span class="text-sm font-semibold">Tour Details</span>
+<span class="material-symbols-outlined text-green-500 ml-auto text-sm">check_circle</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-xl">location_on</span>
+<span class="text-sm font-semibold">Location</span>
+<span class="material-symbols-outlined text-green-500 ml-auto text-sm">check_circle</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-xl">payments</span>
+<span class="text-sm font-semibold">Pricing</span>
+<span class="material-symbols-outlined text-green-500 ml-auto text-sm">check_circle</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-xl">event_note</span>
+<span class="text-sm font-semibold">Itinerary</span>
+<span class="material-symbols-outlined text-green-500 ml-auto text-sm">check_circle</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 ring-1 ring-primary">
+<span class="material-symbols-outlined text-xl">image</span>
+<span class="text-sm font-bold">Multimedia</span>
+</div>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-primary/10">
+<div class="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
+<p class="text-xs font-bold text-primary mb-1 uppercase tracking-tighter">Pro Tip</p>
+<p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">High-quality vertical videos increase conversion by up to 45% on mobile devices.</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 p-6 md:p-10 max-w-4xl mx-auto w-full custom-scrollbar">
+<div class="mb-10">
+<h1 class="text-4xl font-extrabold tracking-tight mb-3">Multimedia &amp; Gallery</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg">Bring your tour to life with cinematic visuals and engaging storytelling.</p>
+</div>
+<div class="flex flex-col gap-12">
+<!-- Video Section -->
+<section>
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">play_circle</span>
+<h3 class="text-xl font-bold">Video Highlights</h3>
+</div>
+<div class="flex flex-col gap-4">
+<div class="relative">
+<input class="w-full bg-white dark:bg-background-dark/50 border border-slate-200 dark:border-primary/20 rounded-xl py-4 px-12 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-slate-700 dark:text-slate-200 transition-all shadow-sm" placeholder="Paste YouTube link here (e.g., https://youtube.com/watch?v=...)" type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">link</span>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 bg-primary text-white px-5 py-2 rounded-lg font-bold text-sm hover:brightness-110 transition-all">
+                                Fetch
+                            </button>
+</div>
+<!-- Video Preview Card -->
+<div class="rounded-xl overflow-hidden bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/10 flex flex-col md:flex-row gap-4 p-4 items-center">
+<div class="w-full md:w-48 aspect-video rounded-lg bg-slate-200 dark:bg-background-dark relative overflow-hidden group" data-alt="YouTube video placeholder preview">
+<img alt="Video preview" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClP01f1QQ_4T7uHQTwOrETZp4mhy6CTZtBDXloQEWjutkbZKlBvBLSBbIaItU7xCX1_XHTFnbKzwddXbH-tFkQP0riIROCQIBNcH4vqIQFVsJunKAX8ZWHu2d4vUZqj_DeVImL18R5eWPhXMHfZnvcLdfau9NjtVimOp1ReS9hfg1KU_lRC3odmQb5zTuknBR9iMil7lQL6WyJ_r2aO7hqptg9M8n0iMTunY9wVVtHn3aV0LfXhOyxx-qgvkafV57eKBAEq5aHtCrC"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white text-4xl">play_circle</span>
+</div>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-lg mb-1">A Journey Through the Swiss Alps</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Duration: 4:22 • Channel: Alpine Adventures</p>
+<div class="flex gap-2">
+<button class="text-xs font-bold text-red-500 hover:bg-red-500/10 px-3 py-1 rounded-full transition-colors">Remove Video</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Image Gallery Section -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">photo_library</span>
+<h3 class="text-xl font-bold">Image Gallery</h3>
+</div>
+<span class="text-sm text-slate-500">6 of 20 images</span>
+</div>
+<!-- Drag & Drop Upload Area -->
+<div class="border-2 border-dashed border-slate-300 dark:border-primary/20 rounded-2xl p-10 flex flex-col items-center justify-center bg-slate-50 dark:bg-primary/5 hover:bg-slate-100 dark:hover:bg-primary/10 transition-all cursor-pointer mb-8">
+<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4">
+<span class="material-symbols-outlined text-4xl">cloud_upload</span>
+</div>
+<p class="text-lg font-bold mb-1">Drag and drop photos here</p>
+<p class="text-sm text-slate-500 mb-6 text-center">Support high-resolution JPEG, PNG, or WebP. <br/>Minimum 1920x1080px recommended.</p>
+<button class="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/25 transition-all">
+                            Browse Files
+                        </button>
+</div>
+<!-- Image Reordering Grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<!-- Primary Image Card -->
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-primary shadow-xl shadow-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Mountain landscape" class="w-full h-full object-cover" data-alt="Main tour landscape photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOJpcQZK6PjPD4pTBGeoHLD4KqbgiyKNqSjct7ib2WoUtPiW_dh0zKRpz8jImApnI8FKpR1KkW6kQKbf8LsjXg-fQzyY1hv7UY9t5b56E1MWS9qeyxQ8J5a42oZY1hEAS4gSLuXKhbIMbaps1JXpGqPSiGZ5fB3f5qPddAmNbta_79dSQDIsI8y7DDR6QeUtwvIFpMQ4P72WJ177ml5aDM_bfu6ghuXXWOMNZN8BQAtvWBPb_TgY0CCyU_2VUvIy-EIqzVNzirQNeL"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+<div class="absolute top-3 left-3 px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-full shadow-lg">Primary Image</div>
+</div>
+<!-- Gallery Items -->
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Mountain peak" class="w-full h-full object-cover" data-alt="Secondary tour nature photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGaNVqmqVI3C50JAdebEXpiBeyOPrHTFRBfdZVIelz3Z_MnYdRVyHn3wiOYqmiT9_ZJh2fk0OwGipAjSPvp9LcebEVgbkyafEcw2dn3UcHHBrNmQsO84kTDXdB-fHyl3Lskfb_tGohK-Tu6emJXpb3DnayTIH8blfSWi0jU7P_j_w8PWlt5R6u7zUVYKVEN405CZIE1CrwCLpej-zF16iTpCX6GQ4a8eId8LUMH4fHoJnFZJxl2ckypw3xxSy5S9M7y-lm-3LZFLyv"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="px-2 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[10px] font-bold hover:bg-primary transition-colors">Set Primary</button>
+</div>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+</div>
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Canyon trail" class="w-full h-full object-cover" data-alt="Third tour scenic destination photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxOmSk2MFiejd9omIINtQepodr822VqAUMv6gLGhXr34kugNH_fvRWUJa1SofNcneRCenzjd-8pgfd0n2lpMMo59GLddfUUSAei8S0YfeVo6CgAO4jMApWW0w6oLW4hkw2gT1xAraImK2Wry0OsINyJIOiLjwW95aHiFCFd4jRADfltOc_z53gqwdK7upAWEfYPEf-kt_KaveZGSi2cIblwZxKgImXXanyjfsD8h-CfQ4dDfZnP-Pb4DB4SKu68cuKt6I1lTJwYcK7"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="px-2 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[10px] font-bold hover:bg-primary transition-colors">Set Primary</button>
+</div>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+</div>
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Forest lake" class="w-full h-full object-cover" data-alt="Fourth tour serene environment photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAetBYH8ukwtfUCQFAJtMKoLJeDzBvW2g-Lpb7bm-2xdYJXljAuzVpuQNMDOhOexibHE_9HSX45Uf8xkj-QGio_HJ-CAnqSvTtKCFFKNmfZK9X0Cr5Jfm1IcdYRdwVsypHd9bIfCFc-YLVvKUGqcuPxYhNCWy1jew4aCMT_iq2sGZEiBMtT4dt_jHiIsi4WMBHDamimc_XyodmElHVEgLNhlpQM4d7BL1RPa28tC4xlnUK0yTG-mUYIRpkxMDBooXff-PqKkYJqDDU7"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="px-2 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[10px] font-bold hover:bg-primary transition-colors">Set Primary</button>
+</div>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+</div>
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Lakeside" class="w-full h-full object-cover" data-alt="Fifth tour picturesque landscape photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6Xn_d2D2-xl9S4RQjQz0IJ3XWArEUzhfujRADGW3D0mpo5o7YrR9-SKJCUH26ZZHitMO5bwPJNek0dvfpHsF5KobMPdUXmPlGcN0izI8AhBI1aQCFPNIKBdx-cf3Xrk5x_p-Px1PCn2Sejvbxe7vpYg8YTDK-D5jnktEAxlv4Sqa85SaUlubPq7LTVh5DDSLIjnNHeKe9zw_blCbWY8Opuuzx1pDFsf6MCofsZVSytiymky2AfnFWCb6bSBZFpBmQQM3eCMFMIeda"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="px-2 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[10px] font-bold hover:bg-primary transition-colors">Set Primary</button>
+</div>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+</div>
+<div class="group relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 dark:border-primary/10 bg-background-light dark:bg-background-dark">
+<img alt="Snow mountain" class="w-full h-full object-cover" data-alt="Sixth tour winter scene photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmsKHg5PJUw6TzabrR1UzWM3NCdknamgb3uE4paWdDsRBqS4vFngVYye43gA4L_NWbERRfvUQCAQzbWASTcDayU2D30qU2c6zW-2KETo0dEY3S-JX_tHwAzO82G1ljW1YnjdGzCO1n3g0nM_C_hwADN5Pffdci8oVGn0Ne3Rcr-ACCfIuf3LvLqnWsTg-8olPd4rHUM-qX8BQlDKNb4VjPZTBOTdWLt6ZwUwd7ExGzr_O7dm_jJiOYDs_j5Pbxyo-B_59GLbBvfdxM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+<div class="flex justify-between items-center">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40"><span class="material-symbols-outlined text-sm">open_with</span></button>
+<button class="px-2 py-1 rounded-lg bg-white/20 backdrop-blur-md text-white text-[10px] font-bold hover:bg-primary transition-colors">Set Primary</button>
+</div>
+<button class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Bar -->
+<div class="flex items-center justify-between pt-10 border-t border-slate-200 dark:border-primary/10">
+<button class="flex items-center gap-2 font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+                        Back to Itinerary
+                    </button>
+<div class="flex gap-4">
+<button class="px-6 py-3 rounded-xl font-bold border border-slate-200 dark:border-primary/20 hover:bg-slate-50 dark:hover:bg-primary/5 transition-all">
+                            Save Draft
+                        </button>
+<button class="px-10 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:brightness-110 active:scale-95 transition-all">
+                            Complete &amp; Launch
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

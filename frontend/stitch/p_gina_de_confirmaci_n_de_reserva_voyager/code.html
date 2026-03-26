@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0077cc",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 py-4 bg-white dark:bg-background-dark lg:px-40">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight tracking-[-0.015em]">Voyager</h2>
+</div>
+<div class="flex flex-1 justify-end gap-4 lg:gap-8">
+<div class="flex gap-2">
+<button class="flex size-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 px-4 lg:px-40 py-10">
+<div class="max-w-[960px] mx-auto space-y-8">
+<!-- Success Banner -->
+<div class="text-center space-y-4">
+<div class="flex justify-center">
+<div class="bg-green-100 dark:bg-green-900/30 p-4 rounded-full">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400 text-5xl">check_circle</span>
+</div>
+</div>
+<h1 class="text-slate-900 dark:text-slate-100 text-4xl font-extrabold tracking-tight">Booking Confirmed!</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg">Your adventure in Barcelona is ready. We've sent the tickets to your email.</p>
+<div class="inline-block px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Booking Reference: <span class="text-slate-900 dark:text-slate-100 font-bold uppercase">#VYG-882910</span></p>
+</div>
+</div>
+<!-- Main Booking Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="flex flex-col md:flex-row">
+<div class="md:w-1/3 h-64 md:h-auto bg-center bg-cover" data-alt="The Sagrada Familia cathedral in Barcelona" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAclMnyFTrZcFn15qHL0HKdOp3e4NI0nX5EHCKnpmUXvY9hmZcf-EYqbCOc_OlMUWIAnXRpV3WPbTjpjirtaTecUvyxJ5s8uPc1WAz6th1eSvIq8woIU0t-t1a9ob0X2pLq9gXJANubg-LCPwHSJwFWmHCEQVRpAXYEr7Avn1jnLZAM0mvVAqIedexPndT-dGMmXIUtMKdQ4TdHnVYO_WzRAKJHE0KlwZ6YMZObHrmeBmtdhqWooAv7CV-mTOtRSC-EqS9jhJ0N14Cb');"></div>
+<div class="md:w-2/3 p-6 lg:p-8 space-y-6">
+<div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+<div class="space-y-2">
+<h3 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Sagrada Familia Fast-Track</h3>
+<div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span>Oct 25, 2023 • 10:30 AM</span>
+</div>
+<div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-sm">group</span>
+<span>2 Adults, 1 Child</span>
+</div>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+                                        View Details
+                                    </button>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800 pt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+<button class="flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+                                        Ticket PDF
+                                    </button>
+<button class="flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">print</span>
+                                        Print
+                                    </button>
+<button class="flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+                                        Manage
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Meeting Point & Map -->
+<div class="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+                                Meeting Point
+                            </h3>
+<p class="text-slate-600 dark:text-slate-400">Plaça de la Sagrada Família, Carrer de Mallorca, s/n, 08013 Barcelona, Spain. Meet near the Nativity Façade entrance.</p>
+<div class="h-48 rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative" data-location="Barcelona" style="">
+<div class="absolute inset-0 bg-center bg-cover opacity-80" data-alt="Stylized map showing Sagrada Familia location" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAjFe5TZqEMXrT3eqW9FtSZM7065xd5VpyMnKZJHttCnAo2HEDa_wg62-dhXWmoAL3czZlmR-yGcO8GHniNbugrxMyKhMHoioRadLyE0T8dYaeaR0cKD5F6nQXYrnnqWAac2Rj-0rS1Y3KCBLSBU_b88nXCN_e9jwZ3B3BbDIBFe1ItrTB7J6tcLdfWIv_fHo7xeYi3h8OAAJXYCsPBFKyiuR3hSyOZlQvn1dqAFAwk0UjBpha6MNj6Btdb9kc_KeZFOOHkQYB6YuV4');"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl">location_on</span>
+</div>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
+                                Open in Google Maps <span class="material-symbols-outlined text-xs">open_in_new</span>
+</button>
+</div>
+<!-- Important Instructions -->
+<div class="bg-white dark:bg-slate-900 p-6 lg:p-8 rounded-xl border border-slate-200 dark:border-slate-800 space-y-6">
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                                Important Instructions
+                            </h3>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<div class="bg-primary/10 text-primary p-2 rounded-lg h-fit">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-slate-100">Arrive Early</p>
+<p class="text-sm text-slate-600 dark:text-slate-400">Please arrive at least 15 minutes before your time slot.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="bg-primary/10 text-primary p-2 rounded-lg h-fit">
+<span class="material-symbols-outlined">identity_platform</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-slate-100">ID Required</p>
+<p class="text-sm text-slate-600 dark:text-slate-400">Bring a physical or digital copy of your ID or Passport.</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="bg-primary/10 text-primary p-2 rounded-lg h-fit">
+<span class="material-symbols-outlined">checkroom</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-slate-100">Dress Code</p>
+<p class="text-sm text-slate-600 dark:text-slate-400">As a religious site, knees and shoulders must be covered.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Share Section -->
+<div class="bg-primary/5 dark:bg-primary/10 p-8 rounded-xl flex flex-col items-center text-center space-y-4">
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Excited about your trip?</h3>
+<p class="text-slate-600 dark:text-slate-400">Share this experience with your friends and family</p>
+<div class="flex gap-4">
+<button class="size-12 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="size-12 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors">
+<svg class="w-5 h-5 fill-currentColor" viewbox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+</button>
+<button class="size-12 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-sky-400 transition-colors">
+<svg class="w-5 h-5 fill-currentColor" viewbox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 px-4 lg:px-40 py-12">
+<div class="max-w-[960px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-primary">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Voyager</h2>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400">Discover and book the world's best experiences.</p>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100 mb-4">Support</h4>
+<ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+<li>Help Center</li>
+<li>Contact Support</li>
+<li>Booking Policies</li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100 mb-4">Company</h4>
+<ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+<li>About Us</li>
+<li>Careers</li>
+<li>Partner Program</li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-slate-100 mb-4">Legal</h4>
+<ul class="text-sm text-slate-500 dark:text-slate-400 space-y-2">
+<li>Terms of Service</li>
+<li>Privacy Policy</li>
+<li>Cookies Policy</li>
+</ul>
+</div>
+</div>
+<div class="max-w-[960px] mx-auto border-t border-slate-100 dark:border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                    © 2023 Voyager Inc. All rights reserved.
+                </div>
+</footer>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tiptap Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .editor-wrapper {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .toolbar {
+            background: #f5f5f5;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .toolbar button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .toolbar button.is-active {
+            background: #333;
+            color: white;
+        }
+        .ProseMirror {
+            min-height: 200px;
+            padding: 10px;
+            outline: none;
+        }
+        /* Estilos para negrita y cursiva */
+        .ProseMirror strong,
+        .ProseMirror b {
+            font-weight: 900 !important;
+            color: #000 !important;
+        }
+        .ProseMirror em,
+        .ProseMirror i {
+            font-style: italic !important;
+            color: #333 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Tiptap Editor - Versión Simple</h1>
+    <p>Esta es una prueba simple del editor Tiptap para verificar que las bibliotecas se cargan correctamente.</p>
+
+    <div class="editor-wrapper">
+        <div class="toolbar">
+            <button id="bold-btn">Negrita</button>
+            <button id="italic-btn">Cursiva</button>
+            <button id="heading-btn">Encabezado</button>
+        </div>
+        <div id="editor"></div>
+    </div>
+
+    <div id="output" style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+        <h3>Consola de Debug:</h3>
+        <pre id="debug-console"></pre>
+    </div>
+
+    <!-- Cargar Tiptap desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tiptap/core@2/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tiptap/pm@2/dist/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2/dist/index.umd.js"></script>
+
+    <script>
+        const debugLog = (msg) => {
+            const console = document.getElementById('debug-console');
+            console.innerHTML += msg + '\n';
+            console.log(msg);
+        };
+
+        debugLog('🔍 Iniciando carga de Tiptap...');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            debugLog('📄 DOM cargado');
+            debugLog('window.Editor: ' + typeof window.Editor);
+            debugLog('window.StarterKit: ' + typeof window.StarterKit);
+
+            // Verificar todas las propiedades de window
+            const props = Object.keys(window).filter(k =>
+                k.toLowerCase().includes('tiptap') ||
+                k.toLowerCase().includes('editor') ||
+                k.toLowerCase().includes('starter')
+            );
+            debugLog('Propiedades encontradas: ' + JSON.stringify(props));
+
+            // Esperar un poco para que las bibliotecas se carguen
+            setTimeout(() => {
+                debugLog('⏰ Verificando después de 1 segundo...');
+                debugLog('window.Editor: ' + typeof window.Editor);
+                debugLog('window.StarterKit: ' + typeof window.StarterKit);
+
+                if (window.Editor && window.StarterKit) {
+                    debugLog('✅ Bibliotecas cargadas! Creando editor...');
+
+                    try {
+                        const editor = new window.Editor({
+                            element: document.getElementById('editor'),
+                            extensions: [window.StarterKit],
+                            content: '<p>Escribe aquí y prueba <strong>negrita</strong> y <em>cursiva</em>...</p>',
+                            onUpdate: ({ editor }) => {
+                                debugLog('Contenido actualizado: ' + editor.getHTML().substring(0, 50) + '...');
+                            }
+                        });
+
+                        debugLog('✅ Editor creado exitosamente!');
+
+                        // Configurar botones
+                        document.getElementById('bold-btn').addEventListener('click', () => {
+                            editor.chain().focus().toggleBold().run();
+                            debugLog('Negrita toggle');
+                        });
+
+                        document.getElementById('italic-btn').addEventListener('click', () => {
+                            editor.chain().focus().toggleItalic().run();
+                            debugLog('Cursiva toggle');
+                        });
+
+                        document.getElementById('heading-btn').addEventListener('click', () => {
+                            editor.chain().focus().toggleHeading({ level: 2 }).run();
+                            debugLog('Heading toggle');
+                        });
+
+                    } catch (error) {
+                        debugLog('❌ Error al crear editor: ' + error.message);
+                    }
+                } else {
+                    debugLog('❌ Bibliotecas no disponibles');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

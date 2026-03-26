@@ -1,0 +1,322 @@
+<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Opciones para Reservar</h3>
+
+<div class="space-y-8">
+    {{-- 1. POLÍTICAS Y CANCELACIONES --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            1. POLÍTICAS Y CANCELACIONES PARA LA ACTIVIDAD A RESERVAR
+        </h4>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                SELECCIONE TIPO DE POLÍTICA:
+            </label>
+            <div class="space-y-2">
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="policy_type" value="standard"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Política Stantard (Políticas pre-establecidas por Inca Lake)
+                    </span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="policy_type" value="custom"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Política Personalizada (Política personalizada para cada actividad)
+                    </span>
+                </label>
+            </div>
+            @error('policy_type') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+        </div>
+
+        @if($policy_type === 'custom')
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    DESCRIPCIÓN DE LAS POLÍTICAS PARA LA ACTIVIDAD:
+                </label>
+                <textarea wire:model="policy_description" rows="6"
+                          class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                          placeholder="Describa las políticas de cancelación y reembolso para esta actividad..."></textarea>
+                @error('policy_description') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            </div>
+        @endif
+    </div>
+
+    {{-- 2. TIEMPO DE ANTICIPACIÓN PARA LA RESERVA --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            2. INDIQUE TIEMPO DE ANTICIPACIÓN PARA LA RESERVA
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            El cliente no podrá reservar si el tiempo restante hasta el inicio del tour es menor al especificado.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tiempo de anticipación:
+                </label>
+                <input type="number" wire:model="booking_anticipation_quantity" min="1"
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">
+                @error('booking_anticipation_quantity') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Seleccione tiempo en:
+                </label>
+                <select wire:model="booking_anticipation_unit"
+                        class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="hours">Horas</option>
+                    <option value="days">Días</option>
+                </select>
+                @error('booking_anticipation_unit') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            </div>
+        </div>
+
+        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+            <p class="text-sm text-blue-800 dark:text-blue-200">
+                ℹ️ Ejemplo: Si el tour inicia a las 7:00 AM y configuras 5 horas de anticipación,
+                los clientes podrán reservar hasta las 2:00 AM del mismo día.
+            </p>
+        </div>
+    </div>
+
+    {{-- 3. INFORMACIÓN OPERACIONAL --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            Información Operacional
+        </h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Selecciona la información que necesitas de los clientes:
+        </p>
+
+        <div class="mb-4 space-y-2">
+            <label class="flex items-center cursor-pointer">
+                <input type="radio" wire:model="data_requirement_type" value="leader"
+                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Requerir datos solo del lider
+                </span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+                <input type="radio" wire:model="data_requirement_type" value="all"
+                       class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                <span class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Requerir todos los datos de los clientes
+                </span>
+            </label>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            @php
+                $operationalFields = [
+                    'peru_entry_date' => 'Fecha de ingreso al Perú (Para enviarte información útil, cuando estés aquí) Opcional',
+                    'hotel_name' => 'Nombre de su hotel',
+                    'passport_copy' => 'Copia de pasaporte o ID (enviar a reservas@incalake.com)',
+                    'arrival_flight' => 'Vuelo de llegada',
+                    'departure_flight' => 'Vuelo de salida',
+                    'weight_kg' => 'Peso (kg)',
+                    'height_m' => 'Altura (m)',
+                    'arrival_bus_company' => 'Compania de bus en la que llega',
+                    'departure_bus_company' => 'Compania de bus en la que se va',
+                    'arrival_train' => 'Tren de llegada',
+                    'departure_train' => 'Tren de Salida',
+                ];
+            @endphp
+
+            @foreach($operationalFields as $key => $label)
+                <label class="flex items-start cursor-pointer">
+                    <input type="checkbox" wire:model="operational_info_required" value="{{ $key }}"
+                           class="mt-0.5 w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                </label>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- 4. INFORMACIÓN PERSONAL --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            Información Personal
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @php
+                $personalFields = [
+                    'first_name' => 'Nombre',
+                    'last_name' => 'Apellido',
+                    'birthdate' => 'Fecha de Nacimiento',
+                    'nationality' => 'Nacionalidad',
+                    'phone_whatsapp' => 'Número de teléfono (whatsapp)',
+                    'email' => 'E-mail',
+                    'dietary_restrictions' => 'Restricciones Alimentarias',
+                    'gender' => 'Género',
+                ];
+            @endphp
+
+            @foreach($personalFields as $key => $label)
+                <label class="flex items-start cursor-pointer">
+                    <input type="checkbox" wire:model="personal_info_required" value="{{ $key }}"
+                           class="mt-0.5 w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                </label>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- 5. OPCIONES DE RECOJO --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            5. INDIQUE OPCIONES DE RECOJO AL CLIENTE
+        </h4>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Indique tipo de recojo:
+            </label>
+            <div class="space-y-2">
+                <label class="flex items-start cursor-pointer">
+                    <input type="radio" wire:model.live="pickup_type" value="meeting_point"
+                           class="mt-0.5 w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Punto de presentación</strong><br>
+                        <span class="text-gray-500 dark:text-gray-400 text-xs">Los clientes deben presentarse en Plaza de armas de la ciudad</span>
+                    </span>
+                </label>
+                <label class="flex items-start cursor-pointer">
+                    <input type="radio" wire:model.live="pickup_type" value="hotel_pickup"
+                           class="mt-0.5 w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Recojo de hotel</strong>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        @if($pickup_type === 'meeting_point')
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Indicar donde debe presentarse el cliente:
+                </label>
+                <textarea wire:model="meeting_point_description" rows="3"
+                          class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                          placeholder="Ejemplo: Plaza de armas de Puno, frente a la Catedral"></textarea>
+            </div>
+        @endif
+
+        @if($pickup_type === 'hotel_pickup')
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Indicar el Lugar de Presentación para Iniciar la actividad:
+                    </label>
+                    <textarea wire:model="pickup_location_description" rows="3"
+                              class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                              placeholder="Ejemplo: Hoteles ubicados en la plaza de armas o alrededores (máximo 3 cuadras alejadas)"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Indique donde terminará la actividad (opcional):
+                    </label>
+                    <textarea wire:model="dropoff_location_description" rows="3"
+                              class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                              placeholder="Ejemplo: Hoteles ubicados en la plaza de armas o alrededores (máximo 3 cuadras alejadas)"></textarea>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    {{-- 6. ASOCIAR GUÍAS --}}
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            6. ASOCIAR GUIAS A LA ACTIVIDAD/SERVICIO (OPCIONAL)
+        </h4>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Indicar tipo de guía:
+            </label>
+            <div class="space-y-2">
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="guide_type" value="live_guide"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Guía de tour en vivo</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="guide_type" value="audio_guide"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Audio Guía y Audífonos</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="guide_type" value="informative_brochures"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Folletos informativos</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="guide_type" value="no_guide"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Sin Guía / No es necesario seleccionar el lenguage (Ejemplo: Tickets de entrada, pasajes)</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" wire:model.live="guide_type" value="none"
+                           class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">No mostrar nada</span>
+                </label>
+            </div>
+        </div>
+
+        @if($guide_type === 'live_guide')
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Seleccione idiomas del guía de tour en vivo:
+                </label>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    @php
+                        $availableLanguages = [
+                            ['id' => 1, 'name' => 'Español', 'code' => 'ES'],
+                            ['id' => 2, 'name' => 'Inglés', 'code' => 'EN'],
+                            ['id' => 3, 'name' => 'Francés', 'code' => 'FR'],
+                            ['id' => 4, 'name' => 'Alemán', 'code' => 'DE'],
+                            ['id' => 5, 'name' => 'Portugués', 'code' => 'PT'],
+                            ['id' => 6, 'name' => 'Italiano', 'code' => 'IT'],
+                        ];
+                    @endphp
+                    @foreach($availableLanguages as $lang)
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model="guide_languages" value="{{ $lang['id'] }}"
+                                   class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ $lang['name'] }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    </div>
+
+    {{-- Resumen --}}
+    <div class="mt-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+        <p class="text-sm text-green-800 dark:text-green-200">
+            <strong>✓ Configuración guardada:</strong><br>
+            Política: <strong>{{ $policy_type === 'standard' ? 'Estándar' : 'Personalizada' }}</strong><br>
+            Anticipación: <strong>{{ $booking_anticipation_quantity }} {{ $booking_anticipation_unit === 'hours' ? 'horas' : 'días' }}</strong><br>
+            Datos requeridos: <strong>{{ $data_requirement_type === 'leader' ? 'Solo del líder' : 'De todos los pasajeros' }}</strong><br>
+            Campos operacionales: <strong>{{ count($operational_info_required ?? []) }}</strong><br>
+            Campos personales: <strong>{{ count($personal_info_required ?? []) }}</strong><br>
+            Tipo de recojo: <strong>{{ $pickup_type === 'meeting_point' ? 'Punto de presentación' : 'Recojo de hotel' }}</strong><br>
+            Tipo de guía: <strong>
+                @if($guide_type === 'live_guide') Guía de tour en vivo
+                @elseif($guide_type === 'audio_guide') Audio Guía
+                @elseif($guide_type === 'informative_brochures') Folletos informativos
+                @elseif($guide_type === 'no_guide') Sin Guía
+                @else No mostrar
+                @endif
+            </strong>
+            @if($guide_type === 'live_guide' && count($guide_languages ?? []) > 0)
+                <br>Idiomas de guía: <strong>{{ count($guide_languages ?? []) }} seleccionados</strong>
+            @endif
+        </p>
+    </div>
+</div>

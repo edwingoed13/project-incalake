@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Incalake Laravel 12</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        }
+        .product-code {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .product-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .product-subtitle {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .product-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+        .info-badge {
+            background: #f7f7f7;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        .category-tag {
+            background: #764ba2;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            margin-right: 5px;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+        }
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .section-title {
+            color: white;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test API - Incalake Laravel 12</h1>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-products">-</div>
+                <div class="stat-label">Productos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-categories">-</div>
+                <div class="stat-label">Categorías</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-languages">-</div>
+                <div class="stat-label">Idiomas</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">📦 Productos Migrados</h2>
+        <div id="products-container" class="loading">Cargando productos...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api';
+
+        async function loadStats() {
+            try {
+                const [products, categories, languages] = await Promise.all([
+                    fetch(`${API_BASE}/products`).then(r => r.json()),
+                    fetch(`${API_BASE}/categories`).then(r => r.json()),
+                    fetch(`${API_BASE}/languages`).then(r => r.json())
+                ]);
+
+                document.getElementById('total-products').textContent = products.meta.total;
+                document.getElementById('total-categories').textContent = categories.meta.total;
+                document.getElementById('total-languages').textContent = languages.meta.total;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/products?per_page=12`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayProducts(data.data);
+                } else {
+                    throw new Error('API returned error');
+                }
+            } catch (error) {
+                document.getElementById('products-container').innerHTML =
+                    `<div class="error">❌ Error cargando productos: ${error.message}</div>`;
+            }
+        }
+
+        function parseJSON(jsonString) {
+            try {
+                const parsed = JSON.parse(jsonString);
+                return parsed.es || parsed.en || 'Sin título';
+            } catch (e) {
+                return jsonString;
+            }
+        }
+
+        function displayProducts(products) {
+            const container = document.getElementById('products-container');
+
+            if (products.length === 0) {
+                container.innerHTML = '<div class="error">No hay productos para mostrar</div>';
+                return;
+            }
+
+            container.className = 'products-grid';
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <span class="product-code">${product.code}</span>
+                    <h3 class="product-title">${parseJSON(product.title)}</h3>
+                    <p class="product-subtitle">${parseJSON(product.subtitle)}</p>
+                    <div class="product-info">
+                        <span class="info-badge">⏱️ ${product.duration}</span>
+                        <span class="info-badge">👥 Capacidad: ${product.capacity}</span>
+                        ${product.categories.map(cat =>
+                            `<span class="category-tag">${cat.name}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load data on page load
+        loadStats();
+        loadProducts();
+    </script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('title', 'Dashboard') - Incalake Admin</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+    <!-- Cropper.js CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+    <!-- Vite Assets (Tailwind CSS + TipTap + Alpine.js) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Tailwind CDN solo como fallback en desarrollo -->
+    @if(!app()->isProduction())
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            // Suprimir advertencias no críticas en desarrollo
+            if (console && console.warn) {
+                const originalWarn = console.warn;
+                console.warn = function(...args) {
+                    const warningText = args[0]?.toString() || '';
+
+                    // Lista de advertencias a suprimir (solo informativas, no errores)
+                    const suppressWarnings = [
+                        'cdn.tailwindcss.com should not be used in production',
+                        'Google Maps JavaScript API has been loaded directly',
+                        'google.maps.places.Autocomplete is not available to new customers',
+                        'PlaceAutocompleteElement is recommended'
+                    ];
+
+                    // Verificar si debe suprimirse
+                    for (const warning of suppressWarnings) {
+                        if (warningText.includes(warning)) {
+                            return; // No mostrar esta advertencia
+                        }
+                    }
+
+                    // Mostrar otras advertencias normalmente
+                    originalWarn.apply(console, args);
+                };
+            }
+        </script>
+    @endif
+
+    <!-- NO cargar Alpine aquí - Livewire lo incluye automáticamente -->
+
+    <!-- Estilos para el editor de texto enriquecido -->
+    <style>
+        /* Forzar estilos visuales en el editor */
+        [contenteditable="true"] strong,
+        [contenteditable="true"] b {
+            font-weight: 700 !important;
+        }
+
+        [contenteditable="true"] em,
+        [contenteditable="true"] i {
+            font-style: italic !important;
+        }
+
+        [contenteditable="true"] u {
+            text-decoration: underline !important;
+        }
+
+        [contenteditable="true"] ul {
+            list-style-type: disc !important;
+            margin-left: 2rem !important;
+            padding-left: 1rem !important;
+        }
+
+        [contenteditable="true"] ol {
+            list-style-type: decimal !important;
+            margin-left: 2rem !important;
+            padding-left: 1rem !important;
+        }
+
+        [contenteditable="true"] li {
+            display: list-item !important;
+        }
+
+        /* Global font weight fix for bold visibility */
+        body {
+            font-weight: 400;
+        }
+
+        strong,
+        b,
+        .font-bold {
+            font-weight: 900 !important;
+            letter-spacing: -0.02em !important;
+        }
+
+        .font-semibold {
+            font-weight: 600 !important;
+        }
+
+        /* Tiptap editor - FORZAR visibilidad máxima */
+        .ProseMirror {
+            font-weight: 400 !important;
+        }
+
+        .ProseMirror strong,
+        .ProseMirror b {
+            font-weight: 900 !important;
+            text-shadow: 0.3px 0 0 currentColor !important;
+            letter-spacing: -0.03em !important;
+            -webkit-font-smoothing: auto !important;
+        }
+
+        .ProseMirror em,
+        .ProseMirror i {
+            font-style: italic !important;
+            font-family: Georgia, serif !important;
+        }
+
+        /* Dark mode */
+        .dark .ProseMirror strong,
+        .dark .ProseMirror b {
+            font-weight: 900 !important;
+            text-shadow: 0.3px 0 0 currentColor !important;
+        }
+
+        /* Windows specific hack */
+        @supports (-ms-ime-align:auto) {
+            .ProseMirror strong,
+            .ProseMirror b {
+                font-weight: 900 !important;
+                -webkit-text-stroke: 0.4px !important;
+            }
+        }
+    </style>
+
+    <!-- TipTap se carga desde los assets compilados de Vite (resources/js/tiptap-editor.js) -->
+
+    @livewireStyles
+</head>
+<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
+    <div class="min-h-screen">
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-200 ease-in-out">
+            <div class="flex flex-col h-full">
+                <!-- Logo -->
+                <div class="flex items-center justify-center h-16 bg-indigo-600 dark:bg-indigo-700">
+                    <h1 class="text-2xl font-bold text-white">Incalake CMS</h1>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex-1 overflow-y-auto p-4" x-data="{ openMenu: '' }">
+                    <ul class="space-y-1">
+                        <!-- Dashboard -->
+                        <li>
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+
+                        <!-- Reservas -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Reservas</div>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.bookings.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.bookings.*') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Clientes (Web/OTAs)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                </svg>
+                                Chatbot
+                            </a>
+                        </li>
+
+                        <!-- Servicios -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Servicios</div>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.tours.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.tours.*') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Tours
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.products.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.products.*') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                                Productos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.categories.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Categorías
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.languages.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.languages.*') ? 'bg-indigo-100 dark:bg-gray-700 font-semibold' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                                </svg>
+                                Idiomas
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                                Paquetes
+                            </a>
+                        </li>
+
+                        <!-- Finanzas -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Finanzas</div>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                Pagos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Reservas Rápidas (Culqi V4)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Facturación
+                            </a>
+                        </li>
+
+                        <!-- Operaciones -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Operaciones</div>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Calendario
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                                Disponibilidad
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                </svg>
+                                Proveedores
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                Guías y Recursos
+                            </a>
+                        </li>
+
+                        <!-- Marketing -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Marketing</div>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Analytics
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                </svg>
+                                Preguntas Web
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Galería Web
+                            </a>
+                        </li>
+
+                        <!-- Reportes -->
+                        <li class="mt-4">
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Reportes
+                            </a>
+                        </li>
+
+
+                        <!-- Cupones -->
+                        <li class="mt-4">
+                            <a href="{{ route('admin.coupons.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700 {{ request()->routeIs('admin.coupons.*') ? 'bg-indigo-50 dark:bg-gray-700' : '' }}">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Cupones
+                            </a>
+                        </li>
+                        <!-- Buses -->
+                        <li class="mt-4">
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                </svg>
+                                Buses
+                            </a>
+                        </li>
+
+                        <!-- Aeropuerto -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Aeropuerto</div>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                </svg>
+                                Traslados
+                            </a>
+                        </li>
+
+                        <!-- OTA Manager -->
+                        <li class="mt-4">
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                </svg>
+                                OTA Manager
+                            </a>
+                        </li>
+
+                        <!-- Configuración -->
+                        <li class="mt-4">
+                            <div class="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Configuración</div>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-indigo-50 dark:hover:bg-gray-700">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                Usuarios y Roles
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- User Section -->
+                <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                    <!-- Dark Mode Toggle -->
+                    <div class="mb-3 flex items-center justify-between px-2">
+                        <span class="text-sm text-gray-700 dark:text-gray-200">Tema</span>
+                        <button @click="darkMode = !darkMode" class="relative inline-flex items-center h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" :class="darkMode ? 'bg-indigo-600' : 'bg-gray-300'">
+                            <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform" :class="darkMode ? 'translate-x-6' : 'translate-x-1'"></span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">
+                                {{ substr(auth()->user()->name, 0, 1) }}
+                            </div>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst(auth()->user()->role) }}</p>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="ml-64">
+            <!-- Top Bar -->
+            <header class="bg-white dark:bg-gray-800 shadow">
+                <div class="px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+                            @yield('page-title', 'Dashboard')
+                        </h2>
+                        <div class="flex items-center space-x-4">
+                            @yield('header-actions')
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                @if(session('success'))
+                    <div class="mb-4 px-4 py-3 rounded-lg bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="mb-4 px-4 py-3 rounded-lg bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                @yield('content')
+            </main>
+        </div>
+    </div>
+
+    @stack('scripts')
+    @livewireScripts
+
+    <!-- Google Maps Places API y Eventos Personalizados -->
+    <script>
+        let autocompleteInstance = null;
+        let googleLoaded = false;
+
+        function initGooglePlaces() {
+            // Verificar que Google Maps esté cargado
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                // Silenciosamente esperar - sin console.log
+                return;
+            }
+
+            googleLoaded = true;
+            const input = document.getElementById('city_autocomplete');
+
+            // Solo inicializar si el input existe y no tiene autocomplete ya
+            if (input && !input.hasAttribute('data-autocomplete-initialized')) {
+                input.setAttribute('data-autocomplete-initialized', 'true');
+
+                try {
+                    // Usar solo la API clásica que funciona correctamente
+                    // La nueva PlaceAutocompleteElement tiene problemas con las configuraciones
+                    autocompleteInstance = new google.maps.places.Autocomplete(input, {
+                        types: ['(cities)'],
+                        fields: ['formatted_address', 'name', 'address_components']
+                    });
+
+                    autocompleteInstance.addListener('place_changed', function() {
+                        const place = autocompleteInstance.getPlace();
+                        if (place && place.formatted_address) {
+                            // Actualizar el valor sin disparar eventos de Livewire inmediatamente
+                            input.value = place.formatted_address;
+
+                            // Usar setTimeout para permitir que Google Places cierre el dropdown
+                            setTimeout(() => {
+                                // Disparar evento blur para actualizar Livewire
+                                input.dispatchEvent(new Event('blur', { bubbles: true }));
+                            }, 100);
+                        }
+                    });
+
+                    // Inicializado correctamente - sin console.log
+                } catch (error) {
+                    // Solo mostrar errores reales, no mensajes informativos
+                    console.error('Error inicializando Google Places:', error);
+                }
+            }
+        }
+
+        // Inicializar cuando Livewire cargue
+        document.addEventListener('livewire:initialized', () => {
+            initGooglePlaces();
+
+            // Listener para SweetAlert modals
+            Livewire.on('swal:modal', ({ type, title, text }) => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+
+                Toast.fire({
+                    icon: type,
+                    title: title,
+                    text: text
+                });
+            });
+
+            // Listener para redirección después de guardar
+            Livewire.on('redirect-after-save', ({ url, delay }) => {
+                setTimeout(() => {
+                    window.location.href = url;
+                }, delay || 2000);
+            });
+        });
+
+        // Re-inicializar después de navegación de Livewire (cuando cambie de step)
+        Livewire.hook('morph.updated', ({ el, component }) => {
+            // Solo reinicializar si es necesario
+            initGooglePlaces();
+        });
+    </script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Tiptap Editor -->
+    <script type="module">
+        import { Editor } from 'https://cdn.jsdelivr.net/npm/@tiptap/core@2.1.13/+esm';
+        import StarterKit from 'https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.1.13/+esm';
+        import Underline from 'https://cdn.jsdelivr.net/npm/@tiptap/extension-underline@2.1.13/+esm';
+
+        window.setupEditor = function(content) {
+            let editor = null;
+
+            return {
+                content: content,
+                editor: null,
+
+                init(element) {
+                    // Crear el editor con configuración mejorada para bold
+                    editor = new Editor({
+                        element: element,
+                        extensions: [
+                            StarterKit,
+                            Underline
+                        ],
+                        content: this.content,
+                        onUpdate: ({ editor }) => {
+                            this.content = editor.getHTML();
+                        },
+                        editorProps: {
+                            attributes: {
+                                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none',
+                                style: 'font-family: inherit;'
+                            }
+                        },
+                        parseOptions: {
+                            preserveWhitespace: 'full'
+                        }
+                    });
+
+                    this.editor = editor;
+
+                    // Watch para cambios externos (desde Livewire)
+                    this.$watch('content', (newContent) => {
+                        // Si el contenido es diferente, actualizar el editor
+                        if (newContent !== editor.getHTML()) {
+                            editor.commands.setContent(newContent, false);
+                        }
+                    });
+                },
+
+                // Cleanup cuando se destruye el componente
+                destroy() {
+                    if (editor) {
+                        editor.destroy();
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Maps API - Carga simple y directa -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.api_key') }}&libraries=places&callback=initGooglePlaces">
+    </script>
+    <script src="{{ asset('js/pickup-modal-complete.js') }}?v={{ time() }}"></script>
+    <script>
+    window.updateWireModel = function(field, value) {
+        const livewireEl = document.querySelector('[wire\:id]');
+        if (livewireEl) {
+            const component = window.Livewire.find(livewireEl.getAttribute('wire:id'));
+            if (component) {
+                component.set(field, value);
+            }
+        }
+    };
+    </script>
+</body>
+</html>
+

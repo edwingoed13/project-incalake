@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: incalake_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-incalake_tours}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-incalake}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - incalake_network
+
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    container_name: incalake_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - incalake_network
+
+  # PHP Laravel Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: incalake_backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    ports:
+      - "${BACKEND_PORT:-8001}:8000"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-incalake_tours}
+      DB_USERNAME: ${DB_USERNAME:-incalake}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    networks:
+      - incalake_network
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: incalake_nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+    networks:
+      - incalake_network
+
+  # Node.js for Frontend Development
+  frontend:
+    image: node:20-alpine
+    container_name: incalake_frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
+    environment:
+      NUXT_PUBLIC_API_BASE: http://nginx/api
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    networks:
+      - incalake_network
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - backend
+
+  # Node.js for Admin Panel Development
+  admin:
+    image: node:20-alpine
+    container_name: incalake_admin
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./admin:/app
+      - admin_node_modules:/app/node_modules
+    ports:
+      - "${ADMIN_PORT:-54112}:3000"
+    environment:
+      NUXT_PUBLIC_API_BASE: http://nginx/api
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    networks:
+      - incalake_network
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - backend
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: incalake_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${DB_USERNAME:-incalake}
+      PMA_PASSWORD: ${DB_PASSWORD:-root}
+      UPLOAD_LIMIT: 300M
+    depends_on:
+      - mysql
+    networks:
+      - incalake_network
+
+  # Mailhog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: incalake_mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_PORT:-1025}:1025"
+      - "${MAILHOG_WEB_PORT:-8025}:8025"
+    networks:
+      - incalake_network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  frontend_node_modules:
+    driver: local
+  admin_node_modules:
+    driver: local
+
+networks:
+  incalake_network:
+    driver: bridge

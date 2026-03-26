@@ -1,0 +1,99 @@
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.nuxt/
+.output/
+.nitro/
+.cache/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Laravel specific
+/backend/bootstrap/cache/
+/backend/storage/*.key
+/backend/storage/app/public/
+/backend/storage/framework/cache/data/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/testing/*
+/backend/storage/framework/views/*
+/backend/storage/logs/*
+/backend/public/hot
+/backend/public/storage
+/backend/public/mix-manifest.json
+/backend/.phpunit.result.cache
+/backend/Homestead.json
+/backend/Homestead.yaml
+/backend/auth.json
+
+# Nuxt specific
+/frontend/.nuxt/
+/frontend/.output/
+/frontend/dist/
+/admin/.nuxt/
+/admin/.output/
+/admin/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+.phpunit.result.cache
+
+# Docker
+docker/mysql/data/
+docker/redis/data/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor directories and files
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.temp/
+.tmp/
+
+# Package manager locks (keep for consistency)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+# composer.lock

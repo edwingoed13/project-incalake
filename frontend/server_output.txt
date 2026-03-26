@@ -1,0 +1,21 @@
+│
+●  [32mNuxt [1m4.4.2[22m[39m[90m (with [39m[90mNitro [1m2.13.2[22m[39m[90m, Vite [1m7.3.1[22m[39m[90m and Vue [1m3.5.30[22m[39m[90m)[39m
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3000[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+
+[41m[30m ERROR [39m[49m Could not load [36m@nuxtjs/tailwindcss[39m. Is it installed?
+
+    [90mat [39mloadNuxtModuleInstance ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/kit/dist/index.mjs:813:8[39m)
+    [90mat [39minstallModules ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/kit/dist/index.mjs:620:21[39m)
+    [90mat [39masync initNuxt ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/nuxt/dist/index.mjs:7151:3[39m)
+    [90mat [39masync #initializeNuxt ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:493:3[39m)
+    [90mat [39masync NuxtDevServer.init ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:385:3[39m)
+    [90mat [39masync initialize ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:690:2[39m)
+    [90mat [39masync Object.run ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-CY-a7lb7.mjs:208:51[39m)
+    [90mat [39masync runCommand ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:188:47[39m)
+    [90mat [39masync runCommand ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:185:21[39m)
+    [90mat [39masync runMain ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:285:10[39m) 
+
+

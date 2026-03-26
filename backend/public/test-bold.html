@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Bold Text</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Diferentes métodos para aplicar negrita */
+        .test-1 { font-weight: bold; }
+        .test-2 { font-weight: 700; }
+        .test-3 { font-weight: 900; }
+        .test-4 strong { font-weight: 900 !important; }
+
+        /* Prueba con diferentes fuentes */
+        .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .font-mono { font-family: Consolas, Monaco, "Courier New", monospace; }
+        .font-serif { font-family: Georgia, serif; }
+    </style>
+</head>
+<body class="p-8 bg-gray-100">
+    <h1 class="text-2xl mb-6">Pruebas de Texto en Negrita</h1>
+
+    <div class="space-y-4">
+        <!-- Prueba 1: HTML básico -->
+        <div class="bg-white p-4 rounded">
+            <h2 class="text-lg mb-2">HTML Básico:</h2>
+            <p>Texto normal</p>
+            <p><strong>Texto con etiqueta strong</strong></p>
+            <p><b>Texto con etiqueta b</b></p>
+            <p style="font-weight: 900;">Texto con style inline font-weight: 900</p>
+        </div>
+
+        <!-- Prueba 2: Clases CSS -->
+        <div class="bg-white p-4 rounded">
+            <h2 class="text-lg mb-2">Con Clases CSS:</h2>
+            <p class="test-1">Texto con font-weight: bold</p>
+            <p class="test-2">Texto con font-weight: 700</p>
+            <p class="test-3">Texto con font-weight: 900</p>
+            <div class="test-4">
+                <p><strong>Strong con font-weight: 900 !important</strong></p>
+            </div>
+        </div>
+
+        <!-- Prueba 3: Tailwind -->
+        <div class="bg-white p-4 rounded">
+            <h2 class="text-lg mb-2">Con Tailwind CSS:</h2>
+            <p class="font-normal">Texto con font-normal</p>
+            <p class="font-semibold">Texto con font-semibold</p>
+            <p class="font-bold">Texto con font-bold</p>
+            <p class="font-extrabold">Texto con font-extrabold</p>
+            <p class="font-black">Texto con font-black</p>
+        </div>
+
+        <!-- Prueba 4: Diferentes fuentes -->
+        <div class="bg-white p-4 rounded">
+            <h2 class="text-lg mb-2">Con Diferentes Fuentes:</h2>
+            <div class="font-sans">
+                <p>Sans-serif normal</p>
+                <p><strong>Sans-serif bold</strong></p>
+            </div>
+            <div class="font-mono mt-2">
+                <p>Monospace normal</p>
+                <p><strong>Monospace bold</strong></p>
+            </div>
+            <div class="font-serif mt-2">
+                <p>Serif normal</p>
+                <p><strong>Serif bold</strong></p>
+            </div>
+        </div>
+
+        <!-- Prueba 5: Tiptap simulado -->
+        <div class="bg-white p-4 rounded">
+            <h2 class="text-lg mb-2">Simulación de Tiptap (ProseMirror):</h2>
+            <div class="ProseMirror">
+                <p>Texto normal en ProseMirror</p>
+                <p><strong>Texto bold en ProseMirror</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript para debug -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Obtener todos los elementos strong y b
+            const boldElements = document.querySelectorAll('strong, b, .font-bold, .font-extrabold, .font-black');
+
+            console.log('=== DEBUG DE ESTILOS ===');
+            boldElements.forEach((el, index) => {
+                const styles = window.getComputedStyle(el);
+                console.log(`Elemento ${index + 1}:`, {
+                    tag: el.tagName,
+                    class: el.className,
+                    fontWeight: styles.fontWeight,
+                    fontFamily: styles.fontFamily,
+                    color: styles.color,
+                    texto: el.textContent.substring(0, 20)
+                });
+            });
+        });
+    </script>
+</body>
+</html>

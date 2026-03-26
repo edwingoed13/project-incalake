@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tour Wizard - Content &amp; SEO</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#330df2",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#131022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="flex h-screen overflow-hidden">
+<!-- Persistent Left Progress Sidebar -->
+<aside class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark flex flex-col justify-between p-6">
+<div class="space-y-8">
+<div>
+<h1 class="text-xl font-bold tracking-tight text-primary">Tour Wizard</h1>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">Step 2 of 5</p>
+</div>
+<nav class="space-y-1">
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">info</span>
+<span class="text-sm font-medium">General info</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px] fill-1">edit_note</span>
+<span class="text-sm font-semibold">Content &amp; SEO</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">image</span>
+<span class="text-sm font-medium">Media</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+<span class="text-sm font-medium">Pricing</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+<span class="text-sm font-medium">Review</span>
+</div>
+</nav>
+</div>
+<div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+<span class="material-symbols-outlined text-sm">save</span>
+<span>Save Draft</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- Sticky Top Header -->
+<header class="sticky top-0 z-10 flex items-center justify-between h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-lg">auto_awesome</span>
+</div>
+<h2 class="text-base font-bold text-slate-900 dark:text-slate-100">Tour Builder</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-5 py-2 rounded-lg text-slate-600 dark:text-slate-400 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Preview</button>
+<button class="px-6 py-2 rounded-lg bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">Publish</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:border-slate-800 mx-2"></div>
+<div class="w-10 h-10 rounded-full border-2 border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="User profile avatar close up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4nb_uDCE5CP1FznfJf5tjty9_mwaolDXIYa_6H2yJ4HsMWCza4k_p27SIU6NUQHeIaMPixMtVN-Lmsm7tq6B7tPF4raqFZ1EYgXVlo-daVQKZuEzqSXk49UZouQL-sEfC8sHCdldoK6wXSpOxVsxzA52Ct8dbejo1jRa0Bu9DcuR6mrVVplLNIddiVpmmOrX60zvQeFuDwQJhqkzHt2-7wVCm3fQoNQLM7tJfooClh81pYVyzkKP-11VwFjmvcdBUenvoWZa8U2yE"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Page Content -->
+<main class="flex-1 overflow-y-auto p-8 flex gap-8">
+<div class="flex-1 max-w-4xl space-y-8">
+<!-- Language Switcher Tabs -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="flex border-b border-slate-100 dark:border-slate-800 px-6">
+<button class="py-4 px-4 border-b-2 border-primary text-primary font-bold text-sm">English (EN)</button>
+<button class="py-4 px-4 border-b-2 border-transparent text-slate-400 dark:text-slate-500 font-medium text-sm hover:text-slate-600 transition-colors">Spanish (ES)</button>
+<button class="py-4 px-4 border-b-2 border-transparent text-slate-400 dark:text-slate-500 font-medium text-sm hover:text-slate-600 transition-colors">French (FR)</button>
+<button class="py-4 px-4 border-b-2 border-transparent text-slate-400 dark:text-slate-500 font-medium text-sm hover:text-slate-600 transition-colors">German (DE)</button>
+</div>
+<!-- Form Content -->
+<div class="p-8 space-y-10">
+<!-- Tour Description Section -->
+<section class="space-y-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">Tour Content</h3>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Tour Title</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400 text-sm" placeholder="e.g. Magical Paris Sunset Tour" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Main Description</label>
+<textarea class="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400 text-sm" placeholder="Describe the magical experience tourists will have..." rows="4"></textarea>
+</div>
+</div>
+</section>
+<!-- SEO Section -->
+<section class="space-y-6 border-t border-slate-100 dark:border-slate-800 pt-10">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">search</span>
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">SEO Settings</h3>
+</div>
+<span class="text-xs font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Search Preview</span>
+</div>
+<div class="space-y-6">
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Meta Title</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400 text-sm" placeholder="Magical Paris Sunset Tour | Book Now" type="text"/>
+<p class="text-[11px] text-slate-400">Recommended: 50-60 characters</p>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">Meta Description</label>
+<textarea class="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary px-4 py-3 placeholder:text-slate-400 text-sm" placeholder="Experience the romance of Paris at twilight with our guided sunset tour through Montmartre and the Seine." rows="3"></textarea>
+<p class="text-[11px] text-slate-400">Recommended: 150-160 characters</p>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300">URL Slug</label>
+<div class="flex">
+<span class="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-medium">
+                                                tours.com/fr/
+                                            </span>
+<input class="flex-1 rounded-r-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-primary focus:border-primary px-4 py-3 text-sm" type="text" value="magical-paris-sunset"/>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<!-- Optimization Sidebars (Right) -->
+<aside class="w-80 space-y-6">
+<!-- Content Score Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+<h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-6">Optimization Score</h4>
+<div class="flex flex-col items-center">
+<div class="relative flex items-center justify-center">
+<!-- Circular Progress -->
+<svg class="w-32 h-32 transform -rotate-90">
+<circle class="text-slate-100 dark:text-slate-800" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364" stroke-dashoffset="100" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 leading-none">72</span>
+<span class="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-widest">Good</span>
+</div>
+</div>
+<p class="text-xs text-center text-slate-500 dark:text-slate-400 mt-6 leading-relaxed">
+                                Complete the checklist below to improve your ranking and conversion.
+                            </p>
+</div>
+</div>
+<!-- SEO Checklist Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">SEO Checklist</h4>
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">3/6 Done</span>
+</div>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Title contains keywords</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-tighter">Done</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Slug is user-friendly</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-tighter">Done</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Description length</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-tighter">Done</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-200 dark:text-slate-700 text-lg">circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Add 3+ alt text images</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-tighter">Missing</span>
+</div>
+</li>
+<li class="flex items-start gap-3 opacity-60">
+<span class="material-symbols-outlined text-slate-200 dark:text-slate-700 text-lg">circle</span>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Internal link structure</span>
+<span class="text-[10px] text-slate-400 uppercase tracking-tighter">Missing</span>
+</div>
+</li>
+</ul>
+<button class="w-full mt-6 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary text-[11px] font-bold hover:bg-primary/10 transition-colors uppercase tracking-widest">
+                            Analyze Content
+                        </button>
+</div>
+</aside>
+</main>
+</div>
+</div>
+</body></html>

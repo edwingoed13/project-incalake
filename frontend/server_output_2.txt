@@ -1,0 +1,35 @@
+│
+●  [32mNuxt [1m4.4.2[22m[39m[90m (with [39m[90mNitro [1m2.13.2[22m[39m[90m, Vite [1m7.3.1[22m[39m[90m and Vue [1m3.5.30[22m[39m[90m)[39m
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3000[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+[90m[[90mnuxt:tailwindcss[90m][39m [36mℹ[39m Using default Tailwind CSS file
+[33m  ➜ DevTools: [39m[2mpress [22m[32mShift[39m[2m + [22m[32mAlt[39m[2m + [22m[32mD[39m[2m in the browser (v4.0.0-alpha.3)[22m
+
+
+[90m[[90m@nuxtjs/og-image[90m][39m [43m[30m WARN [39m[49m Nuxt OG Image is enabled but SSR is disabled.
+
+You should enable SSR ([36mssr: true[39m) or disable the module ([36mogImage: { enabled: false }[39m).
+
+
+[90m[[90mnuxt-schema-org[90m][39m [43m[30m WARN [39m[49m You are using Schema.org with SSR disabled. This is not recommended, Google may not detect your Schema.org, and it adds extra page weight
+
+
+[41m[30m ERROR [39m[49m It looks like you're trying to use [36mtailwindcss[39m directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package, so to continue using Tailwind CSS with PostCSS you'll need to install [36m@tailwindcss/postcss[39m and update your PostCSS configuration.
+
+    [90mat [39mfa ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/tailwindcss/dist/chunk-F4544Y4M.mjs:38:1643[39m)
+    [90mat [39mresolveCSSOptions ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/vite-builder/dist/index.mjs:1593:30[39m)
+    [90mat [39masync bundle ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/vite-builder/dist/index.mjs:2320:8[39m)
+    [90mat [39masync bundle ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/nuxt/dist/index.mjs:8514:5[39m)
+    [90mat [39masync build ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/nuxt/dist/index.mjs:8365:3[39m)
+    [90mat [39masync Promise.all ([36mindex 1[39m)
+    [90mat [39masync #initializeNuxt ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:522:3[39m)
+    [90mat [39masync NuxtDevServer.init ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:385:3[39m)
+    [90mat [39masync initialize ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-D5McAnmo.mjs:690:2[39m)
+    [90mat [39masync Object.run ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/dist/dev-CY-a7lb7.mjs:208:51[39m)
+    [90mat [39masync runCommand ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:188:47[39m)
+    [90mat [39masync runCommand ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:185:21[39m)
+    [90mat [39masync runMain ([36m/C:/xampp/htdocs/web/tour-nuxt4/node_modules/@nuxt/cli/node_modules/citty/dist/index.mjs:285:10[39m) 
+
+

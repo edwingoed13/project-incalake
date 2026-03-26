@@ -1,0 +1,68 @@
+{
+  "name": "incalake-full-stack",
+  "version": "1.0.0",
+  "description": "Tour Management System - Full Stack Monorepo",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && composer install && cd ../frontend && npm install && cd ../admin && npm install",
+    "install:backend": "cd backend && composer install",
+    "install:frontend": "cd frontend && npm install",
+    "install:admin": "cd admin && npm install",
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:backend": "cd backend && php artisan serve --port=8001",
+    "dev:frontend": "cd frontend && npm run dev -- --port 3001",
+    "dev:admin": "cd admin && npm run dev -- --port 54112",
+    "build": "npm run build:frontend && npm run build:admin",
+    "build:frontend": "cd frontend && npm run build",
+    "build:admin": "cd admin && npm run build",
+    "preview:frontend": "cd frontend && npm run preview",
+    "preview:admin": "cd admin && npm run preview",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:admin",
+    "test:backend": "cd backend && php artisan test",
+    "test:frontend": "cd frontend && npm run test",
+    "test:admin": "cd admin && npm run test",
+    "lint": "npm run lint:frontend && npm run lint:admin",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:admin": "cd admin && npm run lint",
+    "clean": "npm run clean:backend && npm run clean:frontend && npm run clean:admin",
+    "clean:backend": "cd backend && rm -rf vendor bootstrap/cache storage/logs/*.log",
+    "clean:frontend": "cd frontend && rm -rf node_modules .nuxt .output dist",
+    "clean:admin": "cd admin && rm -rf node_modules .nuxt .output dist",
+    "migrate": "cd backend && php artisan migrate",
+    "migrate:fresh": "cd backend && php artisan migrate:fresh --seed",
+    "seed": "cd backend && php artisan db:seed",
+    "cache:clear": "cd backend && php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:clear",
+    "optimize": "cd backend && composer install --optimize-autoloader --no-dev && php artisan config:cache && php artisan route:cache && php artisan view:cache",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "docker:logs": "docker-compose logs -f",
+    "docker:exec": "docker-compose exec"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "frontend",
+    "admin"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/incalake-full-stack.git"
+  },
+  "keywords": [
+    "tours",
+    "travel",
+    "laravel",
+    "nuxt",
+    "vue",
+    "fullstack",
+    "monorepo"
+  ],
+  "author": "Incalake Development Team",
+  "license": "MIT"
+}

@@ -1,0 +1,234 @@
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use App\Models\Tour;
+use App\Models\City;
+use App\Models\Language;
+use App\Models\AgeStage;
+use App\Models\CategoryNew;
+use Illuminate\Support\Str;
+
+class TourWizard extends Component
+{
+    use WithFileUploads;
+
+    public $currentStep = 1;
+    public $totalSteps = 5;
+    public $tourId = null;
+
+    // Step 1: Basic Information
+    public $code, $city_id, $service_type = 'tour', $status = 'draft';
+    public $difficulty = 'moderate', $target_audience = 'all';
+    public $capacity = 999, $cupos, $duration_days = 1, $duration_hours;
+    public $start_time, $booking_anticipation_hours = 24, $data_requirement = 1;
+    public $index_status = 'index', $follow_status = 'follow', $active = true;
+
+    // Step 2: Translations & SEO
+    public $translations = [];
+
+    // Step 3: Prices
+    public $prices = [];
+
+    // Step 5: Categories
+    public $selectedCategories = [];
+
+    // Collections
+    public $cities, $languages, $ageStages, $categories;
+
+    protected function rules()
+    {
+        $rules = [];
+
+        if ($this->currentStep == 1) {
+            $rules = [
+                'code' => 'required|string|max:100|unique:tours,code,' . $this->tourId,
+                'city_id' => 'required|exists:cities,id',
+                'service_type' => 'required|in:tour,package,experience,transport',
+                'difficulty' => 'required|in:easy,moderate,hard',
+                'capacity' => 'required|integer|min:1',
+                'duration_days' => 'required|integer|min:1',
+            ];
+        }
+
+        if ($this->currentStep == 2) {
+            foreach ($this->languages as $language) {
+                $rules["translations.{$language->id}.h1_title"] = 'required|string|max:100';
+                $rules["translations.{$language->id}.meta_title"] = 'required|string|max:60';
+                $rules["translations.{$language->id}.meta_description"] = 'required|string|max:160';
+                $rules["translations.{$language->id}.slug"] = 'required|string|max:150';
+            }
+        }
+
+        if ($this->currentStep == 3) {
+            foreach ($this->ageStages as $ageStage) {
+                $rules["prices.{$ageStage->id}.amount"] = 'required|numeric|min:0';
+            }
+        }
+
+        return $rules;
+    }
+
+    public function mount($tourId = null)
+    {
+        $this->tourId = $tourId;
+
+        $this->cities = City::active()->orderBy('name')->get();
+        $this->languages = Language::whereIn('code', ['ES', 'EN', 'FR', 'DE', 'PT', 'IT'])->get();
+        $this->ageStages = AgeStage::orderBy('min_age')->get();
+        $this->categories = CategoryNew::where('active', true)->get();
+
+        foreach ($this->languages as $language) {
+            $this->translations[$language->id] = [
+                'h1_title' => '', 'meta_title' => '', 'meta_description' => '', 'slug' => '',
+                'short_description' => '', 'long_description' => '',
+                'og_title' => '', 'og_description' => '',
+                'twitter_title' => '', 'twitter_description' => '',
+                'ads_headline' => '', 'ads_description' => '',
+                'cta_text' => $language->code == 'ES' ? 'Reservar Ahora' : 'Book Now',
+            ];
+        }
+
+        foreach ($this->ageStages as $ageStage) {
+            $this->prices[$ageStage->id] = [
+                'amount' => 0, 'active' => true, 'price_type' => 'per_person',
+                'min_quantity' => 1, 'max_quantity' => null,
+            ];
+        }
+
+        if ($this->tourId) {
+            $this->loadTour();
+        }
+    }
+
+    protected function loadTour()
+    {
+        $tour = Tour::with(['translations', 'prices', 'categories'])->findOrFail($this->tourId);
+
+        $this->fill($tour->only(['code', 'city_id', 'service_type', 'status', 'difficulty', 'target_audience',
+            'capacity', 'cupos', 'duration_days', 'duration_hours', 'start_time',
+            'booking_anticipation_hours', 'data_requirement', 'index_status', 'follow_status', 'active']));
+
+        foreach ($tour->translations as $translation) {
+            $this->translations[$translation->language_id] = $translation->only([
+                'h1_title', 'meta_title', 'meta_description', 'slug', 'short_description',
+                'long_description', 'og_title', 'og_description', 'twitter_title',
+                'twitter_description', 'ads_headline', 'ads_description', 'cta_text'
+            ]);
+        }
+
+        foreach ($tour->prices as $price) {
+            $this->prices[$price->age_stage_id] = $price->only(['amount', 'active', 'price_type', 'min_quantity', 'max_quantity']);
+        }
+
+        $this->selectedCategories = $tour->categories->pluck('id')->toArray();
+    }
+
+    public function nextStep()
+    {
+        $this->validate();
+        if ($this->currentStep < $this->totalSteps) {
+            $this->currentStep++;
+        }
+    }
+
+    public function previousStep()
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
+    }
+
+    public function goToStep($step)
+    {
+        if ($step >= 1 && $step <= $this->totalSteps) {
+            $this->currentStep = $step;
+        }
+    }
+
+    public function generateSlug($languageId)
+    {
+        if (!empty($this->translations[$languageId]['h1_title'])) {
+            $this->translations[$languageId]['slug'] = Str::slug($this->translations[$languageId]['h1_title']);
+        }
+    }
+
+    public function autoFillSeoFields($languageId)
+    {
+        $t = &$this->translations[$languageId];
+
+        if (empty($t['meta_title']) && !empty($t['h1_title'])) {
+            $t['meta_title'] = Str::limit($t['h1_title'], 60, '');
+        }
+        if (empty($t['meta_description']) && !empty($t['short_description'])) {
+            $t['meta_description'] = Str::limit($t['short_description'], 160, '');
+        }
+        if (empty($t['og_title'])) $t['og_title'] = $t['meta_title'];
+        if (empty($t['og_description'])) $t['og_description'] = $t['meta_description'];
+        if (empty($t['twitter_title'])) $t['twitter_title'] = $t['meta_title'];
+        if (empty($t['twitter_description'])) $t['twitter_description'] = $t['meta_description'];
+    }
+
+    public function save()
+    {
+        $this->validate();
+
+        \DB::beginTransaction();
+
+        try {
+            $tour = Tour::updateOrCreate(
+                ['id' => $this->tourId],
+                [
+                    'code' => $this->code, 'city_id' => $this->city_id,
+                    'service_type' => $this->service_type, 'status' => $this->status,
+                    'difficulty' => $this->difficulty, 'target_audience' => $this->target_audience,
+                    'capacity' => $this->capacity, 'cupos' => $this->cupos,
+                    'duration_days' => $this->duration_days, 'duration_hours' => $this->duration_hours,
+                    'start_time' => $this->start_time,
+                    'booking_anticipation_hours' => $this->booking_anticipation_hours,
+                    'data_requirement' => $this->data_requirement,
+                    'index_status' => $this->index_status, 'follow_status' => $this->follow_status,
+                    'active' => $this->active,
+                ]
+            );
+
+            foreach ($this->translations as $languageId => $translationData) {
+                if (!empty($translationData['h1_title'])) {
+                    $tour->translations()->updateOrCreate(
+                        ['language_id' => $languageId],
+                        $translationData
+                    );
+                }
+            }
+
+            foreach ($this->prices as $ageStageId => $priceData) {
+                if ($priceData['amount'] > 0) {
+                    $tour->prices()->updateOrCreate(
+                        ['age_stage_id' => $ageStageId],
+                        array_merge($priceData, ['tour_id' => $tour->id])
+                    );
+                }
+            }
+
+            if (!empty($this->selectedCategories)) {
+                $tour->categories()->sync($this->selectedCategories);
+            }
+
+            \DB::commit();
+
+            session()->flash('success', 'Tour guardado exitosamente');
+            return redirect()->route('admin.tours.index');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            session()->flash('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.tour-wizard');
+    }
+}
