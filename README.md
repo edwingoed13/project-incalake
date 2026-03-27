@@ -144,10 +144,22 @@ docker-compose up
 
 ## 🌐 URLs de Acceso
 
-- **API Backend**: http://localhost:8001
+- **API Backend**: http://localhost:8001/api
 - **Frontend Tours**: http://localhost:3001
 - **Admin Panel**: http://localhost:54112
-- **API Documentation**: http://localhost:8001/api/documentation
+- **phpMyAdmin**: http://localhost/phpmyadmin
+
+## ⚠️ Solución de Problemas
+
+Si encuentras problemas durante la instalación o ejecución, consulta nuestra **[Guía de Solución de Problemas](./TROUBLESHOOTING.md)** que incluye soluciones para:
+
+- ❌ Errores de CSS / Tailwind
+- ❌ Problemas con dependencias npm
+- ❌ Errores de PHP/Composer
+- ❌ Problemas de conexión a MySQL
+- ❌ Puertos en uso
+- ❌ Persistencia de sesión en Admin
+- ❌ Y más...
 
 ## 🔑 Variables de Entorno
 
@@ -281,7 +293,31 @@ Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
 
 ## 📞 Soporte
 
-Para soporte, email a support@incalake.com o abre un issue en GitHub.
+Para soporte, abre un issue en GitHub: https://github.com/edwingoed13/project-incalake/issues
+
+## 📋 Changelog
+
+### v1.1.0 (2026-03-27)
+
+**Frontend:**
+- ✅ Modo claro por defecto en todas las páginas
+- ✅ Navbar con texto oscuro sobre fondo claro (mejor contraste)
+- ✅ Corregidos errores de CSS en componentes de tours
+- ✅ Removido lazy loading para carga más rápida
+- ✅ Agregado padding superior en páginas de detalle de tours
+- ✅ Eliminado archivo duplicado tours.vue
+
+**Admin Panel:**
+- ✅ Modo claro por defecto con persistencia en localStorage
+- ✅ Sistema de autenticación persistente (no se pierde al recargar)
+- ✅ Ruta de login corregida de /admin/login a /login
+- ✅ Toggle para mostrar/ocultar contraseña en el login
+- ✅ Login simplificado (removidos elementos innecesarios)
+- ✅ Selector de tema con persistencia entre páginas
+
+**Documentación:**
+- ✅ Agregada guía completa de solución de problemas
+- ✅ README actualizado con información de troubleshooting
 
 ---
 
