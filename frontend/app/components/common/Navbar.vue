@@ -1,11 +1,11 @@
 <template>
   <!-- Sticky Premium Navbar -->
-  <header 
+  <header
     class="fixed top-0 z-[100] w-full transition-all duration-500 border-b"
     :class="[
-      isScrolled 
-        ? 'bg-white/90 dark:bg-background-dark/90 backdrop-blur-xl border-slate-100 dark:border-slate-800 py-3 shadow-xl shadow-black/5' 
-        : 'bg-transparent border-transparent py-5'
+      isScrolled
+        ? 'bg-white/95 backdrop-blur-xl border-slate-200 py-3 shadow-lg'
+        : 'bg-white/80 backdrop-blur-md border-slate-100 py-5'
     ]"
   >
     <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -15,15 +15,13 @@
            <span class="material-symbols-outlined font-bold text-2xl">explore</span>
         </div>
         <div class="flex flex-col">
-          <h1 
-            class="text-xl font-black tracking-tighter uppercase italic leading-none transition-colors"
-            :class="isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'"
+          <h1
+            class="text-xl font-black tracking-tighter uppercase italic leading-none transition-colors text-slate-900"
           >
             Incalake
           </h1>
-          <span 
-            class="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 self-start"
-            :class="isScrolled ? 'text-slate-400' : 'text-white/60'"
+          <span
+            class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 self-start"
           >
             Editorial Voyager
           </span>
@@ -32,12 +30,11 @@
 
       <!-- Center Navigation Links -->
       <nav class="hidden md:flex items-center gap-10">
-        <NuxtLink 
-          v-for="link in navLinks" 
-          :key="link.path" 
-          :to="link.path" 
-          class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group"
-          :class="isScrolled ? 'text-slate-600 dark:text-slate-300' : 'text-white/80 hover:text-white'"
+        <NuxtLink
+          v-for="link in navLinks"
+          :key="link.path"
+          :to="link.path"
+          class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group text-slate-600"
         >
           {{ link.label }}
           <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
@@ -46,9 +43,8 @@
 
       <!-- Right Actions Section -->
       <div class="flex items-center gap-4">
-        <button 
-          class="hidden sm:block text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700 active:scale-95"
-          :class="isScrolled ? 'text-slate-500' : 'text-white/80 hover:text-white'"
+        <button
+          class="hidden sm:block text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 active:scale-95 text-slate-500"
         >
           Account
         </button>

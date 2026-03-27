@@ -1,11 +1,11 @@
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-6 flex items-center gap-2">
+    <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
       <span class="material-symbols-outlined text-primary text-3xl">lightbulb</span>
       Important Information
     </h2>
 
-    <div v-if="sanitizedRecommendations || sanitizedWhatToBring" class="prose prose-lg max-w-none text-secondary-light dark:text-secondary-dark">
+    <div v-if="sanitizedRecommendations || sanitizedWhatToBring" class="prose prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-if="sanitizedRecommendations" v-html="sanitizedRecommendations" class="mb-6"></div>
       <div v-if="sanitizedWhatToBring" v-html="sanitizedWhatToBring"></div>
     </div>
@@ -14,15 +14,15 @@
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
         <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">badge</span>
         <div>
-          <h4 class="font-bold text-primary-light dark:text-primary-dark mb-1">Documentation</h4>
-          <p class="text-sm text-secondary-light dark:text-secondary-dark">Valid passport required with at least 6 months validity</p>
+          <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Documentation</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Valid passport required with at least 6 months validity</p>
         </div>
       </div>
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
         <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">hiking</span>
         <div>
-          <h4 class="font-bold text-primary-light dark:text-primary-dark mb-1">Difficulty Level</h4>
-          <p class="text-sm text-secondary-light dark:text-secondary-dark">
+          <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Difficulty Level</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">
             {{ tour.difficulty === 'easy' ? 'Easy' : tour.difficulty === 'moderate' ? 'Moderate' : 'Difficult' }}
           </p>
         </div>
@@ -30,15 +30,15 @@
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
         <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">medical_services</span>
         <div>
-          <h4 class="font-bold text-primary-light dark:text-primary-dark mb-1">Restrictions</h4>
-          <p class="text-sm text-secondary-light dark:text-secondary-dark">Consult your doctor before booking if you have medical conditions</p>
+          <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Restrictions</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Consult your doctor before booking if you have medical conditions</p>
         </div>
       </div>
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
         <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">backpack</span>
         <div>
-          <h4 class="font-bold text-primary-light dark:text-primary-dark mb-1">What to Bring</h4>
-          <p class="text-sm text-secondary-light dark:text-secondary-dark">Sunscreen, insect repellent, hat, water, comfortable clothes</p>
+          <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">What to Bring</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Sunscreen, insect repellent, hat, water, comfortable clothes</p>
         </div>
       </div>
     </div>
@@ -63,13 +63,13 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 @reference "../../assets/css/main.css";
 
 .prose {
-  @apply text-secondary-light dark:text-secondary-dark leading-relaxed;
+  @apply text-slate-600 dark:text-slate-400 leading-relaxed;
 }
 
 .prose :deep(h1),
 .prose :deep(h2),
 .prose :deep(h3) {
-  @apply font-black text-primary-light dark:text-primary-dark;
+  @apply font-black text-slate-800 dark:text-slate-100;
 }
 
 .prose :deep(h1) {
@@ -102,11 +102,11 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 }
 
 .prose :deep(li) {
-  @apply text-secondary-light dark:text-secondary-dark;
+  @apply text-slate-600 dark:text-slate-400;
 }
 
 .prose :deep(strong) {
-  @apply font-bold text-primary-light dark:text-primary-dark;
+  @apply font-bold text-slate-800 dark:text-slate-100;
 }
 
 .prose :deep(a) {
@@ -114,6 +114,6 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 }
 
 .prose :deep(blockquote) {
-  @apply border-l-4 border-primary pl-4 italic text-secondary-light dark:text-secondary-dark my-4 bg-slate-50 dark:bg-slate-800 py-2;
+  @apply border-l-4 border-primary pl-4 italic text-slate-600 dark:text-slate-400 my-4 bg-slate-50 dark:bg-slate-800 py-2;
 }
 </style>

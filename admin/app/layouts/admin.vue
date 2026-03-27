@@ -196,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 
@@ -205,7 +205,22 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isSidebarOpen = ref(false)
-const isDark = ref(true)
+const isDark = ref(false)
+
+// Inicializar tema desde localStorage
+onMounted(() => {
+  if (process.client) {
+    const savedTheme = localStorage.getItem('theme')
+    isDark.value = savedTheme === 'dark'
+
+    // Aplicar tema guardado
+    if (isDark.value) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
+})
 
 const pageTitle = computed(() => {
   const path = route.path
@@ -231,17 +246,22 @@ const closeMobileSidebar = () => {
 
 const toggleTheme = () => {
   isDark.value = !isDark.value
-  if(isDark.value) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
+
+  if (process.client) {
+    if (isDark.value) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
   }
 }
 
 const logout = async () => {
   if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
     await authStore.logout()
-    await router.push('/admin/login')
+    await router.push('/login')
   }
 }
 </script>

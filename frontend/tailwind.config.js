@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class', // Solo activar dark mode cuando hay clase 'dark' en html
   content: [
     "./app/**/*.{vue,js,ts,jsx,tsx,mdx}",
     "./components/**/*.{vue,js,ts,jsx,tsx,mdx}",

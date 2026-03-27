@@ -1,6 +1,27 @@
 <template>
   <NuxtLayout>
-    <div class="bg-white dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+    <!-- Loading State -->
+    <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white dark:bg-background-dark">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-4 text-slate-600 dark:text-slate-400">Cargando experiencias...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white dark:bg-background-dark">
+      <div class="text-center px-4">
+        <span class="material-symbols-outlined text-6xl text-slate-400 mb-4">wifi_off</span>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Conectando con el servidor...</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">Estamos preparando las mejores experiencias para ti</p>
+        <button @click="refresh()" class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-colors">
+          Reintentar
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div v-else class="bg-white dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
       <main>
       <!-- Premium Hero Section -->
       <section class="relative w-full h-[600px] md:h-[650px] overflow-hidden flex flex-col items-center justify-center p-6 sm:p-12">
@@ -332,8 +353,8 @@ const destinations = [
   { name: 'Ica', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCcKHfXoVObCRHpJoNlTkQZP78NvyJJNxW9KmZTmmHmQrXUwnjf1L1_Q73O5w0c7us4mTbJB0TOgthnwCPAHAFMF7jAHZM5LHgPhLpYYO7tmaTXkr1VUsmhxz8cw36LvkOh2MTXyb_hQ2RdWzim69yBS6oVYFXS5oB1oe49uLYBErDiNp8295mfili_uyOVhVgo-wejH5_zcZxELYX2QC7av3-fLKDLAbnd3msPtxvH9zajL-HLQ2cpDWgrDxpKIeOw6ecAmDjNYeeJ' },
 ]
 
-// Fetch featured tours
-const { data: response, pending } = await useAsyncData(
+// Fetch featured tours with error handling
+const { data: response, pending, error, refresh } = await useAsyncData(
   'featured-tours',
   () => api('/tours?active=1&per_page=8')
 )

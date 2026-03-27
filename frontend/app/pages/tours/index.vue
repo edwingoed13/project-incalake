@@ -1,5 +1,26 @@
 <template>
-  <div class="bg-white font-display text-slate-900 min-h-screen">
+  <!-- Loading State -->
+  <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      <p class="mt-4 text-slate-600">Cargando tours disponibles...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white">
+    <div class="text-center px-4">
+      <span class="material-symbols-outlined text-6xl text-slate-400 mb-4">wifi_off</span>
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">No se pudo cargar los tours</h2>
+      <p class="text-slate-600 mb-6">Por favor, verifica tu conexión e intenta nuevamente</p>
+      <button @click="refresh()" class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-colors">
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div v-else class="bg-white font-display text-slate-900 min-h-screen">
 
     <!-- Hero Banner -->
     <section class="relative bg-gradient-to-br from-sky-600 via-primary to-blue-900 text-white overflow-hidden">
@@ -410,7 +431,7 @@ const sortBy = ref('featured')
 const currentPage = ref(1)
 const perPage = 12
 
-// Fetch all tours
+// Fetch all tours with error handling
 const { data: response, pending, error, refresh } = await useAsyncData(
   'all-tours',
   () => api('/tours?per_page=100&active=1')

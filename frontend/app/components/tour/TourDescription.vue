@@ -1,10 +1,10 @@
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-6 flex items-center gap-2">
+    <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
       <span class="material-symbols-outlined text-primary text-3xl">description</span>
       Description
     </h2>
-    <div class="prose prose-lg max-w-none text-secondary-light dark:text-secondary-dark">
+    <div class="prose prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-html="sanitizedDescription"></div>
     </div>
   </section>
@@ -27,13 +27,13 @@ const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_descrip
 @reference "../../assets/css/main.css";
 
 .prose {
-  @apply text-secondary-light dark:text-secondary-dark leading-relaxed;
+  @apply text-slate-600 dark:text-slate-400 leading-relaxed;
 }
 
 .prose :deep(h1),
 .prose :deep(h2),
 .prose :deep(h3) {
-  @apply font-black text-primary-light dark:text-primary-dark;
+  @apply font-black text-slate-800 dark:text-slate-100;
 }
 
 .prose :deep(h1) {
@@ -66,11 +66,11 @@ const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_descrip
 }
 
 .prose :deep(li) {
-  @apply text-secondary-light dark:text-secondary-dark;
+  @apply text-slate-600 dark:text-slate-400;
 }
 
 .prose :deep(strong) {
-  @apply font-bold text-primary-light dark:text-primary-dark;
+  @apply font-bold text-slate-800 dark:text-slate-100;
 }
 
 .prose :deep(a) {
@@ -78,6 +78,6 @@ const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_descrip
 }
 
 .prose :deep(blockquote) {
-  @apply border-l-4 border-primary pl-4 italic text-secondary-light dark:text-secondary-dark my-4 bg-slate-50 dark:bg-slate-800 py-2;
+  @apply border-l-4 border-primary pl-4 italic text-slate-600 dark:text-slate-400 my-4 bg-slate-50 dark:bg-slate-800 py-2;
 }
 </style>
