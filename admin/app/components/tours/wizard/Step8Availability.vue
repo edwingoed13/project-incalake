@@ -172,28 +172,251 @@
           </div>
         </div>
 
-        <!-- Blocks Tab (Placeholder) -->
-        <div v-if="activeTab === 'blocks'" class="py-20 flex flex-col items-center justify-center text-center space-y-6">
-           <div class="size-24 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center animate-pulse">
-              <span class="material-symbols-outlined text-5xl">block</span>
-           </div>
-           <div class="space-y-2">
-              <h4 class="text-xl font-bold dark:text-white">Gestión de Bloqueos Específicos</h4>
-              <p class="text-sm text-slate-500 max-w-sm mx-auto">Esta función te permitirá bloquear fechas puntuales fuera del calendario regular. Estará disponible en la próxima actualización.</p>
-           </div>
-           <button class="px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 cursor-not-allowed">Próximamente</button>
+        <!-- Blocks Tab -->
+        <div v-if="activeTab === 'blocks'" class="space-y-10">
+          <!-- Add New Block Form -->
+          <div class="p-8 bg-red-50/50 dark:bg-red-900/10 rounded-3xl border border-red-200 dark:border-red-900/30 space-y-6">
+            <h4 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-red-500">add_circle</span>
+              Agregar Bloqueo de Fechas
+            </h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-[10px]">1</span>
+                  Desde
+                </label>
+                <div class="relative group">
+                  <input
+                    type="date"
+                    v-model="newBlock.startDate"
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all outline-none"
+                  >
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-red-500 transition-colors">event</span>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-[10px]">2</span>
+                  Hasta
+                </label>
+                <div class="relative group">
+                  <input
+                    type="date"
+                    v-model="newBlock.endDate"
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all outline-none"
+                  >
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-red-500 transition-colors">event</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                <span class="size-6 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-[10px]">3</span>
+                Motivo del Bloqueo
+              </label>
+              <textarea
+                v-model="newBlock.reason"
+                placeholder="Describa el motivo del bloqueo (ej: Mantenimiento, vacaciones, evento privado...)"
+                class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all outline-none resize-none"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <button
+              @click="addBlock"
+              :disabled="!newBlock.startDate || !newBlock.endDate || !newBlock.reason"
+              class="px-6 py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[20px]">save</span>
+              GUARDAR BLOQUEO
+            </button>
+          </div>
+
+          <!-- Blocks List -->
+          <div class="space-y-4">
+            <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Lista de Bloqueos</h4>
+
+            <div v-if="store.availability.blocks && store.availability.blocks.length > 0" class="space-y-3 max-h-96 overflow-y-auto">
+              <div
+                v-for="(block, index) in store.availability.blocks"
+                :key="block.id || index"
+                class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-start justify-between hover:shadow-lg transition-all"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="size-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">block</span>
+                  </div>
+                  <div class="space-y-1">
+                    <h5 class="text-sm font-bold text-slate-900 dark:text-white">{{ block.reason }}</h5>
+                    <p class="text-xs text-slate-500">
+                      <span class="font-medium">Desde:</span> {{ formatDate(block.startDate) }} -
+                      <span class="font-medium">Hasta:</span> {{ formatDate(block.endDate) }}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  @click="removeBlock(index)"
+                  class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                  title="Eliminar bloqueo"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="py-12 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-slate-400">
+              <span class="material-symbols-outlined text-5xl mb-2 opacity-30">event_busy</span>
+              <p class="text-sm font-medium">No hay bloqueos configurados</p>
+              <p class="text-xs opacity-60 mt-1">Agrega fechas bloqueadas arriba</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Offers Tab (Placeholder) -->
-        <div v-if="activeTab === 'offers'" class="py-20 flex flex-col items-center justify-center text-center space-y-6">
-           <div class="size-24 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center animate-pulse">
-              <span class="material-symbols-outlined text-5xl">sell</span>
-           </div>
-           <div class="space-y-2">
-              <h4 class="text-xl font-bold dark:text-white">Ofertas y Descuentos</h4>
-              <p class="text-sm text-slate-500 max-w-sm mx-auto">Configura precios especiales para temporadas bajas o lanzamientos. Estará disponible en la próxima actualización.</p>
-           </div>
-           <button class="px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 cursor-not-allowed">Próximamente</button>
+        <!-- Offers Tab -->
+        <div v-if="activeTab === 'offers'" class="space-y-10">
+          <!-- Add New Offer Form -->
+          <div class="p-8 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-3xl border border-green-200 dark:border-green-900/30 space-y-6">
+            <h4 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-green-500">add_circle</span>
+              Agregar Oferta Especial
+            </h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-[10px]">1</span>
+                  Desde
+                </label>
+                <div class="relative group">
+                  <input
+                    type="date"
+                    v-model="newOffer.startDate"
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                  >
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-green-500 transition-colors">event</span>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-[10px]">2</span>
+                  Hasta
+                </label>
+                <div class="relative group">
+                  <input
+                    type="date"
+                    v-model="newOffer.endDate"
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                  >
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-green-500 transition-colors">event</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-[10px]">3</span>
+                  Descuento
+                </label>
+                <input
+                  type="number"
+                  v-model="newOffer.discount"
+                  min="1"
+                  placeholder="Ej: 20"
+                  class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                >
+              </div>
+
+              <div class="space-y-3">
+                <label class="text-sm font-bold text-slate-700 dark:text-slate-300">
+                  Tipo de Descuento
+                </label>
+                <select
+                  v-model="newOffer.discountType"
+                  class="w-full px-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                >
+                  <option value="percentage">Porcentaje (%)</option>
+                  <option value="amount">Monto Fijo (USD)</option>
+                </select>
+              </div>
+
+              <div class="space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span class="size-6 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center text-[10px]">4</span>
+                  Color
+                </label>
+                <div class="flex gap-2">
+                  <button
+                    v-for="color in offerColors"
+                    :key="color.value"
+                    @click="newOffer.color = color.value"
+                    class="size-12 rounded-xl border-2 transition-all flex items-center justify-center"
+                    :style="{ backgroundColor: color.value }"
+                    :class="newOffer.color === color.value ? 'ring-4 ring-offset-2 ring-slate-400' : 'hover:scale-110'"
+                    :title="color.label"
+                  >
+                    <span v-if="newOffer.color === color.value" class="material-symbols-outlined text-white text-[20px] drop-shadow-lg">check</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              @click="addOffer"
+              :disabled="!newOffer.startDate || !newOffer.endDate || !newOffer.discount"
+              class="px-6 py-3 rounded-2xl bg-green-500 text-white font-bold hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[20px]">save</span>
+              GUARDAR OFERTA
+            </button>
+          </div>
+
+          <!-- Offers List -->
+          <div class="space-y-4">
+            <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Lista de Ofertas</h4>
+
+            <div v-if="store.availability.offers && store.availability.offers.length > 0" class="space-y-3 max-h-96 overflow-y-auto">
+              <div
+                v-for="(offer, index) in store.availability.offers"
+                :key="offer.id || index"
+                class="p-4 bg-white dark:bg-slate-800 rounded-2xl border-2 flex items-start justify-between hover:shadow-lg transition-all"
+                :style="{ borderColor: offer.color }"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="size-10 rounded-xl flex items-center justify-center shrink-0" :style="{ backgroundColor: offer.color + '20' }">
+                    <span class="material-symbols-outlined text-[20px]" :style="{ color: offer.color }">sell</span>
+                  </div>
+                  <div class="space-y-1">
+                    <h5 class="text-sm font-bold text-slate-900 dark:text-white">
+                      {{ offer.discount }}{{ offer.discountType === 'percentage' ? '%' : ' USD' }} de descuento
+                    </h5>
+                    <p class="text-xs text-slate-500">
+                      <span class="font-medium">Desde:</span> {{ formatDate(offer.startDate) }} -
+                      <span class="font-medium">Hasta:</span> {{ formatDate(offer.endDate) }}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  @click="removeOffer(index)"
+                  class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                  title="Eliminar oferta"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="py-12 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-slate-400">
+              <span class="material-symbols-outlined text-5xl mb-2 opacity-30">local_offer</span>
+              <p class="text-sm font-medium">No hay ofertas configuradas</p>
+              <p class="text-xs opacity-60 mt-1">Agrega ofertas especiales arriba</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -222,7 +445,7 @@
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 
 const store = useTourWizardStore()
 
@@ -250,6 +473,86 @@ const holidays = [
   { label: 'Año Nuevo', value: '01-01', date: '01 de Enero', icon: 'restaurant' },
   { label: 'Fiestas Patrias', value: '28-07', date: '28 de Julio', icon: 'flag' }
 ]
+
+// Block management
+const newBlock = reactive({
+  startDate: '',
+  endDate: '',
+  reason: ''
+})
+
+const addBlock = () => {
+  if (!newBlock.startDate || !newBlock.endDate || !newBlock.reason) return
+
+  if (!store.availability.blocks) {
+    store.availability.blocks = []
+  }
+
+  store.availability.blocks.push({
+    id: crypto.randomUUID(),
+    startDate: newBlock.startDate,
+    endDate: newBlock.endDate,
+    reason: newBlock.reason
+  })
+
+  // Reset form
+  newBlock.startDate = ''
+  newBlock.endDate = ''
+  newBlock.reason = ''
+}
+
+const removeBlock = (index: number) => {
+  if (store.availability.blocks) {
+    store.availability.blocks.splice(index, 1)
+  }
+}
+
+// Offer management
+const newOffer = reactive({
+  startDate: '',
+  endDate: '',
+  discount: null as number | null,
+  discountType: 'percentage',
+  color: '#449d44'
+})
+
+const offerColors = [
+  { label: 'Azul', value: '#286090' },
+  { label: 'Verde', value: '#449d44' },
+  { label: 'Celeste', value: '#31b0d5' },
+  { label: 'Naranja', value: '#f0ad4e' },
+  { label: 'Rojo', value: '#d9534f' }
+]
+
+const addOffer = () => {
+  if (!newOffer.startDate || !newOffer.endDate || !newOffer.discount) return
+
+  if (!store.availability.offers) {
+    store.availability.offers = []
+  }
+
+  store.availability.offers.push({
+    id: crypto.randomUUID(),
+    startDate: newOffer.startDate,
+    endDate: newOffer.endDate,
+    discount: newOffer.discount,
+    discountType: newOffer.discountType,
+    color: newOffer.color
+  })
+
+  // Reset form
+  newOffer.startDate = ''
+  newOffer.endDate = ''
+  newOffer.discount = null
+  newOffer.discountType = 'percentage'
+  newOffer.color = '#449d44'
+}
+
+const removeOffer = (index: number) => {
+  if (store.availability.offers) {
+    store.availability.offers.splice(index, 1)
+  }
+}
 
 const toggleDay = (day: number) => {
   const index = store.availability.activeDays.indexOf(day)

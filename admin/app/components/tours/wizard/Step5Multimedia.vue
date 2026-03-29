@@ -1,22 +1,41 @@
 <template>
   <div class="flex flex-col gap-12 pb-20">
-    <!-- Video Section -->
+    <!-- Video Section (per language) -->
     <section class="space-y-6">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">play_circle</span>
-        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Video Highlights</h3>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">play_circle</span>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Video Highlights</h3>
+        </div>
+        <!-- Language tabs for video -->
+        <div class="flex gap-1.5">
+          <button
+            v-for="lang in videoLanguages"
+            :key="lang"
+            @click="store.currentLanguage = lang"
+            :class="store.currentLanguage === lang
+              ? 'bg-primary text-white shadow-md shadow-primary/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'"
+            class="px-3 py-1.5 text-[10px] font-black rounded-lg transition-all uppercase flex items-center gap-1"
+          >
+            {{ lang }}
+            <span v-if="currentLangSeo?.youtubeUrl" class="size-1.5 rounded-full bg-green-400"></span>
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <!-- Input Card -->
         <div class="glass-card p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
           <div>
-             <h4 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4">YouTube Video URL</h4>
+             <h4 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-1">YouTube Video URL</h4>
+             <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">{{ store.currentLanguage.toUpperCase() }} — {{ currentLangLabel }}</p>
              <div class="flex gap-3">
                <div class="flex-1 relative group">
-                  <input 
-                    v-model="store.multimedia.youtubeUrl"
-                    type="text" 
+                  <input
+                    :value="currentLangSeo?.youtubeUrl || ''"
+                    @input="updateVideoUrl(($event.target as HTMLInputElement).value)"
+                    type="text"
                     placeholder="https://www.youtube.com/watch?v="
                     class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-4 px-12 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-slate-700 dark:text-slate-200 transition-all font-medium text-sm"
                   />
@@ -26,21 +45,21 @@
                  Add
                </button>
              </div>
-             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Supported platforms: YouTube, Vimeo. Max 1 video per tour.</p>
+             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Each language has its own video. Supported: YouTube, Vimeo.</p>
           </div>
         </div>
 
         <!-- Preview Card -->
         <div class="relative group aspect-video rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-sm transition-all duration-500 hover:shadow-2xl">
-           <img 
-            v-if="youtubeId" 
-            :src="`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`" 
+           <img
+            v-if="youtubeId"
+            :src="`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`"
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 brightness-75 group-hover:brightness-50"
             alt="Video Thumbnail"
            />
            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-400">
               <span class="material-symbols-outlined text-4xl mb-2 opacity-50">smart_display</span>
-              <p class="text-xs font-bold uppercase tracking-widest opacity-50 text-center">Video Preview<br/><span class="text-[9px] font-medium">Enter a URL to see it here</span></p>
+              <p class="text-xs font-bold uppercase tracking-widest opacity-50 text-center">Video Preview ({{ store.currentLanguage.toUpperCase() }})<br/><span class="text-[9px] font-medium">Enter a URL to see it here</span></p>
            </div>
 
            <!-- Preview Overlay -->
@@ -49,14 +68,14 @@
                  <span class="material-symbols-outlined text-3xl filled">play_arrow</span>
               </div>
               <div class="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-white/10 flex items-center gap-2">
-                 <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">Preview</span>
+                 <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">{{ store.currentLanguage.toUpperCase() }}</span>
               </div>
            </div>
 
            <!-- Delete Button -->
-           <button 
+           <button
             v-if="youtubeId"
-            @click="store.multimedia.youtubeUrl = ''"
+            @click="updateVideoUrl('')"
             class="absolute top-4 right-4 size-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100"
            >
               <span class="material-symbols-outlined text-sm">delete</span>
@@ -220,7 +239,7 @@
               <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                 <span class="material-symbols-outlined filled">edit_note</span>
               </div>
-              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Editar Información de Imagen</h3>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Editar Información de Imagen <span class="text-primary">({{ store.currentLanguage.toUpperCase() }})</span></h3>
             </div>
             <button @click="editingIndex = null" class="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center">
               <span class="material-symbols-outlined">close</span>
@@ -347,12 +366,42 @@ const editForm = ref({
   description: ''
 })
 
+// Per-language video helpers
+const langLabels: Record<string, string> = {
+  es: 'Español', en: 'English', pt: 'Português', fr: 'Français', de: 'Deutsch', it: 'Italiano'
+}
+
+const currentLangSeo = computed(() => store.contentSEO[store.currentLanguage])
+const currentLangLabel = computed(() => langLabels[store.currentLanguage] || store.currentLanguage)
+
+// Only show language tabs for languages that have content (title filled)
+const videoLanguages = computed(() => {
+  return Object.keys(store.contentSEO).filter(code => {
+    const seo = store.contentSEO[code]
+    return seo && (seo.title || seo.youtubeUrl)
+  })
+})
+
+const updateVideoUrl = (url: string) => {
+  if (store.contentSEO[store.currentLanguage]) {
+    store.contentSEO[store.currentLanguage].youtubeUrl = url
+  }
+}
+
+// Get media_texts for current language and specific image
+const getMediaText = (mediaId: any, field: 'alt_text' | 'title_text') => {
+  const texts = currentLangSeo.value?.mediaTexts || []
+  const entry = texts.find((t: any) => t.media_id === mediaId)
+  return entry?.[field] || ''
+}
+
 const openEditModal = (index: number) => {
   const image = store.multimedia.images[index]
   if (image) {
+    // Load from per-language media_texts if available, fallback to shared
     editForm.value = {
-      altText: image.altText || '',
-      titleText: image.titleText || '',
+      altText: getMediaText(image.id, 'alt_text') || image.altText || '',
+      titleText: getMediaText(image.id, 'title_text') || image.titleText || '',
       description: image.description || ''
     }
     editingIndex.value = index
@@ -363,9 +412,29 @@ const saveChanges = () => {
   if (editingIndex.value !== null) {
     const image = store.multimedia.images[editingIndex.value]
     if (image) {
+      // Save shared fields (description stays shared)
+      image.description = editForm.value.description
+
+      // Save alt_text and title_text per language in contentSEO.mediaTexts
+      if (store.contentSEO[store.currentLanguage]) {
+        const mediaTexts = [...(store.contentSEO[store.currentLanguage].mediaTexts || [])]
+        const existingIdx = mediaTexts.findIndex((t: any) => t.media_id === image.id)
+        const entry = {
+          media_id: image.id,
+          alt_text: editForm.value.altText,
+          title_text: editForm.value.titleText
+        }
+        if (existingIdx >= 0) {
+          mediaTexts[existingIdx] = entry
+        } else {
+          mediaTexts.push(entry)
+        }
+        store.contentSEO[store.currentLanguage].mediaTexts = mediaTexts
+      }
+
+      // Also update the shared image fields for backwards compat
       image.altText = editForm.value.altText
       image.titleText = editForm.value.titleText
-      image.description = editForm.value.description
 
       // If it's a new upload, also update metadata in tempImages for the backend
       const tempImage = store.tempImages.find(img => img.filename === image.filename)
@@ -402,13 +471,13 @@ const layouts = [
 ] as const
 
 const youtubeId = computed(() => {
-  const url = store.multimedia.youtubeUrl
+  const url = currentLangSeo.value?.youtubeUrl || ''
   if (!url) return null
-  
+
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
   const match = url.match(regExp)
   if (match && match[2] && match[2].length === 11) return match[2]
-  
+
   const shortExp = /youtube.com\/shorts\/([^\/\?]+)/
   const shortMatch = url.match(shortExp)
   if (shortMatch) return shortMatch[1]

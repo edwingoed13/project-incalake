@@ -107,10 +107,27 @@
           <div class="sticky top-24">
             <!-- Booking Widget Card -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-lg">
+              <!-- Active Offer Banner -->
+              <div v-if="activeOffer" class="mb-4 p-3 rounded-lg flex items-center gap-3" :style="{ backgroundColor: activeOffer.color + '15', borderLeft: '4px solid ' + activeOffer.color }">
+                <span class="material-symbols-outlined text-2xl" :style="{ color: activeOffer.color }">sell</span>
+                <div class="flex-1">
+                  <p class="text-sm font-bold" :style="{ color: activeOffer.color }">
+                    ¡OFERTA ESPECIAL!
+                  </p>
+                  <p class="text-xs text-slate-600 dark:text-slate-400">
+                    {{ activeOffer.discount }}{{ activeOffer.discountType === 'percentage' ? '%' : ' USD' }} de descuento
+                    hasta {{ formatOfferDate(activeOffer.endDate) }}
+                  </p>
+                </div>
+              </div>
+
               <!-- Price Header -->
               <div class="mb-5">
                 <div class="flex items-baseline gap-2">
-                  <span class="text-3xl font-black text-primary">${{ (basePrice || 0).toFixed(2) }}</span>
+                  <span v-if="activeOffer && originalPrice > discountedPrice" class="text-xl text-slate-400 line-through">
+                    ${{ originalPrice.toFixed(2) }}
+                  </span>
+                  <span class="text-3xl font-black text-primary">${{ (discountedPrice || 0).toFixed(2) }}</span>
                   <span class="text-sm text-slate-500">{{ currency }}</span>
                 </div>
                 <p class="text-sm text-slate-500 mt-1">per person</p>
@@ -124,9 +141,38 @@
                   <input
                     v-model="selectedDate"
                     :min="minDate"
+                    :max="maxDate"
                     type="date"
+                    @change="onDateChange"
                     class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                   />
+                </div>
+
+                <!-- Date Status Messages -->
+                <div v-if="dateHasOffer && !isDateBlocked" class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-2">
+                  <span class="material-symbols-outlined text-green-500 text-sm mt-0.5">sell</span>
+                  <div class="flex-1">
+                    <p class="text-xs font-semibold text-green-700 dark:text-green-400">¡Oferta disponible!</p>
+                    <p class="text-xs text-green-600 dark:text-green-500">
+                      {{ activeOffer?.discount }}{{ activeOffer?.discountType === 'percentage' ? '%' : ' USD' }} de descuento
+                    </p>
+                  </div>
+                </div>
+
+                <div v-if="isDateBlocked" class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2">
+                  <span class="material-symbols-outlined text-red-500 text-sm mt-0.5">error</span>
+                  <div class="flex-1">
+                    <p class="text-xs font-semibold text-red-700 dark:text-red-400">Fecha no disponible</p>
+                    <p class="text-xs text-red-600 dark:text-red-500">{{ blockedReason }}</p>
+                  </div>
+                </div>
+
+                <!-- Available Dates Info -->
+                <div v-if="(hasBlockedDates || hasOffers) && !isDateBlocked && !dateHasOffer" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p class="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">info</span>
+                    {{ hasOffers ? 'Hay ofertas disponibles en algunas fechas' : 'Algunas fechas tienen restricciones' }}
+                  </p>
                 </div>
               </div>
 
@@ -172,8 +218,12 @@
               <!-- Price Breakdown -->
               <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">${{ (basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
-                  <span class="font-semibold">${{ (subtotal || 0).toFixed(2) }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">${{ (discountedPrice || basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
+                  <span class="font-semibold">${{ (total || 0).toFixed(2) }}</span>
+                </div>
+                <div v-if="activeOffer" class="flex justify-between text-sm">
+                  <span class="text-slate-600 dark:text-slate-400">{{ activeOffer.discountType === 'percentage' ? activeOffer.discount + '% de descuento' : '$' + activeOffer.discount + ' USD descuento' }}</span>
+                  <span class="font-semibold text-green-600">-${{ ((basePrice - discountedPrice) * adults).toFixed(2) }}</span>
                 </div>
                 <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
                   <span class="text-slate-600 dark:text-slate-400">Group discount</span>
@@ -188,10 +238,11 @@
               <!-- CTA Buttons -->
               <button
                 @click="handleBooking"
-                class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-3 flex items-center justify-center gap-2"
+                :disabled="isDateBlocked"
+                class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span class="material-symbols-outlined">check_circle</span>
-                Book Now
+                <span class="material-symbols-outlined">{{ isDateBlocked ? 'block' : 'check_circle' }}</span>
+                {{ isDateBlocked ? 'Fecha no disponible' : 'Book Now' }}
               </button>
 
 
@@ -303,6 +354,8 @@ const relatedTours = computed(() => {
 const selectedDate = ref('')
 const selectedTime = ref('')
 const adults = ref(2)
+const isDateBlocked = ref(false)
+const blockedReason = ref('')
 
 // Computed - Base price with price_details logic
 const basePrice = computed(() => {
@@ -343,9 +396,114 @@ const groupDiscount = computed(() => {
   return 0
 })
 
-const total = computed(() => subtotal.value - groupDiscount.value)
+const total = computed(() => (discountedPrice.value || basePrice.value) * adults.value - groupDiscount.value)
 
 const currency = computed(() => tour.value?.currency || 'USD')
+
+// Availability data
+const availabilityData = computed(() => tour.value?.availability_data || {})
+
+// Check for active offers based on selected date
+const activeOffer = computed(() => {
+  if (!availabilityData.value?.offers || availabilityData.value.offers.length === 0) return null
+
+  // Use selected date if available, otherwise use today
+  const checkDate = selectedDate.value ? new Date(selectedDate.value) : new Date()
+
+  const activeOffers = availabilityData.value.offers.filter((offer: any) => {
+    const start = new Date(offer.startDate)
+    const end = new Date(offer.endDate)
+    return checkDate >= start && checkDate <= end
+  })
+
+  // Return the offer with the highest discount
+  return activeOffers.reduce((best: any, current: any) => {
+    if (!best) return current
+    const bestValue = best.discountType === 'percentage' ? best.discount : (best.discount / basePrice.value * 100)
+    const currentValue = current.discountType === 'percentage' ? current.discount : (current.discount / basePrice.value * 100)
+    return currentValue > bestValue ? current : best
+  }, null)
+})
+
+// Calculate prices with discount
+const originalPrice = computed(() => basePrice.value)
+
+const discountedPrice = computed(() => {
+  if (!activeOffer.value) return basePrice.value
+
+  if (activeOffer.value.discountType === 'percentage') {
+    return basePrice.value * (1 - activeOffer.value.discount / 100)
+  } else {
+    return Math.max(0, basePrice.value - activeOffer.value.discount)
+  }
+})
+
+// Check if there are blocked dates
+const hasBlockedDates = computed(() => {
+  return availabilityData.value?.blocks && availabilityData.value.blocks.length > 0
+})
+
+// Check if there are offers
+const hasOffers = computed(() => {
+  return availabilityData.value?.offers && availabilityData.value.offers.length > 0
+})
+
+// Check if selected date has an offer
+const dateHasOffer = computed(() => {
+  return activeOffer.value !== null
+})
+
+// Calculate max date (1 year from now)
+const maxDate = computed(() => {
+  const date = new Date()
+  date.setFullYear(date.getFullYear() + 1)
+  return date.toISOString().split('T')[0]
+})
+
+// Format offer date
+const formatOfferDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })
+}
+
+// Handle date change
+const onDateChange = () => {
+  checkDateAvailability()
+}
+
+// Check if selected date is blocked
+const checkDateAvailability = () => {
+  if (!selectedDate.value || !availabilityData.value?.blocks) {
+    isDateBlocked.value = false
+    blockedReason.value = ''
+    return
+  }
+
+  const selected = new Date(selectedDate.value)
+
+  // Check if day of week is active
+  const dayOfWeek = selected.getDay()
+  if (availabilityData.value.activeDays && !availabilityData.value.activeDays.includes(dayOfWeek)) {
+    isDateBlocked.value = true
+    blockedReason.value = 'Este día de la semana no está disponible'
+    return
+  }
+
+  // Check if date is in blocked ranges
+  const blocked = availabilityData.value.blocks.find((block: any) => {
+    const start = new Date(block.startDate)
+    const end = new Date(block.endDate)
+    return selected >= start && selected <= end
+  })
+
+  if (blocked) {
+    isDateBlocked.value = true
+    blockedReason.value = blocked.reason || 'Esta fecha no está disponible'
+  } else {
+    isDateBlocked.value = false
+    blockedReason.value = ''
+  }
+}
 
 // Calculate minimum bookable date based on booking_anticipation_hours
 const minDate = computed(() => {
@@ -418,8 +576,9 @@ function handleBooking() {
     ? getImageUrl(tour.value.media_gallery[0].url)
     : ''
 
-  // Calculate total
-  const totalPrice = basePrice.value * adults.value
+  // Calculate total with discount if applicable
+  const pricePerPerson = discountedPrice.value || basePrice.value
+  const totalPrice = pricePerPerson * adults.value
 
   // Add to cart
   const cartItem = {
@@ -432,14 +591,20 @@ function handleBooking() {
     timezone: tour.value?.timezone || 'America/Lima',
     adults: adults.value,
     children: 0,
-    basePrice: basePrice.value,
+    basePrice: pricePerPerson,
+    originalPrice: basePrice.value,
     childPrice: 0,
     total: totalPrice,
     currency: tour.value?.currency || 'USD',
     policies: tour.value?.policies || '',
     cancellationPolicy: tour.value?.cancellation_policy || '',
     taxPercentage: tour.value?.tax_percentage || 0,
-    advancePaymentPercentage: tour.value?.advance_payment_percentage || 100
+    advancePaymentPercentage: tour.value?.advance_payment_percentage || 100,
+    // Include offer information if applicable
+    hasOffer: activeOffer.value !== null,
+    offerDiscount: activeOffer.value?.discount || 0,
+    offerDiscountType: activeOffer.value?.discountType || '',
+    offerColor: activeOffer.value?.color || ''
   }
 
   console.log('Adding to cart:', cartItem)

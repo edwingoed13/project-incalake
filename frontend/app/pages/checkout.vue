@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark py-8 lg:py-12">
+  <div class="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-8 lg:pt-28 lg:pb-12">
     <div class="container mx-auto px-4 lg:px-6 max-w-7xl">
       <!-- Header -->
       <div class="mb-8">
@@ -151,7 +151,14 @@ const handleCheckoutSubmit = async (formData: any) => {
         customer_country: formData.customer_country,
         customer_notes: formData.customer_notes || '',
         pickup_location: formData.pickup_location || undefined,
-        payment_method: formData.payment_method || 'culqi'
+        payment_method: formData.payment_method || 'culqi',
+        // Include pricing information with discounts
+        base_price: item.basePrice,
+        original_price: item.originalPrice || item.basePrice,
+        total_amount: item.total,
+        has_offer: item.hasOffer || false,
+        offer_discount: item.offerDiscount || 0,
+        offer_discount_type: item.offerDiscountType || ''
       }
 
       bookings.push(checkoutData)

@@ -35,6 +35,9 @@ class TourTranslation extends Model
         'price_from_label',
         'ads_headline',
         'ads_description',
+        'youtube_url',
+        'media_texts',
+        'booking_texts',
     ];
 
     protected $casts = [
@@ -44,6 +47,8 @@ class TourTranslation extends Model
         'recommendations' => 'array',
         'what_to_bring' => 'array',
         'policies' => 'array',
+        'media_texts' => 'array',
+        'booking_texts' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

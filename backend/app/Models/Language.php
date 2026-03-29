@@ -37,4 +37,9 @@ class Language extends Model
     {
         return $this->hasMany(Service::class);
     }
+
+    public function categoryTranslations()
+    {
+        return $this->hasMany(CategoryTranslation::class, 'language_id');
+    }
 }

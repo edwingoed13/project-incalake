@@ -1,5 +1,26 @@
 <template>
   <div class="flex flex-col gap-10 pb-20">
+    <!-- Language selector -->
+    <div class="flex items-center gap-3 px-5 py-3 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary text-lg font-bold">translate</span>
+      </div>
+      <div>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Editando opciones de reserva en</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button
+            v-for="lang in tourLanguages"
+            :key="lang"
+            @click="store.currentLanguage = lang"
+            class="px-2 py-0.5 rounded text-[10px] font-black uppercase transition-all"
+            :class="store.currentLanguage === lang ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-700'"
+          >
+            {{ lang }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 1. Políticas y Cancelaciones -->
     <section class="glass-card p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 space-y-6">
       <div class="flex items-center gap-3 mb-2">
@@ -49,12 +70,12 @@
           <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950">
             <TiptapEditor 
               v-if="store.bookingOptions.policyType === 'standard'"
-              v-model="store.bookingOptions.policyDescription"
+              v-model="currentBookingTexts.policyDescription"
               placeholder="Escribe las políticas estándar aquí..."
             />
             <TiptapEditor 
               v-else
-              v-model="store.bookingOptions.policyDescriptionCustom"
+              v-model="currentBookingTexts.policyDescriptionCustom"
               placeholder="Escribe las políticas personalizadas para esta actividad..."
             />
           </div>
@@ -221,7 +242,7 @@
           <Transition name="fade">
             <div v-if="store.bookingOptions.enableMeetingPoint" class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                <textarea 
-                v-model="store.bookingOptions.meetingPointDescription"
+                v-model="currentBookingTexts.meetingPointDescription"
                 placeholder="Ejemplo: Plaza de Armas de Puno, frente a la Catedral..."
                 rows="3"
                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary outline-none transition-all dark:text-white"
@@ -262,7 +283,7 @@
            <Transition name="fade">
             <div v-if="store.bookingOptions.enableHotelPickup" class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                <textarea 
-                v-model="store.bookingOptions.pickupLocationDescription"
+                v-model="currentBookingTexts.pickupLocationDescription"
                 placeholder="Ejemplo: Hoteles del centro de la ciudad y alrededores..."
                 rows="2"
                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary outline-none transition-all dark:text-white"
@@ -286,7 +307,7 @@
                </div>
 
                <textarea 
-                v-model="store.bookingOptions.dropoffLocationDescription"
+                v-model="currentBookingTexts.dropoffLocationDescription"
                 placeholder="Punto de retorno (opcional)..."
                 rows="2"
                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs focus:ring-1 focus:ring-primary outline-none transition-all dark:text-white"
@@ -374,6 +395,23 @@ import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
 
+const tourLanguages = computed(() => {
+  return Object.keys(store.contentSEO).filter(code => {
+    const seo = store.contentSEO[code]
+    return seo && seo.title
+  })
+})
+
+// Per-language booking texts
+const currentBookingTexts = computed(() => {
+  const seo = store.contentSEO[store.currentLanguage]
+  if (!seo) return { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' }
+  if (!seo.bookingTexts) {
+    seo.bookingTexts = { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' }
+  }
+  return seo.bookingTexts
+})
+
 // Map Modal Logic
 const isMapModalOpen = ref(false)
 const pickupModalType = ref<'meeting_point' | 'hotel_pickup'>('meeting_point')
@@ -383,14 +421,14 @@ const pickupModalData = computed(() => {
     return {
       lat: store.bookingOptions.meetingPointLat,
       lng: store.bookingOptions.meetingPointLng,
-      description: store.bookingOptions.meetingPointDescription
+      description: currentBookingTexts.value.meetingPointDescription
     }
   } else {
     return {
       lat: store.bookingOptions.pickupCenterLat,
       lng: store.bookingOptions.pickupCenterLng,
       radius: store.bookingOptions.pickupRadiusKm,
-      description: store.bookingOptions.pickupLocationDescription
+      description: currentBookingTexts.value.pickupLocationDescription
     }
   }
 })
@@ -404,12 +442,12 @@ const handlePickupSave = (data: any) => {
   if (pickupModalType.value === 'meeting_point') {
     store.bookingOptions.meetingPointLat = data.lat
     store.bookingOptions.meetingPointLng = data.lng
-    store.bookingOptions.meetingPointDescription = data.description
+    currentBookingTexts.value.meetingPointDescription = data.description
   } else {
     store.bookingOptions.pickupCenterLat = data.lat
     store.bookingOptions.pickupCenterLng = data.lng
     store.bookingOptions.pickupRadiusKm = data.radius
-    store.bookingOptions.pickupLocationDescription = data.description
+    currentBookingTexts.value.pickupLocationDescription = data.description
   }
   isMapModalOpen.value = false
 }

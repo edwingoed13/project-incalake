@@ -70,6 +70,14 @@ class TourController extends Controller
                 });
             }
 
+            // Filter tours that have a translation in the requested language
+            if ($request->has('language')) {
+                $lang = strtoupper($request->language);
+                $query->whereHas('translations.language', function ($q) use ($lang) {
+                    $q->where('code', $lang);
+                });
+            }
+
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->whereHas('translations', function ($q) use ($search) {
@@ -194,7 +202,7 @@ class TourController extends Controller
                 'categories.translations',
                 'city',
             ])
-            ->whereHas('translations', function ($query) use ($slug, $language) {
+            ->whereHas('translations', function ($query) use ($slug) {
                 $query->where('slug', $slug);
             })
             ->firstOrFail();
@@ -435,11 +443,14 @@ class TourController extends Controller
      * Show tour by multilang URL structure: /{lang}/{city}/{slug}
      * Example: /es/puno/tour-uros-amantani-taquile-sillustani-2d1n
      */
-    public function showMultilang(string $lang, string $citySlug, string $tourSlug): JsonResponse
+    public function showMultilang(Request $request, string $lang, string $citySlug, string $tourSlug): JsonResponse
     {
         try {
             // Normalize lang to uppercase (ES, EN, PT, etc.)
             $langCode = strtoupper($lang);
+
+            // Inject the language into the request so TourDetailResource can use it
+            $request->merge(['language' => $langCode]);
 
             $tour = Tour::query()
                 ->with([

@@ -24,7 +24,7 @@ class CategoryController extends Controller
             $query = Category::query();
 
             // Eager loading
-            $query->with(['language', 'categoryCode', 'user']);
+            $query->with(['translations', 'tours']);
 
             // Filter by language_id
             if ($request->has('language_id')) {
@@ -84,25 +84,39 @@ class CategoryController extends Controller
     /**
      * Store a newly created category
      *
-     * @param StoreCategoryRequest $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(StoreCategoryRequest $request)
+    public function store(Request $request)
     {
         try {
-            $category = Category::create(array_merge(
-                $request->validated(),
-                ['user_id' => auth()->id()]
-            ));
+            DB::beginTransaction();
 
-            $category->load(['language', 'categoryCode', 'user']);
+            // Create category in categories_new table
+            $category = Category::create([
+                'code' => $request->slug ?? \Illuminate\Support\Str::slug($request->name),
+                'active' => $request->active ?? true,
+            ]);
+
+            // Create translation for Spanish (language_id = 1)
+            $category->translations()->create([
+                'language_id' => 1,
+                'name' => $request->name,
+                'description' => $request->description,
+                'slug' => $request->slug,
+            ]);
+
+            DB::commit();
+
+            $category->load(['translations', 'tours']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Categoría creada exitosamente.',
-                'data' => new CategoryResource($category),
+                'data' => $category,
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear la categoría.',
@@ -120,16 +134,11 @@ class CategoryController extends Controller
     public function show($id)
     {
         try {
-            $category = Category::with([
-                'language',
-                'categoryCode',
-                'user',
-                'products.service'
-            ])->findOrFail($id);
+            $category = Category::with(['translations', 'tours'])->findOrFail($id);
 
             return response()->json([
                 'success' => true,
-                'data' => new CategoryResource($category),
+                'data' => $category,
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
@@ -148,29 +157,58 @@ class CategoryController extends Controller
     /**
      * Update the specified category
      *
-     * @param UpdateCategoryRequest $request
+     * @param Request $request
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(UpdateCategoryRequest $request, $id)
+    public function update(Request $request, $id)
     {
         try {
-            $category = Category::findOrFail($id);
-            $category->update($request->validated());
+            DB::beginTransaction();
 
-            $category->load(['language', 'categoryCode', 'user']);
+            $category = Category::findOrFail($id);
+
+            // Update category in categories_new table
+            $category->update([
+                'code' => $request->slug ?? $category->code,
+                'active' => $request->active ?? $category->active,
+            ]);
+
+            // Update translation for Spanish (language_id = 1)
+            $translation = $category->translations()->where('language_id', 1)->first();
+            if ($translation) {
+                $translation->update([
+                    'name' => $request->name,
+                    'description' => $request->description,
+                    'slug' => $request->slug,
+                ]);
+            } else {
+                // Create translation if it doesn't exist
+                $category->translations()->create([
+                    'language_id' => 1,
+                    'name' => $request->name,
+                    'description' => $request->description,
+                    'slug' => $request->slug,
+                ]);
+            }
+
+            DB::commit();
+
+            $category->load(['translations', 'tours']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Categoría actualizada exitosamente.',
-                'data' => new CategoryResource($category),
+                'data' => $category,
             ], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Categoría no encontrada.',
             ], 404);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar la categoría.',

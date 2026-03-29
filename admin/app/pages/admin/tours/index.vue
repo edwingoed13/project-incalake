@@ -24,25 +24,172 @@
           <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
             <span class="material-symbols-outlined text-lg">search</span>
           </span>
-          <input 
+          <input
             v-model="searchQuery"
             @input="debounceSearch"
-            class="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all" 
-            placeholder="Buscar por título o código..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+            placeholder="Buscar por título o código..."
           />
         </div>
         <div class="flex gap-2">
           <button @click="refreshData" class="p-2.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl border border-slate-200 dark:border-slate-800">
             <span class="material-symbols-outlined text-lg" :class="{'animate-spin': loading}">refresh</span>
           </button>
-          <button class="px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
-            <span class="material-symbols-outlined text-lg">filter_list</span>
-            Filtros
+          <!-- Toggle view mode -->
+          <button
+            @click="viewMode = viewMode === 'grouped' ? 'flat' : 'grouped'"
+            class="px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+            :title="viewMode === 'grouped' ? 'Vista plana' : 'Vista agrupada por idioma'"
+          >
+            <span class="material-symbols-outlined text-lg">{{ viewMode === 'grouped' ? 'view_list' : 'account_tree' }}</span>
+            {{ viewMode === 'grouped' ? 'Vista Plana' : 'Vista Agrupada' }}
           </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <!-- Grouped View -->
+      <div v-if="viewMode === 'grouped'" class="divide-y divide-slate-100 dark:divide-slate-800">
+        <div v-if="tours.length === 0 && !loading" class="px-6 py-20 text-center">
+          <div class="flex flex-col items-center gap-3 text-slate-400">
+            <span class="material-symbols-outlined text-5xl opacity-20">search_off</span>
+            <p class="text-sm font-medium">No se encontraron tours con los criterios de búsqueda.</p>
+          </div>
+        </div>
+
+        <div v-for="tour in tours" :key="tour.id" class="group/tour">
+          <!-- Tour Group Header -->
+          <div
+            class="px-6 py-4 bg-slate-50/80 dark:bg-slate-800/30 flex items-center gap-4 cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/50 transition-colors"
+            @click="toggleExpand(tour.id)"
+          >
+            <!-- Thumbnail -->
+            <div class="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 shadow-sm border border-slate-100 dark:border-slate-800">
+              <img v-if="tour.thumbnail" :src="tour.thumbnail" class="w-full h-full object-cover" />
+              <div v-else class="w-full h-full flex items-center justify-center text-slate-400">
+                <span class="material-symbols-outlined text-sm">image</span>
+              </div>
+            </div>
+
+            <!-- Tour Reference Name & Code -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-black text-slate-900 dark:text-white truncate">
+                  {{ getTourReferenceName(tour) }}
+                </p>
+                <span class="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-[9px] font-black font-mono text-slate-500 dark:text-slate-400">
+                  {{ tour.code }}
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                {{ tour.service_type }} · {{ (tour.translations_summary || []).length }} {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}
+              </p>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center gap-2">
+              <div class="size-2 rounded-full" :class="tour.active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-slate-300'"></div>
+              <span :class="tour.active ? 'text-green-600 dark:text-green-400' : 'text-slate-400'" class="text-[10px] font-black uppercase tracking-tighter">
+                {{ tour.active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+
+            <!-- Language badges -->
+            <div class="flex gap-1">
+              <span
+                v-for="lang in tour.available_languages || []"
+                :key="lang.id"
+                class="text-[9px] bg-primary/10 text-primary font-black px-1.5 py-0.5 rounded border border-primary/20"
+                :title="lang.country"
+              >
+                {{ lang.code }}
+              </span>
+            </div>
+
+            <!-- Actions: Clone + Delete Tour + Expand -->
+            <div class="flex items-center gap-1">
+              <button @click.stop="openCloneModal(tour)" class="p-1.5 text-slate-400 hover:text-green-500 transition-colors hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg" title="Agregar idioma">
+                <span class="material-symbols-outlined text-base">translate</span>
+              </button>
+              <button @click.stop="confirmDeleteTour(tour)" class="p-1.5 text-slate-400 hover:text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg" title="Eliminar tour completo">
+                <span class="material-symbols-outlined text-base">delete</span>
+              </button>
+              <span class="material-symbols-outlined text-slate-400 transition-transform duration-200 text-lg" :class="expandedTours.has(tour.id) ? 'rotate-180' : ''">
+                expand_more
+              </span>
+            </div>
+          </div>
+
+          <!-- Translation Rows (expanded) -->
+          <transition name="expand">
+            <div v-if="expandedTours.has(tour.id)" class="bg-white dark:bg-slate-900">
+              <div
+                v-for="tr in (tour.translations_summary || [])"
+                :key="tr.translation_id"
+                class="flex items-center gap-4 px-6 py-3 border-t border-slate-100/60 dark:border-slate-800/60 hover:bg-blue-50/40 dark:hover:bg-slate-800/20 transition-colors group/row"
+              >
+                <!-- Indent + Flag -->
+                <div class="w-10 flex justify-center shrink-0">
+                  <span class="text-lg">{{ getLanguageFlag(tr.language_code) }}</span>
+                </div>
+
+                <!-- Language Badge -->
+                <span
+                  class="px-2 py-1 rounded-md text-[10px] font-black uppercase shrink-0"
+                  :class="tr.language_code === getPrimaryLanguageCode(tour)
+                    ? 'bg-primary text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'"
+                >
+                  {{ tr.language_code }}
+                  <span v-if="tr.language_code === getPrimaryLanguageCode(tour)" class="ml-0.5 opacity-70">★</span>
+                </span>
+
+                <!-- Title -->
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    {{ tr.title || '(Sin título)' }}
+                  </p>
+                  <p class="text-[10px] text-slate-400 font-mono truncate">
+                    /{{ tr.language_code?.toLowerCase() }}/{{ tr.slug || '...' }}
+                  </p>
+                </div>
+
+                <!-- Actions per translation -->
+                <div class="flex items-center gap-1 sm:opacity-0 group-hover/row:opacity-100 transition-opacity">
+                  <NuxtLink
+                    :to="`/admin/tours/${tour.id}/edit?lang=${tr.language_code}`"
+                    class="p-1.5 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg"
+                    title="Editar esta traducción"
+                  >
+                    <span class="material-symbols-outlined text-base">edit</span>
+                  </NuxtLink>
+                  <button
+                    v-if="(tour.translations_summary || []).length > 1"
+                    @click="confirmDeleteTranslation(tour, tr)"
+                    class="p-1.5 text-slate-400 hover:text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg"
+                    title="Eliminar esta traducción"
+                  >
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Add Translation Row -->
+              <div
+                @click="openCloneModal(tour)"
+                class="flex items-center gap-4 px-6 py-2.5 border-t border-dashed border-slate-200/60 dark:border-slate-700/60 cursor-pointer hover:bg-green-50/40 dark:hover:bg-green-500/5 transition-colors"
+              >
+                <div class="w-10 flex justify-center shrink-0">
+                  <span class="material-symbols-outlined text-green-500 text-base">add_circle</span>
+                </div>
+                <p class="text-xs font-semibold text-green-600 dark:text-green-400">Agregar idioma...</p>
+              </div>
+            </div>
+          </transition>
+        </div>
+      </div>
+
+      <!-- Flat View (original table) -->
+      <div v-else class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
             <tr>
@@ -111,7 +258,7 @@
                   <button @click="openCloneModal(tour)" class="p-2 text-slate-400 hover:text-green-500 transition-colors hover:bg-green-50 rounded-xl" title="Clonar">
                     <span class="material-symbols-outlined text-lg">content_copy</span>
                   </button>
-                  <button @click="confirmDelete(tour)" class="p-2 text-slate-400 hover:text-red-500 transition-colors hover:bg-red-50 rounded-xl" title="Eliminar">
+                  <button @click="confirmDeleteTour(tour)" class="p-2 text-slate-400 hover:text-red-500 transition-colors hover:bg-red-50 rounded-xl" title="Eliminar">
                     <span class="material-symbols-outlined text-lg">delete</span>
                   </button>
                 </div>
@@ -120,21 +267,21 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- Pagination -->
       <div v-if="meta" class="p-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-widest">
         <p>Mostrando {{ meta.from }}-{{ meta.to }} de {{ meta.total }} tours</p>
         <div class="flex gap-2">
-          <button 
+          <button
             @click="changePage(meta.current_page - 1)"
             :disabled="meta.current_page === 1"
             class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <span class="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          
-          <button 
-            v-for="page in displayedPages" 
+
+          <button
+            v-for="page in displayedPages"
             :key="page"
             @click="changePage(page)"
             class="w-10 h-10 rounded-xl font-black transition-all"
@@ -143,7 +290,7 @@
             {{ page }}
           </button>
 
-          <button 
+          <button
             @click="changePage(meta.current_page + 1)"
             :disabled="meta.current_page === meta.last_page"
             class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
@@ -160,22 +307,22 @@
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeCloneModal"></div>
 
-        <!-- Modal - More Compact -->
+        <!-- Modal -->
         <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-xl p-6 animate-in fade-in zoom-in duration-200">
-          <!-- Header - Smaller -->
+          <!-- Header -->
           <div class="mb-6">
             <div class="flex items-center justify-between mb-2">
-              <h3 class="text-lg font-black text-slate-900 dark:text-white">Clonar Tour</h3>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">Agregar Idioma</h3>
               <button @click="closeCloneModal" class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                 <span class="material-symbols-outlined text-slate-400">close</span>
               </button>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Clonando: <span class="font-bold">{{ selectedTour?.title }}</span>
+              Tour: <span class="font-bold">{{ selectedTour?.title }}</span>
             </p>
           </div>
 
-          <!-- Language Selection - Compact Grid -->
+          <!-- Language Selection -->
           <div class="mb-6">
             <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 block">
               Idioma de destino
@@ -183,14 +330,14 @@
             <div v-if="allLanguages.length === 0" class="text-center py-4 text-sm text-slate-400">
               Cargando idiomas disponibles...
             </div>
-            <div v-else-if="availableLanguages.length === 0" class="text-center py-8">
+            <div v-else-if="cloneAvailableLanguages.length === 0" class="text-center py-8">
               <span class="material-symbols-outlined text-4xl text-green-500 mb-2">check_circle</span>
               <p class="text-sm font-bold text-slate-700 dark:text-slate-300">¡Este tour ya está traducido a todos los idiomas disponibles!</p>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">No hay más idiomas para agregar</p>
             </div>
             <div v-else class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
               <button
-                v-for="lang in availableLanguages"
+                v-for="lang in cloneAvailableLanguages"
                 :key="lang.id"
                 @click="selectedLanguage = lang"
                 :class="selectedLanguage?.id === lang.id
@@ -205,13 +352,12 @@
             </div>
           </div>
 
-          <!-- Clone Type Selection - Compact -->
+          <!-- Clone Type Selection -->
           <div class="mb-6">
             <label class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 block">
               Tipo de clonación
             </label>
             <div class="grid grid-cols-2 gap-3">
-              <!-- Manual Clone -->
               <button
                 @click="cloneType = 'manual'"
                 :class="cloneType === 'manual'
@@ -225,14 +371,10 @@
                   </div>
                   <div class="flex-1">
                     <h4 class="font-bold text-sm text-slate-900 dark:text-white mb-1">Manual</h4>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Copia datos y permite traducir manualmente
-                    </p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">Copia datos y permite traducir manualmente</p>
                   </div>
                 </div>
               </button>
-
-              <!-- AI Translation Clone -->
               <button
                 @click="cloneType = 'ai'"
                 :class="cloneType === 'ai'
@@ -241,9 +383,7 @@
                 class="p-4 rounded-lg transition-all text-left relative overflow-hidden"
               >
                 <div class="absolute top-2 right-2">
-                  <span class="px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] font-black rounded-full uppercase">
-                    IA
-                  </span>
+                  <span class="px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] font-black rounded-full uppercase">IA</span>
                 </div>
                 <div class="flex items-start gap-3">
                   <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
@@ -251,21 +391,16 @@
                   </div>
                   <div class="flex-1">
                     <h4 class="font-bold text-sm text-slate-900 dark:text-white mb-1">Con IA</h4>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Traducción automática con inteligencia artificial
-                    </p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">Traducción automática con inteligencia artificial</p>
                   </div>
                 </div>
               </button>
             </div>
           </div>
 
-          <!-- Actions - Compact -->
+          <!-- Actions -->
           <div class="flex justify-end gap-2">
-            <button
-              @click="closeCloneModal"
-              class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-            >
+            <button @click="closeCloneModal" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">
               Cancelar
             </button>
             <button
@@ -274,8 +409,8 @@
               class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <span v-if="cloning" class="material-symbols-outlined animate-spin text-base">progress_activity</span>
-              <span v-else class="material-symbols-outlined text-base">content_copy</span>
-              {{ cloning ? 'Clonando...' : 'Clonar' }}
+              <span v-else class="material-symbols-outlined text-base">translate</span>
+              {{ cloning ? 'Agregando...' : 'Agregar Traducción' }}
             </button>
           </div>
         </div>
@@ -291,7 +426,6 @@ definePageMeta({
   layout: 'admin'
 })
 
-// Interfaces for API response
 interface Tour {
   id: number
   code: string
@@ -299,7 +433,17 @@ interface Tour {
   thumbnail: string | null
   service_type: string
   active: boolean
-  // Add other fields if needed
+  available_languages?: { id: number; code: string; country: string }[]
+  translations_summary?: {
+    translation_id: number
+    language_id: number
+    language_code: string
+    language_country: string
+    title: string
+    slug: string
+    short_description: string
+  }[]
+  primary_language?: { id: number; code: string }
 }
 
 interface Meta {
@@ -311,7 +455,6 @@ interface Meta {
   total: number
 }
 
-// Centralized API Configuration
 const config = useRuntimeConfig()
 const API_BASE_URL = config.public.apiUrl
 
@@ -321,6 +464,8 @@ const meta = ref<Meta | null>(null)
 const loading = ref(false)
 const searchQuery = ref('')
 const currentPage = ref(1)
+const viewMode = ref<'grouped' | 'flat'>('grouped')
+const expandedTours = ref<Set<number>>(new Set())
 
 // Clone Modal States
 const showCloneModal = ref(false)
@@ -329,31 +474,46 @@ const selectedLanguage = ref<any>(null)
 const cloneType = ref<'manual' | 'ai'>('manual')
 const cloning = ref(false)
 
-// All available languages - will be loaded from API
 const allLanguages = ref<any[]>([])
-// Available languages for cloning (filtered by tour's existing translations)
-const availableLanguages = computed(() => {
+
+const cloneAvailableLanguages = computed(() => {
     if (!selectedTour.value || !selectedTour.value.available_languages) {
         return allLanguages.value
     }
-
-    // Filter out languages that already have translations for this tour
     const existingLanguageIds = selectedTour.value.available_languages.map((lang: any) => lang.id)
     return allLanguages.value.filter(lang => !existingLanguageIds.includes(lang.id))
 })
 
-// Language flag mapping
 const languageFlags: Record<string, string> = {
-  'ES': '🇪🇸',
-  'EN': '🇬🇧',
-  'PT': '🇵🇹',
-  'FR': '🇫🇷',
-  'DE': '🇩🇪',
-  'IT': '🇮🇹',
-  'RU': '🇷🇺',
-  'CN': '🇨🇳',
-  'JP': '🇯🇵',
-  'KR': '🇰🇷'
+  'ES': '🇪🇸', 'EN': '🇬🇧', 'PT': '🇵🇹', 'FR': '🇫🇷',
+  'DE': '🇩🇪', 'IT': '🇮🇹', 'RU': '🇷🇺', 'CN': '🇨🇳',
+  'JP': '🇯🇵', 'KR': '🇰🇷'
+}
+
+const getLanguageFlag = (code: string) => languageFlags[code] || '🌐'
+
+const getPrimaryLanguageCode = (tour: Tour) => {
+  if (tour.primary_language?.code) return tour.primary_language.code
+  // Fallback: extract from code prefix
+  const match = tour.code?.match(/^([A-Z]{2})/)
+  return match ? match[1] : 'ES'
+}
+
+const getTourReferenceName = (tour: Tour) => {
+  // Use the primary language translation title, or the tour's default title
+  const primaryCode = getPrimaryLanguageCode(tour)
+  const primaryTr = (tour.translations_summary || []).find(t => t.language_code === primaryCode)
+  return primaryTr?.title || tour.title || tour.code
+}
+
+const toggleExpand = (tourId: number) => {
+  if (expandedTours.value.has(tourId)) {
+    expandedTours.value.delete(tourId)
+  } else {
+    expandedTours.value.add(tourId)
+  }
+  // Force reactivity
+  expandedTours.value = new Set(expandedTours.value)
 }
 
 // Fetch Logic
@@ -365,23 +525,25 @@ const fetchTours = async (page = 1, search = '') => {
       per_page: '10',
       search: search
     })
-    
-    // In a real app, inject Sanctum token from authStore
+
     const response: any = await $fetch(`${API_BASE_URL}/tours?${params.toString()}`)
-    
+
     if (response && response.success) {
       tours.value = response.data
       meta.value = response.meta
+      // Auto-expand all tours in grouped view
+      if (viewMode.value === 'grouped') {
+        tours.value.forEach(t => expandedTours.value.add(t.id))
+        expandedTours.value = new Set(expandedTours.value)
+      }
     }
   } catch (error) {
     console.error("Error fetching tours:", error)
-    // Fallback to empty state or alert
   } finally {
     loading.value = false
   }
 }
 
-// Interactivity
 let debounceTimer: any = null
 const debounceSearch = () => {
     clearTimeout(debounceTimer)
@@ -401,31 +563,27 @@ const changePage = (page: number) => {
     fetchTours(page, searchQuery.value)
 }
 
-// Pagination UI Helpers
 const displayedPages = computed(() => {
     if (!meta.value) return []
     const total = meta.value.last_page
     const current = meta.value.current_page
     const pages = []
-    
-    // Simple pagination logic: show current, and one before/after
     for (let i = Math.max(1, current - 1); i <= Math.min(total, current + 1); i++) {
         pages.push(i)
     }
     return pages
 })
 
-const confirmDelete = (tour: any) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar el tour "${tour.title}"? Esta acción no se puede deshacer.`)) {
-        handleDelete(tour.id)
+// Delete entire tour
+const confirmDeleteTour = (tour: any) => {
+    if (confirm(`¿Eliminar el tour "${tour.title}" COMPLETO con todas sus traducciones? Esta acción no se puede deshacer.`)) {
+        handleDeleteTour(tour.id)
     }
 }
 
-const handleDelete = async (id: number) => {
+const handleDeleteTour = async (id: number) => {
     try {
-        const response: any = await $fetch(`${API_BASE_URL}/tours/${id}`, {
-            method: 'DELETE'
-        })
+        const response: any = await $fetch(`${API_BASE_URL}/tours/${id}`, { method: 'DELETE' })
         if (response && response.success) {
             alert('Tour eliminado correctamente')
             refreshData()
@@ -433,6 +591,31 @@ const handleDelete = async (id: number) => {
     } catch (error) {
         console.error("Delete failed", error)
         alert('Error al intentar eliminar el tour')
+    }
+}
+
+// Delete single translation
+const confirmDeleteTranslation = (tour: Tour, tr: any) => {
+    const langName = tr.language_country || tr.language_code
+    if (confirm(`¿Eliminar la traducción en ${langName} de "${tr.title}"?`)) {
+        handleDeleteTranslation(tour.id, tr.language_id)
+    }
+}
+
+const handleDeleteTranslation = async (tourId: number, languageId: number) => {
+    try {
+        const response: any = await $fetch(`${API_BASE_URL}/tours/${tourId}/translation/${languageId}`, { method: 'DELETE' })
+        if (response && response.success) {
+            if (response.tour_deleted) {
+                alert('Era la última traducción. El tour ha sido eliminado.')
+            } else {
+                alert('Traducción eliminada correctamente')
+            }
+            refreshData()
+        }
+    } catch (error: any) {
+        console.error("Delete translation failed", error)
+        alert(error.data?.message || 'Error al eliminar la traducción')
     }
 }
 
@@ -448,7 +631,6 @@ const fetchLanguages = async () => {
         }
     } catch (error) {
         console.error('Error fetching languages:', error)
-        // Fallback to basic languages if API fails
         allLanguages.value = [
             { id: 1, code: 'ES', country: 'Español', flag: '🇪🇸' },
             { id: 2, code: 'EN', country: 'English', flag: '🇬🇧' },
@@ -461,23 +643,13 @@ const fetchLanguages = async () => {
 }
 
 // Clone Modal Functions
-const getLanguageFlag = (code: string) => {
-    return languageFlags[code] || '🌐'
-}
-
 const openCloneModal = async (tour: Tour) => {
     selectedTour.value = tour
     selectedLanguage.value = null
     cloneType.value = 'manual'
-
-    // Load all available languages if not already loaded
     if (allLanguages.value.length === 0) {
         await fetchLanguages()
     }
-
-    // The computed property 'availableLanguages' will automatically
-    // filter out languages that already have translations for this tour
-
     showCloneModal.value = true
 }
 
@@ -511,27 +683,20 @@ const performClone = async () => {
 
         if (response && response.success) {
             closeCloneModal()
-
-            // Show success message
             alert(response.message || `Traducción ${selectedLanguage.value.country} agregada exitosamente`)
 
-            // Redirect to edit the tour with the new language
             if (response.data?.redirect_url) {
                 await navigateTo(response.data.redirect_url)
             } else if (response.data?.tour_id) {
-                // Fallback to tour edit page
                 await navigateTo(`/admin/tours/${response.data.tour_id}/edit`)
             }
 
-            // Refresh the list to show any updates
             await refreshData()
         } else {
             alert('Error: ' + (response.message || 'Error desconocido'))
         }
     } catch (error: any) {
         console.error('Error cloning tour:', error)
-
-        // Handle specific error messages
         if (error.data?.message) {
             alert('Error: ' + error.data.message)
         } else {
@@ -556,8 +721,20 @@ onMounted(() => {
   background: rgba(15, 23, 42, 0.5);
 }
 
-.material-symbols-outlined.filled {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+.expand-enter-to,
+.expand-leave-from {
+  opacity: 1;
+  max-height: 500px;
 }
 
 button:disabled {

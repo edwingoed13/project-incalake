@@ -238,7 +238,9 @@ const { data: response, pending, error } = await useAsyncData(
         return await api(`/bookings/token/${token}`)
       } else {
         // Code-based access (requires email verification in production)
-        return await api(`/bookings/${bookingCode}`)
+        const email = route.query.email as string
+        const params = email ? `?email=${encodeURIComponent(email)}` : ''
+        return await api(`/bookings/${bookingCode}${params}`)
       }
     } catch (err: any) {
       throw err

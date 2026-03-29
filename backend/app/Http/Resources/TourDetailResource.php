@@ -72,14 +72,20 @@ class TourDetailResource extends JsonResource
             // Step 8 Availability
             'require_availability' => $this->require_availability ?? false,
             'availability_data' => $this->availability_data,
-            'blocks_data' => $this->blocks_data,
-            'offers_data' => $this->offers_data,
+            // Extract blocks and offers from availability_data (where admin stores them)
+            'blocks_data' => $this->availability_data['blocks'] ?? $this->blocks_data ?? [],
+            'offers_data' => $this->availability_data['offers'] ?? $this->offers_data ?? [],
 
             'featured_image' => $this->featured_image_path,
             'thumbnail' => $this->thumbnail_path,
-            'youtube_url' => $this->youtube_url ?? '',
+            // Video: per-translation only (no fallback to other languages)
+            'youtube_url' => $translation?->youtube_url ?? '',
             'video_first' => $this->video_first ?? true,
             'gallery_layout' => $this->gallery_layout ?? 'hero_mosaic',
+            // Media alt/title texts per translation
+            'media_texts' => $translation?->media_texts ?? [],
+            // Booking texts per translation (policies, meeting point, pickup descriptions)
+            'booking_texts' => $translation?->booking_texts ?? [],
 
             'currency' => $this->currency ?? 'USD',
             'min_price' => $this->min_price,
@@ -188,6 +194,9 @@ class TourDetailResource extends JsonResource
                     'what_to_bring' => $trans->what_to_bring,
                     'policies' => $trans->policies,
                     'cancellation_policy' => $trans->cancellation_policy,
+                    'youtube_url' => $trans->youtube_url,
+                    'media_texts' => $trans->media_texts ?? [],
+                    'booking_texts' => $trans->booking_texts ?? [],
                 ];
             }),
 

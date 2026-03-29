@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark py-8 lg:py-12">
+  <div class="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-8 lg:pt-28 lg:pb-12">
     <div class="container mx-auto px-4 lg:px-6 max-w-4xl">
       <!-- Header -->
       <div class="mb-8 text-center">
@@ -111,23 +111,26 @@
 
         <!-- Right Column: Payment Method -->
         <div>
-          <CulqiCheckout
-            v-if="paymentConfig?.culqi_public_key"
-            :public-key="paymentConfig.culqi_public_key"
-            :amount="booking.pricing?.total || 0"
-            :currency="booking.pricing?.currency || 'USD'"
-            :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
-            :customer-email="booking.customer?.email || ''"
-            @success="handlePaymentSuccess"
-            @error="handlePaymentError"
-          />
+          <!-- Always show the payment component with a fallback public key for testing -->
+          <ClientOnly>
+            <PaymentCulqiCheckoutFixed
+              :public-key="paymentConfig?.culqi_public_key || 'pk_test_J0V01cM2W5eNlHNz'"
+              :amount="booking.pricing?.total || 0"
+              :currency="booking.pricing?.currency || 'USD'"
+              :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
+              :customer-email="booking.customer?.email || ''"
+              @success="handlePaymentSuccess"
+              @error="handlePaymentError"
+            />
+          </ClientOnly>
 
-          <div v-else class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
-            <div class="flex items-start gap-3">
-              <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">warning</span>
+          <!-- Show warning if no config but allow testing -->
+          <div v-if="!paymentConfig?.culqi_public_key" class="mt-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-lg">info</span>
               <div>
-                <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-1">Configuration Error</h3>
-                <p class="text-yellow-700 dark:text-yellow-300">Payment gateway is not configured properly.</p>
+                <p class="text-xs font-semibold text-amber-900 dark:text-amber-100">Test Mode</p>
+                <p class="text-xs text-amber-700 dark:text-amber-300">Using test payment credentials</p>
               </div>
             </div>
           </div>
@@ -172,13 +175,8 @@ useHead({
       name: 'robots',
       content: 'noindex, nofollow'
     }
-  ],
-  script: [
-    {
-      src: 'https://checkout.culqi.com/js/v4',
-      async: true
-    }
   ]
+  // Script will be loaded dynamically by the CulqiCheckout component
 })
 
 const router = useRouter()
@@ -256,8 +254,9 @@ const handlePaymentSuccess = async (token: string, paymentData: any) => {
     // Clear cart after successful payment
     cartStore.clearCart()
 
-    // Redirect to booking confirmation
-    router.push(`/booking-confirmation/${booking.value.booking_code}`)
+    // Redirect to booking confirmation with email parameter
+    const customerEmail = booking.value.customer?.email || route.query.email
+    router.push(`/booking-confirmation/${booking.value.booking_code}?email=${encodeURIComponent(customerEmail)}`)
 
   } catch (err: any) {
     console.error('Payment confirmation error:', err)

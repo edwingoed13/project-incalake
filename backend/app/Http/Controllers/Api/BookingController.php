@@ -126,15 +126,36 @@ class BookingController extends Controller
                 'adult_price_found' => $adultPrice ? true : false
             ]);
 
-            // Simple pricing: adults full price, children 50%, infants free
-            $subtotal = ($adults * $pricePerAdult) + ($children * $pricePerAdult * 0.5) + ($infants * 0);
-            $discount = 0; // TODO: Implement discount logic
-            $total = $subtotal - $discount;
+            // Check if there's an offer discount from frontend
+            $discount = 0;
+            $originalSubtotal = ($adults * $pricePerAdult) + ($children * $pricePerAdult * 0.5) + ($infants * 0);
 
-            // Use frontend-provided total_price as override when DB price lookup gives $0
-            if ($request->has('total_price') && (float) $request->total_price > 0 && $total < 1.00) {
-                $total = (float) $request->total_price;
+            // Use frontend-provided pricing if available (includes offer calculations)
+            if ($request->has('total_amount') && (float) $request->total_amount > 0) {
+                $total = (float) $request->total_amount;
                 $subtotal = $total;
+
+                // Calculate discount if offer is active
+                if ($request->has('has_offer') && $request->has_offer) {
+                    if ($request->has('original_price')) {
+                        $originalPrice = (float) $request->original_price;
+                        $basePrice = (float) $request->base_price;
+                        $discount = ($originalPrice - $basePrice) * $adults;
+                        $subtotal = $originalPrice * $adults;
+                    }
+                }
+            } else {
+                // Fallback to calculated prices
+                $subtotal = $originalSubtotal;
+                $total = $subtotal - $discount;
+            }
+
+            // Also check for old field name for backward compatibility
+            if (!isset($total) || $total < 1.00) {
+                if ($request->has('total_price') && (float) $request->total_price > 0) {
+                    $total = (float) $request->total_price;
+                    $subtotal = $total;
+                }
             }
 
             // Ensure minimum amount for Culqi (requires at least $1.00 = 100 cents)
@@ -616,6 +637,66 @@ class BookingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al cancelar la reserva',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * List all bookings with filters and pagination (for admin)
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request)
+    {
+        try {
+            $query = Booking::with(['tour']);
+
+            // Search filter
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('booking_code', 'like', "%{$search}%")
+                      ->orWhere('customer_name', 'like', "%{$search}%")
+                      ->orWhere('customer_email', 'like', "%{$search}%")
+                      ->orWhere('customer_phone', 'like', "%{$search}%");
+                });
+            }
+
+            // Status filter
+            if ($request->has('status') && $request->status) {
+                $query->where('status', $request->status);
+            }
+
+            // Payment method filter
+            if ($request->has('payment_method') && $request->payment_method) {
+                $query->where('payment_method', $request->payment_method);
+            }
+
+            // Date filter
+            if ($request->has('date') && $request->date) {
+                $query->whereDate('tour_date', $request->date);
+            }
+
+            // Order by created_at desc
+            $query->orderBy('created_at', 'desc');
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $bookings = $query->paginate($perPage);
+
+            return response()->json($bookings);
+
+        } catch (\Exception $e) {
+            \Log::error('Error fetching bookings', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar las reservas',
                 'error' => $e->getMessage()
             ], 500);
         }

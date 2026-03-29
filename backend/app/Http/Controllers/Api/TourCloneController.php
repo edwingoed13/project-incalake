@@ -434,4 +434,59 @@ class TourCloneController extends Controller
 
         return $languages[strtoupper($code)] ?? $code;
     }
+
+    /**
+     * Delete a specific translation from a tour.
+     * If it's the last translation, deletes the entire tour.
+     */
+    public function deleteTranslation(int $id, int $languageId): JsonResponse
+    {
+        try {
+            $tour = Tour::with('translations')->findOrFail($id);
+
+            $translation = TourTranslation::where('tour_id', $id)
+                ->where('language_id', $languageId)
+                ->first();
+
+            if (!$translation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró la traducción para ese idioma.',
+                ], 404);
+            }
+
+            // If this is the only translation, delete the entire tour
+            if ($tour->translations->count() <= 1) {
+                $tour->delete();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Era la última traducción. El tour completo ha sido eliminado.',
+                    'tour_deleted' => true,
+                ]);
+            }
+
+            // Delete just the translation
+            $translation->delete();
+
+            // If we deleted the primary language, update it to the first remaining translation
+            if ($tour->primary_language_id === $languageId) {
+                $remaining = TourTranslation::where('tour_id', $id)->first();
+                if ($remaining) {
+                    $tour->update(['primary_language_id' => $remaining->language_id]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Traducción eliminada correctamente.',
+                'tour_deleted' => false,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error deleting translation", ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la traducción: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

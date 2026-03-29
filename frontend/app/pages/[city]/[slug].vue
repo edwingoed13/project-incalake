@@ -1,6 +1,6 @@
 <template>
   <div v-if="tour" class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
 
       <!-- Title & Basic Info -->
       <div class="flex flex-col lg:flex-row justify-between gap-6 mb-8">
@@ -128,6 +128,19 @@
                     class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                   />
                 </div>
+                <!-- Active offer indicator -->
+                <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
+                  <span class="text-xs font-bold text-green-700 dark:text-green-400">
+                    {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                    — Special offer for this date!
+                  </span>
+                </div>
+                <!-- Blocked date warning -->
+                <div v-if="isDateBlocked" class="mt-2 flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <span class="material-symbols-outlined text-red-600 text-base">block</span>
+                  <span class="text-xs font-bold text-red-700 dark:text-red-400">This date is not available. Please select another date.</span>
+                </div>
               </div>
 
               <!-- Time Selector -->
@@ -176,7 +189,10 @@
                   <span class="font-semibold">${{ (subtotal || 0).toFixed(2) }}</span>
                 </div>
                 <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">Group discount</span>
+                  <span class="text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">local_offer</span>
+                    {{ activeOffer?.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : 'Discount' }}
+                  </span>
                   <span class="font-semibold text-green-600">-${{ (groupDiscount || 0).toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
@@ -343,10 +359,34 @@ const basePrice = computed(() => {
 
 const subtotal = computed(() => basePrice.value * adults.value)
 
-const groupDiscount = computed(() => {
-  // TODO: Get group discount from tour.offers_data when implemented
-  return 0
+// Check if selected date has an active offer
+const activeOffer = computed(() => {
+  if (!selectedDate.value || !tour.value?.offers_data) return null
+  const selected = selectedDate.value
+  return tour.value.offers_data.find((offer: any) => {
+    return selected >= offer.startDate && selected <= offer.endDate
+  }) || null
 })
+
+// Check if selected date is blocked
+const isDateBlocked = computed(() => {
+  if (!selectedDate.value || !tour.value?.blocks_data) return false
+  const selected = selectedDate.value
+  return tour.value.blocks_data.some((block: any) => {
+    return selected >= block.startDate && selected <= block.endDate
+  })
+})
+
+// Calculate offer discount
+const offerDiscount = computed(() => {
+  if (!activeOffer.value) return 0
+  if (activeOffer.value.discountType === 'percentage') {
+    return subtotal.value * (activeOffer.value.discount / 100)
+  }
+  return activeOffer.value.discount * adults.value
+})
+
+const groupDiscount = computed(() => offerDiscount.value)
 
 const total = computed(() => subtotal.value - groupDiscount.value)
 

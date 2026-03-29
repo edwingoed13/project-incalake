@@ -19,6 +19,8 @@ class StoreTourRequest extends FormRequest
             'primary_language_id' => 'required|exists:languages,id',
             'city_id' => 'nullable|exists:cities,id',
             'city_name' => 'required|string|max:255',
+            'city_latitude' => 'nullable|numeric|between:-90,90',
+            'city_longitude' => 'nullable|numeric|between:-180,180',
             'code' => 'nullable|string|max:100|unique:tours,code',
             'service_type' => 'required|in:tour,package,experience,transport',
             'status' => 'nullable|in:draft,published,archived',
@@ -76,7 +78,7 @@ class StoreTourRequest extends FormRequest
             'prices.*.ranges.*.price' => 'required_with:prices.*.ranges|numeric|min:0.01',
 
             'categories' => 'nullable|array',
-            'categories.*' => 'integer|exists:category_news,id',
+            'categories.*' => 'integer|exists:categories_new,id',
 
             'map_points' => 'nullable|array',
             'map_points.*.name' => 'required|string|max:255',

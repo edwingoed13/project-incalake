@@ -7,45 +7,79 @@
         Información Básica del Tour
       </h3>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-        <!-- Idioma Principal -->
-        <div class="col-span-2 space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Idioma Principal del Tour <span class="text-primary">*</span>
-            <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(selecciona primero para generar el código)</span>
-          </label>
-          <div class="relative">
-            <select 
-              v-model="selectedLanguageId"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-            >
-              <option v-for="lang in availableLanguages" :key="lang.id" :value="lang.id">
-                {{ lang.country }} ({{ lang.code.toUpperCase() }})
-              </option>
-            </select>
-            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-          </div>
+      <!-- Editing language banner (edit mode) -->
+      <div v-if="isEditMode" class="mb-6 flex items-center gap-4 px-5 py-4 bg-primary/5 border border-primary/20 rounded-2xl">
+        <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg">
+          {{ currentLangFlag }}
         </div>
+        <div class="flex-1">
+          <p class="text-sm font-black text-slate-900 dark:text-white">
+            Editando traducción: <span class="text-primary">{{ currentLangName }} ({{ store.currentLanguage.toUpperCase() }})</span>
+          </p>
+          <p class="text-[10px] text-slate-500 font-medium">Código del tour: <span class="font-mono font-black">{{ store.basicInfo.code }}</span></p>
+        </div>
+        <!-- Show other available translations -->
+        <div class="flex gap-1">
+          <span
+            v-for="lang in tourTranslationCodes"
+            :key="lang"
+            :class="lang === store.currentLanguage
+              ? 'bg-primary text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
+            class="px-2 py-1 text-[9px] font-black rounded-md uppercase"
+          >
+            {{ lang }}
+          </span>
+        </div>
+      </div>
 
-        <!-- Código del Tour -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Código del Tour <span class="text-primary">*</span>
-            <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(generado automáticamente)</span>
-          </label>
-          <div class="relative group">
-            <input 
-              v-model="store.basicInfo.code"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-mono font-bold tracking-wider" 
-              placeholder="ES000" 
-              readonly
-              type="text"
-            />
-            <div class="mt-1.5 flex items-center gap-1.5 px-1">
-              <span class="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
-              <span class="text-[10px] font-bold text-green-600 uppercase">Código generado: {{ store.basicInfo.code || '...' }}</span>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        <!-- Idioma Principal (solo al crear un tour nuevo) -->
+        <template v-if="!isEditMode">
+          <div class="col-span-2 space-y-2">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Idioma Principal del Tour <span class="text-primary">*</span>
+              <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(selecciona primero para generar el código)</span>
+            </label>
+            <div class="relative">
+              <select
+                v-model="selectedLanguageId"
+                class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
+              >
+                <option v-for="lang in availableLanguages" :key="lang.id" :value="lang.id">
+                  {{ lang.country }} ({{ lang.code.toUpperCase() }})
+                </option>
+              </select>
+              <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
             </div>
           </div>
+
+          <!-- Código del Tour (solo crear) -->
+          <div class="space-y-2">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Código del Tour <span class="text-primary">*</span>
+              <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(generado automáticamente)</span>
+            </label>
+            <div class="relative group">
+              <input
+                v-model="store.basicInfo.code"
+                class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-mono font-bold tracking-wider"
+                placeholder="ES000"
+                readonly
+                type="text"
+              />
+              <div class="mt-1.5 flex items-center gap-1.5 px-1">
+                <span class="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
+                <span class="text-[10px] font-bold text-green-600 uppercase">Código generado: {{ store.basicInfo.code || '...' }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Shared fields info (edit mode) -->
+        <div v-if="isEditMode" class="col-span-2 flex items-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl">
+          <span class="material-symbols-outlined text-amber-500 text-base">info</span>
+          <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400">Los siguientes campos son compartidos entre todos los idiomas de este tour.</p>
         </div>
 
         <!-- Ciudad de Salida -->
@@ -56,11 +90,12 @@
           </label>
           <div class="relative group">
             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-            <input 
+            <input
+              ref="cityInputRef"
               v-model="citySearchQuery"
               @input="onCitySearch"
-              class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold" 
-              placeholder="Ej: Puno, Cusco..." 
+              class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
+              placeholder="Ej: Puno, Cusco..."
               type="text"
             />
             
@@ -219,12 +254,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
+import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
 const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
+const { initCityAutocomplete, cleanup } = useGooglePlaces()
+
+// Edit mode detection
+const isEditMode = computed(() => !!store.tourId && store.tourId !== 'new')
+
+// Language display helpers
+const langFlags: Record<string, string> = {
+  es: '🇪🇸', en: '🇬🇧', pt: '🇵🇹', fr: '🇫🇷', de: '🇩🇪', it: '🇮🇹'
+}
+const langNames: Record<string, string> = {
+  es: 'Español', en: 'English', pt: 'Português', fr: 'Français', de: 'Deutsch', it: 'Italiano'
+}
+const currentLangFlag = computed(() => langFlags[store.currentLanguage] || '🌐')
+const currentLangName = computed(() => langNames[store.currentLanguage] || store.currentLanguage)
+
+// Get list of translation language codes for this tour
+const tourTranslationCodes = computed(() => {
+  return Object.keys(store.contentSEO).filter(code => {
+    const seo = store.contentSEO[code]
+    return seo && seo.title
+  })
+})
 
 // Data state
 const availableLanguages = ref<any[]>([])
@@ -236,6 +294,7 @@ const isTourActive = ref(true)
 const citySearchQuery = ref('')
 const cityResults = ref<any[]>([])
 const isSearchingCities = ref(false)
+const cityInputRef = ref<HTMLInputElement | null>(null)
 
 // Fetch languages on mount
 const fetchLanguages = async () => {
@@ -246,14 +305,23 @@ const fetchLanguages = async () => {
       store.availableLanguages = response.data // Save to store for other steps
       
       // If store already has a language (edit mode), use it. Otherwise, select 'es' or first.
+      // Preserve ?lang= from URL — never override it
+      const route = useRoute()
+      const langFromUrl = (route.query.lang as string)?.toLowerCase()
+
       if (store.basicInfo.languageId) {
         selectedLanguageId.value = store.basicInfo.languageId
         const currentLang = availableLanguages.value.find(l => l.id === store.basicInfo.languageId)
         if (currentLang) {
           selectedLanguageCode.value = currentLang.code
-          store.currentLanguage = currentLang.code.toLowerCase()
         }
-      } else {
+      }
+
+      // Set currentLanguage: URL param takes priority, then existing store value for new tours
+      if (langFromUrl) {
+        store.currentLanguage = langFromUrl
+      } else if (!isEditMode.value) {
+        // Only auto-set language for new tours
         const esLang = availableLanguages.value.find(l => l.code.toLowerCase() === 'es')
         if (esLang) {
           selectedLanguageId.value = esLang.id
@@ -285,11 +353,45 @@ const generateTourCode = async (langId: number) => {
   }
 }
 
-// City Search
+// Initialize Google Places Autocomplete
+const initializeGooglePlaces = async () => {
+  await nextTick()
+
+  if (cityInputRef.value) {
+    try {
+      await initCityAutocomplete(cityInputRef.value, (placeData: any) => {
+        // Store the city information
+        store.basicInfo.nearestCity = placeData.cityName || placeData.formatted_address
+        store.basicInfo.cityCoordinates = {
+          lat: placeData.lat,
+          lng: placeData.lng
+        }
+
+        // Update the input value
+        citySearchQuery.value = placeData.cityName ?
+          (placeData.countryName ? `${placeData.cityName}, ${placeData.countryName}` : placeData.cityName) :
+          placeData.formatted_address
+
+        // Clear any old results
+        cityResults.value = []
+      })
+    } catch (error) {
+      console.error('Error initializing Google Places:', error)
+      // Fallback to manual search if Google Places fails
+    }
+  }
+}
+
+// Fallback manual city search (in case Google Places fails)
 let searchTimeout: any = null
 const onCitySearch = () => {
+  // Don't search if Google Places is handling it
+  if (cityInputRef.value?.hasAttribute('data-autocomplete-initialized')) {
+    return
+  }
+
   if (searchTimeout) clearTimeout(searchTimeout)
-  
+
   if (citySearchQuery.value.length < 2) {
     cityResults.value = []
     return
@@ -312,15 +414,14 @@ const onCitySearch = () => {
 
 const selectCity = (city: any) => {
   store.basicInfo.nearestCity = city.name
-  store.basicInfo.cityId = city.id 
+  store.basicInfo.cityId = city.id
   citySearchQuery.value = city.name
   cityResults.value = []
 }
 
-// Watch for language changes to auto-generate the tour code
+// Watch for language changes to auto-generate the tour code (only for new tours)
 watch(selectedLanguageId, (newLangId) => {
-  if (newLangId) {
-    const isNewTour = !store.tourId || store.tourId === 'new'
+  if (newLangId && !isEditMode.value) {
     const languageChanged = store.basicInfo.languageId !== newLangId
 
     store.basicInfo.languageId = newLangId
@@ -328,11 +429,9 @@ watch(selectedLanguageId, (newLangId) => {
 
     if (lang) {
         selectedLanguageCode.value = lang.code
-        // Update the global current language in the store for Step 2
         store.currentLanguage = lang.code.toLowerCase()
 
-        // Generate new code when language changes
-        if (isNewTour || languageChanged) {
+        if (languageChanged) {
            generateTourCode(newLangId)
         }
     }
@@ -342,13 +441,23 @@ watch(selectedLanguageId, (newLangId) => {
 // Initialize city query if already exists in store
 onMounted(async () => {
   await fetchLanguages()
-  
+
   if (store.basicInfo.nearestCity) {
     citySearchQuery.value = store.basicInfo.nearestCity
   }
 
+  // Initialize Google Places Autocomplete
+  await initializeGooglePlaces()
+
   if (!store.basicInfo.code && selectedLanguageId.value) {
     generateTourCode(selectedLanguageId.value)
+  }
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (cityInputRef.value) {
+    cleanup(cityInputRef.value)
   }
 })
 </script>

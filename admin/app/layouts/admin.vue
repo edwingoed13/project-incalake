@@ -50,15 +50,10 @@
 
             <!-- Servicios -->
             <MenuSection
+              v-if="authStore.hasPermission('tours.view') || authStore.hasPermission('categories.view') || authStore.hasPermission('languages.view')"
               title="Servicios"
               icon="inventory_2"
-              :items="[
-                { label: 'Tours', path: '/admin/tours', icon: 'tour' },
-                { label: 'Productos', path: '/admin/products', icon: 'shopping_bag', badge: 'Próximamente' },
-                { label: 'Categorías', path: '/admin/categories', icon: 'category' },
-                { label: 'Idiomas', path: '/admin/languages', icon: 'language' },
-                { label: 'Paquetes', path: '/admin/packages', icon: 'card_giftcard', badge: 'Próximamente' }
-              ]"
+              :items="servicesMenuItems"
               @closeMobileSidebar="closeMobileSidebar"
             />
 
@@ -123,12 +118,10 @@
 
             <!-- Configuración -->
             <MenuSection
+              v-if="authStore.hasPermission('users.view') || authStore.hasPermission('settings.view')"
               title="Configuración"
               icon="settings"
-              :items="[
-                { label: 'Usuarios y Roles', path: '/admin/users', icon: 'admin_panel_settings' },
-                { label: 'Traducción IA', path: '/admin/settings/ai-translation', icon: 'translate', badge: 'Nuevo' }
-              ]"
+              :items="settingsMenuItems"
               @closeMobileSidebar="closeMobileSidebar"
             />
           </nav>
@@ -207,6 +200,29 @@ const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
 const isDark = ref(false)
 
+// Cargar permisos al iniciar
+const loadPermissions = async () => {
+  if (!authStore.token) return
+
+  try {
+    const config = useRuntimeConfig()
+    const response = await fetch(`${config.public.apiUrl}/auth/permissions`, {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.data) {
+        authStore.setPermissions(data.data.permissions, data.data.role)
+      }
+    }
+  } catch (error) {
+    console.error('Error loading permissions:', error)
+  }
+}
+
 // Inicializar tema desde localStorage
 onMounted(() => {
   if (process.client) {
@@ -219,7 +235,47 @@ onMounted(() => {
     } else {
       document.documentElement.classList.remove('dark')
     }
+
+    // Cargar permisos
+    loadPermissions()
   }
+})
+
+// Computed menu items filtrados por permisos
+const servicesMenuItems = computed(() => {
+  const items = []
+
+  if (authStore.hasPermission('tours.view')) {
+    items.push({ label: 'Tours', path: '/admin/tours', icon: 'tour' })
+  }
+
+  items.push({ label: 'Productos', path: '/admin/products', icon: 'shopping_bag', badge: 'Próximamente' })
+
+  if (authStore.hasPermission('categories.view')) {
+    items.push({ label: 'Categorías', path: '/admin/categories', icon: 'category' })
+  }
+
+  if (authStore.hasPermission('languages.view')) {
+    items.push({ label: 'Idiomas', path: '/admin/languages', icon: 'language' })
+  }
+
+  items.push({ label: 'Paquetes', path: '/admin/packages', icon: 'card_giftcard', badge: 'Próximamente' })
+
+  return items
+})
+
+const settingsMenuItems = computed(() => {
+  const items = []
+
+  if (authStore.hasPermission('users.view')) {
+    items.push({ label: 'Usuarios y Roles', path: '/admin/users', icon: 'admin_panel_settings' })
+  }
+
+  if (authStore.hasPermission('settings.ai')) {
+    items.push({ label: 'Traducción IA', path: '/admin/settings/ai-translation', icon: 'translate', badge: 'Nuevo' })
+  }
+
+  return items
 })
 
 const pageTitle = computed(() => {

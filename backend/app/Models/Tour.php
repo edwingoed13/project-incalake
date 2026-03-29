@@ -17,6 +17,8 @@ class Tour extends Model
         'primary_language_id',
         'city_id',
         'city_name',
+        'city_latitude',
+        'city_longitude',
         'service_type',
         'status',
         'difficulty',

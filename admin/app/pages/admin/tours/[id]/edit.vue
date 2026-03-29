@@ -93,9 +93,20 @@ const currentStepLabel = computed(() => {
 })
 
 onMounted(async () => {
+  // Set the language FIRST, before fetching data, so Step1 respects it
+  const langParam = (route.query.lang as string)?.toLowerCase()
+  if (langParam) {
+    store.currentLanguage = langParam
+  }
+
   if (route.params.id && route.params.id !== 'new') {
     store.setTourId(route.params.id as string)
     await store.fetchTourData(route.params.id as string)
+
+    // Re-apply after fetch (fetchTourData may override currentLanguage)
+    if (langParam) {
+      store.currentLanguage = langParam
+    }
   }
 })
 </script>

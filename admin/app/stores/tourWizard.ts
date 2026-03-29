@@ -18,6 +18,10 @@ export interface TourStep1 {
   nearestCity: string
   nearestAirport: string
   cityId?: number
+  cityCoordinates?: {
+    lat: number
+    lng: number
+  }
   languageId?: number
 }
 
@@ -47,6 +51,12 @@ export interface MapPoint {
   order: number
 }
 
+export interface TimelineItem {
+  id: string
+  time: string
+  activity: string
+}
+
 export interface TourStep3Content {
   itinerary: ItineraryDay[]
   itineraryText: string
@@ -58,6 +68,7 @@ export interface TourStep3Content {
   generalPolicies: string
   cancellationPolicy: string
   mapPoints: MapPoint[]
+  timelineItems?: TimelineItem[]
 }
 
 export interface PaxPriceRange {
@@ -147,12 +158,30 @@ export interface Category {
   icon?: string
 }
 
+export interface AvailabilityBlock {
+  id: string
+  startDate: string
+  endDate: string
+  reason: string
+}
+
+export interface AvailabilityOffer {
+  id: string
+  startDate: string
+  endDate: string
+  discount: number
+  discountType: 'percentage' | 'amount'
+  color: string
+}
+
 export interface TourStep8Availability {
   requireAvailability: boolean
   start: string
   end: string
   activeDays: number[]
   specialDays: string[]
+  blocks?: AvailabilityBlock[]
+  offers?: AvailabilityOffer[]
 }
 
 export const useTourWizardStore = defineStore('tourWizard', {
@@ -187,10 +216,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
     // Step 2 Data (Multi-language)
     contentSEO: {
-      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '' },
-      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '' },
-      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '' },
-      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '' },
+      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      pt: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      it: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
     } as Record<string, any>,
 
     // Step 3 Data (Multi-language)
@@ -199,6 +230,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
       es: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
       fr: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
       de: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
+      pt: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
+      it: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
     } as Record<string, TourStep3Content>,
 
     commercialRules: {
@@ -282,7 +315,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
       start: new Date().toISOString().split('T')[0],
       end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
       activeDays: [1, 2, 3, 4, 5, 6, 0], // Monday to Sunday
-      specialDays: []
+      specialDays: [],
+      blocks: [],
+      offers: []
     } as TourStep8Availability,
   }),
 
@@ -350,13 +385,29 @@ export const useTourWizardStore = defineStore('tourWizard', {
           if (data.translations && Array.isArray(data.translations)) {
             data.translations.forEach((trans: any) => {
               const langCode = trans.language?.code?.toLowerCase() || 'es'
+              // Initialize language key if it doesn't exist
+              if (!this.contentSEO[langCode]) {
+                this.contentSEO[langCode] = { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [] }
+              }
+              if (!this.detailedContent[langCode]) {
+                this.detailedContent[langCode] = { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] }
+              }
               if (this.contentSEO[langCode]) {
                 this.contentSEO[langCode] = {
                   title: trans.h1_title || '',
                   shortDescription: trans.short_description || '',
                   metaTitle: trans.meta_title || '',
                   metaDescription: trans.meta_description || '',
-                  slug: trans.slug || ''
+                  slug: trans.slug || '',
+                  youtubeUrl: trans.youtube_url || '',
+                  mediaTexts: trans.media_texts || [],
+                  bookingTexts: trans.booking_texts || {
+                    policyDescription: '',
+                    policyDescriptionCustom: '',
+                    meetingPointDescription: '',
+                    pickupLocationDescription: '',
+                    dropoffLocationDescription: ''
+                  }
                 }
                 
                 if (this.detailedContent[langCode]) {
@@ -369,7 +420,16 @@ export const useTourWizardStore = defineStore('tourWizard', {
                      recommendations: trans.recommendations || '',
                      thingsToBring: trans.what_to_bring || '',
                      generalPolicies: trans.policies || '',
-                     cancellationPolicy: trans.cancellation_policy || ''
+                     cancellationPolicy: trans.cancellation_policy || '',
+                     // Map points are the same for all languages
+                     mapPoints: (data.map_points || []).map((point: any) => ({
+                       id: point.id,
+                       name: point.name,
+                       description: point.description,
+                       coordinates: point.coordinates,
+                       type: point.type,
+                       order: point.order
+                     }))
                    }
                 }
                 
@@ -482,6 +542,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
         primary_language_id: langId,
         city_id: this.basicInfo.cityId,
         city_name: this.basicInfo.nearestCity,
+        city_latitude: this.basicInfo.cityCoordinates?.lat || null,
+        city_longitude: this.basicInfo.cityCoordinates?.lng || null,
         code: this.basicInfo.code,
         service_type: this.basicInfo.serviceType,
         difficulty: this.basicInfo.difficulty,
@@ -529,13 +591,21 @@ export const useTourWizardStore = defineStore('tourWizard', {
         // Step 7 Categories
         categories: this.selectedCategories,
 
+        // Map points from Step 3 (use current language or first available)
+        map_points: this.detailedContent[this.currentLanguage]?.mapPoints ||
+                   this.detailedContent.es?.mapPoints ||
+                   this.detailedContent.en?.mapPoints ||
+                   [],
+
         // Step 8 Availability
         require_availability: this.availability.requireAvailability,
         availability_data: {
           start: this.availability.start,
           end: this.availability.end,
           activeDays: this.availability.activeDays,
-          specialDays: this.availability.specialDays
+          specialDays: this.availability.specialDays,
+          blocks: this.availability.blocks || [],
+          offers: this.availability.offers || []
         },
 
         translations: {} as Record<number, any>
@@ -585,7 +655,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
             meta_title: seoData.metaTitle,
             meta_description: seoData.metaDescription,
             slug: seoData.slug || payload.translations[langId]?.slug || fallbackSlug,
-            
+
             // Step 3 data
             long_description: detailed?.detailedDescription,
             itinerary: detailed?.itineraryText,
@@ -594,7 +664,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
             recommendations: detailed?.recommendations,
             what_to_bring: detailed?.thingsToBring,
             policies: detailed?.generalPolicies,
-            cancellation_policy: detailed?.cancellationPolicy
+            cancellation_policy: detailed?.cancellationPolicy,
+
+            // Per-language multimedia
+            youtube_url: seoData.youtubeUrl || '',
+            media_texts: seoData.mediaTexts || [],
+            booking_texts: seoData.bookingTexts || {}
           }
         }
       })

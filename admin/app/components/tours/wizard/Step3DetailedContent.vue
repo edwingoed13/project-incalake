@@ -8,7 +8,17 @@
           </div>
           <div>
             <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Editando contenido detallado en</p>
-            <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ store.currentLanguage.toUpperCase() }}</h4>
+            <div class="flex items-center gap-2 mt-1">
+              <button
+                v-for="lang in tourLanguages"
+                :key="lang"
+                @click="store.currentLanguage = lang"
+                class="px-2 py-0.5 rounded text-[10px] font-black uppercase transition-all"
+                :class="store.currentLanguage === lang ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-700'"
+              >
+                {{ lang }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -50,110 +60,206 @@
           </div>
           
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Left: Itinerary List -->
-            <div class="space-y-6">
-              <div class="flex items-center justify-between">
-                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Timeline Activities</h4>
-                <button 
-                  @click="addDay"
-                  class="flex items-center gap-2 text-primary text-xs font-bold hover:underline"
-                >
-                  <span class="material-symbols-outlined text-sm">add_circle</span>
-                  Add Day
-                </button>
-              </div>
-
-              <div class="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
-                <TransitionGroup name="list">
-                  <div 
-                    v-for="(day, index) in currentLangData.itinerary" 
-                    :key="day.id"
-                    class="glass-card rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden group transition-all"
-                  >
-                    <div class="p-4 space-y-4">
-                      <div class="flex justify-between items-start">
-                        <div class="flex items-center gap-2 flex-1">
-                          <span class="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded uppercase">Day {{ index + 1 }}</span>
-                          <input 
-                            v-model="day.title"
-                            class="flex-1 text-sm font-bold bg-transparent border-none p-0 focus:ring-0 text-slate-900 dark:text-white" 
-                            placeholder="Title of this day..." 
-                            type="text"
-                          />
-                        </div>
-                        <button @click="removeDay(index)" class="text-slate-300 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
-                      </div>
-                      <textarea 
-                        v-model="day.description"
-                        class="w-full bg-slate-50/50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-lg p-2 text-xs text-slate-600 dark:text-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none" 
-                        placeholder="What happens today?" 
-                        rows="2"
-                      ></textarea>
-                    </div>
-                  </div>
-                </TransitionGroup>
-                
-                <div v-if="currentLangData.itinerary.length === 0" class="py-12 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-300">
-                  <span class="material-symbols-outlined text-4xl mb-2 opacity-20">event_note</span>
-                  <p class="text-xs font-medium">No days added.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: Map Builder -->
+            <!-- Left: Map Preview -->
             <div class="space-y-6">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Tour Map Points</h4>
-                <div class="flex items-center gap-2 text-[10px] text-emerald-500 font-bold uppercase tracking-wider animate-pulse">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live Preview
+              </div>
+
+              <!-- Map Preview -->
+              <div class="relative rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-900 h-[500px] shadow-inner">
+                <div id="tourMapCanvas" class="w-full h-full"></div>
+              </div>
+            </div>
+
+            <!-- Right: Add Point Form and Points List -->
+            <div class="space-y-6">
+
+              <!-- Add New Point Section -->
+              <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-primary text-sm">add_location</span>
+                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Add New Point</h5>
+                </div>
+
+                <div class="space-y-2">
+                  <input
+                    ref="mapSearchInput"
+                    v-model="newPoint.name"
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    placeholder="Search location (Google Places)..."
+                    @input="onMapSearchInput"
+                  />
+
+                  <textarea
+                    v-model="newPoint.description"
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                    placeholder="Description (optional)"
+                    rows="2"
+                  ></textarea>
+
+                  <div class="flex gap-2">
+                    <select
+                      v-model="newPoint.type"
+                      class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                    >
+                      <option value="">Select type...</option>
+                      <option value="punto_reunion">Meeting Point</option>
+                      <option value="punto_parada">Stop Point</option>
+                      <option value="lugar_turistico">Tourist Attraction</option>
+                      <option value="restaurant">Restaurant</option>
+                      <option value="hotel">Hotel</option>
+                      <option value="aeropuerto">Airport</option>
+                      <option value="estacion_tren">Train Station</option>
+                      <option value="puerto">Port/Harbor</option>
+                      <option value="otro">Other</option>
+                    </select>
+
+                    <input
+                      v-model="newPoint.coordinates"
+                      class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      placeholder="Lat,Lng (auto-filled)"
+                      readonly
+                    />
+
+                    <button
+                      @click="addMapPoint"
+                      :disabled="!newPoint.name || !newPoint.type || !newPoint.coordinates"
+                      class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1"
+                    >
+                      <span class="material-symbols-outlined text-sm">add</span>
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Map Container -->
-              <div class="relative rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-square shadow-inner group">
-                <div id="tourMapCanvas" class="w-full h-full"></div>
-                
-                <!-- Map Controls Overlay -->
-                <div class="absolute top-4 left-4 right-4 flex flex-col gap-2 z-10 pointer-events-none">
-                  <div class="pointer-events-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-xl space-y-3 max-w-xs">
-                    <input 
-                      id="pointNameInput"
-                      v-model="mapFields.name"
-                      class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-xs outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Search point/place name..."
-                    />
-                    <div class="flex gap-2">
-                       <select 
-                        v-model="mapFields.type"
-                        class="flex-1 px-2 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-[10px] font-bold outline-none"
-                       >
-                         <option value="">Type...</option>
-                         <option value="punto_parada">Stop Point</option>
-                         <option value="restaurant">Restaurant</option>
-                         <option value="lugar_turistico">Sightseeing</option>
-                         <option value="aeropuerto">Airport</option>
-                         <option value="estacion_tren">Train Station</option>
-                         <option value="punto_reunion">Meeting Point</option>
-                         <option value="otro">Other</option>
-                       </select>
-                       <button 
-                        @click="addPoint"
-                        class="px-3 py-2 bg-primary text-white text-[10px] font-bold rounded-lg hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center gap-1"
-                       >
-                         <span class="material-symbols-outlined text-[14px]">add</span> Add
-                       </button>
+              <!-- Points List -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-primary text-sm">route</span>
+                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Route Points ({{ currentLangData.mapPoints?.length || 0 }})</h5>
+                </div>
+
+                <div v-if="currentLangData.mapPoints && currentLangData.mapPoints.length > 0" class="space-y-2">
+                  <div
+                    v-for="(point, index) in currentLangData.mapPoints"
+                    :key="point.id || index"
+                    class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-md transition-shadow"
+                  >
+                    <div v-if="editingPointIndex !== index" class="flex items-start justify-between">
+                      <div class="flex items-start gap-3 flex-1">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-xs font-bold flex-shrink-0">
+                          {{ index + 1 }}
+                        </div>
+                        <div class="flex-1">
+                          <h6 class="font-bold text-sm text-slate-900 dark:text-white">{{ point.name }}</h6>
+                          <p v-if="point.description" class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ point.description }}</p>
+                          <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500">
+                            <span class="flex items-center gap-1">
+                              <span class="material-symbols-outlined text-xs">category</span>
+                              {{ getPointTypeLabel(point.type) }}
+                            </span>
+                            <span class="flex items-center gap-1">
+                              <span class="material-symbols-outlined text-xs">location_on</span>
+                              {{ point.coordinates }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1 ml-2">
+                        <button
+                          @click="movePointUp(index)"
+                          :disabled="index === 0"
+                          class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move up"
+                        >
+                          <span class="material-symbols-outlined text-sm">arrow_upward</span>
+                        </button>
+                        <button
+                          @click="movePointDown(index)"
+                          :disabled="index === currentLangData.mapPoints.length - 1"
+                          class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move down"
+                        >
+                          <span class="material-symbols-outlined text-sm">arrow_downward</span>
+                        </button>
+                        <button
+                          @click="editPoint(index)"
+                          class="p-1 text-slate-400 hover:text-blue-500"
+                          title="Edit"
+                        >
+                          <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
+                          @click="removePoint(index)"
+                          class="p-1 text-slate-400 hover:text-red-500"
+                          title="Delete"
+                        >
+                          <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div v-else class="space-y-2">
+                      <input
+                        v-model="editingPoint.name"
+                        class="w-full px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm"
+                        placeholder="Name"
+                      />
+                      <textarea
+                        v-model="editingPoint.description"
+                        class="w-full px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm resize-none"
+                        placeholder="Description"
+                        rows="2"
+                      ></textarea>
+                      <div class="flex gap-2">
+                        <select
+                          v-model="editingPoint.type"
+                          class="flex-1 px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm"
+                        >
+                          <option value="punto_reunion">Meeting Point</option>
+                          <option value="punto_parada">Stop Point</option>
+                          <option value="lugar_turistico">Tourist Attraction</option>
+                          <option value="restaurant">Restaurant</option>
+                          <option value="hotel">Hotel</option>
+                          <option value="aeropuerto">Airport</option>
+                          <option value="estacion_tren">Train Station</option>
+                          <option value="puerto">Port/Harbor</option>
+                          <option value="otro">Other</option>
+                        </select>
+                        <input
+                          v-model="editingPoint.coordinates"
+                          class="flex-1 px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm"
+                          placeholder="Lat,Lng"
+                        />
+                      </div>
+                      <div class="flex justify-end gap-2">
+                        <button
+                          @click="cancelEdit"
+                          class="px-3 py-1 text-xs font-bold text-slate-600 hover:text-slate-800"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          @click="saveEdit"
+                          class="px-3 py-1 bg-primary text-white text-xs font-bold rounded hover:bg-primary-600"
+                        >
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Points List Overlay (Minimal) -->
-                <div class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none flex justify-end">
-                   <div class="pointer-events-auto bg-black/50 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-bold text-white flex items-center gap-2 shadow-2xl">
-                     <span class="material-symbols-outlined text-xs">location_on</span>
-                     <span>{{ currentLangData.mapPoints.length }} Points registered</span>
-                   </div>
+                <div v-else class="py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400">
+                  <span class="material-symbols-outlined text-3xl mb-2 opacity-30">location_off</span>
+                  <p class="text-xs font-medium">No map points added yet</p>
+                  <p class="text-[10px] opacity-60 mt-1">Add points to create the tour route</p>
                 </div>
               </div>
+
             </div>
           </div>
         </section>
@@ -219,10 +325,19 @@
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import TiptapEditor from '~/components/common/TiptapEditor.vue'
+import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
+const { initCityAutocomplete } = useGooglePlaces()
+
+const tourLanguages = computed(() => {
+  return Object.keys(store.contentSEO).filter(code => {
+    const seo = store.contentSEO[code]
+    return seo && seo.title
+  })
+})
 
 const currentLangData = computed(() => {
   return store.detailedContent[store.currentLanguage]
@@ -232,7 +347,19 @@ const currentLangData = computed(() => {
 const map = ref<any>(null)
 const markers = ref<any[]>([])
 const routeLine = ref<any>(null)
-const mapFields = ref({
+const mapSearchInput = ref<HTMLInputElement | null>(null)
+
+// New point form
+const newPoint = ref({
+  name: '',
+  description: '',
+  coordinates: '',
+  type: ''
+})
+
+// Edit mode
+const editingPointIndex = ref<number | null>(null)
+const editingPoint = ref<any>({
   name: '',
   description: '',
   coordinates: '',
@@ -282,38 +409,123 @@ const setupMap = () => {
     zoomControl: true,
   })
 
-  // Autocomplete
-  const input = document.getElementById('pointNameInput') as HTMLInputElement
-  const autocomplete = new google.maps.places.Autocomplete(input)
-  autocomplete.addListener('place_changed', () => {
-    const place = autocomplete.getPlace()
-    if (!place.geometry || !place.geometry.location) return
-    
-    mapFields.value.name = place.name || ''
-    mapFields.value.description = place.formatted_address || ''
-    mapFields.value.coordinates = `${place.geometry.location.lat()},${place.geometry.location.lng()}`
-    
-    map.value.setCenter(place.geometry.location)
-    map.value.setZoom(15)
+  // Setup autocomplete for the search input
+  nextTick(() => {
+    if (mapSearchInput.value) {
+      initCityAutocomplete(mapSearchInput.value, (placeData: any) => {
+        newPoint.value.name = placeData.cityName || placeData.formatted_address || ''
+        newPoint.value.description = placeData.formatted_address || ''
+        newPoint.value.coordinates = `${placeData.lat},${placeData.lng}`
+
+        // Center map on selected location
+        if (map.value && placeData.lat && placeData.lng) {
+          map.value.setCenter({ lat: placeData.lat, lng: placeData.lng })
+          map.value.setZoom(12)
+        }
+      })
+    }
   })
 
   renderPoints()
 }
 
-const addPoint = () => {
-  if (!mapFields.value.name || !mapFields.value.type || !currentLangData.value) return
-  
+// Map Point Management Functions
+const addMapPoint = () => {
+  if (!newPoint.value.name || !newPoint.value.type || !newPoint.value.coordinates || !currentLangData.value) return
+
+  // Initialize mapPoints array if it doesn't exist
+  if (!currentLangData.value.mapPoints) {
+    currentLangData.value.mapPoints = []
+  }
+
   const point = {
-    name: mapFields.value.name,
-    description: mapFields.value.description,
-    coordinates: mapFields.value.coordinates,
-    type: mapFields.value.type,
+    id: crypto.randomUUID(),
+    name: newPoint.value.name,
+    description: newPoint.value.description,
+    coordinates: newPoint.value.coordinates,
+    type: newPoint.value.type,
     order: currentLangData.value.mapPoints.length + 1
   }
-  
+
   currentLangData.value.mapPoints.push(point)
-  mapFields.value = { name: '', description: '', coordinates: '', type: '' }
+
+  // Reset form
+  newPoint.value = { name: '', description: '', coordinates: '', type: '' }
+
+  // Update map
   renderPoints()
+}
+
+const removePoint = (index: number) => {
+  if (!currentLangData.value?.mapPoints) return
+  currentLangData.value.mapPoints.splice(index, 1)
+  // Update order
+  currentLangData.value.mapPoints.forEach((p, i) => {
+    p.order = i + 1
+  })
+  renderPoints()
+}
+
+const movePointUp = (index: number) => {
+  if (!currentLangData.value?.mapPoints || index === 0) return
+  const points = currentLangData.value.mapPoints
+  ;[points[index - 1], points[index]] = [points[index], points[index - 1]]
+  // Update order
+  points.forEach((p, i) => {
+    p.order = i + 1
+  })
+  renderPoints()
+}
+
+const movePointDown = (index: number) => {
+  if (!currentLangData.value?.mapPoints || index >= currentLangData.value.mapPoints.length - 1) return
+  const points = currentLangData.value.mapPoints
+  ;[points[index], points[index + 1]] = [points[index + 1], points[index]]
+  // Update order
+  points.forEach((p, i) => {
+    p.order = i + 1
+  })
+  renderPoints()
+}
+
+const editPoint = (index: number) => {
+  if (!currentLangData.value?.mapPoints) return
+  const point = currentLangData.value.mapPoints[index]
+  editingPointIndex.value = index
+  editingPoint.value = { ...point }
+}
+
+const saveEdit = () => {
+  if (!currentLangData.value?.mapPoints || editingPointIndex.value === null) return
+  currentLangData.value.mapPoints[editingPointIndex.value] = { ...editingPoint.value }
+  editingPointIndex.value = null
+  editingPoint.value = { name: '', description: '', coordinates: '', type: '' }
+  renderPoints()
+}
+
+const cancelEdit = () => {
+  editingPointIndex.value = null
+  editingPoint.value = { name: '', description: '', coordinates: '', type: '' }
+}
+
+const getPointTypeLabel = (type: string) => {
+  const labels: Record<string, string> = {
+    'punto_reunion': 'Meeting Point',
+    'punto_parada': 'Stop Point',
+    'lugar_turistico': 'Tourist Attraction',
+    'restaurant': 'Restaurant',
+    'hotel': 'Hotel',
+    'aeropuerto': 'Airport',
+    'estacion_tren': 'Train Station',
+    'puerto': 'Port/Harbor',
+    'otro': 'Other'
+  }
+  return labels[type] || type
+}
+
+// Handle search input with Google Places
+const onMapSearchInput = () => {
+  // This is handled by the Google Places autocomplete
 }
 
 const renderPoints = () => {
@@ -328,8 +540,10 @@ const renderPoints = () => {
   const bounds = new google.maps.LatLngBounds()
   const path: any[] = []
 
-  currentLangData.value.mapPoints.forEach((p, i) => {
+  currentLangData.value.mapPoints?.forEach((p, i) => {
+    if (!p.coordinates) return
     const [lat, lng] = p.coordinates.split(',').map(Number)
+    if (isNaN(lat) || isNaN(lng)) return
     const pos = { lat, lng }
     
     const marker = new google.maps.Marker({

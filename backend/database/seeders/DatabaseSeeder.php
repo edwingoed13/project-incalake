@@ -19,6 +19,17 @@ class DatabaseSeeder extends Seeder
             NationalitySeeder::class,
             AgeStageSeeder::class,
             CategorySeeder::class,
+            RoleAndPermissionSeeder::class,
         ]);
+
+        // Create default admin user if not exists
+        $admin = \App\Models\User::firstOrCreate(
+            ['email' => 'admin@incalake.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $admin->assignRole('Super Admin');
     }
 }

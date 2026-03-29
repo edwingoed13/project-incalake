@@ -3,7 +3,7 @@
   <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-      <p class="mt-4 text-slate-600">Cargando tours disponibles...</p>
+      <p class="mt-4 text-slate-600">{{ t('loading_tours') }}</p>
     </div>
   </div>
 
@@ -11,16 +11,16 @@
   <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white">
     <div class="text-center px-4">
       <span class="material-symbols-outlined text-6xl text-slate-400 mb-4">wifi_off</span>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">No se pudo cargar los tours</h2>
-      <p class="text-slate-600 mb-6">Por favor, verifica tu conexión e intenta nuevamente</p>
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h2>
+      <p class="text-slate-600 mb-6">{{ t('error_connection') }}</p>
       <button @click="refresh()" class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-colors">
-        Reintentar
+        {{ t('retry') }}
       </button>
     </div>
   </div>
 
   <!-- Main Content -->
-  <div v-else class="bg-white font-display text-slate-900 min-h-screen">
+  <div v-else class="bg-white font-display text-slate-900 min-h-screen pt-20">
 
     <!-- Hero Banner -->
     <section class="relative bg-gradient-to-br from-sky-600 via-primary to-blue-900 text-white overflow-hidden">
@@ -29,13 +29,12 @@
       </div>
       <div class="relative w-full px-4 sm:px-6 lg:px-10 py-12 md:py-16">
         <div class="max-w-4xl">
-          <p class="text-sky-200 font-semibold tracking-wider text-sm uppercase mb-2">Explore & Discover</p>
+          <p class="text-sky-200 font-semibold tracking-wider text-sm uppercase mb-2">{{ t('hero_subtitle') }}</p>
           <h1 class="text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight">
-            Tours in Puno & Lake Titicaca
+            {{ t('hero_title') }}
           </h1>
           <p class="text-sky-100 text-base md:text-lg max-w-2xl leading-relaxed">
-            Discover breathtaking experiences across the highest navigable lake in the world. 
-            From ancient floating islands to vibrant cultural adventures.
+            {{ t('hero_description') }}
           </p>
         </div>
       </div>
@@ -51,7 +50,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search tours, destinations..."
+              :placeholder="t('search_placeholder')"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-primary/30 focus:bg-white transition-all"
             />
           </div>
@@ -62,27 +61,42 @@
             class="md:hidden flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors"
           >
             <span class="material-symbols-outlined text-lg">tune</span>
-            Filters
+            {{ t('filters') }}
             <span v-if="activeFilterCount > 0" class="ml-1 w-5 h-5 bg-primary text-white text-xs flex items-center justify-center rounded-full font-bold">{{ activeFilterCount }}</span>
           </button>
 
           <!-- Sort (desktop) -->
           <div class="hidden md:flex items-center gap-2">
-            <span class="text-sm text-slate-500 font-medium whitespace-nowrap">Sort by</span>
+            <span class="text-sm text-slate-500 font-medium whitespace-nowrap">{{ t('sort_by') }}</span>
             <select
               v-model="sortBy"
               class="bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-primary/30 pr-10 font-semibold py-2.5"
             >
-              <option value="featured">Popularity</option>
-              <option value="price_asc">Price: Low → High</option>
-              <option value="price_desc">Price: High → Low</option>
-              <option value="rating">Highest Rating</option>
+              <option value="featured">{{ t('sort_popularity') }}</option>
+              <option value="price_asc">{{ t('sort_price_asc') }}</option>
+              <option value="price_desc">{{ t('sort_price_desc') }}</option>
+              <option value="rating">{{ t('sort_rating') }}</option>
             </select>
+          </div>
+
+          <!-- Language Switcher -->
+          <div class="hidden md:flex items-center gap-1.5">
+            <NuxtLink
+              v-for="loc in availableLocales"
+              :key="loc.code"
+              :to="switchLocalePath(loc.code)"
+              :class="locale === loc.code
+                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all uppercase"
+            >
+              {{ loc.code }}
+            </NuxtLink>
           </div>
 
           <!-- Results Count -->
           <div class="hidden lg:block text-sm text-slate-500 font-medium whitespace-nowrap">
-            {{ filteredTours.length }} tours found
+            {{ t('tours_found', { count: filteredTours.length }) }}
           </div>
         </div>
       </div>
@@ -96,19 +110,19 @@
           <div class="sticky top-20 space-y-1">
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <div class="flex items-center justify-between mb-5">
-                <h3 class="font-black text-base">Filters</h3>
+                <h3 class="font-black text-base">{{ t('filters') }}</h3>
                 <button
                   v-if="hasActiveFilters"
                   @click="clearFilters"
                   class="text-primary text-xs font-semibold hover:underline"
                 >
-                  Clear all
+                  {{ t('clear_all') }}
                 </button>
               </div>
 
               <!-- Duration -->
               <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Duration</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('duration') }}</p>
                 <div class="flex flex-wrap gap-1.5">
                   <button
                     v-for="dur in durations"
@@ -124,7 +138,7 @@
 
               <!-- Rating -->
               <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Rating</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('rating') }}</p>
                 <div class="space-y-2">
                   <label v-for="r in ratings" :key="r.value" class="flex items-center gap-2.5 cursor-pointer group">
                     <input
@@ -144,27 +158,46 @@
 
               <!-- Type -->
               <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Experience</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('experience') }}</p>
                 <div class="space-y-2">
-                  <label v-for="t in experienceOptions" :key="t.value" class="flex items-center gap-2.5 cursor-pointer group">
+                  <label v-for="tp in experienceOptions" :key="tp.value" class="flex items-center gap-2.5 cursor-pointer group">
                     <input
                       v-model="experienceTypes"
-                      :value="t.value"
+                      :value="tp.value"
                       type="checkbox"
                       class="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20"
                     />
-                    <span class="text-xs text-slate-600 group-hover:text-slate-800">{{ t.label }}</span>
+                    <span class="text-xs text-slate-600 group-hover:text-slate-800">{{ tp.label }}</span>
                   </label>
                 </div>
               </div>
 
               <!-- Free Cancellation -->
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-600">Free Cancellation</span>
+                <span class="text-xs font-semibold text-slate-600">{{ t('free_cancellation') }}</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input v-model="freeCancellation" class="sr-only peer" type="checkbox" />
                   <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                 </label>
+              </div>
+
+              <!-- Language Switcher (sidebar) -->
+              <div class="mt-6 pt-4 border-t border-slate-100">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('filters') }} - Idioma</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <NuxtLink
+                    v-for="loc in availableLocales"
+                    :key="loc.code"
+                    :to="switchLocalePath(loc.code)"
+                    :class="locale === loc.code
+                      ? 'bg-primary text-white shadow-md shadow-primary/20'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all uppercase"
+                    :title="loc.name"
+                  >
+                    {{ loc.code }}
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </div>
@@ -178,7 +211,7 @@
           <Transition name="slide-up">
             <div v-if="showFilters" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto p-6">
               <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-black">Filters</h3>
+                <h3 class="text-lg font-black">{{ t('filters') }}</h3>
                 <button @click="showFilters = false" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200">
                   <span class="material-symbols-outlined">close</span>
                 </button>
@@ -186,18 +219,37 @@
 
               <!-- Sort -->
               <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Sort by</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('sort_by') }}</p>
                 <select v-model="sortBy" class="w-full bg-slate-100 border-0 rounded-xl text-sm py-2.5 font-semibold">
-                  <option value="featured">Popularity</option>
-                  <option value="price_asc">Price: Low → High</option>
-                  <option value="price_desc">Price: High → Low</option>
-                  <option value="rating">Highest Rating</option>
+                  <option value="featured">{{ t('sort_popularity') }}</option>
+                  <option value="price_asc">{{ t('sort_price_asc') }}</option>
+                  <option value="price_desc">{{ t('sort_price_desc') }}</option>
+                  <option value="rating">{{ t('sort_rating') }}</option>
                 </select>
+              </div>
+
+              <!-- Language Switcher (mobile) -->
+              <div class="mb-6">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Idioma</p>
+                <div class="flex flex-wrap gap-2">
+                  <NuxtLink
+                    v-for="loc in availableLocales"
+                    :key="loc.code"
+                    :to="switchLocalePath(loc.code)"
+                    @click="showFilters = false"
+                    :class="locale === loc.code
+                      ? 'bg-primary text-white'
+                      : 'bg-slate-100 text-slate-600'"
+                    class="px-4 py-2 text-sm font-bold rounded-xl transition-all uppercase"
+                  >
+                    {{ loc.code }} - {{ loc.name }}
+                  </NuxtLink>
+                </div>
               </div>
 
               <!-- Duration -->
               <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Duration</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('duration') }}</p>
                 <div class="flex flex-wrap gap-2">
                   <button
                     v-for="dur in durations"
@@ -213,7 +265,7 @@
 
               <!-- Free Cancellation -->
               <div class="flex items-center justify-between mb-6">
-                <span class="text-sm font-semibold">Free Cancellation</span>
+                <span class="text-sm font-semibold">{{ t('free_cancellation') }}</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input v-model="freeCancellation" class="sr-only peer" type="checkbox" />
                   <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
@@ -223,10 +275,10 @@
               <!-- Actions -->
               <div class="flex gap-3 pt-4 border-t border-slate-100">
                 <button @click="clearFilters(); showFilters = false" class="flex-1 py-3 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
-                  Clear All
+                  {{ t('clear_all') }}
                 </button>
                 <button @click="showFilters = false" class="flex-1 py-3 text-sm font-bold text-white bg-primary rounded-xl hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                  Show {{ filteredTours.length }} Results
+                  {{ t('show_results', { count: filteredTours.length }) }}
                 </button>
               </div>
             </div>
@@ -239,26 +291,26 @@
           <!-- Loading State -->
           <div v-if="pending" class="flex flex-col items-center justify-center py-20">
             <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
-            <p class="text-slate-500 font-medium">Loading tours...</p>
+            <p class="text-slate-500 font-medium">{{ t('loading') }}</p>
           </div>
 
           <!-- Error State -->
           <div v-else-if="error" class="text-center py-20">
             <span class="material-symbols-outlined text-6xl text-red-300 mb-4 block">error</span>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Oops, something went wrong</h3>
-            <p class="text-slate-500 mb-6">We couldn't load the tours. Please try again.</p>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('error_generic') }}</h3>
+            <p class="text-slate-500 mb-6">{{ t('error_generic_hint') }}</p>
             <button @click="refresh()" class="bg-primary text-white font-bold py-3 px-8 rounded-xl hover:brightness-110 transition-all">
-              Try Again
+              {{ t('try_again') }}
             </button>
           </div>
 
           <!-- Empty State -->
           <div v-else-if="filteredTours.length === 0" class="text-center py-20">
             <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">search_off</span>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">No tours found</h3>
-            <p class="text-slate-500 mb-6">Try adjusting your search or filters.</p>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('no_tours_found') }}</h3>
+            <p class="text-slate-500 mb-6">{{ t('no_tours_hint') }}</p>
             <button @click="clearFilters" class="bg-primary text-white font-bold py-3 px-8 rounded-xl hover:brightness-110 transition-all">
-              Clear Filters
+              {{ t('clear_filters') }}
             </button>
           </div>
 
@@ -267,7 +319,7 @@
             <NuxtLink
               v-for="tour in paginatedTours.data"
               :key="tour.id"
-              :to="tour.slug ? `/tours/${tour.slug}` : `/tours/${tour.id}`"
+              :to="getTourLink(tour)"
               class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:border-slate-200 hover:-translate-y-1 transition-all duration-300"
             >
               <!-- Image -->
@@ -335,12 +387,12 @@
                 <!-- Price -->
                 <div class="flex items-end justify-between pt-3 border-t border-slate-100">
                   <div>
-                    <span class="text-[10px] text-slate-400 font-medium block">From</span>
+                    <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
                     <span class="text-lg font-black text-primary">${{ (tour.min_price || 0).toFixed(0) }}</span>
-                    <span class="text-[10px] text-slate-400 ml-0.5">/ person</span>
+                    <span class="text-[10px] text-slate-400 ml-0.5">{{ t('per_person') }}</span>
                   </div>
                   <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                    View
+                    {{ t('view') }}
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                   </span>
                 </div>
@@ -385,14 +437,30 @@
 <script setup lang="ts">
 const { api } = useApi()
 const config = useRuntimeConfig()
+const { t, locale } = useI18n()
+const switchLocalePath = useSwitchLocalePath()
+const localePath = useLocalePath()
+
+// Available locales for the language switcher
+const availableLocales = [
+  { code: 'es', name: 'Español' },
+  { code: 'en', name: 'English' },
+  { code: 'pt', name: 'Português' },
+  { code: 'fr', name: 'Français' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'it', name: 'Italiano' },
+]
+
+// Map locale code to API language code (uppercase)
+const langCode = computed(() => locale.value.toUpperCase())
 
 // SEO
 useHead({
-  title: 'Tours in Puno | Voyager Marketplace',
+  title: computed(() => `${t('tours')} - Incalake Tours`),
   meta: [
     {
       name: 'description',
-      content: 'Discover unique tours and experiences in Puno and Lake Titicaca. From floating islands to cultural adventures.'
+      content: computed(() => t('hero_description'))
     }
   ]
 })
@@ -407,17 +475,17 @@ const durations = [
   { value: 'long', label: 'Full Day+' },
 ]
 
-const ratings = [
-  { value: '4', label: '& Up', stars: 4 },
-  { value: '3', label: '& Up', stars: 3 },
-  { value: '', label: 'All', stars: 0 },
-]
+const ratings = computed(() => [
+  { value: '4', label: t('and_up'), stars: 4 },
+  { value: '3', label: t('and_up'), stars: 3 },
+  { value: '', label: t('all'), stars: 0 },
+])
 
-const experienceOptions = [
-  { value: 'culture', label: 'Culture & History' },
-  { value: 'adventure', label: 'Adventure & Nature' },
-  { value: 'food', label: 'Food & Gastronomy' },
-]
+const experienceOptions = computed(() => [
+  { value: 'culture', label: t('culture_history') },
+  { value: 'adventure', label: t('adventure_nature') },
+  { value: 'food', label: t('food_gastronomy') },
+])
 
 // Filters
 const searchQuery = ref('')
@@ -431,15 +499,15 @@ const sortBy = ref('featured')
 const currentPage = ref(1)
 const perPage = 12
 
-// Fetch all tours with error handling
+// Fetch tours filtered by current language
 const { data: response, pending, error, refresh } = await useAsyncData(
-  'all-tours',
-  () => api('/tours?per_page=100&active=1')
+  `tours-${locale.value}`,
+  () => api(`/tours?per_page=100&active=1&language=${langCode.value}`),
+  { watch: [locale] }
 )
 
 const tours = computed(() => {
   if (response.value && response.value.data) {
-    // Handle paginated response
     if (Array.isArray(response.value.data.data)) {
       return response.value.data.data
     }
@@ -454,7 +522,6 @@ const tours = computed(() => {
 const filteredTours = computed(() => {
   let result = [...tours.value]
 
-  // Search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(tour =>
@@ -464,7 +531,6 @@ const filteredTours = computed(() => {
     )
   }
 
-  // Duration filter
   if (selectedDuration.value) {
     result = result.filter(tour => {
       const hours = tour.duration_hours || 0
@@ -475,18 +541,15 @@ const filteredTours = computed(() => {
     })
   }
 
-  // Rating filter
   if (minRating.value) {
     const rating = parseFloat(minRating.value)
     result = result.filter(tour => (tour.rating || 0) >= rating)
   }
 
-  // Free cancellation filter
   if (freeCancellation.value) {
     result = result.filter(tour => tour.free_cancellation)
   }
 
-  // Sorting
   if (sortBy.value === 'price_asc') {
     result.sort((a, b) => (a.min_price || 0) - (b.min_price || 0))
   } else if (sortBy.value === 'price_desc') {
@@ -572,6 +635,11 @@ function formatDuration(tour: any) {
   if (days > 0) return `${days} day${days > 1 ? 's' : ''}`
   if (hours > 0) return `${hours}h`
   return 'Flexible'
+}
+
+function getTourLink(tour: any) {
+  const slug = tour.slug || tour.id
+  return localePath(`/tours/${slug}`)
 }
 </script>
 

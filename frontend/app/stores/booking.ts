@@ -112,7 +112,7 @@ export const useBookingStore = defineStore('booking', {
 
       try {
         const { api } = useApi()
-        const response = await api(`/bookings/${bookingId}/confirm-culqi`, {
+        const response = await api(`/bookings/${bookingId}/payment/culqi`, {
           method: 'POST',
           body: {
             token,
@@ -136,7 +136,7 @@ export const useBookingStore = defineStore('booking', {
 
       try {
         const { api } = useApi()
-        const response = await api(`/bookings/${bookingId}/confirm-paypal`, {
+        const response = await api(`/bookings/${bookingId}/payment/paypal`, {
           method: 'POST',
           body: {
             order_id: orderId,

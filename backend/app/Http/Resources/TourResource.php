@@ -59,6 +59,22 @@ class TourResource extends JsonResource
                     return $lang['code'] !== null;
                 })->values();
             }),
+            // Detailed translation info for admin listing
+            'translations_summary' => $this->whenLoaded('translations', function () {
+                return $this->translations->map(function ($translation) {
+                    return [
+                        'translation_id' => $translation->id,
+                        'language_id' => $translation->language_id,
+                        'language_code' => $translation->language->code ?? null,
+                        'language_country' => $translation->language->country ?? null,
+                        'title' => $translation->h1_title,
+                        'slug' => $translation->slug,
+                        'short_description' => $translation->short_description,
+                    ];
+                })->filter(function ($t) {
+                    return $t['language_code'] !== null;
+                })->values();
+            }),
             'difficulty' => $this->difficulty,
             'status' => $this->status,
             'active' => $this->active,

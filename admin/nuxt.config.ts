@@ -37,7 +37,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+      googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
     }
   },
 

@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   ssr: false, // Deshabilitar SSR temporalmente para evitar error IPC
 
   srcDir: 'app',
@@ -88,14 +88,14 @@ export default defineNuxtConfig({
   routeRules: {
     // SSG - Páginas estáticas (pre-renderizadas en build)
     '/': { prerender: true },
-    '/tours': { prerender: true },
-    '/about': { prerender: true },
-    '/contact': { prerender: true },
+    '/**/tours': { prerender: true },
+    '/**/about': { prerender: true },
+    '/**/contact': { prerender: true },
 
     // SSR - Páginas dinámicas (renderizadas en servidor)
-    '/tours/**': { ssr: true },
-    '/checkout': { ssr: true },
-    '/booking-confirmation/**': { ssr: true },
+    '/**/tours/**': { ssr: true },
+    '/**/checkout': { ssr: true },
+    '/**/booking-confirmation/**': { ssr: true },
 
     // API routes - Sin caché (siempre fresh)
     '/api/**': { cors: true, headers: { 'cache-control': 'no-cache' } }
@@ -126,9 +126,12 @@ export default defineNuxtConfig({
       { code: 'es', iso: 'es-PE', name: 'Español' },
       { code: 'en', iso: 'en-US', name: 'English' },
       { code: 'pt', iso: 'pt-BR', name: 'Português' },
+      { code: 'fr', iso: 'fr-FR', name: 'Français' },
+      { code: 'de', iso: 'de-DE', name: 'Deutsch' },
+      { code: 'it', iso: 'it-IT', name: 'Italiano' },
     ],
     defaultLocale: 'es',
-    strategy: 'prefix_except_default',
+    strategy: 'prefix',
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: 'i18n_redirected',

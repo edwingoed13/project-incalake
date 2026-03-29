@@ -128,14 +128,47 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         try {
+            $user = $request->user();
+
             return response()->json([
                 'success' => true,
-                'data' => new UserResource($request->user()),
+                'data' => new UserResource($user),
+                'permissions' => $user->getPermissions(),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener la información del usuario.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user permissions
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function permissions(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'role' => $user->role,
+                    'permissions' => $user->getPermissions(),
+                    'is_admin' => $user->isAdmin(),
+                    'is_staff' => $user->isStaff(),
+                    'can_access_admin' => $user->canAccessAdminPanel(),
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los permisos.',
                 'error' => $e->getMessage(),
             ], 500);
         }

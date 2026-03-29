@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\LanguageController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\TourCloneController;
 use App\Http\Controllers\Api\CouponController;
@@ -74,6 +75,7 @@ Route::middleware(['throttle:60,1'])->prefix('tours')->group(function () {
     // Clone/Translation endpoints
     Route::post('/{id}/clone', [TourCloneController::class, 'cloneManual'])->name('api.tours.clone');
     Route::post('/{id}/clone-ai', [TourCloneController::class, 'cloneWithAI'])->name('api.tours.clone-ai');
+    Route::delete('/{id}/translation/{languageId}', [TourCloneController::class, 'deleteTranslation'])->name('api.tours.delete-translation');
 });
 
 // Public routes - Coupons validation - Rate Limited
@@ -109,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
         Route::get('/me', [AuthController::class, 'me'])->name('api.auth.me');
+        Route::get('/permissions', [AuthController::class, 'permissions'])->name('api.auth.permissions');
     });
 
     // Bookings - List user's bookings (authenticated only)
@@ -128,6 +131,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [CategoryController::class, 'store'])->name('api.admin.categories.store');
         Route::put('/{id}', [CategoryController::class, 'update'])->name('api.admin.categories.update');
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('api.admin.categories.destroy');
+    });
+
+    // Admin routes - Languages management
+    Route::prefix('admin/languages')->group(function () {
+        Route::post('/', [LanguageController::class, 'store'])->name('api.admin.languages.store');
+        Route::put('/{id}', [LanguageController::class, 'update'])->name('api.admin.languages.update');
+        Route::delete('/{id}', [LanguageController::class, 'destroy'])->name('api.admin.languages.destroy');
+    });
+
+    // Admin routes - Users management
+    Route::prefix('admin/users')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('api.admin.users.index');
+        Route::get('/{id}', [UserController::class, 'show'])->name('api.admin.users.show');
+        Route::post('/', [UserController::class, 'store'])->name('api.admin.users.store');
+        Route::put('/{id}', [UserController::class, 'update'])->name('api.admin.users.update');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->name('api.admin.users.destroy');
     });
 
     // Admin routes - Tours management - More restrictive rate limit

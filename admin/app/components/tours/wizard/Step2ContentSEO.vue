@@ -10,8 +10,8 @@
           <div>
             <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Editando contenido en</p>
             <div class="flex items-center gap-2 mt-1">
-              <button 
-                v-for="lang in ['es', 'en', 'fr', 'de']" 
+              <button
+                v-for="lang in tourLanguages"
                 :key="lang"
                 @click="store.currentLanguage = lang"
                 class="px-2 py-0.5 rounded text-[10px] font-black uppercase transition-all"
@@ -124,6 +124,14 @@ const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
 
 const cityData = ref<any>(null)
+
+// Only show languages that have translations (title filled)
+const tourLanguages = computed(() => {
+  return Object.keys(store.contentSEO).filter(code => {
+    const seo = store.contentSEO[code]
+    return seo && seo.title
+  })
+})
 
 const currentLangData = computed(() => {
   return store.contentSEO[store.currentLanguage]

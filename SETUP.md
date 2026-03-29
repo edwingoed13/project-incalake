@@ -1,173 +1,266 @@
-# 🚀 Setup Instructions - Incalake Full Stack
+# Setup Guide - Incalake Full Stack
 
-## Estructura del Monorepo Creada
+Step-by-step guide to get the project running from scratch after cloning.
 
-La estructura del monorepo ha sido creada exitosamente con los siguientes archivos:
+## Prerequisites
 
-```
-incalake-full-stack/
-├── README.md                 ✅ Documentación completa del proyecto
-├── .gitignore               ✅ Configuración de archivos ignorados
-├── .env.example             ✅ Variables de entorno de ejemplo
-├── package.json             ✅ Scripts de gestión centralizados
-├── Makefile                 ✅ Comandos de utilidad
-├── docker-compose.yml       ✅ Configuración Docker completa
-├── docker/
-│   ├── php/
-│   │   └── Dockerfile       ✅ Imagen PHP 8.2 + Laravel
-│   └── nginx/
-│       └── default.conf     ✅ Configuración Nginx
-├── backend/                 📁 (Pendiente: copiar laravel-incalake-v12)
-├── frontend/                📁 (Pendiente: copiar tour-nuxt4)
-└── admin/                   📁 (Pendiente: copiar cms-admin-nuxt4)
-```
+| Tool | Version | Check command |
+|------|---------|---------------|
+| Node.js | >= 18 | `node -v` |
+| npm | >= 9 | `npm -v` |
+| PHP | >= 8.2 | `php -v` |
+| Composer | >= 2 | `composer -V` |
+| MySQL | >= 8.0 | `mysql --version` |
 
-## ⚠️ Pasos Pendientes para Completar el Setup
+### Windows with XAMPP
 
-### 1. Copiar los Proyectos
+If using XAMPP, make sure you have a version with PHP 8.2+. The default XAMPP may have an older PHP. You can install XAMPP 8.2 in a separate folder (e.g., `C:\xampp82`) and use its PHP/MySQL.
 
-Necesitas copiar manualmente los tres proyectos a sus respectivas carpetas:
+**Important PHP extensions** (usually enabled by default in XAMPP):
+`pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `gd`, `zip`
+
+---
+
+## 1. Clone the repository
 
 ```bash
-# Backend Laravel
-xcopy /E /I /Y laravel-incalake-v12\* incalake-full-stack\backend\
-
-# Frontend Nuxt
-xcopy /E /I /Y tour-nuxt4\* incalake-full-stack\frontend\
-
-# Admin Panel Nuxt
-xcopy /E /I /Y cms-admin-nuxt4\* incalake-full-stack\admin\
+git clone https://github.com/edwingoed13/project-incalake.git
+cd project-incalake/incalake-full-stack
 ```
 
-### 2. Crear Archivos de Entorno
+---
 
-En cada subdirectorio, crear los archivos `.env` basados en los ejemplos:
-
-#### Backend (.env)
-```bash
-cd incalake-full-stack\backend
-copy .env.example .env
-# Editar .env con tus credenciales
-```
-
-#### Frontend (.env)
-```bash
-cd incalake-full-stack\frontend
-echo NUXT_PUBLIC_API_BASE=http://localhost:8001/api > .env
-echo NUXT_PUBLIC_STORAGE_BASE=http://localhost:8001/storage >> .env
-```
-
-#### Admin (.env)
-```bash
-cd incalake-full-stack\admin
-echo NUXT_PUBLIC_API_BASE=http://localhost:8001/api > .env
-echo NUXT_PUBLIC_STORAGE_BASE=http://localhost:8001/storage >> .env
-```
-
-### 3. Instalar Dependencias
-
-Desde la raíz del monorepo:
+## 2. Backend Setup (Laravel 12)
 
 ```bash
-cd incalake-full-stack
-npm install
-npm run install:all
-```
-
-### 4. Configurar Base de Datos
-
-```bash
-# Ejecutar migraciones
 cd backend
+```
+
+### 2.1 Install PHP dependencies
+
+```bash
+composer install
+```
+
+If you get memory errors:
+```bash
+COMPOSER_MEMORY_LIMIT=-1 composer install
+```
+
+### 2.2 Environment file
+
+Copy the example and edit it:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set your database credentials:
+```env
+DB_DATABASE=incalake_tours
+DB_USERNAME=root
+DB_PASSWORD=        # empty for XAMPP default
+```
+
+> **Note:** Your team lead will provide you with the production `.env` values if needed.
+
+### 2.3 Generate app key
+
+```bash
+php artisan key:generate
+```
+
+### 2.4 Create the database
+
+Create the database in MySQL before running migrations:
+
+```sql
+CREATE DATABASE incalake_tours CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Or via command line:
+```bash
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS incalake_tours CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+### 2.5 Run migrations and seeders
+
+```bash
 php artisan migrate
 php artisan db:seed
 ```
 
-### 5. Iniciar Todos los Servicios
+This creates:
+- All database tables (87 migrations)
+- 6 languages (ES, EN, FR, DE, PT, IT)
+- Nationalities, age stages, categories
+- Roles & permissions (Super Admin, Admin, Seller, Guide)
+- Default admin user: `admin@incalake.com` / `password`
 
-#### Opción A: Con npm (Recomendado)
+### 2.6 Create storage symlink
+
+```bash
+php artisan storage:link
+```
+
+This creates `public/storage` -> `storage/app/public` so uploaded images are accessible.
+
+### 2.7 Verify backend works
+
+```bash
+php artisan serve --port=8001
+```
+
+Visit http://localhost:8001/api/languages - you should see JSON with 6 languages.
+
+---
+
+## 3. Frontend Setup (Nuxt 4)
+
+Open a **new terminal**:
+
+```bash
+cd frontend
+```
+
+### 3.1 Install dependencies
+
+```bash
+npm install
+```
+
+### 3.2 Environment file
+
+```bash
+cp .env.example .env
+```
+
+Default values should work for local development (points to `localhost:8001`).
+
+### 3.3 Start frontend
+
 ```bash
 npm run dev
 ```
 
-#### Opción B: Con Make
-```bash
-make dev
-```
-
-#### Opción C: Con Docker
-```bash
-docker-compose up -d
-```
-
-## 📋 Comandos Disponibles
-
-### NPM Scripts
-- `npm run dev` - Inicia todos los servicios
-- `npm run build` - Construye frontend y admin
-- `npm run test` - Ejecuta todos los tests
-- `npm run install:all` - Instala todas las dependencias
-
-### Make Commands
-- `make help` - Ver todos los comandos disponibles
-- `make setup` - Setup inicial completo
-- `make dev` - Iniciar desarrollo
-- `make clean` - Limpiar archivos temporales
-
-### Docker Commands
-- `docker-compose up` - Iniciar contenedores
-- `docker-compose down` - Detener contenedores
-- `docker-compose logs -f` - Ver logs
-
-## 🌐 URLs de Acceso
-
-- **API Backend**: http://localhost:8001
-- **Frontend Tours**: http://localhost:3001
-- **Admin Panel**: http://localhost:54112
-- **phpMyAdmin** (Docker): http://localhost:8080
-- **Mailhog** (Docker): http://localhost:8025
-
-## 🎯 Git - Primer Commit
-
-Una vez copiados los proyectos:
-
-```bash
-cd incalake-full-stack
-git init
-git add .
-git commit -m "Initial commit: Monorepo structure with Laravel backend, Nuxt frontend and admin panel"
-git branch -M main
-git remote add origin https://github.com/tu-usuario/incalake-full-stack.git
-git push -u origin main
-```
-
-## 📝 Notas Importantes
-
-1. **Archivos .env**: No están incluidos por seguridad. Crear basándose en los `.env.example`
-2. **node_modules y vendor**: Se excluyen del git automáticamente
-3. **Storage Laravel**: Ejecutar `php artisan storage:link` después de copiar el backend
-4. **Permisos**: En Linux/Mac, dar permisos a storage: `chmod -R 775 backend/storage`
-5. **Cache**: Limpiar cache si hay problemas: `npm run clean` o `make clean`
-
-## ✅ Verificación Final
-
-Para verificar que todo está funcionando:
-
-1. Acceder a http://localhost:8001 - Debe mostrar Laravel
-2. Acceder a http://localhost:3001 - Debe mostrar el frontend de tours
-3. Acceder a http://localhost:54112 - Debe mostrar el panel admin
-4. Verificar API: http://localhost:8001/api/tours
-
-## 🆘 Troubleshooting
-
-Si encuentras problemas:
-
-1. **Puerto en uso**: Cambiar puertos en los archivos `.env`
-2. **Error de permisos**: Ejecutar como administrador en Windows
-3. **IPC Error en Nuxt**: Verificar que `ssr: false` esté en `nuxt.config.ts`
-4. **Base de datos**: Verificar credenciales en `.env` del backend
-5. **Cache issues**: Ejecutar `make clean` y reiniciar
+Visit http://localhost:3001/es/tours
 
 ---
 
-¡El monorepo está listo para usar! Solo necesitas copiar los proyectos a sus carpetas correspondientes.
+## 4. Admin Panel Setup (Nuxt 4)
+
+Open a **new terminal**:
+
+```bash
+cd admin
+```
+
+### 4.1 Install dependencies
+
+```bash
+npm install
+```
+
+### 4.2 Environment file
+
+```bash
+cp .env.example .env
+```
+
+### 4.3 Start admin
+
+```bash
+npm run dev
+```
+
+Visit http://localhost:3000 and login with:
+- Email: `admin@incalake.com`
+- Password: `password`
+
+---
+
+## 5. Run all services at once (optional)
+
+From the project root:
+
+```bash
+npm install          # installs concurrently
+npm run install:all  # installs all 3 projects
+npm run dev          # starts backend + frontend + admin
+```
+
+---
+
+## Quick Reference - URLs
+
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8001/api |
+| Frontend | http://localhost:3001 |
+| Admin Panel | http://localhost:3000 |
+| phpMyAdmin (if XAMPP) | http://localhost/phpmyadmin |
+
+---
+
+## Common Issues
+
+### "SQLSTATE[HY000] [1049] Unknown database"
+Create the database first: `CREATE DATABASE incalake_tours;`
+
+### "php artisan: command not found"
+Make sure PHP 8.2+ is in your PATH. On Windows with XAMPP82:
+```bash
+# Use full path
+C:\xampp82\php\php.exe artisan serve --port=8001
+```
+
+### "npm ERR! engine" or Node version errors
+Install Node.js 18 or later from https://nodejs.org
+
+### Frontend shows blank page or API errors
+1. Make sure the backend is running on port 8001
+2. Check `.env` files point to `http://localhost:8001/api`
+3. Check browser console for CORS errors
+
+### "Class Spatie\Permission not found"
+Run `composer install` again. If persists:
+```bash
+composer dump-autoload
+php artisan cache:clear
+```
+
+### Images not loading (404)
+Run `php artisan storage:link` in the backend directory.
+
+### Admin login fails
+Make sure you ran `php artisan db:seed`. The seeder creates the admin user with roles.
+
+### Port already in use
+Change ports in the respective commands:
+```bash
+php artisan serve --port=8002          # backend
+npm run dev -- --port 3002             # frontend
+npm run dev -- --port 3003             # admin
+```
+And update the `.env` files accordingly.
+
+---
+
+## Importing Production Data
+
+If your team lead provides a database dump (`.sql` file):
+
+```bash
+mysql -u root incalake_tours < dump.sql
+```
+
+This replaces the seeded data with real production tours, images, and bookings.
+
+---
+
+## Tech Stack Summary
+
+- **Backend:** Laravel 12 + PHP 8.2 + MySQL + Sanctum (API auth)
+- **Frontend:** Nuxt 4 + Vue 3 + Tailwind CSS + Pinia + i18n (6 languages)
+- **Admin:** Nuxt 4 + Vue 3 + Tailwind CSS + TipTap (rich text editor)
+- **Payments:** Culqi (Peru) + PayPal
+- **Maps:** Google Maps API + Leaflet
