@@ -43,15 +43,15 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Tour</p>
-              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ booking.tour?.title || 'N/A' }}</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Fecha</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Fecha del Tour</p>
               <p class="text-sm font-medium text-slate-900 dark:text-white">{{ formatDate(booking.tour_date) }}</p>
             </div>
             <div>
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Pasajeros</p>
-              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ booking.total_passengers }} personas</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ booking.total_participants || ((booking.adults || 0) + (booking.children || 0) + (booking.infants || 0)) }} personas</p>
             </div>
             <div v-if="booking.adults">
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Adultos</p>
@@ -80,11 +80,11 @@
             </div>
             <div>
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Subtotal</p>
-              <p class="text-sm font-medium text-slate-900 dark:text-white">${{ booking.subtotal || booking.total_amount }}</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-white">${{ booking.subtotal || booking.total || '0.00' }}</p>
             </div>
             <div>
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Total</p>
-              <p class="text-lg font-bold text-primary">${{ booking.total_amount }}</p>
+              <p class="text-lg font-bold text-primary">${{ booking.total || booking.total_amount || '0.00' }}</p>
             </div>
           </div>
         </div>

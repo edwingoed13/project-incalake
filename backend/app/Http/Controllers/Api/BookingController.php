@@ -667,6 +667,9 @@ class BookingController extends Controller
             // Status filter
             if ($request->has('status') && $request->status) {
                 $query->where('status', $request->status);
+            } else {
+                // By default, hide bookings that never completed payment
+                $query->where('payment_status', '!=', 'pending');
             }
 
             // Payment method filter

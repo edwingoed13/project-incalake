@@ -104,6 +104,10 @@ Route::prefix('ai-translation-settings')->group(function () {
 
 Route::post('/ai-translation-test', [AITranslationSettingsController::class, 'test'])->name('api.ai-translation-test');
 
+// Dashboard stats
+Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
+Route::get('/dashboard/recent-bookings', [App\Http\Controllers\Api\DashboardController::class, 'recentBookings']);
+
 // Protected routes - Require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
 

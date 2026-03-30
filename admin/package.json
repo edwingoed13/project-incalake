@@ -25,12 +25,12 @@
     "vue-router": "^5.0.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.1",
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/postcss": "file:C:/Users/oscar/AppData/Local/Temp/tailwindcss-postcss-4.2.1.tgz",
+    "@tailwindcss/vite": "file:C:/Users/oscar/AppData/Local/Temp/tailwindcss-vite-4.2.1.tgz",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "postcss-import": "^16.1.1",
     "postcss-nested": "^7.0.2",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "file:C:/Users/oscar/AppData/Local/Temp/tailwindcss-4.2.1.tgz"
   }
 }

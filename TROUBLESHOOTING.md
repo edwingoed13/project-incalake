@@ -545,6 +545,90 @@ Si ninguna de estas soluciones funciona:
 
 ---
 
+### ❌ Problema 11: npm no instala devDependencies (tailwindcss, @nuxtjs/tailwindcss, etc.)
+
+**Síntomas:**
+- `npm install` se ejecuta sin errores pero paquetes como `tailwindcss`, `@nuxtjs/tailwindcss`, `@nuxtjs/i18n`, `@tailwindcss/vite` NO aparecen en `node_modules/`
+- Al levantar Nuxt: `Could not load @nuxtjs/tailwindcss. Is it installed?`
+- Al levantar Nuxt: `Cannot find module '@tailwindcss/vite'`
+- Al levantar Nuxt: `[nuxt] could not import postcss plugin tailwindcss`
+- La página carga pero sin estilos CSS
+- `npm ls tailwindcss` muestra `(empty)`
+
+**Causa raíz:**
+
+La variable de entorno `NODE_ENV=production` está configurada en el sistema. Cuando `NODE_ENV=production`, npm **omite automáticamente todas las `devDependencies`** durante `npm install`. Todos los paquetes de Tailwind CSS y módulos de Nuxt están declarados como `devDependencies`, por lo que nunca se instalan.
+
+**Verificar si tienes este problema:**
+
+```bash
+echo $NODE_ENV        # Linux/Mac/Git Bash
+echo %NODE_ENV%       # Windows CMD
+$env:NODE_ENV         # Windows PowerShell
+npm config get omit   # Si muestra "dev", las devDependencies están siendo omitidas
+```
+
+**Solución 1 - Instalar con NODE_ENV=development (recomendada):**
+
+```bash
+cd frontend
+NODE_ENV=development npm install
+
+cd ../admin
+NODE_ENV=development npm install
+```
+
+**Solución 2 - Cambiar NODE_ENV permanentemente (Windows):**
+
+```powershell
+# PowerShell (sesión actual)
+$env:NODE_ENV = "development"
+
+# CMD (sesión actual)
+set NODE_ENV=development
+
+# Permanente (Panel de Control > Sistema > Variables de Entorno)
+# Cambiar NODE_ENV de "production" a "development"
+# O eliminar la variable NODE_ENV completamente
+```
+
+**Solución 3 - Forzar instalación de devDependencies sin cambiar NODE_ENV:**
+
+```bash
+npm install --include=dev
+```
+
+**Nota importante:** Después de instalar, si `nuxt prepare` falla porque se ejecuta durante `postinstall`, usa:
+
+```bash
+npm install --ignore-scripts    # Instala sin ejecutar postinstall
+npx nuxt prepare                # Ejecuta nuxt prepare manualmente después
+```
+
+---
+
+### ❌ Problema 12: Admin panel intenta conectar a puerto 8000 en vez de 8001
+
+**Síntomas:**
+```
+Failed to load resource: net::ERR_CONNECTION_REFUSED
+POST http://localhost:8000/api/auth/login
+```
+
+**Causa:**
+El `nuxt.config.ts` del admin tiene como fallback `http://localhost:8000/api`. Si la variable `NUXT_PUBLIC_API_URL` no está definida en `.env`, usa el puerto incorrecto.
+
+**Solución:**
+
+Verificar que el archivo `admin/.env` tenga la variable correcta:
+```env
+NUXT_PUBLIC_API_URL=http://localhost:8001/api
+```
+
+> **Nota:** La variable debe ser `NUXT_PUBLIC_API_URL` (no `NUXT_PUBLIC_API_BASE`). El nombre debe coincidir con lo que espera `nuxt.config.ts` en `runtimeConfig.public.apiUrl`.
+
+---
+
 ## 📝 Notas de la Última Actualización
 
 **Versión**: 2026-03-27

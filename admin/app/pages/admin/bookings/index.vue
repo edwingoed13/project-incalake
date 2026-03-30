@@ -156,16 +156,16 @@
                 </div>
               </td>
               <td class="px-4 py-4">
-                <p class="text-sm text-slate-900 dark:text-white max-w-xs truncate">{{ booking.tour?.title || 'N/A' }}</p>
+                <p class="text-sm text-slate-900 dark:text-white max-w-xs truncate">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
               </td>
               <td class="px-4 py-4 whitespace-nowrap">
                 <p class="text-sm text-slate-900 dark:text-white">{{ formatDate(booking.tour_date) }}</p>
               </td>
               <td class="px-4 py-4 whitespace-nowrap">
-                <p class="text-sm text-slate-900 dark:text-white">{{ booking.total_passengers }}</p>
+                <p class="text-sm text-slate-900 dark:text-white">{{ booking.total_participants || ((booking.adults || 0) + (booking.children || 0) + (booking.infants || 0)) || '-' }}</p>
               </td>
               <td class="px-4 py-4 whitespace-nowrap">
-                <p class="text-sm font-semibold text-slate-900 dark:text-white">${{ booking.total_amount }}</p>
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">${{ booking.total || booking.total_amount || '0.00' }}</p>
               </td>
               <td class="px-4 py-4 whitespace-nowrap">
                 <span :class="getStatusClass(booking.status)" class="px-2 py-1 text-xs font-bold rounded-full">
@@ -333,7 +333,7 @@ const loadBookings = async () => {
     stats.value.pending = bookings.value.filter((b: any) => b.status === 'pending').length
     stats.value.revenue = bookings.value
       .filter((b: any) => b.payment_status === 'paid')
-      .reduce((sum: number, b: any) => sum + parseFloat(b.total_amount || 0), 0)
+      .reduce((sum: number, b: any) => sum + parseFloat(b.total || b.total_amount || 0), 0)
       .toFixed(2)
   } catch (error) {
     console.error('Error loading bookings:', error)

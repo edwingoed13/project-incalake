@@ -42,10 +42,7 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "workspaces": [
-    "frontend",
-    "admin"
-  ],
+  "_workspaces_disabled": "Disabled: npm workspaces hoist dependencies and break Tailwind CSS resolution on Windows",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
