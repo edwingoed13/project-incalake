@@ -260,6 +260,7 @@ const servicesMenuItems = computed(() => {
   }
 
   items.push({ label: 'Paquetes', path: '/admin/packages', icon: 'card_giftcard', badge: 'Próximamente' })
+  items.push({ label: 'Home Page', path: '/admin/pages/home', icon: 'home' })
 
   return items
 })

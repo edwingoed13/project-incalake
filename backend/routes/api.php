@@ -59,6 +59,10 @@ Route::prefix('cities')->group(function () {
 // Public utility routes for tour creation form
 Route::get('/admin/tours/generate-code', [TourController::class, 'generateCodeApi'])->name('api.admin.tours.generate-code');
 
+// Public routes - Page content (read-only)
+use App\Http\Controllers\Api\PageContentController;
+Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');
+
 // Public routes - Tours (read-only) - Rate Limited
 Route::middleware(['throttle:60,1'])->prefix('tours')->group(function () {
     Route::get('/', [TourController::class, 'index'])->name('api.tours.index');
@@ -159,6 +163,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
         Route::delete('/{id}', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
         Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
+    });
+
+    // Admin routes - Page content management
+    Route::prefix('admin/pages')->group(function () {
+        Route::get('/{page}', [PageContentController::class, 'index'])->name('api.admin.pages.index');
+        Route::put('/{page}', [PageContentController::class, 'update'])->name('api.admin.pages.update');
+        Route::post('/{page}/translate', [PageContentController::class, 'translate'])->name('api.admin.pages.translate');
     });
 });
 
