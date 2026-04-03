@@ -95,6 +95,9 @@ class UpdateTourRequest extends FormRequest
             'translations.*.ads_headline' => 'nullable|string|max:100',
             'translations.*.ads_description' => 'nullable|string|max:160',
             'translations.*.cta_text' => 'nullable|string|max:50',
+            'translations.*.youtube_url' => 'nullable|string|max:500',
+            'translations.*.media_texts' => 'nullable|array',
+            'translations.*.booking_texts' => 'nullable|array',
 
             'prices' => 'sometimes|required|array',
             'prices.*' => 'array',

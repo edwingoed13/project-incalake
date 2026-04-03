@@ -37,7 +37,10 @@ class TourTranslationService
                 }
             }
 
-            Log::info("Translations synced successfully", ['tour_id' => $tour->id]);
+            foreach ($translationsData as $lid => $td) {
+                Log::info("Translation saved", ['tour_id' => $tour->id, 'lang_id' => $lid, 'has_booking_texts' => isset($td['booking_texts']), 'booking_texts_type' => gettype($td['booking_texts'] ?? null), 'booking_texts_keys' => is_array($td['booking_texts'] ?? null) ? array_keys($td['booking_texts']) : 'N/A']);
+                break; // only log first
+            }
         } catch (Exception $e) {
             Log::error("Error syncing translations", ['tour_id' => $tour->id, 'error' => $e->getMessage()]);
             throw $e;

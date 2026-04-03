@@ -19,6 +19,14 @@ export interface CartItem {
   taxPercentage?: number
   advancePaymentPercentage?: number
   cancellationPolicy?: string
+  guideType?: string
+  guideLanguages?: string[]
+  durationLabel?: string
+  hasOffer?: boolean
+  originalPrice?: number
+  offerDiscount?: number
+  offerDiscountType?: string
+  offerColor?: string
 }
 
 export const useCartStore = defineStore('cart', {

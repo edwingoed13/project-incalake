@@ -621,6 +621,19 @@ function decrementAdults() {
   if (adults.value > 1) adults.value--
 }
 
+const guideLanguageMap: Record<number, string> = { 1: 'Spanish', 2: 'English', 3: 'French', 4: 'German', 5: 'Portuguese', 6: 'Italian' }
+function getGuideLanguageNames(ids: number[]): string[] {
+  return ids.map(id => guideLanguageMap[id] || `Lang ${id}`)
+}
+
+const guideTypeLabels: Record<string, string> = {
+  live_guide: 'Live Guide',
+  audio_guide: 'Audio Guide',
+  informative_brochures: 'Informative Brochures',
+  no_guide: 'No Guide',
+  none: 'None'
+}
+
 function handleBooking() {
   console.log('=== handleBooking called from [slug].vue ===')
   
@@ -663,15 +676,18 @@ function handleBooking() {
     policies: tour.value?.policies || '',
     cancellationPolicy: tour.value?.cancellation_policy || '',
     taxPercentage: tour.value?.tax_percentage || 0,
-    advancePaymentPercentage: tour.value?.advance_payment_percentage || 100
+    advancePaymentPercentage: tour.value?.advance_payment_percentage || 100,
+    guideType: tour.value?.guide_type || '',
+    guideLanguages: getGuideLanguageNames(tour.value?.guide_languages || []),
+    durationLabel: durationLabel.value,
   }
 
   console.log('Adding to cart:', cartItem)
   cartStore.addItem(cartItem)
   console.log('Cart items after add:', cartStore.items.length)
 
-  // Navigate to checkout
-  navigateTo('/checkout')
+  // Navigate to cart
+  navigateTo('/cart')
 }
 
 

@@ -654,6 +654,11 @@ function decrementAdults() {
   if (adults.value > 1) adults.value--
 }
 
+const guideLanguageMap: Record<number, string> = { 1: 'Spanish', 2: 'English', 3: 'French', 4: 'German', 5: 'Portuguese', 6: 'Italian' }
+function getGuideLanguageNames(ids: number[]): string[] {
+  return ids.map(id => guideLanguageMap[id] || `Lang ${id}`)
+}
+
 function handleBooking() {
   console.log('=== handleBooking called from [slug].vue ===')
   
@@ -703,7 +708,10 @@ function handleBooking() {
     hasOffer: activeOffer.value !== null,
     offerDiscount: activeOffer.value?.discount || 0,
     offerDiscountType: activeOffer.value?.discountType || '',
-    offerColor: activeOffer.value?.color || ''
+    offerColor: activeOffer.value?.color || '',
+    guideType: tour.value?.guide_type || '',
+    guideLanguages: getGuideLanguageNames(tour.value?.guide_languages || []),
+    durationLabel: durationLabel.value,
   }
 
   console.log('Adding to cart:', cartItem)
@@ -711,7 +719,7 @@ function handleBooking() {
   console.log('Cart items after add:', cartStore.items.length)
 
   // Navigate to checkout
-  navigateTo('/checkout')
+  navigateTo('/cart')
 }
 
 

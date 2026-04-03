@@ -182,7 +182,7 @@
       <p style="margin: 0 0 12px 0; color: #666; font-size: 14px;">
         Puedes ver los detalles completos de tu reserva en cualquier momento:
       </p>
-      <a href="{{ config('app.frontend_url') }}/booking-confirmation/{{ $booking->booking_code }}?token={{ $booking->confirmation_token }}"
+      <a href="{{ config('app.frontend_url') }}/es/booking-confirmation/{{ $booking->booking_code }}?token={{ $booking->confirmation_token }}"
          style="display:inline-block; background:#ff6b35; color:#fff; text-decoration:none; padding:14px 32px; border-radius:8px; font-size:16px; font-weight:bold; box-shadow: 0 2px 4px rgba(255,107,53,0.3);">
         &#128274; Ver Mi Reserva
       </a>

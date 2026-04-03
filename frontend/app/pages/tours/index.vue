@@ -30,33 +30,33 @@
     </section>
 
     <!-- Sticky Filter Bar (Viator style) -->
-    <div class="sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm overflow-visible">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 overflow-visible">
-        <div class="flex items-center gap-2 flex-wrap md:flex-nowrap">
+    <div class="sticky top-[56px] md:top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm overflow-visible">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-10 py-2 md:py-2.5 overflow-visible">
+        <div class="flex items-center gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide">
 
           <!-- Search pill -->
           <div class="relative shrink-0">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm md:text-base">search</span>
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="t('search_placeholder')"
-              class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary w-48 focus:w-64 transition-all"
+              class="pl-8 md:pl-9 pr-3 md:pr-4 py-1.5 md:py-2 bg-slate-50 border border-slate-200 rounded-full text-[10px] md:text-xs font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary w-28 md:w-48 focus:w-44 md:focus:w-64 transition-all"
             />
           </div>
 
           <!-- Divider -->
-          <div class="w-px h-6 bg-slate-200 shrink-0"></div>
+          <div class="w-px h-5 md:h-6 bg-slate-200 shrink-0"></div>
 
           <!-- Destination pill -->
           <div class="relative shrink-0">
             <button
               @click="openFilter = openFilter === 'city' ? '' : 'city'"
               :class="selectedCitySlug ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
-              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+              class="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3.5 py-1.5 md:py-2 border rounded-full text-[10px] md:text-xs font-semibold transition-all"
             >
               <span class="material-symbols-outlined text-sm">location_on</span>
-              {{ selectedCitySlug ? formatCityName(selectedCitySlug) : 'Destination' }}
+              <span class="hidden md:inline">{{ selectedCitySlug ? formatCityName(selectedCitySlug) : 'Destination' }}</span>
               <span class="material-symbols-outlined text-xs">expand_more</span>
             </button>
             <!-- Dropdown -->
@@ -81,10 +81,10 @@
             <button
               @click="openFilter = openFilter === 'duration' ? '' : 'duration'"
               :class="selectedDuration ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
-              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+              class="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3.5 py-1.5 md:py-2 border rounded-full text-[10px] md:text-xs font-semibold transition-all"
             >
               <span class="material-symbols-outlined text-sm">schedule</span>
-              {{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}
+              <span class="hidden md:inline">{{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}</span>
               <span class="material-symbols-outlined text-xs">expand_more</span>
             </button>
             <div v-if="openFilter === 'duration'" class="absolute top-full left-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
@@ -100,10 +100,10 @@
             <button
               @click="openFilter = openFilter === 'price' ? '' : 'price'"
               :class="selectedPrice ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
-              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+              class="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3.5 py-1.5 md:py-2 border rounded-full text-[10px] md:text-xs font-semibold transition-all"
             >
               <span class="material-symbols-outlined text-sm">payments</span>
-              {{ selectedPrice ? priceLabels[selectedPrice] : 'Price' }}
+              <span class="hidden md:inline">{{ selectedPrice ? priceLabels[selectedPrice] : 'Price' }}</span>
               <span class="material-symbols-outlined text-xs">expand_more</span>
             </button>
             <div v-if="openFilter === 'price'" class="absolute top-full left-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
@@ -119,10 +119,10 @@
           <div class="relative shrink-0">
             <button
               @click="openFilter = openFilter === 'sort' ? '' : 'sort'"
-              class="flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 hover:border-slate-300 rounded-full text-xs font-semibold transition-all"
+              class="flex items-center gap-1 md:gap-1.5 px-2.5 md:px-3.5 py-1.5 md:py-2 bg-white text-slate-700 border border-slate-200 hover:border-slate-300 rounded-full text-[10px] md:text-xs font-semibold transition-all"
             >
               <span class="material-symbols-outlined text-sm">sort</span>
-              {{ sortLabels[sortBy] || 'Sort' }}
+              <span class="hidden md:inline">{{ sortLabels[sortBy] || 'Sort' }}</span>
               <span class="material-symbols-outlined text-xs">expand_more</span>
             </button>
             <div v-if="openFilter === 'sort'" class="absolute top-full right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">

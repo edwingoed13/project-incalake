@@ -72,6 +72,12 @@ class TourService
 
     public function update(Tour $tour, array $data): Tour
     {
+        $firstLang = isset($data['translations']) ? array_key_first($data['translations']) : null;
+        \Log::info('UPDATE_TOUR_DEBUG', [
+            'tour_id' => $tour->id,
+            'first_lang' => $firstLang,
+            'bt' => $firstLang ? ($data['translations'][$firstLang]['booking_texts'] ?? 'MISSING') : 'NO_TRANS',
+        ]);
         DB::beginTransaction();
         try {
             $data = $this->prepareDurationData($data);

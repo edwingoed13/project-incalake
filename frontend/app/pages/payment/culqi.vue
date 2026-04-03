@@ -174,7 +174,8 @@ function getInitials(name: string) {
 
 function formatDate(dateString: string) {
   if (!dateString) return ''
-  const [y, m, d] = dateString.split('-').map(Number)
+  const clean = dateString.split('T')[0] // Remove time part from ISO datetime
+  const [y, m, d] = clean.split('-').map(Number)
   const date = new Date(y, m - 1, d)
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }

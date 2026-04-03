@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white font-display text-slate-900 min-h-screen pt-20">
+  <div class="bg-white font-display text-slate-900 min-h-screen pt-14 md:pt-20">
     <!-- Premium Hero Section -->
-    <section class="relative w-full h-[550px] md:h-[600px] flex flex-col items-center justify-center p-6 sm:p-12">
+    <section class="relative w-full h-[420px] md:h-[600px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
         <img
           :src="heroImage"
@@ -11,24 +11,24 @@
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
       </div>
 
-      <div class="relative z-10 text-center max-w-4xl px-4 mb-8">
-        <h2 class="text-white text-4xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-4 drop-shadow-2xl">
+      <div class="relative z-10 text-center max-w-4xl px-4 mb-6 md:mb-8">
+        <h2 class="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-3 md:mb-4 drop-shadow-2xl">
           {{ c('hero', 'title', 'home_hero_title') }}
         </h2>
-        <p class="text-white/80 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+        <p class="hidden sm:block text-white/80 text-lg md:text-xl font-medium max-w-2xl mx-auto">
           {{ c('hero', 'subtitle', 'home_hero_subtitle') }}
         </p>
       </div>
 
-      <!-- Search Bar (inline, GetYourGuide style) -->
-      <div class="relative w-full max-w-3xl px-6" style="z-index: 60;">
-        <div class="bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] rounded-2xl p-2 flex items-center gap-2">
-          <div class="flex-1 flex items-center gap-3 px-4 py-3">
-            <span class="material-symbols-outlined text-primary text-xl">search</span>
+      <!-- Search Bar - simplified on mobile -->
+      <div class="relative w-full max-w-3xl px-4 sm:px-6" style="z-index: 60;">
+        <div class="bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex items-center gap-1.5 sm:gap-2">
+          <div class="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3">
+            <span class="material-symbols-outlined text-primary text-lg sm:text-xl">search</span>
             <input
               ref="searchInputRef"
               v-model="searchQuery"
-              class="bg-transparent border-none p-0 focus:ring-0 text-sm font-semibold text-slate-800 placeholder:text-slate-400 w-full outline-none"
+              class="bg-transparent border-none p-0 focus:ring-0 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 w-full outline-none"
               :placeholder="c('search_placeholder', '', 'home_search_placeholder')"
               type="text"
               @input="onSearchInput"
@@ -39,10 +39,10 @@
           </div>
           <button
             @click="goToTours"
-            class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
+            class="bg-primary text-white px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
           >
             <span class="material-symbols-outlined text-lg">search</span>
-            {{ c('search_btn', '', 'home_search_btn') }}
+            <span class="hidden sm:inline">{{ c('search_btn', '', 'home_search_btn') }}</span>
           </button>
         </div>
 
@@ -131,30 +131,51 @@
       </div>
     </section>
 
-    <!-- Trust Signals -->
-    <section class="py-8 px-6 relative z-0">
-      <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
-          <div v-for="(signal, idx) in trustSignals" :key="idx" class="flex items-center gap-3 group">
-            <div class="size-10 rounded-xl flex items-center justify-center group-hover:-translate-y-1 transition-transform"
-                 :class="[idx === 0 ? 'bg-orange-50 text-orange-600' : idx === 1 ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600']">
-              <span class="material-symbols-outlined text-2xl font-bold">{{ signal.icon }}</span>
-            </div>
-            <div>
-              <h5 class="text-sm font-bold text-slate-900">{{ signal.title }}</h5>
-              <p class="text-xs text-slate-500 font-medium">{{ signal.description }}</p>
-            </div>
+    <!-- Trust Signals - Mobile: horizontal scroll pills / Desktop: full layout -->
+    <section class="py-4 md:py-8 relative z-0">
+      <!-- Mobile: compact horizontal scroll -->
+      <div class="md:hidden overflow-x-auto scrollbar-hide px-4">
+        <div class="flex items-center gap-3 w-max">
+          <div v-for="(signal, idx) in trustSignals" :key="idx"
+            class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-full shrink-0"
+          >
+            <span class="material-symbols-outlined text-sm"
+              :class="[idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-green-500' : 'text-blue-500']"
+            >{{ signal.icon }}</span>
+            <span class="text-[10px] font-bold text-slate-700 whitespace-nowrap">{{ signal.title }}</span>
           </div>
-          <div class="flex items-center gap-1.5">
-            <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
-            <span class="text-[10px] font-black text-slate-400 ml-1">4.9/5</span>
+          <div class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
+            <span class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+            <span class="text-[10px] font-black text-slate-700">4.9/5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop: full layout -->
+      <div class="hidden md:block px-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex items-center justify-between gap-8">
+            <div v-for="(signal, idx) in trustSignals" :key="idx" class="flex items-center gap-3 group">
+              <div class="size-10 rounded-xl flex items-center justify-center group-hover:-translate-y-1 transition-transform"
+                   :class="[idx === 0 ? 'bg-orange-50 text-orange-600' : idx === 1 ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600']">
+                <span class="material-symbols-outlined text-2xl font-bold">{{ signal.icon }}</span>
+              </div>
+              <div>
+                <h5 class="text-sm font-bold text-slate-900">{{ signal.title }}</h5>
+                <p class="text-xs text-slate-500 font-medium">{{ signal.description }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+              <span class="text-[10px] font-black text-slate-400 ml-1">4.9/5</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Explore by Destination (GetYourGuide style) -->
-    <section class="py-16 px-6">
+    <section class="py-2 md:py-16 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
         <div class="mb-10">
           <h3 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{{ c('destinations', 'title', 'home_destinations_title') }}</h3>
@@ -181,7 +202,7 @@
     </section>
 
     <!-- Featured Tours -->
-    <section class="py-12 px-6 bg-slate-50/50">
+    <section class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-8">
           <div>
@@ -252,7 +273,7 @@
     </section>
 
     <!-- Our Offers (only if 4+ tours have active offers) -->
-    <section v-if="toursWithOffers.length >= 4" class="py-12 px-6">
+    <section v-if="toursWithOffers.length >= 4" class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-8">
           <div>
@@ -315,7 +336,7 @@
     </section>
 
     <!-- Testimonials Slider -->
-    <section v-if="featuredReviews.length > 0" class="py-12 px-6 bg-slate-50/50">
+    <section v-if="featuredReviews.length > 0" class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-10">
           <div>
@@ -379,7 +400,7 @@
     </section>
 
     <!-- Why Choose Us -->
-    <section class="py-12 px-6">
+    <section class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
         <h3 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 text-center mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">

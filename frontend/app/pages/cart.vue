@@ -1,65 +1,105 @@
 <script setup lang="ts">
 import type { CartItem } from '~/stores/cart'
 
+const { api } = useApi()
+const { locale } = useI18n()
 const cartStore = useCartStore()
 const router = useRouter()
 const config = useRuntimeConfig()
+const localePath = useLocalePath()
 
-// Load cart from localStorage on mount
-onMounted(() => {
+// Tour details cache (for policies, guide info not in cart)
+const tourDetails = ref<Record<number, any>>({})
+
+onMounted(async () => {
   cartStore.loadFromLocalStorage()
+  // Fetch full tour details for each cart item (for policies)
+  for (const item of cartStore.items) {
+    if (!tourDetails.value[item.tourId]) {
+      try {
+        const res = await api(`/tours/${item.tourId}?language=${locale.value.toUpperCase()}`)
+        tourDetails.value[item.tourId] = (res as any)?.data || null
+      } catch (e) {}
+    }
+  }
 })
 
-const showPoliciesModal = ref(false)
-const selectedTourPolicies = ref<CartItem | null>(null)
-const acceptedTerms = ref(false)
+const editingItem = ref<string | null>(null)
+const editForm = ref({ date: '', time: '', adults: 1 })
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+function openEdit(item: CartItem) {
+  editForm.value = { date: item.selectedDate, time: item.selectedTime, adults: item.adults }
+  editingItem.value = item.id
 }
 
-const formatTime = (timeString: string) => {
-  const [hours, minutes] = timeString.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const hour12 = hour % 12 || 12
-  return `${hour12}:${minutes} ${ampm}`
+function saveEdit(item: CartItem) {
+  const newTotal = item.basePrice * editForm.value.adults
+  cartStore.updateItem(item.id, {
+    selectedDate: editForm.value.date,
+    selectedTime: editForm.value.time,
+    adults: editForm.value.adults,
+    total: newTotal,
+  })
+  editingItem.value = null
 }
 
 function removeItem(itemId: string) {
-  if (confirm('Are you sure you want to remove this tour from your cart?')) {
-    cartStore.removeItem(itemId)
+  cartStore.removeItem(itemId)
+}
+
+function getItemPolicies(item: any) {
+  const detail = tourDetails.value[item.tourId]
+  const bt = detail?.booking_texts || {}
+  const policyType = detail?.policy_type || 'standard'
+
+  // Get policy content: custom from booking_texts, or standard from tour fields
+  let policyContent = ''
+  if (policyType === 'custom') {
+    policyContent = bt.policyDescriptionCustom || bt.policyDescription || detail?.policy_description_custom || ''
+  } else {
+    policyContent = bt.policyDescription || detail?.policy_description || ''
+  }
+
+  return {
+    policies: item.policies || detail?.policies || policyContent || '',
+    cancellationPolicy: item.cancellationPolicy || detail?.cancellation_policy || '',
+    policyType,
+    tourTitle: item.tourTitle,
   }
 }
 
-function continueShopping() {
-  router.push('/tours')
+const acceptedTerms = ref(false)
+const policiesItem = ref<any>(null)
+
+function openPolicies(item: any) {
+  policiesItem.value = getItemPolicies(item)
+}
+
+function closePolicies() {
+  policiesItem.value = null
 }
 
 function proceedToCheckout() {
-  if (!acceptedTerms.value) {
-    alert('Please accept the terms and conditions to continue')
-    return
-  }
-  router.push('/checkout')
+  if (!acceptedTerms.value) return
+  router.push(localePath('/checkout'))
 }
 
-function openPoliciesModal(item: CartItem) {
-  selectedTourPolicies.value = item
-  showPoliciesModal.value = true
-  document.body.style.overflow = 'hidden'
+const formatDate = (d: string) => {
+  if (!d) return ''
+  const [y, m, day] = d.split('-').map(Number)
+  return new Date(y, m - 1, day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function closePoliciesModal() {
-  showPoliciesModal.value = false
-  selectedTourPolicies.value = null
-  document.body.style.overflow = ''
+const formatTime = (t: string) => {
+  if (!t) return ''
+  const [h, m] = t.split(':')
+  const hour = parseInt(h)
+  return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
+}
+
+const guideTypeLabels: Record<string, string> = {
+  live_guide: 'Live Tour Guide', audio_guide: 'Audio Guide',
+  informative_brochures: 'Brochures', no_guide: 'Self-guided', none: '',
 }
 
 function getImageUrl(path: string) {
@@ -70,254 +110,260 @@ function getImageUrl(path: string) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-slate-50 pt-24 pb-12">
+    <div class="max-w-5xl mx-auto px-4">
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-black mb-2">Shopping Cart</h1>
-        <p class="text-slate-600 dark:text-slate-400">{{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? 'tour' : 'tours' }} in your cart</p>
+      <div class="mb-6">
+        <h1 class="text-2xl font-black text-slate-800">Shopping Cart</h1>
+        <p class="text-sm text-slate-500">{{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? 'tour' : 'tours' }}</p>
       </div>
 
-      <!-- Empty State -->
-      <div v-if="cartStore.isEmpty" class="bg-white dark:bg-slate-900 rounded-xl p-12 text-center shadow-lg">
-        <span class="material-symbols-outlined text-slate-300 dark:text-slate-700 mb-4 block" style="font-size: 96px;">shopping_cart</span>
-        <h2 class="text-2xl font-black mb-2">Your cart is empty</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-6">Explore our tours and add your favorites to the cart</p>
-        <button @click="continueShopping" class="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 rounded-lg transition-colors">
+      <!-- Empty -->
+      <div v-if="cartStore.isEmpty" class="bg-white rounded-2xl p-12 text-center shadow-sm">
+        <span class="material-symbols-outlined text-slate-300 text-6xl mb-4">shopping_cart</span>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Your cart is empty</h2>
+        <p class="text-sm text-slate-500 mb-6">Explore our tours and find your next adventure</p>
+        <NuxtLink :to="localePath('/tours')" class="bg-primary text-white font-bold px-6 py-3 rounded-xl text-sm">
           Explore Tours
-        </button>
+        </NuxtLink>
       </div>
 
-      <!-- Cart Items -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Items List -->
+      <!-- Cart Content -->
+      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Items (2 cols) -->
         <div class="lg:col-span-2 space-y-4">
           <div
             v-for="item in cartStore.items"
             :key="item.id"
-            class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow border border-slate-200 dark:border-slate-800"
+            class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
           >
-            <div class="flex gap-4">
-              <!-- Tour Image -->
-              <div class="flex-shrink-0">
-                <img
-                  v-if="item.tourImage"
-                  :src="getImageUrl(item.tourImage)"
-                  :alt="item.tourTitle"
-                  class="w-24 h-24 object-cover rounded-lg"
-                />
-                <div v-else class="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                  <span class="material-symbols-outlined text-slate-400 text-4xl">image</span>
-                </div>
+            <div class="flex gap-4 p-4">
+              <!-- Image -->
+              <img
+                v-if="item.tourImage"
+                :src="getImageUrl(item.tourImage)"
+                :alt="item.tourTitle"
+                class="w-28 h-28 object-cover rounded-xl shrink-0"
+              />
+              <div v-else class="w-28 h-28 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-slate-300 text-3xl">image</span>
               </div>
 
-              <!-- Tour Details -->
-              <div class="flex-grow">
-                <div class="flex justify-between items-start mb-2">
-                  <div class="flex-1">
-                    <h3 class="font-bold text-lg mb-2">{{ item.tourTitle }}</h3>
-                    <div class="space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                      <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-base">calendar_today</span>
-                        <span>{{ formatDate(item.selectedDate) }}</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-base">schedule</span>
-                        <span>{{ formatTime(item.selectedTime) }}</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-base">group</span>
-                        <span>{{ item.adults }} adult{{ item.adults !== 1 ? 's' : '' }}{{ item.children > 0 ? `, ${item.children} child${item.children !== 1 ? 'ren' : ''}` : '' }}</span>
-                      </div>
-
-                      <!-- Policies Button -->
-                      <button
-                        v-if="item.policies || item.cancellationPolicy"
-                        @click="openPoliciesModal(item)"
-                        class="flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-semibold mt-2 hover:underline"
-                      >
-                        <span class="material-symbols-outlined text-base">description</span>
-                        <span>View policies</span>
-                      </button>
-                    </div>
+              <!-- Details -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <h3 class="text-sm font-bold text-slate-800 line-clamp-2">{{ item.tourTitle }}</h3>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <button @click="openEdit(item)" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" title="Edit">
+                      <span class="material-symbols-outlined text-base">edit</span>
+                    </button>
+                    <button @click="removeItem(item.id)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Remove">
+                      <span class="material-symbols-outlined text-base">delete</span>
+                    </button>
                   </div>
+                </div>
 
-                  <!-- Remove Button -->
+                <!-- Offer badge -->
+                <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mb-2" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
+                  <span class="material-symbols-outlined text-xs">sell</span>
+                  {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
+                </div>
+
+                <!-- Info rows -->
+                <div class="space-y-1 text-xs text-slate-500">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">calendar_today</span>
+                    {{ formatDate(item.selectedDate) }}
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">schedule</span>
+                    {{ formatTime(item.selectedTime) }}{{ item.durationLabel ? ` · ${item.durationLabel}` : '' }}
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">group</span>
+                    {{ item.adults }} adult{{ item.adults !== 1 ? 's' : '' }}{{ item.children > 0 ? `, ${item.children} children` : '' }}
+                  </div>
+                  <div v-if="item.guideType && item.guideType !== 'none'" class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">record_voice_over</span>
+                    {{ guideTypeLabels[item.guideType] || item.guideType }}{{ item.guideLanguages?.length ? ` [ ${item.guideLanguages.join(', ')} ]` : '' }}
+                  </div>
                   <button
-                    @click="removeItem(item.id)"
-                    class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    title="Remove from cart"
+                    @click="openPolicies(item)"
+                    class="flex items-center gap-1 text-primary hover:underline font-semibold mt-0.5"
                   >
-                    <span class="material-symbols-outlined">close</span>
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    Terms & Conditions
                   </button>
                 </div>
 
                 <!-- Price -->
-                <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <div class="flex justify-between items-center">
-                    <span class="text-sm text-slate-600 dark:text-slate-400">Subtotal:</span>
-                    <span class="text-lg font-black text-primary">
-                      ${{ item.total.toFixed(2) }} {{ item.currency }}
-                    </span>
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                  <div v-if="item.hasOffer && item.originalPrice" class="text-xs">
+                    <span class="line-through text-slate-400">${{ (item.originalPrice * item.adults).toFixed(2) }}</span>
+                    <span class="text-green-600 font-semibold ml-1">-{{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }}</span>
                   </div>
+                  <div v-else></div>
+                  <span class="text-lg font-black text-primary">${{ item.total.toFixed(2) }}</span>
                 </div>
               </div>
             </div>
+
+            <!-- Edit Panel -->
+            <Transition name="slide">
+              <div v-if="editingItem === item.id" class="p-4 bg-slate-50 border-t border-slate-100">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Edit Booking</p>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Date</label>
+                    <input v-model="editForm.date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Time</label>
+                    <input v-model="editForm.time" type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Adults</label>
+                    <div class="flex items-center gap-2">
+                      <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                        <span class="material-symbols-outlined text-sm">remove</span>
+                      </button>
+                      <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
+                      <button @click="editForm.adults = Math.min(20, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <button @click="editingItem = null" class="flex-1 py-2 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg">Cancel</button>
+                  <button @click="saveEdit(item)" class="flex-1 py-2 text-xs font-bold text-white bg-primary rounded-lg">Save Changes</button>
+                </div>
+              </div>
+            </Transition>
           </div>
+
+          <!-- Continue Shopping -->
+          <NuxtLink :to="localePath('/tours')" class="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+            <span class="material-symbols-outlined text-base">arrow_back</span>
+            Continue Shopping
+          </NuxtLink>
         </div>
 
         <!-- Summary Sidebar -->
         <div class="lg:col-span-1">
-          <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-lg sticky top-24 border border-slate-200 dark:border-slate-800">
-            <h2 class="text-xl font-black mb-4">Summary</h2>
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-24">
+            <h2 class="text-base font-black mb-4">Summary</h2>
 
-            <div class="space-y-3 mb-6">
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-600 dark:text-slate-400">Tours ({{ cartStore.itemCount }})</span>
+            <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-500">Tours ({{ cartStore.itemCount }})</span>
                 <span class="font-semibold">${{ cartStore.totalAmount.toFixed(2) }}</span>
               </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-slate-600 dark:text-slate-400">Participants</span>
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-500">Participants</span>
                 <span class="font-semibold">{{ cartStore.totalParticipants }}</span>
               </div>
-              <div class="border-t border-slate-200 dark:border-slate-800 pt-3 flex justify-between">
-                <span class="font-black">Total</span>
-                <div class="text-right">
-                  <div class="text-xl font-black text-primary">
-                    ${{ cartStore.totalAmount.toFixed(2) }}
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <!-- Terms and Conditions -->
-            <div class="mb-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-              <label class="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  v-model="acceptedTerms"
-                  class="mt-1 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                />
-                <span class="text-sm text-slate-700 dark:text-slate-300">
-                  I accept the
-                  <a href="#" class="text-primary hover:text-primary/80 font-semibold underline">terms and conditions</a>
-                  and cancellation policies of each tour
-                </span>
-              </label>
+            <div class="flex justify-between items-center mb-5">
+              <span class="font-black">Total</span>
+              <span class="text-2xl font-black text-primary">${{ cartStore.totalAmount.toFixed(2) }}</span>
             </div>
 
-            <div class="space-y-3">
-              <button
-                @click="proceedToCheckout"
-                :disabled="!acceptedTerms"
-                :class="[
-                  'w-full font-black py-4 rounded-xl transition-all shadow-lg',
-                  acceptedTerms
-                    ? 'bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-primary/20'
-                    : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'
-                ]"
-              >
-                <span class="flex items-center justify-center gap-2">
-                  <span class="material-symbols-outlined">check_circle</span>
-                  <span>Proceed to Payment</span>
-                </span>
-              </button>
-              <button
-                @click="continueShopping"
-                class="w-full border-2 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold py-4 rounded-xl hover:border-primary hover:text-primary transition-colors"
-              >
-                Continue Shopping
-              </button>
-            </div>
+            <!-- Terms -->
+            <label class="flex items-start gap-2 cursor-pointer mb-4 p-3 bg-slate-50 rounded-xl">
+              <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 w-4 h-4 text-primary rounded" />
+              <span class="text-[11px] text-slate-600">I accept the <a href="#" class="text-primary font-semibold">terms and conditions</a> and cancellation policies</span>
+            </label>
 
-            <!-- Trust Signals -->
-            <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 space-y-2">
-              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                <span class="material-symbols-outlined text-green-500 text-base">shield</span>
-                <span>Secure payment</span>
+            <button
+              @click="proceedToCheckout"
+              :disabled="!acceptedTerms"
+              class="w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              :class="acceptedTerms ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+            >
+              <span class="material-symbols-outlined text-lg">lock</span>
+              Proceed to Checkout
+            </button>
+
+            <!-- Trust -->
+            <div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5">
+              <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                <span class="material-symbols-outlined text-green-500 text-sm">shield</span> Secure payment
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                <span class="material-symbols-outlined text-yellow-500 text-base">bolt</span>
-                <span>Instant confirmation</span>
-              </div>
-              <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                <span class="material-symbols-outlined text-blue-500 text-base">verified_user</span>
-                <span>Flexible cancellation</span>
+              <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                <span class="material-symbols-outlined text-yellow-500 text-sm">bolt</span> Instant confirmation
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
     <!-- Policies Modal -->
     <Teleport to="body">
-      <div
-        v-if="showPoliciesModal && selectedTourPolicies"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
-        @click.self="closePoliciesModal"
-      >
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
-            <h2 class="text-2xl font-black">Tour Policies</h2>
-            <button
-              @click="closePoliciesModal"
-              class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-            >
-              <span class="material-symbols-outlined text-2xl">close</span>
+      <div v-if="policiesItem" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closePolicies">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden">
+          <div class="flex items-center justify-between p-5 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-800">Terms & Conditions</h3>
+            <button @click="closePolicies" class="p-1 hover:bg-slate-100 rounded-lg">
+              <span class="material-symbols-outlined text-slate-400">close</span>
             </button>
           </div>
+          <div class="p-5 overflow-y-auto max-h-[calc(80vh-120px)] space-y-4">
+            <p class="text-xs font-bold text-slate-400 uppercase">{{ policiesItem.tourTitle }}</p>
 
-          <!-- Modal Content -->
-          <div class="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
-            <!-- Tour Title -->
-            <div class="mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
-              <h3 class="text-lg font-bold">{{ selectedTourPolicies.tourTitle }}</h3>
+            <!-- Custom policies from admin -->
+            <div v-if="policiesItem.policies">
+              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+                <span class="material-symbols-outlined text-blue-500 text-base">policy</span>
+                Tour Policies
+              </h4>
+              <div class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
             </div>
 
-            <!-- Cancellation Policy -->
-            <div v-if="selectedTourPolicies.cancellationPolicy" class="mb-6">
-              <h4 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <span class="material-symbols-outlined text-red-500">report</span>
+            <div v-if="policiesItem.cancellationPolicy">
+              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+                <span class="material-symbols-outlined text-red-500 text-base">cancel</span>
                 Cancellation Policy
               </h4>
-              <div
-                class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800"
-                v-html="selectedTourPolicies.cancellationPolicy"
-              ></div>
+              <div class="text-xs text-slate-600 bg-red-50 border border-red-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
             </div>
 
-            <!-- General Policies -->
-            <div v-if="selectedTourPolicies.policies" class="mb-6">
-              <h4 class="text-lg font-bold mb-3 flex items-center gap-2">
-                <span class="material-symbols-outlined text-blue-500">description</span>
-                General Policies
+            <!-- Standard policy (default when nothing configured) -->
+            <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
+              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+                <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+                Standard Policy
               </h4>
-              <div
-                class="prose dark:prose-invert max-w-none text-sm text-slate-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
-                v-html="selectedTourPolicies.policies"
-              ></div>
+              <div class="text-xs text-slate-600 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
+                <p><strong>Free cancellation</strong> up to 24 hours before the tour start time for a full refund.</p>
+                <p><strong>No changes</strong> are accepted within 24 hours of the tour.</p>
+                <p><strong>No-shows</strong> will be charged in full.</p>
+                <p>All tours are subject to weather conditions and minimum participant requirements.</p>
+              </div>
             </div>
 
-            <!-- No policies message -->
-            <div v-if="!selectedTourPolicies.cancellationPolicy && !selectedTourPolicies.policies" class="text-center py-8">
-              <span class="material-symbols-outlined text-slate-300 dark:text-slate-700 mb-3 block" style="font-size: 64px;">description</span>
-              <p class="text-slate-500 dark:text-slate-400">No policies available for this tour.</p>
+            <!-- Custom type selected but no content yet -->
+            <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
+              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+                <span class="material-symbols-outlined text-amber-500 text-base">info</span>
+                Custom Policy
+              </h4>
+              <div class="text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>
+              </div>
             </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
-            <button
-              @click="closePoliciesModal"
-              class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.slide-enter-active, .slide-leave-active { transition: all 0.2s ease; }
+.slide-enter-from, .slide-leave-to { opacity: 0; max-height: 0; }
+.slide-enter-to, .slide-leave-from { max-height: 300px; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>

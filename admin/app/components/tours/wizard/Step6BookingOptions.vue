@@ -68,15 +68,19 @@
             {{ store.bookingOptions.policyType === 'standard' ? 'Políticas Pre-establecidas (Editables)' : 'Descripción Personalizada' }}
           </label>
           <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950">
-            <TiptapEditor 
+            <TiptapEditor
               v-if="store.bookingOptions.policyType === 'standard'"
-              v-model="currentBookingTexts.policyDescription"
+              :modelValue="currentBookingTexts.policyDescription || ''"
+              @update:modelValue="(v: string) => { const seo = store.contentSEO[store.currentLanguage]; if (seo?.bookingTexts) seo.bookingTexts.policyDescription = v; store.bookingOptions.policyDescription = v }"
               placeholder="Escribe las políticas estándar aquí..."
+              :key="'policy-std-' + store.currentLanguage"
             />
-            <TiptapEditor 
+            <TiptapEditor
               v-else
-              v-model="currentBookingTexts.policyDescriptionCustom"
+              :modelValue="currentBookingTexts.policyDescriptionCustom || ''"
+              @update:modelValue="(v: string) => { const seo = store.contentSEO[store.currentLanguage]; if (seo?.bookingTexts) seo.bookingTexts.policyDescriptionCustom = v; store.bookingOptions.policyDescriptionCustom = v }"
               placeholder="Escribe las políticas personalizadas para esta actividad..."
+              :key="'policy-custom-' + store.currentLanguage"
             />
           </div>
           <p v-if="store.bookingOptions.policyType === 'standard'" class="text-[10px] text-blue-500 font-bold flex items-center gap-2 px-2">
@@ -402,7 +406,7 @@ const tourLanguages = computed(() => {
   })
 })
 
-// Per-language booking texts
+// Per-language booking texts - direct reference to store object
 const currentBookingTexts = computed(() => {
   const seo = store.contentSEO[store.currentLanguage]
   if (!seo) return { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' }
@@ -421,14 +425,14 @@ const pickupModalData = computed(() => {
     return {
       lat: store.bookingOptions.meetingPointLat,
       lng: store.bookingOptions.meetingPointLng,
-      description: currentBookingTexts.value.meetingPointDescription
+      description: currentBookingTexts.meetingPointDescription
     }
   } else {
     return {
       lat: store.bookingOptions.pickupCenterLat,
       lng: store.bookingOptions.pickupCenterLng,
       radius: store.bookingOptions.pickupRadiusKm,
-      description: currentBookingTexts.value.pickupLocationDescription
+      description: currentBookingTexts.pickupLocationDescription
     }
   }
 })
@@ -442,12 +446,12 @@ const handlePickupSave = (data: any) => {
   if (pickupModalType.value === 'meeting_point') {
     store.bookingOptions.meetingPointLat = data.lat
     store.bookingOptions.meetingPointLng = data.lng
-    currentBookingTexts.value.meetingPointDescription = data.description
+    currentBookingTexts.meetingPointDescription = data.description
   } else {
     store.bookingOptions.pickupCenterLat = data.lat
     store.bookingOptions.pickupCenterLng = data.lng
     store.bookingOptions.pickupRadiusKm = data.radius
-    currentBookingTexts.value.pickupLocationDescription = data.description
+    currentBookingTexts.pickupLocationDescription = data.description
   }
   isMapModalOpen.value = false
 }

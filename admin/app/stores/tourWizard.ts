@@ -671,7 +671,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
             // Per-language multimedia
             youtube_url: seoData.youtubeUrl || '',
             media_texts: seoData.mediaTexts || [],
-            booking_texts: seoData.bookingTexts || {}
+            booking_texts: (() => { console.log('[SAVE] lang='+code+' bookingTexts=', JSON.stringify(seoData.bookingTexts)); return seoData.bookingTexts || {} })()
           }
         }
       })

@@ -38,10 +38,10 @@
         <div class="relative">
           <button
             @click="langOpen = !langOpen"
-            class="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
+            class="flex items-center gap-1 px-2 py-1.5 text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
           >
-            <span class="material-symbols-outlined text-sm">translate</span>
-            {{ locale }}
+            <span class="text-sm">{{ langFlags[locale] || '🌐' }}</span>
+            <span class="hidden sm:inline">{{ langShortLabels[locale] || locale.toUpperCase() }}</span>
             <span class="material-symbols-outlined text-xs transition-transform" :class="{ 'rotate-180': langOpen }">expand_more</span>
           </button>
           <div v-if="langOpen" class="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -168,6 +168,10 @@ const mobileOpen = ref(false)
 
 const langFlags: Record<string, string> = {
   es: '🇪🇸', en: '🇬🇧', pt: '🇵🇹', fr: '🇫🇷', de: '🇩🇪', it: '🇮🇹'
+}
+
+const langShortLabels: Record<string, string> = {
+  es: 'ESP', en: 'ENG', pt: 'POR', fr: 'FRA', de: 'DEU', it: 'ITA'
 }
 
 const navLinks = [
