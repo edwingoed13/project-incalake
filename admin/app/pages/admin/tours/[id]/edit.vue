@@ -9,6 +9,10 @@
       <main class="flex-1 p-8 lg:p-12 overflow-y-auto custom-scrollbar h-[calc(100vh-64px)]">
         <div class="max-w-6xl mx-auto">
           <div class="mb-10">
+            <NuxtLink to="/admin/tours" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-primary transition-colors mb-4">
+              <span class="material-symbols-outlined text-base">arrow_back</span>
+              Back to Tours
+            </NuxtLink>
             <span class="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-3">
               {{ currentStepLabel?.category }}
             </span>

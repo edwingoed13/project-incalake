@@ -164,27 +164,29 @@ const handleCheckoutSubmit = async (formData: any) => {
       bookings.push(checkoutData)
     }
 
-    // For now, create booking for the first item
-    // TODO: Support multiple bookings in one transaction
-    const response = await bookingStore.createBooking(bookings[0])
+    // Create booking for each cart item
+    const bookingCodes: string[] = []
+    let totalAmount = 0
 
-    if (!response || !response.booking) {
-      throw new Error('Failed to create booking')
+    for (const bookingData of bookings) {
+      const response = await bookingStore.createBooking(bookingData)
+      if (!response || !response.booking) {
+        throw new Error('Failed to create booking')
+      }
+      bookingCodes.push(response.booking.booking_code)
+      totalAmount += response.booking.pricing?.total || bookingData.total_amount || 0
+      console.log('Booking created:', response.booking.booking_code)
     }
 
-    const booking = response.booking
-    console.log('Booking created successfully:', booking.booking_code)
-
-    // Redirect to payment page based on payment method
+    // Redirect to payment page with all booking codes
     const paymentMethod = formData.payment_method || 'culqi'
-
-    // Encode email for URL
     const encodedEmail = encodeURIComponent(formData.customer_email)
+    const codesParam = bookingCodes.join(',')
 
     if (paymentMethod === 'culqi') {
-      router.push(`/payment/culqi?booking=${booking.booking_code}&email=${encodedEmail}`)
+      router.push(`/payment/culqi?booking=${codesParam}&email=${encodedEmail}`)
     } else if (paymentMethod === 'paypal') {
-      router.push(`/payment/paypal?booking=${booking.booking_code}&email=${encodedEmail}`)
+      router.push(`/payment/paypal?booking=${codesParam}&email=${encodedEmail}`)
     } else {
       throw new Error('Invalid payment method')
     }

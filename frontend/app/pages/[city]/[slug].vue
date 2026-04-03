@@ -10,8 +10,8 @@
             <!-- Rating -->
             <div class="flex items-center gap-1">
               <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-              <span>{{ tour.rating || '4.5' }}</span>
-              <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} reviews)</span>
+              <span>{{ tourReviews.length > 0 ? avgRating : '—' }}</span>
+              <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tourReviews.length }} reviews)</span>
             </div>
             <span class="text-slate-300">•</span>
             <!-- Location -->
@@ -78,27 +78,53 @@
           <section>
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-xl font-bold">Customer Reviews</h3>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-2xl">{{ tour.rating || '4.5' }}</span>
+              <div v-if="tourReviews.length > 0" class="flex items-center gap-2">
+                <span class="font-bold text-2xl">{{ avgRating }}</span>
                 <div class="flex">
-                  <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
+                  <span v-for="i in 5" :key="i" class="material-symbols-outlined text-lg" :class="i <= Math.round(avgRating) ? 'text-yellow-500' : 'text-slate-300'" style="font-variation-settings: 'FILL' 1">star</span>
                 </div>
+                <span class="text-sm text-slate-500">({{ tourReviews.length }})</span>
               </div>
             </div>
-            <div class="space-y-8">
-              <!-- Sample reviews - replace with real data when available -->
-              <div class="border-b border-slate-100 dark:border-slate-800 pb-8">
-                <div class="flex items-center gap-4 mb-3">
-                  <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">JD</div>
-                  <div>
-                    <h4 class="font-bold">John Doe</h4>
-                    <p class="text-xs text-slate-500">2 days ago • Verified Booking</p>
+
+            <div v-if="tourReviews.length > 0" class="space-y-6">
+              <div
+                v-for="review in tourReviews.slice(0, showAllReviews ? tourReviews.length : 3)"
+                :key="review.id"
+                class="border-b border-slate-100 dark:border-slate-800 pb-6"
+              >
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm">
+                    {{ getInitials(review.name) }}
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <h4 class="text-sm font-bold">{{ review.name }}</h4>
+                      <span class="text-[10px] text-slate-400">{{ review.review_date }}</span>
+                    </div>
+                    <div class="flex items-center gap-0.5 mt-0.5">
+                      <span v-for="i in review.rating" :key="i" class="material-symbols-outlined text-yellow-400 text-xs" style="font-variation-settings: 'FILL' 1">star</span>
+                    </div>
                   </div>
                 </div>
-                <p class="text-slate-600 dark:text-slate-400">Incredible experience! Our guide was very knowledgeable and passionate about sharing the culture and history of Lake Titicaca.</p>
+                <p v-if="review.title" class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
               </div>
+
+              <button
+                v-if="tourReviews.length > 3"
+                @click="showAllReviews = !showAllReviews"
+                class="font-bold text-primary hover:underline text-sm flex items-center gap-1"
+              >
+                {{ showAllReviews ? 'Show less' : `View all ${tourReviews.length} reviews` }}
+                <span class="material-symbols-outlined text-sm">{{ showAllReviews ? 'expand_less' : 'expand_more' }}</span>
+              </button>
             </div>
-            <button class="mt-6 font-bold text-primary hover:underline text-sm">View all {{ tour.reviews_count || 0 }} reviews</button>
+
+            <div v-else class="py-8 text-center text-slate-400">
+              <span class="material-symbols-outlined text-3xl mb-2">rate_review</span>
+              <p class="text-sm font-medium">No reviews yet for this tour.</p>
+            </div>
           </section>
         </div>
 
@@ -116,36 +142,34 @@
                 <p class="text-sm text-slate-500 mt-1">per person</p>
               </div>
 
-              <!-- Date Selector -->
+              <!-- Date Selector (Calendar) -->
               <div class="mb-4">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tour Date</label>
-                <div class="relative">
-                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">calendar_today</span>
-                  <input
-                    v-model="selectedDate"
-                    :min="minDate"
-                    type="date"
-                    class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                  />
-                </div>
+                <TourCalendar
+                  v-model="selectedDate"
+                  :min-date="minDate"
+                  :offers="tour?.offers_data || []"
+                  :blocks="tour?.blocks_data || []"
+                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                />
                 <!-- Active offer indicator -->
                 <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
                   <span class="text-xs font-bold text-green-700 dark:text-green-400">
                     {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-                    — Special offer for this date!
                   </span>
-                </div>
-                <!-- Blocked date warning -->
-                <div v-if="isDateBlocked" class="mt-2 flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <span class="material-symbols-outlined text-red-600 text-base">block</span>
-                  <span class="text-xs font-bold text-red-700 dark:text-red-400">This date is not available. Please select another date.</span>
                 </div>
               </div>
 
               <!-- Time Selector -->
               <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Departure Time</label>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
+                  <span v-if="tour.duration_hours || tour.duration_days" class="text-xs font-semibold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    {{ formatDuration(tour) }}
+                  </span>
+                </div>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">schedule</span>
                   <select
@@ -157,6 +181,10 @@
                       {{ time.label }}
                     </option>
                   </select>
+                </div>
+                <div v-if="tour.duration_hours || tour.duration_days" class="mt-1.5 flex items-center gap-1 text-xs text-primary font-semibold px-1">
+                  <span class="material-symbols-outlined text-xs">timelapse</span>
+                  Duration: {{ formatDuration(tour) }}
                 </div>
               </div>
 
@@ -251,19 +279,109 @@
     </main>
 
     <!-- Mobile Fixed Bottom CTA -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shadow-2xl z-40 safe-area-inset-bottom">
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shadow-2xl z-40">
       <div class="flex items-center justify-between gap-4">
         <div class="flex flex-col">
-          <span class="text-xs text-slate-500 dark:text-slate-400">From</span>
-          <span class="text-2xl font-black text-primary">${{ tour.min_price || 0 }}</span>
+          <span class="text-xs text-slate-500">From</span>
+          <span class="text-2xl font-black text-primary">${{ (basePrice || 0).toFixed(0) }}</span>
           <span class="text-xs text-slate-500">per person</span>
         </div>
-        <button @click="handleBooking" class="flex-1 bg-primary hover:bg-primary/90 text-white font-black py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+        <button @click="mobileBookingOpen = true" class="flex-1 bg-primary hover:bg-primary/90 text-white font-black py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
           <span class="material-symbols-outlined">calendar_today</span>
           Book Now
         </button>
       </div>
     </div>
+
+    <!-- Mobile Booking Drawer -->
+    <Teleport to="body">
+      <Transition name="drawer">
+        <div v-if="mobileBookingOpen" class="lg:hidden fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" @click="mobileBookingOpen = false"></div>
+          <div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl">
+            <!-- Handle bar -->
+            <div class="flex justify-center pt-3 pb-1">
+              <div class="w-10 h-1 bg-slate-300 rounded-full"></div>
+            </div>
+
+            <div class="p-5 space-y-4">
+              <!-- Price -->
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-black text-primary">${{ (basePrice || 0).toFixed(2) }}</span>
+                <span class="text-sm text-slate-500">{{ currency }} / person</span>
+              </div>
+
+              <!-- Offer banner -->
+              <div v-if="activeOffer" class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
+                <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
+                <span class="text-xs font-bold text-green-700">
+                  {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                </span>
+              </div>
+
+              <!-- Calendar -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Date</label>
+                <TourCalendar
+                  v-model="selectedDate"
+                  :min-date="minDate"
+                  :offers="tour?.offers_data || []"
+                  :blocks="tour?.blocks_data || []"
+                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                />
+              </div>
+
+              <!-- Time -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Departure Time</label>
+                <select
+                  v-model="selectedTime"
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"
+                >
+                  <option value="">Select time</option>
+                  <option v-for="time in availableTimes" :key="time.value" :value="time.value">{{ time.label }}</option>
+                </select>
+              </div>
+
+              <!-- Travelers -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
+                <div class="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
+                  <button @click="decrementAdults" type="button" class="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                    <span class="material-symbols-outlined text-lg">remove</span>
+                  </button>
+                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
+                  <button @click="incrementAdults" type="button" class="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                    <span class="material-symbols-outlined text-lg">add</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Total -->
+              <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                <span class="font-bold text-slate-800">Total</span>
+                <span class="text-xl font-black text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
+              </div>
+
+              <!-- Validation error -->
+              <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
+                <span class="material-symbols-outlined text-red-500 text-base">error</span>
+                <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
+              </div>
+
+              <!-- Book button -->
+              <button
+                @click="mobileHandleBooking"
+                class="w-full bg-primary text-white font-black py-4 rounded-xl shadow-lg flex items-center justify-center gap-2"
+              >
+                <span class="material-symbols-outlined">check_circle</span>
+                Book Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 
   <!-- Loading State -->
@@ -320,10 +438,54 @@ const relatedTours = computed(() => {
   return tours.filter((t: any) => t.slug !== slug)
 })
 
+// Reviews for this tour
+const tourReviews = ref<any[]>([])
+const showAllReviews = ref(false)
+
+const avgRating = computed(() => {
+  if (tourReviews.value.length === 0) return 0
+  const sum = tourReviews.value.reduce((acc: number, r: any) => acc + r.rating, 0)
+  return (sum / tourReviews.value.length).toFixed(1)
+})
+
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+}
+
+// Fetch reviews when tour is loaded
+watch(tour, async (t) => {
+  if (t?.id) {
+    try {
+      const res = await api(`/reviews?tour_id=${t.id}&per_page=20`)
+      tourReviews.value = (res as any)?.data || []
+    } catch (e) { tourReviews.value = [] }
+  }
+}, { immediate: true })
+
 // Booking widget state
 const selectedDate = ref('')
 const selectedTime = ref('')
 const adults = ref(2)
+const mobileBookingOpen = ref(false)
+const mobileError = ref('')
+
+function mobileHandleBooking() {
+  if (!selectedDate.value) {
+    mobileError.value = 'Please select a date'
+    return
+  }
+  if (!selectedTime.value) {
+    mobileError.value = 'Please select a time'
+    return
+  }
+  mobileError.value = ''
+  mobileBookingOpen.value = false
+  handleBooking()
+}
+
+// Clear mobile error when user selects
+watch(selectedDate, () => { if (mobileError.value) mobileError.value = '' })
+watch(selectedTime, () => { if (mobileError.value) mobileError.value = '' })
 
 // Computed - Base price with price_details logic
 const basePrice = computed(() => {
@@ -405,10 +567,28 @@ const minDate = computed(() => {
 })
 
 // Available times from tour data
+const durationLabel = computed(() => {
+  if (!tour.value) return ''
+  // Use duration_quantity + duration_unit (from admin wizard) as primary source
+  const qty = tour.value.duration_quantity
+  const unit = tour.value.duration_unit
+  if (qty && unit) {
+    if (unit === 'hours') return `${qty}h`
+    if (unit === 'days') return `${qty} day${qty > 1 ? 's' : ''}`
+    if (unit === 'minutes') return `${qty} min`
+  }
+  // Fallback to legacy fields
+  const d = tour.value.duration_days || 0
+  const h = tour.value.duration_hours || 0
+  if (d > 0) return `${d} day${d > 1 ? 's' : ''}`
+  if (h > 0) return `${h}h`
+  return ''
+})
+
 const availableTimes = computed(() => {
   const times = []
+  const dur = durationLabel.value ? ` - Duration ${durationLabel.value}` : ''
 
-  // Add departure time if available
   if (tour.value?.departure_time) {
     const [hours, minutes] = tour.value.departure_time.split(':')
     const hour = parseInt(hours)
@@ -416,17 +596,16 @@ const availableTimes = computed(() => {
     const hour12 = hour % 12 || 12
     times.push({
       value: tour.value.departure_time,
-      label: `${hour12}:${minutes} ${ampm}`
+      label: `${hour12}:${minutes} ${ampm}${dur}`
     })
   }
 
-  // Add default times if no departure time
   if (times.length === 0) {
     times.push(
-      { value: '06:00', label: '06:00 AM' },
-      { value: '08:00', label: '08:00 AM' },
-      { value: '09:00', label: '09:00 AM' },
-      { value: '10:00', label: '10:00 AM' }
+      { value: '06:00', label: `06:00 AM${dur}` },
+      { value: '08:00', label: `08:00 AM${dur}` },
+      { value: '09:00', label: `09:00 AM${dur}` },
+      { value: '10:00', label: `10:00 AM${dur}` }
     )
   }
 
@@ -672,6 +851,10 @@ function formatDuration(tour: any) {
 
 <style scoped>
 @reference "../../assets/css/main.css";
+
+.drawer-enter-active, .drawer-leave-active { transition: all 0.3s ease; }
+.drawer-enter-from .absolute.bottom-0, .drawer-leave-to .absolute.bottom-0 { transform: translateY(100%); }
+.drawer-enter-from, .drawer-leave-to { opacity: 0; }
 
 /* Style for includes/not includes lists from HTML content */
 :deep(.tour-includes-list ul),

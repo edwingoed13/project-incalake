@@ -35,8 +35,14 @@ export default defineNuxtPlugin(() => {
         return
       }
 
-      // Create script tag
-      console.log('📦 Loading Culqi Custom Checkout script...')
+      // Load Culqi 3DS script first
+      const script3ds = document.createElement('script')
+      script3ds.src = 'https://3ds.culqi.com'
+      script3ds.async = true
+      document.head.appendChild(script3ds)
+
+      // Create checkout script tag
+      console.log('📦 Loading Culqi Custom Checkout + 3DS scripts...')
       const script = document.createElement('script')
       script.src = 'https://js.culqi.com/checkout-js'
       script.async = true
@@ -52,6 +58,7 @@ export default defineNuxtPlugin(() => {
           if (window.CulqiCheckout) {
             clearInterval(checkInterval)
             console.log('✅ CulqiCheckout class available')
+            console.log('✅ Culqi3DS available:', typeof window.Culqi3DS !== 'undefined')
             resolve(true)
           } else if (attempts > 20) {
             clearInterval(checkInterval)
@@ -88,6 +95,7 @@ declare global {
   interface Window {
     CulqiCheckout: any
     Culqi: any
+    Culqi3DS: any
     culqi: any
   }
 }

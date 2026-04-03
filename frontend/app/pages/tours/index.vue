@@ -1,434 +1,256 @@
 <template>
-  <!-- Loading State -->
-  <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white">
+  <!-- Loading -->
+  <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white pt-20">
     <div class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-      <p class="mt-4 text-slate-600">{{ t('loading_tours') }}</p>
+      <p class="mt-4 text-slate-500 text-sm">{{ t('loading_tours') }}</p>
     </div>
   </div>
 
-  <!-- Error State -->
-  <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white">
+  <!-- Error -->
+  <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white pt-20">
     <div class="text-center px-4">
-      <span class="material-symbols-outlined text-6xl text-slate-400 mb-4">wifi_off</span>
-      <h2 class="text-2xl font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h2>
-      <p class="text-slate-600 mb-6">{{ t('error_connection') }}</p>
-      <button @click="refresh()" class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-600 transition-colors">
-        {{ t('retry') }}
-      </button>
+      <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">wifi_off</span>
+      <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h2>
+      <button @click="refresh()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">{{ t('retry') }}</button>
     </div>
   </div>
 
-  <!-- Main Content -->
+  <!-- Main -->
   <div v-else class="bg-white font-display text-slate-900 min-h-screen pt-20">
 
-    <!-- Hero Banner -->
-    <section class="relative bg-gradient-to-br from-sky-600 via-primary to-blue-900 text-white overflow-hidden">
-      <div class="absolute inset-0 opacity-10">
-        <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.3\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-      </div>
-      <div class="relative w-full px-4 sm:px-6 lg:px-10 py-12 md:py-16">
-        <div class="max-w-4xl">
-          <p class="text-sky-200 font-semibold tracking-wider text-sm uppercase mb-2">{{ t('hero_subtitle') }}</p>
-          <h1 class="text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight">
-            {{ t('hero_title') }}
-          </h1>
-          <p class="text-sky-100 text-base md:text-lg max-w-2xl leading-relaxed">
-            {{ t('hero_description') }}
-          </p>
-        </div>
+    <!-- Compact Hero -->
+    <section class="bg-gradient-to-r from-primary to-sky-600 text-white px-4 sm:px-6 lg:px-10 py-8">
+      <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl md:text-3xl font-black mb-1">
+          {{ selectedCitySlug ? `Tours ${formatCityName(selectedCitySlug)}` : t('hero_title') }}
+        </h1>
+        <p class="text-white/70 text-sm">{{ filteredTours.length }} {{ filteredTours.length === 1 ? 'tour' : 'tours' }} {{ t('tours_found', { count: '' }).replace(/ $/, '') }}</p>
       </div>
     </section>
 
-    <!-- Sticky Search & Filter Bar -->
-    <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      <div class="w-full px-4 sm:px-6 lg:px-10 py-3">
-        <div class="flex items-center gap-3">
-          <!-- Search -->
-          <div class="relative flex-1 max-w-xl">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+    <!-- Sticky Filter Bar (Viator style) -->
+    <div class="sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm overflow-visible">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 overflow-visible">
+        <div class="flex items-center gap-2 flex-wrap md:flex-nowrap">
+
+          <!-- Search pill -->
+          <div class="relative shrink-0">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="t('search_placeholder')"
-              class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-primary/30 focus:bg-white transition-all"
+              class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:ring-2 focus:ring-primary/30 focus:border-primary w-48 focus:w-64 transition-all"
             />
           </div>
 
-          <!-- Filter Toggle (mobile) -->
+          <!-- Divider -->
+          <div class="w-px h-6 bg-slate-200 shrink-0"></div>
+
+          <!-- Destination pill -->
+          <div class="relative shrink-0">
+            <button
+              @click="openFilter = openFilter === 'city' ? '' : 'city'"
+              :class="selectedCitySlug ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
+              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">location_on</span>
+              {{ selectedCitySlug ? formatCityName(selectedCitySlug) : 'Destination' }}
+              <span class="material-symbols-outlined text-xs">expand_more</span>
+            </button>
+            <!-- Dropdown -->
+            <div v-if="openFilter === 'city'" class="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
+              <button @click="selectedCitySlug = ''; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5 transition-colors" :class="!selectedCitySlug ? 'text-primary' : 'text-slate-600'">
+                All Destinations
+              </button>
+              <button
+                v-for="city in cities"
+                :key="city.slug"
+                @click="selectedCitySlug = city.slug; openFilter = ''"
+                class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5 transition-colors"
+                :class="selectedCitySlug === city.slug ? 'text-primary bg-primary/5' : 'text-slate-600'"
+              >
+                {{ city.name }} <span class="text-slate-400">({{ city.count }})</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Duration pill -->
+          <div class="relative shrink-0">
+            <button
+              @click="openFilter = openFilter === 'duration' ? '' : 'duration'"
+              :class="selectedDuration ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
+              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              {{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}
+              <span class="material-symbols-outlined text-xs">expand_more</span>
+            </button>
+            <div v-if="openFilter === 'duration'" class="absolute top-full left-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
+              <button @click="selectedDuration = ''; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="!selectedDuration ? 'text-primary' : 'text-slate-600'">All</button>
+              <button @click="selectedDuration = 'half'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedDuration === 'half' ? 'text-primary bg-primary/5' : 'text-slate-600'">Half Day (1-4h)</button>
+              <button @click="selectedDuration = 'full'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedDuration === 'full' ? 'text-primary bg-primary/5' : 'text-slate-600'">Full Day (5-12h)</button>
+              <button @click="selectedDuration = 'multi'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedDuration === 'multi' ? 'text-primary bg-primary/5' : 'text-slate-600'">Multi-Day</button>
+            </div>
+          </div>
+
+          <!-- Price pill -->
+          <div class="relative shrink-0">
+            <button
+              @click="openFilter = openFilter === 'price' ? '' : 'price'"
+              :class="selectedPrice ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
+              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">payments</span>
+              {{ selectedPrice ? priceLabels[selectedPrice] : 'Price' }}
+              <span class="material-symbols-outlined text-xs">expand_more</span>
+            </button>
+            <div v-if="openFilter === 'price'" class="absolute top-full left-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
+              <button @click="selectedPrice = ''; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="!selectedPrice ? 'text-primary' : 'text-slate-600'">All Prices</button>
+              <button @click="selectedPrice = 'budget'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedPrice === 'budget' ? 'text-primary bg-primary/5' : 'text-slate-600'">Under $50</button>
+              <button @click="selectedPrice = 'mid'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedPrice === 'mid' ? 'text-primary bg-primary/5' : 'text-slate-600'">$50 - $99</button>
+              <button @click="selectedPrice = 'premium'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedPrice === 'premium' ? 'text-primary bg-primary/5' : 'text-slate-600'">$100 - $199</button>
+              <button @click="selectedPrice = 'luxury'; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="selectedPrice === 'luxury' ? 'text-primary bg-primary/5' : 'text-slate-600'">$200+</button>
+            </div>
+          </div>
+
+          <!-- Sort pill -->
+          <div class="relative shrink-0">
+            <button
+              @click="openFilter = openFilter === 'sort' ? '' : 'sort'"
+              class="flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 hover:border-slate-300 rounded-full text-xs font-semibold transition-all"
+            >
+              <span class="material-symbols-outlined text-sm">sort</span>
+              {{ sortLabels[sortBy] || 'Sort' }}
+              <span class="material-symbols-outlined text-xs">expand_more</span>
+            </button>
+            <div v-if="openFilter === 'sort'" class="absolute top-full right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1">
+              <button v-for="(label, key) in sortLabels" :key="key" @click="sortBy = key; openFilter = ''" class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5" :class="sortBy === key ? 'text-primary bg-primary/5' : 'text-slate-600'">{{ label }}</button>
+            </div>
+          </div>
+
+          <!-- Spacer -->
+          <div class="flex-1"></div>
+
+          <!-- Clear all -->
           <button
-            @click="showFilters = !showFilters"
-            class="md:hidden flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors"
+            v-if="hasActiveFilters"
+            @click="clearFilters"
+            class="shrink-0 text-xs font-semibold text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors"
           >
-            <span class="material-symbols-outlined text-lg">tune</span>
-            {{ t('filters') }}
-            <span v-if="activeFilterCount > 0" class="ml-1 w-5 h-5 bg-primary text-white text-xs flex items-center justify-center rounded-full font-bold">{{ activeFilterCount }}</span>
+            <span class="material-symbols-outlined text-sm">close</span>
+            Clear
           </button>
 
-          <!-- Sort (desktop) -->
-          <div class="hidden md:flex items-center gap-2">
-            <span class="text-sm text-slate-500 font-medium whitespace-nowrap">{{ t('sort_by') }}</span>
-            <select
-              v-model="sortBy"
-              class="bg-slate-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-primary/30 pr-10 font-semibold py-2.5"
-            >
-              <option value="featured">{{ t('sort_popularity') }}</option>
-              <option value="price_asc">{{ t('sort_price_asc') }}</option>
-              <option value="price_desc">{{ t('sort_price_desc') }}</option>
-              <option value="rating">{{ t('sort_rating') }}</option>
-            </select>
-          </div>
-
-          <!-- Language Switcher -->
-          <div class="hidden md:flex items-center gap-1.5">
-            <NuxtLink
-              v-for="loc in availableLocales"
-              :key="loc.code"
-              :to="switchLocalePath(loc.code)"
-              :class="locale === loc.code
-                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-              class="px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all uppercase"
-            >
-              {{ loc.code }}
-            </NuxtLink>
-          </div>
-
-          <!-- Results Count -->
-          <div class="hidden lg:block text-sm text-slate-500 font-medium whitespace-nowrap">
-            {{ t('tours_found', { count: filteredTours.length }) }}
-          </div>
+          <!-- Results count -->
+          <span class="shrink-0 text-xs font-bold text-slate-400 hidden md:block">{{ filteredTours.length }} results</span>
         </div>
       </div>
+      <!-- Backdrop to close dropdowns (inside sticky so z-index works) -->
+      <div v-if="openFilter" class="fixed inset-0" @click="openFilter = ''"></div>
     </div>
 
-    <div class="w-full px-4 sm:px-6 lg:px-10 py-6">
-      <div class="flex gap-6">
 
-        <!-- Sidebar Filters (desktop) -->
-        <aside class="hidden md:block w-64 shrink-0">
-          <div class="sticky top-20 space-y-1">
-            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-5">
-                <h3 class="font-black text-base">{{ t('filters') }}</h3>
-                <button
-                  v-if="hasActiveFilters"
-                  @click="clearFilters"
-                  class="text-primary text-xs font-semibold hover:underline"
-                >
-                  {{ t('clear_all') }}
-                </button>
-              </div>
+    <!-- Tour Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6">
 
-              <!-- Duration -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('duration') }}</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <button
-                    v-for="dur in durations"
-                    :key="dur.value"
-                    @click="selectedDuration = selectedDuration === dur.value ? '' : dur.value"
-                    :class="selectedDuration === dur.value ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
-                  >
-                    {{ dur.label }}
-                  </button>
-                </div>
-              </div>
+      <!-- Active filters badges -->
+      <div v-if="selectedCitySlug || selectedDuration || selectedPrice" class="flex flex-wrap items-center gap-2 mb-4">
+        <span class="text-[10px] font-bold text-slate-400 uppercase">Active:</span>
+        <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+          {{ formatCityName(selectedCitySlug) }}
+          <button @click="selectedCitySlug = ''" class="material-symbols-outlined text-xs hover:text-red-500">close</button>
+        </span>
+        <span v-if="selectedDuration" class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+          {{ durationLabels[selectedDuration] }}
+          <button @click="selectedDuration = ''" class="material-symbols-outlined text-xs hover:text-red-500">close</button>
+        </span>
+        <span v-if="selectedPrice" class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+          {{ priceLabels[selectedPrice] }}
+          <button @click="selectedPrice = ''" class="material-symbols-outlined text-xs hover:text-red-500">close</button>
+        </span>
+      </div>
 
-              <!-- Rating -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('rating') }}</p>
-                <div class="space-y-2">
-                  <label v-for="r in ratings" :key="r.value" class="flex items-center gap-2.5 cursor-pointer group">
-                    <input
-                      v-model="minRating"
-                      :value="r.value"
-                      name="rating"
-                      type="radio"
-                      class="w-4 h-4 text-primary border-slate-300 focus:ring-primary/20"
-                    />
-                    <div class="flex items-center gap-1">
-                      <span v-for="i in r.stars" :key="i" class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
-                      <span class="text-xs text-slate-500 group-hover:text-slate-700">{{ r.label }}</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
+      <!-- Empty -->
+      <div v-if="filteredTours.length === 0" class="text-center py-20">
+        <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">search_off</span>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">{{ t('no_tours_found') }}</h3>
+        <p class="text-sm text-slate-500 mb-6">{{ t('no_tours_hint') }}</p>
+        <button @click="clearFilters" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">{{ t('clear_filters') }}</button>
+      </div>
 
-              <!-- Type -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('experience') }}</p>
-                <div class="space-y-2">
-                  <label v-for="tp in experienceOptions" :key="tp.value" class="flex items-center gap-2.5 cursor-pointer group">
-                    <input
-                      v-model="experienceTypes"
-                      :value="tp.value"
-                      type="checkbox"
-                      class="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary/20"
-                    />
-                    <span class="text-xs text-slate-600 group-hover:text-slate-800">{{ tp.label }}</span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Free Cancellation -->
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-600">{{ t('free_cancellation') }}</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input v-model="freeCancellation" class="sr-only peer" type="checkbox" />
-                  <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
-              </div>
-
-              <!-- Language Switcher (sidebar) -->
-              <div class="mt-6 pt-4 border-t border-slate-100">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('filters') }} - Idioma</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <NuxtLink
-                    v-for="loc in availableLocales"
-                    :key="loc.code"
-                    :to="switchLocalePath(loc.code)"
-                    :class="locale === loc.code
-                      ? 'bg-primary text-white shadow-md shadow-primary/20'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                    class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all uppercase"
-                    :title="loc.name"
-                  >
-                    {{ loc.code }}
-                  </NuxtLink>
-                </div>
-              </div>
+      <!-- Grid -->
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <NuxtLink
+          v-for="tour in paginatedTours.data"
+          :key="tour.id"
+          :to="getTourLink(tour)"
+          class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+        >
+          <div class="relative aspect-[4/3] overflow-hidden">
+            <img
+              :src="getImageUrl(tour.featured_image || tour.thumbnail)"
+              :alt="tour.title"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              loading="lazy"
+            />
+            <div v-if="tour.duration_days || tour.duration_hours" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
+              <span class="material-symbols-outlined text-sm">schedule</span>
+              {{ formatDuration(tour) }}
+            </div>
+            <!-- Offer badge -->
+            <div v-if="hasActiveOffer(tour)" class="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-xs">local_offer</span>
+              {{ getOfferLabel(tour) }}
             </div>
           </div>
-        </aside>
-
-        <!-- Mobile Filters Drawer -->
-        <Teleport to="body">
-          <Transition name="fade">
-            <div v-if="showFilters" class="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" @click="showFilters = false"></div>
-          </Transition>
-          <Transition name="slide-up">
-            <div v-if="showFilters" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[80vh] overflow-y-auto p-6">
-              <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-black">{{ t('filters') }}</h3>
-                <button @click="showFilters = false" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200">
-                  <span class="material-symbols-outlined">close</span>
-                </button>
-              </div>
-
-              <!-- Sort -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('sort_by') }}</p>
-                <select v-model="sortBy" class="w-full bg-slate-100 border-0 rounded-xl text-sm py-2.5 font-semibold">
-                  <option value="featured">{{ t('sort_popularity') }}</option>
-                  <option value="price_asc">{{ t('sort_price_asc') }}</option>
-                  <option value="price_desc">{{ t('sort_price_desc') }}</option>
-                  <option value="rating">{{ t('sort_rating') }}</option>
-                </select>
-              </div>
-
-              <!-- Language Switcher (mobile) -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Idioma</p>
-                <div class="flex flex-wrap gap-2">
-                  <NuxtLink
-                    v-for="loc in availableLocales"
-                    :key="loc.code"
-                    :to="switchLocalePath(loc.code)"
-                    @click="showFilters = false"
-                    :class="locale === loc.code
-                      ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-600'"
-                    class="px-4 py-2 text-sm font-bold rounded-xl transition-all uppercase"
-                  >
-                    {{ loc.code }} - {{ loc.name }}
-                  </NuxtLink>
-                </div>
-              </div>
-
-              <!-- Duration -->
-              <div class="mb-6">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">{{ t('duration') }}</p>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="dur in durations"
-                    :key="dur.value"
-                    @click="selectedDuration = selectedDuration === dur.value ? '' : dur.value"
-                    :class="selectedDuration === dur.value ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'"
-                    class="px-4 py-2 text-sm font-semibold rounded-xl transition-all"
-                  >
-                    {{ dur.label }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Free Cancellation -->
-              <div class="flex items-center justify-between mb-6">
-                <span class="text-sm font-semibold">{{ t('free_cancellation') }}</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input v-model="freeCancellation" class="sr-only peer" type="checkbox" />
-                  <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                </label>
-              </div>
-
-              <!-- Actions -->
-              <div class="flex gap-3 pt-4 border-t border-slate-100">
-                <button @click="clearFilters(); showFilters = false" class="flex-1 py-3 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
-                  {{ t('clear_all') }}
-                </button>
-                <button @click="showFilters = false" class="flex-1 py-3 text-sm font-bold text-white bg-primary rounded-xl hover:brightness-110 transition-all shadow-lg shadow-primary/20">
-                  {{ t('show_results', { count: filteredTours.length }) }}
-                </button>
-              </div>
+          <div class="p-4">
+            <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <span class="material-symbols-outlined text-xs">location_on</span>
+              {{ tour.city?.name || 'Puno' }}
             </div>
-          </Transition>
-        </Teleport>
-
-        <!-- Results Section -->
-        <div class="flex-1 min-w-0">
-
-          <!-- Loading State -->
-          <div v-if="pending" class="flex flex-col items-center justify-center py-20">
-            <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
-            <p class="text-slate-500 font-medium">{{ t('loading') }}</p>
-          </div>
-
-          <!-- Error State -->
-          <div v-else-if="error" class="text-center py-20">
-            <span class="material-symbols-outlined text-6xl text-red-300 mb-4 block">error</span>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('error_generic') }}</h3>
-            <p class="text-slate-500 mb-6">{{ t('error_generic_hint') }}</p>
-            <button @click="refresh()" class="bg-primary text-white font-bold py-3 px-8 rounded-xl hover:brightness-110 transition-all">
-              {{ t('try_again') }}
-            </button>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else-if="filteredTours.length === 0" class="text-center py-20">
-            <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">search_off</span>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ t('no_tours_found') }}</h3>
-            <p class="text-slate-500 mb-6">{{ t('no_tours_hint') }}</p>
-            <button @click="clearFilters" class="bg-primary text-white font-bold py-3 px-8 rounded-xl hover:brightness-110 transition-all">
-              {{ t('clear_filters') }}
-            </button>
-          </div>
-
-          <!-- Tour Cards Grid -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            <NuxtLink
-              v-for="tour in paginatedTours.data"
-              :key="tour.id"
-              :to="getTourLink(tour)"
-              class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:border-slate-200 hover:-translate-y-1 transition-all duration-300"
-            >
-              <!-- Image -->
-              <div class="relative aspect-[4/3] overflow-hidden">
-                <img
-                  :src="getImageUrl(tour.featured_image || tour.thumbnail)"
-                  :alt="tour.title"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  loading="lazy"
-                />
-                <!-- Gradient overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                <!-- Top Badges -->
-                <div class="absolute top-3 left-3 flex gap-1.5">
-                  <span
-                    v-if="tour.difficulty"
-                    class="px-2.5 py-1 text-[10px] font-bold rounded-full shadow backdrop-blur-md"
-                    :class="{
-                      'bg-green-500/90 text-white': tour.difficulty === 'easy',
-                      'bg-yellow-500/90 text-white': tour.difficulty === 'moderate',
-                      'bg-orange-500/90 text-white': tour.difficulty === 'difficult',
-                      'bg-red-500/90 text-white': tour.difficulty === 'hard',
-                    }"
-                  >
-                    {{ tour.difficulty.charAt(0).toUpperCase() + tour.difficulty.slice(1) }}
-                  </span>
-                </div>
-
-                <!-- Heart -->
-                <button
-                  class="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all shadow"
-                  @click.prevent
-                >
-                  <span class="material-symbols-outlined text-slate-500 text-lg">favorite</span>
-                </button>
-
-                <!-- Duration pill bottom-left -->
-                <div v-if="tour.duration_days || tour.duration_hours" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
-                  <span class="material-symbols-outlined text-sm">schedule</span>
-                  {{ formatDuration(tour) }}
-                </div>
+            <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+            <div class="flex items-end justify-between pt-3 border-t border-slate-100">
+              <div>
+                <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                <span class="text-lg font-black text-primary">${{ (tour.min_price || 0).toFixed(0) }}</span>
+                <span class="text-[10px] text-slate-400 ml-0.5">{{ t('per_person') }}</span>
               </div>
-
-              <!-- Content -->
-              <div class="p-4">
-                <!-- Location -->
-                <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1.5">
-                  <span class="material-symbols-outlined text-xs">location_on</span>
-                  {{ tour.city?.name || 'Puno' }}
-                </div>
-
-                <!-- Title -->
-                <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
-                  {{ tour.title }}
-                </h3>
-
-                <!-- Rating -->
-                <div class="flex items-center gap-1 mb-3">
-                  <span class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
-                  <span class="text-xs font-bold text-slate-700">{{ tour.rating || '4.5' }}</span>
-                  <span class="text-[10px] text-slate-400">({{ tour.reviews_count || 0 }})</span>
-                </div>
-
-                <!-- Price -->
-                <div class="flex items-end justify-between pt-3 border-t border-slate-100">
-                  <div>
-                    <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
-                    <span class="text-lg font-black text-primary">${{ (tour.min_price || 0).toFixed(0) }}</span>
-                    <span class="text-[10px] text-slate-400 ml-0.5">{{ t('per_person') }}</span>
-                  </div>
-                  <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                    {{ t('view') }}
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                  </span>
-                </div>
-              </div>
-            </NuxtLink>
+              <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                {{ t('view') }}
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </span>
+            </div>
           </div>
+        </NuxtLink>
+      </div>
 
-          <!-- Pagination -->
-          <div v-if="paginatedTours.data.length > 0" class="flex items-center justify-center gap-2 mt-10 mb-4">
-            <button
-              @click="handlePageChange(currentPage - 1)"
-              :disabled="currentPage <= 1"
-              class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <span class="material-symbols-outlined text-lg">chevron_left</span>
-            </button>
-
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="handlePageChange(page)"
-              :class="page === currentPage ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-              class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all"
-            >
-              {{ page }}
-            </button>
-
-            <button
-              @click="handlePageChange(currentPage + 1)"
-              :disabled="currentPage >= paginatedTours.lastPage"
-              class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <span class="material-symbols-outlined text-lg">chevron_right</span>
-            </button>
-          </div>
-        </div>
+      <!-- Pagination -->
+      <div v-if="paginatedTours.lastPage > 1" class="flex items-center justify-center gap-2 mt-10 mb-4">
+        <button
+          @click="handlePageChange(currentPage - 1)"
+          :disabled="currentPage <= 1"
+          class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-30"
+        >
+          <span class="material-symbols-outlined text-lg">chevron_left</span>
+        </button>
+        <button
+          v-for="page in visiblePages"
+          :key="page"
+          @click="handlePageChange(page)"
+          :class="page === currentPage ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all"
+        >
+          {{ page }}
+        </button>
+        <button
+          @click="handlePageChange(currentPage + 1)"
+          :disabled="currentPage >= paginatedTours.lastPage"
+          class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-30"
+        >
+          <span class="material-symbols-outlined text-lg">chevron_right</span>
+        </button>
       </div>
     </div>
   </div>
@@ -441,176 +263,163 @@ const { t, locale } = useI18n()
 const switchLocalePath = useSwitchLocalePath()
 const localePath = useLocalePath()
 
-// Available locales for the language switcher
-const availableLocales = [
-  { code: 'es', name: 'Español' },
-  { code: 'en', name: 'English' },
-  { code: 'pt', name: 'Português' },
-  { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'it', name: 'Italiano' },
-]
-
-// Map locale code to API language code (uppercase)
 const langCode = computed(() => locale.value.toUpperCase())
 
-// SEO
 useHead({
   title: computed(() => `${t('tours')} - Incalake Tours`),
-  meta: [
-    {
-      name: 'description',
-      content: computed(() => t('hero_description'))
-    }
-  ]
 })
 
-// UI State
-const showFilters = ref(false)
-
-// Options
-const durations = [
-  { value: 'short', label: '0-4h' },
-  { value: 'medium', label: '4-8h' },
-  { value: 'long', label: 'Full Day+' },
-]
-
-const ratings = computed(() => [
-  { value: '4', label: t('and_up'), stars: 4 },
-  { value: '3', label: t('and_up'), stars: 3 },
-  { value: '', label: t('all'), stars: 0 },
-])
-
-const experienceOptions = computed(() => [
-  { value: 'culture', label: t('culture_history') },
-  { value: 'adventure', label: t('adventure_nature') },
-  { value: 'food', label: t('food_gastronomy') },
-])
-
-// Filters
-const searchQuery = ref('')
+// Filter state
+const route = useRoute()
+const openFilter = ref('')
+const searchQuery = ref((route.query.search as string) || '')
+const selectedCitySlug = ref((route.query.city as string) || '')
 const selectedDuration = ref('')
-const minRating = ref('')
-const experienceTypes = ref<string[]>([])
-const freeCancellation = ref(false)
+const selectedPrice = ref('')
 const sortBy = ref('featured')
-
-// Pagination
 const currentPage = ref(1)
 const perPage = 12
 
-// Fetch tours filtered by current language
-const { data: response, pending, error, refresh } = await useAsyncData(
-  `tours-${locale.value}`,
-  () => api(`/tours?per_page=100&active=1&language=${langCode.value}`),
-  { watch: [locale] }
-)
+const durationLabels: Record<string, string> = { half: 'Half Day (1-4h)', full: 'Full Day (5-12h)', multi: 'Multi-Day' }
+const priceLabels: Record<string, string> = { budget: 'Under $50', mid: '$50-$99', premium: '$100-$199', luxury: '$200+' }
+const sortLabels: Record<string, string> = { featured: 'Recommended', price_asc: 'Price: Low → High', price_desc: 'Price: High → Low' }
 
-const tours = computed(() => {
-  if (response.value && response.value.data) {
-    if (Array.isArray(response.value.data.data)) {
-      return response.value.data.data
-    }
-    if (Array.isArray(response.value.data)) {
-      return response.value.data
-    }
+// Cities for destination filter
+const featuredSlugs = ['puno','cusco','arequipa','la-paz','uyuni','copacabana']
+const cities = ref<any[]>([])
+const allToursForCount = ref<any[]>([])
+
+async function fetchCitiesWithCounts() {
+  try {
+    // Fetch cities
+    const cityRes = await api('/cities')
+    const allCities = ((cityRes as any)?.data || []).filter((c: any) => featuredSlugs.includes(c.slug))
+
+    // Fetch ALL tours (no city filter) to count per city
+    const toursRes = await api(`/tours?per_page=500&active=1&language=${langCode.value}`)
+    const data = (toursRes as any)?.data
+    allToursForCount.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+
+    // Count tours per city
+    cities.value = allCities.map((c: any) => {
+      const count = allToursForCount.value.filter((t: any) => {
+        const cId = t.city?.id || t.city_id
+        return cId === c.id
+      }).length
+      return { ...c, count }
+    }).filter((c: any) => c.count > 0)
+  } catch (e) { cities.value = [] }
+}
+await fetchCitiesWithCounts()
+
+// Fetch tours
+const tours = ref<any[]>([])
+const pending = ref(false)
+const error = ref<any>(null)
+
+async function fetchTours() {
+  pending.value = true
+  error.value = null
+  try {
+    let url = `/tours?per_page=500&active=1&language=${langCode.value}`
+    if (selectedCitySlug.value) url += `&city_slug=${selectedCitySlug.value}`
+    const res = await api(url)
+    const data = (res as any)?.data
+    tours.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+  } catch (e: any) {
+    error.value = e
+    tours.value = []
+  } finally {
+    pending.value = false
   }
-  return []
+}
+
+await fetchTours()
+watch([langCode, selectedCitySlug], () => {
+  fetchTours()
+  fetchCitiesWithCounts()
 })
 
-// Computed filtered and sorted tours
+function refresh() { fetchTours() }
+
+// Client-side filters
 const filteredTours = computed(() => {
   let result = [...tours.value]
 
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
+    const q = searchQuery.value.toLowerCase()
     result = result.filter(tour =>
-      tour.title?.toLowerCase().includes(query) ||
-      tour.short_description?.toLowerCase().includes(query) ||
-      tour.city?.name?.toLowerCase().includes(query)
+      tour.title?.toLowerCase().includes(q) ||
+      tour.short_description?.toLowerCase().includes(q) ||
+      tour.city?.name?.toLowerCase().includes(q)
     )
   }
 
   if (selectedDuration.value) {
     result = result.filter(tour => {
-      const hours = tour.duration_hours || 0
-      if (selectedDuration.value === 'short') return hours <= 4
-      if (selectedDuration.value === 'medium') return hours > 4 && hours <= 8
-      if (selectedDuration.value === 'long') return hours > 8
+      const h = tour.duration_hours || 0
+      const d = tour.duration_days || 0
+      // Multi-day takes priority
+      if (d > 0) return selectedDuration.value === 'multi'
+      // Hours only
+      if (selectedDuration.value === 'half') return h > 0 && h <= 4
+      if (selectedDuration.value === 'full') return h > 4
+      if (selectedDuration.value === 'multi') return false
       return true
     })
   }
 
-  if (minRating.value) {
-    const rating = parseFloat(minRating.value)
-    result = result.filter(tour => (tour.rating || 0) >= rating)
+  if (selectedPrice.value) {
+    result = result.filter(tour => {
+      const p = tour.min_price || 0
+      if (selectedPrice.value === 'budget') return p < 50
+      if (selectedPrice.value === 'mid') return p >= 50 && p < 100
+      if (selectedPrice.value === 'premium') return p >= 100 && p < 200
+      if (selectedPrice.value === 'luxury') return p >= 200
+      return true
+    })
   }
 
-  if (freeCancellation.value) {
-    result = result.filter(tour => tour.free_cancellation)
-  }
-
-  if (sortBy.value === 'price_asc') {
-    result.sort((a, b) => (a.min_price || 0) - (b.min_price || 0))
-  } else if (sortBy.value === 'price_desc') {
-    result.sort((a, b) => (b.min_price || 0) - (a.min_price || 0))
-  } else if (sortBy.value === 'rating') {
-    result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-  }
+  if (sortBy.value === 'price_asc') result.sort((a, b) => (a.min_price || 0) - (b.min_price || 0))
+  else if (sortBy.value === 'price_desc') result.sort((a, b) => (b.min_price || 0) - (a.min_price || 0))
 
   return result
 })
 
-// Paginated tours
 const paginatedTours = computed(() => {
   const start = (currentPage.value - 1) * perPage
-  const end = start + perPage
-  const data = filteredTours.value.slice(start, end)
-
-  return {
-    data,
-    total: filteredTours.value.length,
-    lastPage: Math.ceil(filteredTours.value.length / perPage),
-    from: start + 1,
-    to: Math.min(end, filteredTours.value.length)
-  }
+  const data = filteredTours.value.slice(start, start + perPage)
+  return { data, total: filteredTours.value.length, lastPage: Math.ceil(filteredTours.value.length / perPage) }
 })
 
 const visiblePages = computed(() => {
   const pages: number[] = []
-  const last = paginatedTours.value.lastPage
-  const current = currentPage.value
-
-  for (let i = Math.max(1, current - 2); i <= Math.min(last, current + 2); i++) {
-    pages.push(i)
-  }
+  const c = currentPage.value
+  const l = paginatedTours.value.lastPage
+  for (let i = Math.max(1, c - 2); i <= Math.min(l, c + 2); i++) pages.push(i)
   return pages
 })
 
-const hasActiveFilters = computed(() =>
-  searchQuery.value ||
-  selectedDuration.value ||
-  minRating.value ||
-  experienceTypes.value.length > 0 ||
-  freeCancellation.value ||
-  sortBy.value !== 'featured'
-)
+const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedDuration.value || selectedPrice.value || sortBy.value !== 'featured')
 
 const activeFilterCount = computed(() => {
-  let count = 0
-  if (selectedDuration.value) count++
-  if (minRating.value) count++
-  if (experienceTypes.value.length > 0) count++
-  if (freeCancellation.value) count++
-  return count
+  let c = 0
+  if (selectedCitySlug.value) c++
+  if (selectedDuration.value) c++
+  if (selectedPrice.value) c++
+  return c
+})
+
+// Reset page when filters change
+watch([searchQuery, selectedDuration, selectedPrice, sortBy, selectedCitySlug], () => {
+  currentPage.value = 1
 })
 
 function clearFilters() {
   searchQuery.value = ''
+  selectedCitySlug.value = ''
   selectedDuration.value = ''
-  minRating.value = ''
-  experienceTypes.value = []
-  freeCancellation.value = false
+  selectedPrice.value = ''
   sortBy.value = 'featured'
   currentPage.value = 1
 }
@@ -628,39 +437,37 @@ function getImageUrl(path: string) {
 }
 
 function formatDuration(tour: any) {
-  const days = tour.duration_days || 0
-  const hours = tour.duration_hours || 0
+  const d = tour.duration_days || 0
+  const h = tour.duration_hours || 0
+  if (d > 0 && h > 0) return `${d}d ${h}h`
+  if (d > 0) return `${d} day${d > 1 ? 's' : ''}`
+  if (h > 0) return `${h}h`
+  return ''
+}
 
-  if (days > 0 && hours > 0) return `${days}d ${hours}h`
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''}`
-  if (hours > 0) return `${hours}h`
-  return 'Flexible'
+function formatCityName(slug: string) {
+  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
 function getTourLink(tour: any) {
-  const slug = tour.slug || tour.id
-  return localePath(`/tours/${slug}`)
+  return localePath(`/tours/${tour.slug || tour.id}`)
+}
+
+function hasActiveOffer(tour: any) {
+  const today = new Date().toISOString().split('T')[0]
+  return (tour.availability_data?.offers || []).some((o: any) => o.endDate >= today)
+}
+
+function getOfferLabel(tour: any) {
+  const today = new Date().toISOString().split('T')[0]
+  const offer = (tour.availability_data?.offers || []).find((o: any) => o.endDate >= today)
+  if (!offer) return ''
+  return offer.discountType === 'percentage' ? `${offer.discount}% OFF` : `$${offer.discount} OFF`
 }
 </script>
 
 <style scoped>
-@reference "../../assets/css/main.css";
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: transform 0.3s ease;
-}
-.slide-up-enter-from,
-.slide-up-leave-to {
-  transform: translateY(100%);
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>

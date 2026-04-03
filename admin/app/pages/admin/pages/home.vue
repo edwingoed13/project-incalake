@@ -57,9 +57,40 @@
             <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Subtitle</label>
             <textarea v-model="form.hero.subtitle" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm resize-none"></textarea>
           </div>
+          <!-- Hero Background Image -->
           <div>
-            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Background Image URL</label>
-            <input v-model="form.hero.image" type="text" placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Background Image</label>
+            <div class="flex gap-4 items-start">
+              <!-- Preview -->
+              <div class="w-48 h-28 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shrink-0">
+                <img v-if="form.hero.image" :src="form.hero.image" class="w-full h-full object-cover" />
+                <div v-else class="w-full h-full flex items-center justify-center text-slate-400">
+                  <span class="material-symbols-outlined text-3xl">image</span>
+                </div>
+              </div>
+              <!-- Upload + URL -->
+              <div class="flex-1 space-y-2">
+                <div
+                  @dragover.prevent="heroDropActive = true"
+                  @dragleave.prevent="heroDropActive = false"
+                  @drop.prevent="handleHeroDrop"
+                  :class="heroDropActive ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800'"
+                  class="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 transition-all relative"
+                >
+                  <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" @change="handleHeroFileChange" />
+                  <span v-if="heroUploading" class="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+                  <template v-else>
+                    <span class="material-symbols-outlined text-slate-400 text-xl">cloud_upload</span>
+                    <p class="text-[10px] font-bold text-slate-400 mt-1">Drop image or click to upload</p>
+                  </template>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[9px] font-bold text-slate-400 uppercase">or URL:</span>
+                  <input v-model="form.hero.image" type="text" placeholder="https://..." class="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-xs" />
+                </div>
+                <button v-if="form.hero.image" @click="form.hero.image = ''" class="text-[10px] font-bold text-red-500 hover:underline">Remove image</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -211,6 +242,8 @@ const loading = ref(false)
 const saving = ref(false)
 const translating = ref(false)
 const published = ref(true)
+const heroUploading = ref(false)
+const heroDropActive = ref(false)
 
 const defaultForm = () => ({
   hero: { title: '', subtitle: '', image: '' },
@@ -319,6 +352,38 @@ async function translateFromSpanish() {
   } catch (e: any) {
     alert('Error: ' + (e.data?.message || e.message))
   } finally { translating.value = false }
+}
+
+async function uploadHeroImage(file: File) {
+  if (!file.type.startsWith('image/')) return
+  heroUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const res: any = await $fetch(`${API}/admin/pages/upload-image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${auth.token}` },
+      body: formData,
+    })
+    if (res.success) {
+      form.value.hero.image = res.url
+    }
+  } catch (e: any) {
+    alert('Upload error: ' + (e.data?.message || e.message))
+  } finally {
+    heroUploading.value = false
+    heroDropActive.value = false
+  }
+}
+
+function handleHeroFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) uploadHeroImage(file)
+}
+
+function handleHeroDrop(e: DragEvent) {
+  const file = e.dataTransfer?.files?.[0]
+  if (file) uploadHeroImage(file)
 }
 
 onMounted(async () => {

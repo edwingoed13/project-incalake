@@ -80,6 +80,8 @@ class TourResource extends JsonResource
             'active' => $this->active,
             'duration_days' => $this->duration_days,
             'duration_hours' => $this->duration_hours,
+            'duration_quantity' => $this->duration_quantity,
+            'duration_unit' => $this->duration_unit,
             'capacity' => $this->capacity,
             'cupos' => $this->cupos,
             'departure_time' => $this->departure_time,
@@ -91,6 +93,7 @@ class TourResource extends JsonResource
             'thumbnail' => $thumbnailUrl,
             'min_price' => $this->min_price,
             'is_bookable' => $this->isBookable(),
+            'availability_data' => $this->availability_data,
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
             'media_gallery' => $this->whenLoaded('mediaGallery', function () {
                 return $this->mediaGallery->map(function ($media) {

@@ -43,6 +43,7 @@
               icon="calendar_month"
               :items="[
                 { label: 'Clientes (Web/OTAs)', path: '/admin/bookings', icon: 'people' },
+                { label: 'Reviews', path: '/admin/reviews', icon: 'reviews' },
                 { label: 'Chatbot', path: '/admin/chatbot', icon: 'smart_toy', badge: 'Próximamente' }
               ]"
               @closeMobileSidebar="closeMobileSidebar"

@@ -107,6 +107,63 @@
           <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Solicitudes Especiales</h3>
           <p class="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 p-4 rounded-lg">{{ booking.special_requests }}</p>
         </div>
+
+        <!-- Pickup Configuration -->
+        <div v-if="fullDetails?.pickup_detail" class="mb-6">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-base">location_on</span>
+            Pickup Configuration
+          </h3>
+          <div class="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                :class="fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'">
+                {{ fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'Hotel Pickup' : 'Meeting Point' }}
+              </span>
+              <span v-if="fullDetails.pickup_detail.requires_logistics_approval" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 text-amber-700">
+                {{ fullDetails.pickup_detail.approval_status || 'Pending Approval' }}
+              </span>
+            </div>
+            <div v-if="fullDetails.pickup_detail.hotel_name" class="text-sm">
+              <p class="font-semibold text-slate-800 dark:text-white">{{ fullDetails.pickup_detail.hotel_name }}</p>
+              <p class="text-xs text-slate-500">{{ fullDetails.pickup_detail.hotel_address }}</p>
+            </div>
+            <div v-if="fullDetails.pickup_detail.distance_from_center" class="flex gap-4 text-xs text-slate-500">
+              <span>Distance: {{ parseFloat(fullDetails.pickup_detail.distance_from_center).toFixed(1) }} km</span>
+              <span v-if="fullDetails.pickup_detail.extra_pickup_cost > 0" class="font-bold text-amber-600">
+                Extra: ${{ parseFloat(fullDetails.pickup_detail.extra_pickup_cost).toFixed(2) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Travelers -->
+        <div v-if="fullDetails?.travelers?.length" class="mb-6">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-base">group</span>
+            Travelers ({{ fullDetails.travelers.length }})
+          </h3>
+          <div class="space-y-2">
+            <div v-for="(t, idx) in fullDetails.travelers" :key="t.id" class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+              <div class="size-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                :class="t.is_leader ? 'bg-primary/10 text-primary' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">
+                {{ idx + 1 }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-slate-800 dark:text-white">
+                  {{ t.full_name }}
+                  <span v-if="t.is_leader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1 font-bold">LEADER</span>
+                  <span v-if="t.age_group !== 'adult'" class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-1 font-bold uppercase">{{ t.age_group }}</span>
+                </p>
+                <div class="flex gap-3 text-[10px] text-slate-500 mt-0.5">
+                  <span v-if="t.nationality">{{ t.nationality }}</span>
+                  <span v-if="t.doc_type && t.doc_number">{{ t.doc_type.toUpperCase() }}: {{ t.doc_number }}</span>
+                  <span v-if="t.special_needs" class="text-amber-600">{{ t.special_needs }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -120,12 +177,25 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+
 interface Props {
   booking: any
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 defineEmits(['close', 'updated'])
+
+const config = useRuntimeConfig()
+const API = config.public.apiUrl
+const fullDetails = ref<any>(null)
+
+onMounted(async () => {
+  try {
+    const res: any = await $fetch(`${API}/bookings/${props.booking.id}/full-details`)
+    if (res.success) fullDetails.value = res.data
+  } catch (e) { /* ignore - fields just won't show */ }
+})
 
 const formatDate = (date: string) => {
   if (!date) return 'N/A'

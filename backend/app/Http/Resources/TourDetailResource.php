@@ -41,6 +41,8 @@ class TourDetailResource extends JsonResource
 
             'duration_days' => $this->duration_days,
             'duration_hours' => $this->duration_hours,
+            'duration_quantity' => $this->duration_quantity,
+            'duration_unit' => $this->duration_unit,
             'departure_time' => $this->departure_time,
             'departure_period' => $this->departure_period,
             'timezone' => $this->timezone,

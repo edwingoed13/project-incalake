@@ -531,11 +531,7 @@ const fetchTours = async (page = 1, search = '') => {
     if (response && response.success) {
       tours.value = response.data
       meta.value = response.meta
-      // Auto-expand all tours in grouped view
-      if (viewMode.value === 'grouped') {
-        tours.value.forEach(t => expandedTours.value.add(t.id))
-        expandedTours.value = new Set(expandedTours.value)
-      }
+      // Tours start collapsed - user clicks to expand
     }
   } catch (error) {
     console.error("Error fetching tours:", error)

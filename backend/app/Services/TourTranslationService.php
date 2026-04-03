@@ -14,6 +14,22 @@ class TourTranslationService
         try {
             foreach ($translationsData as $languageId => $translationData) {
                 if (!empty($translationData['h1_title'])) {
+                    // Ensure slug is unique (exclude current tour's translation)
+                    if (!empty($translationData['slug'])) {
+                        $slug = $translationData['slug'];
+                        $existing = TourTranslation::where('slug', $slug)
+                            ->where('tour_id', '!=', $tour->id)
+                            ->first();
+                        if ($existing) {
+                            $counter = 1;
+                            while (TourTranslation::where('slug', $slug . '-' . $counter)
+                                ->where('tour_id', '!=', $tour->id)->exists()) {
+                                $counter++;
+                            }
+                            $translationData['slug'] = $slug . '-' . $counter;
+                        }
+                    }
+
                     $tour->translations()->updateOrCreate(
                         ['language_id' => $languageId],
                         $translationData

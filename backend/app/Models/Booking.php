@@ -99,6 +99,11 @@ class Booking extends Model
         return $this->belongsTo(Tour::class);
     }
 
+    public function travelers()
+    {
+        return $this->hasMany(BookingTraveler::class)->orderBy('order');
+    }
+
     // Scopes
     public function scopePending($query)
     {

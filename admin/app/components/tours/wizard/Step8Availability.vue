@@ -574,7 +574,10 @@ const toggleSpecialDay = (value: string) => {
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '---'
-  return new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+  // Parse as local date (not UTC) to avoid timezone offset showing previous day
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 const router = useRouter()

@@ -59,6 +59,10 @@ Route::prefix('cities')->group(function () {
 // Public utility routes for tour creation form
 Route::get('/admin/tours/generate-code', [TourController::class, 'generateCodeApi'])->name('api.admin.tours.generate-code');
 
+// Public routes - Reviews
+use App\Http\Controllers\Api\ReviewController;
+Route::get('/reviews', [ReviewController::class, 'index'])->name('api.reviews.index');
+
 // Public routes - Page content (read-only)
 use App\Http\Controllers\Api\PageContentController;
 Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');
@@ -165,6 +169,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
     });
 
+    // Admin routes - Upload
+    Route::post('/admin/pages/upload-image', [UploadController::class, 'uploadPageImage'])->name('api.admin.pages.upload-image');
+
+    // Admin routes - Reviews management
+    Route::prefix('admin/reviews')->group(function () {
+        Route::get('/', [ReviewController::class, 'adminIndex'])->name('api.admin.reviews.index');
+        Route::get('/stats', [ReviewController::class, 'stats'])->name('api.admin.reviews.stats');
+        Route::post('/', [ReviewController::class, 'store'])->name('api.admin.reviews.store');
+        Route::put('/{id}', [ReviewController::class, 'update'])->name('api.admin.reviews.update');
+        Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('api.admin.reviews.destroy');
+    });
+
     // Admin routes - Page content management
     Route::prefix('admin/pages')->group(function () {
         Route::get('/{page}', [PageContentController::class, 'index'])->name('api.admin.pages.index');
@@ -183,6 +199,12 @@ Route::prefix('bookings')->group(function () {
         ->name('api.bookings.validate-hotel');
     Route::post('/{id}/save-pickup', [BookingConfirmationController::class, 'savePickupDetails'])
         ->name('api.bookings.save-pickup');
+    Route::get('/{id}/travelers', [BookingConfirmationController::class, 'getTravelers'])
+        ->name('api.bookings.travelers');
+    Route::post('/{id}/travelers', [BookingConfirmationController::class, 'saveTravelers'])
+        ->name('api.bookings.save-travelers');
+    Route::get('/{id}/full-details', [BookingConfirmationController::class, 'getFullDetails'])
+        ->name('api.bookings.full-details');
 });
 
 // Fallback route for undefined API routes

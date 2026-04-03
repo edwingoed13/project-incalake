@@ -1,6 +1,12 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
-  ssr: false, // Deshabilitar SSR temporalmente para evitar error IPC
+  ssr: false,
+
+  vite: {
+    server: {
+      allowedHosts: true,
+    },
+  },
 
   srcDir: 'app',
 

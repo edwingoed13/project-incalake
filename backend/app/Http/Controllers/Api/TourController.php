@@ -64,6 +64,12 @@ class TourController extends Controller
                 $query->where('city_id', $request->city_id);
             }
 
+            if ($request->has('city_slug')) {
+                $query->whereHas('city', function ($q) use ($request) {
+                    $q->where('slug', $request->city_slug);
+                });
+            }
+
             if ($request->has('category_id')) {
                 $query->whereHas('categories', function ($q) use ($request) {
                     $q->where('category_new_id', $request->category_id);

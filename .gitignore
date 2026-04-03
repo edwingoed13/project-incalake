@@ -6,6 +6,9 @@ vendor/
 # Build outputs
 dist/
 build/
+
+# Large data files (download separately)
+*.tar.gz
 .nuxt/
 .output/
 .nitro/

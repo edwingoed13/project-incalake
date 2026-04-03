@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-// Declare CulqiCheckout on window
+// Declare CulqiCheckout and 3DS on window
 declare global {
   interface Window {
     CulqiCheckout: any
     Culqi: any
+    Culqi3DS: any
   }
 }
 
@@ -156,6 +157,19 @@ const initializeCulqi = () => {
       }
     }
 
+    // Initialize 3DS if available
+    if (window.Culqi3DS) {
+      try {
+        window.Culqi3DS.settings = {
+          chargeEndpoint: '', // Backend handles the charge, not 3DS directly
+          publicKey: props.publicKey,
+        }
+        console.log('✅ Culqi 3DS initialized')
+      } catch (e) {
+        console.warn('3DS init skipped:', e)
+      }
+    }
+
     console.log('✅ Culqi initialized and ready')
 
   } catch (error: any) {
@@ -199,38 +213,10 @@ const openPayment = () => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
-    <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-        <span class="material-symbols-outlined text-primary text-2xl">credit_card</span>
-      </div>
-      <div>
-        <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">
-          Secure Payment
-        </h3>
-        <p class="text-sm text-secondary-light dark:text-secondary-dark">
-          Powered by Culqi
-        </p>
-      </div>
-    </div>
-
+  <div>
     <!-- Error Message -->
-    <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
       <p class="text-sm text-red-700 dark:text-red-300">{{ errorMessage }}</p>
-    </div>
-
-    <!-- Payment Methods Info -->
-    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800 mb-4">
-      <h4 class="text-sm font-bold text-primary-light dark:text-primary-dark mb-2">
-        💳 Accepted Cards
-      </h4>
-      <div class="flex gap-2">
-        <span class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded">Visa</span>
-        <span class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded">Mastercard</span>
-        <span class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded">Amex</span>
-        <span class="text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded">Diners</span>
-      </div>
     </div>
 
     <!-- Pay Button -->
@@ -238,27 +224,14 @@ const openPayment = () => {
       type="button"
       @click="openPayment"
       :disabled="processing || !culqiReady"
-      class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+      class="w-full bg-primary hover:brightness-110 disabled:bg-slate-400 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-      <span v-else-if="!culqiReady" class="material-symbols-outlined text-xl animate-pulse">hourglass_empty</span>
-      <span v-else class="material-symbols-outlined text-xl">lock</span>
+      <span v-else-if="!culqiReady" class="material-symbols-outlined text-lg animate-pulse">hourglass_empty</span>
+      <span v-else class="material-symbols-outlined text-lg">lock</span>
       <span v-if="processing">Processing...</span>
-      <span v-else-if="!culqiReady">Loading payment system...</span>
+      <span v-else-if="!culqiReady">Loading...</span>
       <span v-else>Pay {{ currency }} {{ amount.toFixed(2) }}</span>
     </button>
-
-    <!-- Test Mode Info -->
-    <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-      <p class="text-xs text-amber-700 dark:text-amber-300">
-        <strong>Test Card:</strong> 4111 1111 1111 1111 | 12/2025 | 123
-      </p>
-    </div>
-
-    <!-- Security Badge -->
-    <div class="flex items-center justify-center gap-2 text-xs text-secondary-light dark:text-secondary-dark mt-3">
-      <span class="material-symbols-outlined text-base">shield</span>
-      <span>Secure payment powered by Culqi</span>
-    </div>
   </div>
 </template>

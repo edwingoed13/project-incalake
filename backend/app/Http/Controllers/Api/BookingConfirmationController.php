@@ -226,11 +226,88 @@ class BookingConfirmationController extends Controller
      */
     private function notifyLogisticsTeam($booking, $pickupDetail)
     {
-        // TODO: Implement email/notification to logistics team
         Log::info('Logistics notification needed for booking #' . $booking->id, [
             'hotel' => $pickupDetail->hotel_name,
             'distance' => $pickupDetail->distance_from_center,
             'extra_cost' => $pickupDetail->extra_pickup_cost
+        ]);
+    }
+
+    /**
+     * Save travelers for a booking
+     */
+    public function saveTravelers(Request $request, $bookingId)
+    {
+        $request->validate([
+            'travelers' => 'required|array|min:1',
+            'travelers.*.full_name' => 'required|string|max:150',
+            'travelers.*.nationality' => 'nullable|string|max:80',
+            'travelers.*.doc_type' => 'nullable|string|in:passport,dni',
+            'travelers.*.doc_number' => 'nullable|string|max:50',
+            'travelers.*.age_group' => 'nullable|string|in:adult,child,infant',
+            'travelers.*.special_needs' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $booking = Booking::findOrFail($bookingId);
+
+            // Delete existing travelers and recreate
+            $booking->travelers()->delete();
+
+            foreach ($request->travelers as $idx => $data) {
+                $booking->travelers()->create([
+                    'full_name' => $data['full_name'],
+                    'nationality' => $data['nationality'] ?? null,
+                    'doc_type' => $data['doc_type'] ?? 'passport',
+                    'doc_number' => $data['doc_number'] ?? null,
+                    'age_group' => $data['age_group'] ?? 'adult',
+                    'special_needs' => $data['special_needs'] ?? null,
+                    'is_leader' => $idx === 0,
+                    'order' => $idx,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Travelers saved successfully.',
+                'data' => $booking->travelers()->get(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error saving travelers', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving travelers: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get travelers for a booking
+     */
+    public function getTravelers($bookingId)
+    {
+        $booking = Booking::with('travelers')->findOrFail($bookingId);
+
+        return response()->json([
+            'success' => true,
+            'data' => $booking->travelers,
+        ]);
+    }
+
+    /**
+     * Get full booking details including pickup and travelers (for admin)
+     */
+    public function getFullDetails($bookingId)
+    {
+        $booking = Booking::with(['tour', 'pickupDetail', 'travelers'])->findOrFail($bookingId);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'booking' => $booking,
+                'pickup_detail' => $booking->pickupDetail,
+                'travelers' => $booking->travelers,
+            ],
         ]);
     }
 }
