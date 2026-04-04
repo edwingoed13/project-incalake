@@ -92,7 +92,7 @@
               <label class="text-sm font-bold text-slate-700 dark:text-slate-300">URL Slug</label>
               <div class="flex group">
                 <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-500 text-xs font-medium">
-                  incalake.com/{{ store.currentLanguage }}/{{ citySlugDisplay }}/
+                  incalake.com/{{ store.currentLanguage }}/tours/
                 </span>
                 <input
                   v-model="currentLangData.slug"
@@ -159,10 +159,10 @@ const citySlugDisplay = computed(() => {
 })
 
 const fullMultilangUrl = computed(() => {
-  if (!currentLangData.value?.slug || !citySlugDisplay.value) return ''
+  if (!currentLangData.value?.slug) return ''
 
   const frontendUrl = 'http://localhost:3001' // You can change this to production URL later
-  return `${frontendUrl}/${store.currentLanguage}/${citySlugDisplay.value}/${currentLangData.value.slug}`
+  return `${frontendUrl}/${store.currentLanguage}/tours/${currentLangData.value.slug}`
 })
 
 const sanitizeSlug = (e: Event) => {

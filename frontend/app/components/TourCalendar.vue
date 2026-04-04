@@ -7,7 +7,7 @@
     >
       <span class="material-symbols-outlined text-slate-400 text-lg">calendar_today</span>
       <span v-if="modelValue" class="text-sm font-semibold text-slate-800 dark:text-white">{{ formatSelected }}</span>
-      <span v-else class="text-sm text-slate-400">Select date</span>
+      <span v-else class="text-sm text-slate-400">{{ t('select_date') }}</span>
       <span class="material-symbols-outlined text-slate-400 text-sm ml-auto" :class="{ 'rotate-180': open }">expand_more</span>
     </div>
 
@@ -43,9 +43,10 @@
                   :disabled="day.disabled"
                   class="relative h-10 text-sm font-semibold rounded-xl transition-all"
                   :class="getDayClasses(day)"
+                  :style="getDayStyle(day)"
                 >
                   {{ day.day }}
-                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 text-green-500 font-black leading-none" style="font-size: 6px;">%</span>
+                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 font-black leading-none" :style="{ color: day.offerColor, fontSize: '6px' }">%</span>
                 </button>
                 <span v-else class="h-10"></span>
               </template>
@@ -68,9 +69,10 @@
                   :disabled="day.disabled"
                   class="relative h-10 text-sm font-semibold rounded-xl transition-all"
                   :class="getDayClasses(day)"
+                  :style="getDayStyle(day)"
                 >
                   {{ day.day }}
-                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 text-green-500 font-black leading-none" style="font-size: 6px;">%</span>
+                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 font-black leading-none" :style="{ color: day.offerColor, fontSize: '6px' }">%</span>
                 </button>
                 <span v-else class="h-10"></span>
               </template>
@@ -80,8 +82,8 @@
 
         <!-- Legend -->
         <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-5 text-xs font-semibold text-slate-400">
-          <span class="flex items-center gap-1"><span class="text-green-500 text-[8px] font-black">%</span> Offer</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span> Unavailable</span>
+          <span class="flex items-center gap-1"><span class="text-amber-500 text-[8px] font-black">%</span> {{ t('offer_legend') }}</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span> {{ t('unavailable_legend') }}</span>
         </div>
       </div>
     </Transition>
@@ -92,10 +94,12 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 interface Props {
   modelValue: string
   minDate?: string
-  offers?: Array<{ startDate: string; endDate: string; discount: number; discountType: string }>
+  offers?: Array<{ startDate: string; endDate: string; discount: number; discountType: string; color?: string }>
   blocks?: Array<{ startDate: string; endDate: string }>
   activeDays?: number[]
 }
@@ -158,6 +162,7 @@ interface CalDay {
   isToday: boolean
   isSelected: boolean
   hasOffer: boolean
+  offerColor: string
   isBlocked: boolean
   isPast: boolean
 }
@@ -183,7 +188,7 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
     const isPast = dateStr < todayStr || (props.minDate && dateStr < props.minDate)
     const isBlocked = props.blocks.some(b => dateStr >= b.startDate && dateStr <= b.endDate)
     const isActiveDay = props.activeDays.includes(dayOfWeek)
-    const hasOffer = props.offers.some(o => dateStr >= o.startDate && dateStr <= o.endDate)
+    const matchingOffer = props.offers.find(o => dateStr >= o.startDate && dateStr <= o.endDate)
 
     days.push({
       day: d,
@@ -191,7 +196,8 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
       disabled: isPast || isBlocked || !isActiveDay,
       isToday: dateStr === todayStr,
       isSelected: dateStr === props.modelValue,
-      hasOffer: hasOffer && !isPast,
+      hasOffer: !!matchingOffer && !isPast,
+      offerColor: matchingOffer?.color || '#f59e0b',
       isBlocked,
       isPast,
     })
@@ -203,9 +209,19 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
 function getDayClasses(day: CalDay): string {
   if (day.isSelected) return 'bg-primary text-white shadow-md'
   if (day.disabled) return 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
-  if (day.hasOffer) return 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400'
+  if (day.hasOffer) return 'offer-day'
   if (day.isToday) return 'bg-primary/10 text-primary font-bold hover:bg-primary/20'
   return 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+}
+
+function getDayStyle(day: CalDay): Record<string, string> {
+  if (day.hasOffer && !day.isSelected && !day.disabled) {
+    return {
+      backgroundColor: day.offerColor + '18',
+      color: day.offerColor,
+    }
+  }
+  return {}
 }
 
 function selectDate(date: string) {

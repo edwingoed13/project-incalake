@@ -39,8 +39,19 @@ export const useCartStore = defineStore('cart', {
   getters: {
     itemCount: (state) => state.items.length,
 
-    totalAmount: (state) => {
+    subtotal: (state) => {
       return state.items.reduce((sum, item) => sum + item.total, 0)
+    },
+
+    totalTax: (state) => {
+      return state.items.reduce((sum, item) => {
+        const tax = item.taxPercentage || 0
+        return sum + (item.total * tax / 100)
+      }, 0)
+    },
+
+    totalAmount(): number {
+      return this.subtotal + this.totalTax
     },
 
     totalParticipants: (state) => {

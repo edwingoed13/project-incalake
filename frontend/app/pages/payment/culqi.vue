@@ -5,16 +5,16 @@
       <!-- Loading -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
         <div class="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p class="text-sm text-slate-500 font-medium">Loading payment...</p>
+        <p class="text-sm text-slate-500 font-medium">{{ t('loading_payment') }}</p>
       </div>
 
       <!-- Error -->
       <div v-else-if="error" class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8 text-center">
         <span class="material-symbols-outlined text-red-400 text-5xl mb-4">error</span>
-        <h3 class="text-lg font-bold text-slate-800 mb-2">Payment Error</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">{{ t('payment_error') }}</h3>
         <p class="text-sm text-slate-500 mb-6">{{ error }}</p>
         <button @click="router.push('/cart')" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">
-          Return to Cart
+          {{ t('return_cart') }}
         </button>
       </div>
 
@@ -30,8 +30,8 @@
                 <span class="material-symbols-outlined text-primary">receipt_long</span>
               </div>
               <div>
-                <h2 class="text-lg font-bold text-slate-800">Order Summary</h2>
-                <p class="text-xs text-slate-400">{{ allBookings.length }} {{ allBookings.length === 1 ? 'tour' : 'tours' }} selected</p>
+                <h2 class="text-lg font-bold text-slate-800">{{ t('order_summary') }}</h2>
+                <p class="text-xs text-slate-400">{{ allBookings.length }} {{ allBookings.length === 1 ? t('tour_selected') : t('tours_selected') }}</p>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@
 
           <!-- Customer Info -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Customer</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{{ t('customer') }}</h4>
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">
                 {{ getInitials(allBookings[0]?.customer?.name || '') }}
@@ -94,12 +94,19 @@
 
           <!-- Total -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="text-xs text-slate-400 font-semibold uppercase">Total to Pay</p>
-                <p class="text-xs text-slate-400 mt-0.5">{{ allBookings.length }} {{ allBookings.length === 1 ? 'booking' : 'bookings' }}</p>
+            <div class="space-y-2 mb-3 pb-3 border-b border-slate-100">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-500">{{ t('subtotal') }} ({{ allBookings.length }} {{ allBookings.length === 1 ? t('booking') : t('bookings') }})</span>
+                <span class="font-semibold">${{ subtotalAmount.toFixed(2) }}</span>
               </div>
-              <p class="text-3xl font-black text-primary">${{ grandTotal.toFixed(2) }} <span class="text-sm font-semibold text-slate-400">USD</span></p>
+              <div v-if="taxAmount > 0" class="flex justify-between text-xs">
+                <span class="text-slate-500">{{ t('transaction_fees') }}</span>
+                <span class="font-semibold">${{ taxAmount.toFixed(2) }}</span>
+              </div>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="font-black">{{ t('total_to_pay') }}</p>
+              <p class="text-2xl font-black text-primary">${{ grandTotal.toFixed(2) }} <span class="text-sm font-semibold text-slate-400">USD</span></p>
             </div>
           </div>
         </div>
@@ -123,7 +130,7 @@
 
               <div class="flex items-center justify-center gap-2 text-xs text-slate-400 mt-4">
                 <span class="material-symbols-outlined text-sm">shield</span>
-                <span>Secure payment powered by Culqi</span>
+                <span>{{ t('secure_powered') }}</span>
               </div>
             </div>
           </div>
@@ -136,8 +143,8 @@
       <div v-if="processingPayment" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
           <div class="size-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <h3 class="text-lg font-bold text-slate-800 mb-1">Processing Payment</h3>
-          <p class="text-sm text-slate-500">Please wait...</p>
+          <h3 class="text-lg font-bold text-slate-800 mb-1">{{ t('processing_payment') }}</h3>
+          <p class="text-sm text-slate-500">{{ t('please_wait') }}</p>
         </div>
       </div>
     </Teleport>
@@ -147,6 +154,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+
+const { t } = useI18n()
 
 useHead({
   title: 'Payment - Complete Your Booking',
@@ -164,9 +173,18 @@ const processingPayment = ref(false)
 const allBookings = ref<any[]>([])
 const paymentConfig = ref<any>(null)
 
-const grandTotal = computed(() =>
-  allBookings.value.reduce((sum, b) => sum + (b.pricing?.total || 0), 0)
+const subtotalAmount = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.subtotal || b.pricing?.total || 0), 0)
 )
+
+const taxAmount = computed(() =>
+  allBookings.value.reduce((sum, b) => {
+    const tax = b.pricing?.tax_amount || 0
+    return sum + tax
+  }, 0)
+)
+
+const grandTotal = computed(() => subtotalAmount.value + taxAmount.value)
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)

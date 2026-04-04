@@ -2,7 +2,7 @@
 import type { CartItem } from '~/stores/cart'
 
 const { api } = useApi()
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const cartStore = useCartStore()
 const router = useRouter()
 const config = useRuntimeConfig()
@@ -114,17 +114,17 @@ function getImageUrl(path: string) {
     <div class="max-w-5xl mx-auto px-4">
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-2xl font-black text-slate-800">Shopping Cart</h1>
-        <p class="text-sm text-slate-500">{{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? 'tour' : 'tours' }}</p>
+        <h1 class="text-2xl font-black text-slate-800">{{ t('shopping_cart') }}</h1>
+        <p class="text-sm text-slate-500">{{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? t('tour') : t('tours') }}</p>
       </div>
 
       <!-- Empty -->
       <div v-if="cartStore.isEmpty" class="bg-white rounded-2xl p-12 text-center shadow-sm">
         <span class="material-symbols-outlined text-slate-300 text-6xl mb-4">shopping_cart</span>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">Your cart is empty</h2>
-        <p class="text-sm text-slate-500 mb-6">Explore our tours and find your next adventure</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('your_cart_empty') }}</h2>
+        <p class="text-sm text-slate-500 mb-6">{{ t('explore_tours_hint') }}</p>
         <NuxtLink :to="localePath('/tours')" class="bg-primary text-white font-bold px-6 py-3 rounded-xl text-sm">
-          Explore Tours
+          {{ t('explore_tours') }}
         </NuxtLink>
       </div>
 
@@ -192,7 +192,7 @@ function getImageUrl(path: string) {
                     class="flex items-center gap-1 text-primary hover:underline font-semibold mt-0.5"
                   >
                     <span class="material-symbols-outlined text-sm">description</span>
-                    Terms & Conditions
+                    {{ t('terms_conditions') }}
                   </button>
                 </div>
 
@@ -211,18 +211,18 @@ function getImageUrl(path: string) {
             <!-- Edit Panel -->
             <Transition name="slide">
               <div v-if="editingItem === item.id" class="p-4 bg-slate-50 border-t border-slate-100">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Edit Booking</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{{ t('edit_booking') }}</p>
                 <div class="grid grid-cols-3 gap-3">
                   <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Date</label>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('date') }}</label>
                     <input v-model="editForm.date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Time</label>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('time') }}</label>
                     <input v-model="editForm.time" type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Adults</label>
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('adults') }}</label>
                     <div class="flex items-center gap-2">
                       <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
                         <span class="material-symbols-outlined text-sm">remove</span>
@@ -235,8 +235,8 @@ function getImageUrl(path: string) {
                   </div>
                 </div>
                 <div class="flex gap-2 mt-3">
-                  <button @click="editingItem = null" class="flex-1 py-2 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg">Cancel</button>
-                  <button @click="saveEdit(item)" class="flex-1 py-2 text-xs font-bold text-white bg-primary rounded-lg">Save Changes</button>
+                  <button @click="editingItem = null" class="flex-1 py-2 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg">{{ t('cancel') }}</button>
+                  <button @click="saveEdit(item)" class="flex-1 py-2 text-xs font-bold text-white bg-primary rounded-lg">{{ t('save_changes') }}</button>
                 </div>
               </div>
             </Transition>
@@ -245,35 +245,39 @@ function getImageUrl(path: string) {
           <!-- Continue Shopping -->
           <NuxtLink :to="localePath('/tours')" class="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
             <span class="material-symbols-outlined text-base">arrow_back</span>
-            Continue Shopping
+            {{ t('continue_shopping') }}
           </NuxtLink>
         </div>
 
         <!-- Summary Sidebar -->
         <div class="lg:col-span-1">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-24">
-            <h2 class="text-base font-black mb-4">Summary</h2>
+            <h2 class="text-base font-black mb-4">{{ t('summary') }}</h2>
 
             <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
               <div class="flex justify-between text-xs">
-                <span class="text-slate-500">Tours ({{ cartStore.itemCount }})</span>
-                <span class="font-semibold">${{ cartStore.totalAmount.toFixed(2) }}</span>
+                <span class="text-slate-500">{{ t('tours') }} ({{ cartStore.itemCount }})</span>
+                <span class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</span>
               </div>
               <div class="flex justify-between text-xs">
-                <span class="text-slate-500">Participants</span>
+                <span class="text-slate-500">{{ t('participants') }}</span>
                 <span class="font-semibold">{{ cartStore.totalParticipants }}</span>
+              </div>
+              <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
+                <span class="text-slate-500">{{ t('transaction_fees') }}</span>
+                <span class="font-semibold">${{ cartStore.totalTax.toFixed(2) }}</span>
               </div>
             </div>
 
             <div class="flex justify-between items-center mb-5">
-              <span class="font-black">Total</span>
+              <span class="font-black">{{ t('total') }}</span>
               <span class="text-2xl font-black text-primary">${{ cartStore.totalAmount.toFixed(2) }}</span>
             </div>
 
             <!-- Terms -->
             <label class="flex items-start gap-2 cursor-pointer mb-4 p-3 bg-slate-50 rounded-xl">
               <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 w-4 h-4 text-primary rounded" />
-              <span class="text-[11px] text-slate-600">I accept the <a href="#" class="text-primary font-semibold">terms and conditions</a> and cancellation policies</span>
+              <span class="text-[11px] text-slate-600">{{ t('terms_accept') }} <a href="#" class="text-primary font-semibold">{{ t('terms_link') }}</a> {{ t('terms_policies') }}</span>
             </label>
 
             <button
@@ -283,16 +287,16 @@ function getImageUrl(path: string) {
               :class="acceptedTerms ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
             >
               <span class="material-symbols-outlined text-lg">lock</span>
-              Proceed to Checkout
+              {{ t('proceed_checkout') }}
             </button>
 
             <!-- Trust -->
             <div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5">
               <div class="flex items-center gap-2 text-[10px] text-slate-400">
-                <span class="material-symbols-outlined text-green-500 text-sm">shield</span> Secure payment
+                <span class="material-symbols-outlined text-green-500 text-sm">shield</span> {{ t('secure_payment') }}
               </div>
               <div class="flex items-center gap-2 text-[10px] text-slate-400">
-                <span class="material-symbols-outlined text-yellow-500 text-sm">bolt</span> Instant confirmation
+                <span class="material-symbols-outlined text-yellow-500 text-sm">bolt</span> {{ t('instant_confirmation') }}
               </div>
             </div>
           </div>
@@ -305,7 +309,7 @@ function getImageUrl(path: string) {
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden">
           <div class="flex items-center justify-between p-5 border-b border-slate-100">
-            <h3 class="text-base font-bold text-slate-800">Terms & Conditions</h3>
+            <h3 class="text-base font-bold text-slate-800">{{ t('terms_conditions') }}</h3>
             <button @click="closePolicies" class="p-1 hover:bg-slate-100 rounded-lg">
               <span class="material-symbols-outlined text-slate-400">close</span>
             </button>
@@ -317,7 +321,7 @@ function getImageUrl(path: string) {
             <div v-if="policiesItem.policies">
               <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
                 <span class="material-symbols-outlined text-blue-500 text-base">policy</span>
-                Tour Policies
+                {{ t('tour_policies') }}
               </h4>
               <div class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
             </div>
@@ -325,7 +329,7 @@ function getImageUrl(path: string) {
             <div v-if="policiesItem.cancellationPolicy">
               <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
                 <span class="material-symbols-outlined text-red-500 text-base">cancel</span>
-                Cancellation Policy
+                {{ t('cancellation_policy') }}
               </h4>
               <div class="text-xs text-slate-600 bg-red-50 border border-red-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
             </div>
@@ -334,7 +338,7 @@ function getImageUrl(path: string) {
             <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
               <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
                 <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
-                Standard Policy
+                {{ t('standard_policy') }}
               </h4>
               <div class="text-xs text-slate-600 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
                 <p><strong>Free cancellation</strong> up to 24 hours before the tour start time for a full refund.</p>
@@ -348,7 +352,7 @@ function getImageUrl(path: string) {
             <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
               <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
                 <span class="material-symbols-outlined text-amber-500 text-base">info</span>
-                Custom Policy
+                {{ t('custom_policy') }}
               </h4>
               <div class="text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-3">
                 <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>

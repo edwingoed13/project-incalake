@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-white font-display text-slate-900 min-h-screen pt-14 md:pt-20">
+  <div class="bg-white font-display text-slate-900 min-h-screen">
     <!-- Premium Hero Section -->
-    <section class="relative w-full h-[420px] md:h-[600px] flex flex-col items-center justify-center p-4 sm:p-12">
+    <section class="relative w-full h-[480px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
         <img
           :src="heroImage"
-          class="absolute w-full h-full object-cover scale-105"
+          class="absolute w-full h-full object-cover"
           alt="Lake Titicaca"
         />
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>

@@ -72,6 +72,9 @@ class StoreTourRequest extends FormRequest
             'translations.*.media_texts' => 'nullable|array',
             'translations.*.booking_texts' => 'nullable|array',
 
+            'tax_percentage' => 'nullable|numeric|min:0|max:100',
+            'advance_payment_percentage' => 'nullable|integer|min:0|max:100',
+
             'prices' => 'required|array',
             'prices.*' => 'array',
             'prices.*.active' => 'nullable|boolean',

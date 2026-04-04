@@ -31,6 +31,8 @@ class Booking extends Model
         'currency',
         'subtotal',
         'discount',
+        'tax_percentage',
+        'tax_amount',
         'total',
         'payment_method',
         'payment_status',

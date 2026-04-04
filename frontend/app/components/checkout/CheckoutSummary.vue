@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 const cartStore = useCartStore()
 const localePath = useLocalePath()
 
@@ -24,9 +25,9 @@ const guideTypeLabels: Record<string, string> = {
 <template>
   <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-5 sticky top-24 border border-slate-200 dark:border-slate-800">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-black">Booking Summary</h3>
+      <h3 class="text-base font-black">{{ t('booking_summary') }}</h3>
       <NuxtLink :to="localePath('/cart')" class="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
-        <span class="material-symbols-outlined text-xs">edit</span> Edit
+        <span class="material-symbols-outlined text-xs">edit</span> {{ t('edit') }}
       </NuxtLink>
     </div>
 
@@ -66,27 +67,31 @@ const guideTypeLabels: Record<string, string> = {
     <!-- Totals -->
     <div class="space-y-1.5 mb-4 pb-4 border-b border-slate-100">
       <div class="flex justify-between text-xs">
-        <span class="text-slate-500">Tours</span>
-        <span class="font-semibold">{{ cartStore.itemCount }}</span>
+        <span class="text-slate-500">{{ t('subtotal') }}</span>
+        <span class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</span>
       </div>
       <div class="flex justify-between text-xs">
-        <span class="text-slate-500">Participants</span>
+        <span class="text-slate-500">{{ t('participants') }}</span>
         <span class="font-semibold">{{ cartStore.totalParticipants }}</span>
+      </div>
+      <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
+        <span class="text-slate-500">{{ t('transaction_fees') }}</span>
+        <span class="font-semibold">${{ cartStore.totalTax.toFixed(2) }}</span>
       </div>
     </div>
 
     <div class="flex justify-between items-center">
-      <span class="font-black">Total</span>
+      <span class="font-black">{{ t('total') }}</span>
       <span class="text-xl font-black text-primary">${{ cartStore.totalAmount.toFixed(2) }}</span>
     </div>
 
     <!-- Trust -->
     <div class="mt-4 pt-4 border-t border-slate-100 space-y-1">
       <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-        <span class="material-symbols-outlined text-green-500 text-xs">shield</span> Secure payment
+        <span class="material-symbols-outlined text-green-500 text-xs">shield</span> {{ t('secure_payment') }}
       </div>
       <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-        <span class="material-symbols-outlined text-yellow-500 text-xs">bolt</span> Instant confirmation
+        <span class="material-symbols-outlined text-yellow-500 text-xs">bolt</span> {{ t('instant_confirmation') }}
       </div>
     </div>
   </div>

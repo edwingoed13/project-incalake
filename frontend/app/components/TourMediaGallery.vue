@@ -95,6 +95,27 @@ const remainingImagesCount = computed(() => {
   return Math.max(0, images.value.length - displayImages.value.length)
 })
 
+// Mobile slider state
+const mobileSlideIndex = ref(0)
+let touchStartX = 0
+let touchEndX = 0
+
+function onTouchStart(e: TouchEvent) {
+  touchStartX = e.changedTouches[0].screenX
+}
+
+function onTouchEnd(e: TouchEvent) {
+  touchEndX = e.changedTouches[0].screenX
+  const diff = touchStartX - touchEndX
+  if (Math.abs(diff) > 50) {
+    if (diff > 0 && mobileSlideIndex.value < images.value.length - 1) {
+      mobileSlideIndex.value++
+    } else if (diff < 0 && mobileSlideIndex.value > 0) {
+      mobileSlideIndex.value--
+    }
+  }
+}
+
 // Lightbox state
 const lightboxOpen = ref(false)
 const currentImageIndex = ref(0)
@@ -144,10 +165,58 @@ function getImageUrl(path: string) {
 
 <template>
   <div>
-    <!-- LAYOUT 1: MOSAICO (1 grande + 4 pequeñas) -->
-    <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="grid grid-cols-4 grid-rows-2 gap-2 h-[300px] md:h-[500px] overflow-hidden rounded-xl">
+    <!-- MOBILE SLIDER (all layouts) -->
+    <div v-if="images.length > 0" class="md:hidden relative">
+      <div
+        class="relative overflow-hidden rounded-2xl aspect-[4/3]"
+        @touchstart="onTouchStart"
+        @touchend="onTouchEnd"
+      >
+        <div
+          class="flex transition-transform duration-300 ease-out h-full"
+          :style="{ transform: `translateX(-${mobileSlideIndex * 100}%)` }"
+        >
+          <div
+            v-for="(image, index) in images"
+            :key="index"
+            class="w-full flex-shrink-0 h-full"
+          >
+            <img
+              :src="image.url"
+              :alt="image.alt"
+              class="w-full h-full object-cover"
+              @click="openLightbox(index)"
+            />
+          </div>
+        </div>
+
+        <!-- Photo count button (bottom right) -->
+        <button
+          v-if="images.length > 1"
+          class="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold"
+          @click="openLightbox(0)"
+        >
+          <span class="material-symbols-outlined text-sm">photo_library</span>
+          {{ mobileSlideIndex + 1 }}/{{ images.length }}
+        </button>
+
+        <!-- Dots indicator -->
+        <div v-if="images.length > 1 && images.length <= 10" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+          <span
+            v-for="(_, i) in images.slice(0, Math.min(images.length, 7))"
+            :key="i"
+            class="block rounded-full transition-all duration-200"
+            :class="mobileSlideIndex === i ? 'w-2 h-2 bg-white' : 'w-1.5 h-1.5 bg-white/50'"
+          ></span>
+          <span v-if="images.length > 7" class="block w-1 h-1 rounded-full bg-white/30"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYOUT 1: MOSAICO (1 grande + 4 pequeñas) - DESKTOP ONLY -->
+    <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[500px] overflow-hidden rounded-xl">
       <!-- Hero Image (primera imagen grande) -->
-      <div class="col-span-4 md:col-span-2 md:row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
+      <div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
         <img
           :src="images[0].url"
           :alt="images[0].alt"
@@ -160,7 +229,7 @@ function getImageUrl(path: string) {
         <!-- Última imagen con overlay si hay más de 5 -->
         <div
           v-if="index === 3 && images.length > 5"
-          class="col-span-2 md:col-span-1 md:row-span-1 relative cursor-pointer group overflow-hidden"
+          class="relative cursor-pointer group overflow-hidden"
           @click="openLightbox(4)"
         >
           <img
@@ -169,14 +238,14 @@ function getImageUrl(path: string) {
             class="w-full h-full object-cover"
           />
           <div class="absolute inset-0 bg-black/60 group-hover:bg-black/70 flex items-center justify-center transition-colors">
-            <span class="text-white text-xl md:text-2xl font-bold">+{{ images.length - 5 }} más</span>
+            <span class="text-white text-2xl font-bold">+{{ images.length - 5 }} más</span>
           </div>
         </div>
 
         <!-- Imágenes normales -->
         <div
           v-else
-          class="col-span-2 md:col-span-1 md:row-span-1 relative group cursor-pointer overflow-hidden"
+          class="relative group cursor-pointer overflow-hidden"
           @click="openLightbox(index + 1)"
         >
           <img
@@ -188,10 +257,9 @@ function getImageUrl(path: string) {
       </template>
     </div>
 
-    <!-- LAYOUT 2: VIDEO VERTICAL (SHORT) + 3 IMÁGENES CURADAS -->
-    <div v-else-if="galleryLayout === 'video_image' && youtubeVideoId && images.length > 0">
-      <!-- Desktop: Video Short left + 3 Curated Images right -->
-      <div class="hidden md:grid md:grid-cols-[300px_1fr] gap-2 rounded-xl overflow-hidden h-[500px]">
+    <!-- LAYOUT 2: VIDEO VERTICAL (SHORT) + 3 IMÁGENES CURADAS - DESKTOP ONLY -->
+    <div v-else-if="galleryLayout === 'video_image' && youtubeVideoId && images.length > 0" class="hidden md:block">
+      <div class="grid grid-cols-[300px_1fr] gap-2 rounded-xl overflow-hidden h-[500px]">
         <!-- Video Column (Left) -->
         <div class="relative bg-black rounded-l-xl overflow-hidden h-[500px] w-[300px]">
           <iframe
@@ -209,48 +277,20 @@ function getImageUrl(path: string) {
 
         <!-- Curated Images Column (Right) -->
         <div class="flex flex-col gap-2">
-          <!-- Primera imagen grande -->
           <div
             v-if="displayImages[0]"
             class="relative cursor-pointer hover:opacity-90 transition-opacity flex-1"
             @click="openLightbox(0)"
           >
-            <img
-              :src="displayImages[0].url"
-              :alt="displayImages[0].alt"
-              class="w-full h-full object-cover rounded"
-            />
+            <img :src="displayImages[0].url" :alt="displayImages[0].alt" class="w-full h-full object-cover rounded" />
           </div>
-
-          <!-- 2 imágenes pequeñas -->
           <div class="grid grid-cols-2 gap-2 h-[182px]">
-            <div
-              v-if="displayImages[1]"
-              class="relative cursor-pointer hover:opacity-90 transition-opacity"
-              @click="openLightbox(1)"
-            >
-              <img
-                :src="displayImages[1].url"
-                :alt="displayImages[1].alt"
-                class="w-full h-full object-cover rounded"
-              />
+            <div v-if="displayImages[1]" class="relative cursor-pointer hover:opacity-90 transition-opacity" @click="openLightbox(1)">
+              <img :src="displayImages[1].url" :alt="displayImages[1].alt" class="w-full h-full object-cover rounded" />
             </div>
-
-            <!-- Última con overlay "Ver todas" -->
-            <div
-              v-if="displayImages[2]"
-              class="relative cursor-pointer group overflow-hidden rounded"
-              @click="openLightbox(2)"
-            >
-              <img
-                :src="displayImages[2].url"
-                :alt="displayImages[2].alt"
-                class="w-full h-full object-cover"
-              />
-              <div
-                v-if="remainingImagesCount > 0"
-                class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors"
-              >
+            <div v-if="displayImages[2]" class="relative cursor-pointer group overflow-hidden rounded" @click="openLightbox(2)">
+              <img :src="displayImages[2].url" :alt="displayImages[2].alt" class="w-full h-full object-cover" />
+              <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors">
                 <div class="flex flex-col items-center">
                   <span class="material-symbols-outlined text-white text-3xl mb-2">photo_library</span>
                   <span class="text-white text-sm font-semibold">Ver todas</span>
@@ -261,47 +301,11 @@ function getImageUrl(path: string) {
           </div>
         </div>
       </div>
-
-      <!-- Mobile: Video + 2 Imágenes -->
-      <div class="md:hidden space-y-2">
-        <div class="rounded-xl overflow-hidden bg-black flex justify-center h-[400px]">
-          <div
-            class="relative cursor-pointer group w-[225px] h-[400px]"
-            @click="openVideoModal"
-          >
-            <img
-              :src="youtubeThumbnail"
-              :alt="`Video: ${tour.title}`"
-              class="w-full h-full object-cover"
-            />
-            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-white text-4xl fill-1">play_arrow</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div v-if="displayImages[0]" class="relative cursor-pointer" @click="openLightbox(0)">
-            <img :src="displayImages[0].url" :alt="displayImages[0].alt" class="w-full h-32 object-cover rounded" />
-          </div>
-          <div v-if="displayImages[1]" class="relative cursor-pointer group" @click="openLightbox(1)">
-            <img :src="displayImages[1].url" :alt="displayImages[1].alt" class="w-full h-32 object-cover rounded" />
-            <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex flex-col items-center justify-center transition-colors rounded">
-              <span class="material-symbols-outlined text-white text-2xl">photo_library</span>
-              <span class="text-white text-xs font-semibold">+{{ remainingImagesCount + 1 }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- LAYOUT 3: VIDEO HORIZONTAL + IMAGEN DESTACADA -->
-    <div v-else-if="galleryLayout === 'video_horizontal_mosaic' && youtubeVideoId && images.length > 0">
-      <!-- Desktop: Video (60%) + Featured Image (40%) -->
-      <div class="hidden md:grid md:grid-cols-[1.5fr_1fr] gap-2 rounded-xl overflow-hidden">
+    <!-- LAYOUT 3: VIDEO HORIZONTAL + IMAGEN DESTACADA - DESKTOP ONLY -->
+    <div v-else-if="galleryLayout === 'video_horizontal_mosaic' && youtubeVideoId && images.length > 0" class="hidden md:block">
+      <div class="grid grid-cols-[1.5fr_1fr] gap-2 rounded-xl overflow-hidden">
         <!-- Video Column -->
         <div class="relative bg-black rounded-l-xl overflow-hidden">
           <div style="padding-bottom: 56.25%; position: relative;">
@@ -335,36 +339,6 @@ function getImageUrl(path: string) {
                 <span class="material-symbols-outlined text-lg">photo_library</span>
                 <span>Ver fotos ({{ images.length }})</span>
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mobile: Video + 2 Imágenes -->
-      <div class="md:hidden space-y-2">
-        <div class="rounded-xl overflow-hidden bg-black">
-          <div style="padding-bottom: 56.25%; position: relative;">
-            <iframe
-              :src="getYouTubeEmbedUrl"
-              :title="`Video: ${tour.title}`"
-              class="absolute top-0 left-0 w-full h-full"
-              frameborder="0"
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div v-if="displayImages[0]" class="relative cursor-pointer" @click="openLightbox(0)">
-            <img :src="displayImages[0].url" :alt="displayImages[0].alt" class="w-full h-32 object-cover rounded" />
-          </div>
-          <div v-if="displayImages[1]" class="relative cursor-pointer group" @click="openLightbox(1)">
-            <img :src="displayImages[1].url" :alt="displayImages[1].alt" class="w-full h-32 object-cover rounded" />
-            <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex flex-col items-center justify-center transition-colors rounded">
-              <span class="material-symbols-outlined text-white text-2xl">photo_library</span>
-              <span class="text-white text-xs font-semibold">+{{ remainingImagesCount + 1 }}</span>
             </div>
           </div>
         </div>

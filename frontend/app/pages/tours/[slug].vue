@@ -1,47 +1,82 @@
 <template>
   <div v-if="tour" class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 lg:pb-8">
 
       <!-- Title & Basic Info -->
-      <div class="flex flex-col lg:flex-row justify-between gap-6 mb-8">
-        <div class="flex-1">
-          <h1 class="text-2xl md:text-3xl font-black mb-3 leading-tight">{{ tour.title }}</h1>
-          <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
-            <!-- Rating -->
-            <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-              <span>{{ tour.rating || '4.5' }}</span>
-              <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} reviews)</span>
+      <div class="mb-6 md:mb-8">
+        <!-- Mobile layout -->
+        <div class="md:hidden">
+          <h1 class="text-xl font-black mb-2 leading-tight">{{ tour.title }}</h1>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+              <span class="material-symbols-outlined text-yellow-500 fill-1 text-sm">star</span>
+              <span class="font-bold">{{ tour.rating || '4.5' }}</span>
+              <span class="text-slate-300">-</span>
+              <span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+              <span>{{ tour.city?.name || 'Puno' }}</span>
+              <span class="text-slate-300">-</span>
+              <span class="material-symbols-outlined text-slate-400 text-sm">schedule</span>
+              <span>{{ formatDurationShort(tour) }}</span>
             </div>
-            <span class="text-slate-300">•</span>
-            <!-- Location -->
             <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-slate-500 text-base">location_on</span>
-              <span>{{ tour.city?.name || 'Puno' }}, Peru</span>
-            </div>
-            <span class="text-slate-300">•</span>
-            <!-- Duration -->
-            <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-slate-500 text-base">schedule</span>
-              <span>{{ formatDuration(tour) }}</span>
+              <button
+                @click="shareTour"
+                class="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                aria-label="Share"
+              >
+                <span class="material-symbols-outlined text-slate-500 text-lg">share</span>
+              </button>
+              <button
+                @click="toggleFavorite"
+                class="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                aria-label="Save"
+              >
+                <span class="material-symbols-outlined text-lg" :class="isFavorite ? 'text-red-500 fill-1' : 'text-slate-500'">favorite</span>
+              </button>
             </div>
           </div>
         </div>
-        <div class="flex gap-2 items-start">
-          <button
-            class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Share tour"
-          >
-            <span class="material-symbols-outlined text-lg">share</span>
-            <span class="hidden sm:inline">Share</span>
-          </button>
-          <button
-            class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Save to favorites"
-          >
-            <span class="material-symbols-outlined text-lg">favorite</span>
-            <span class="hidden sm:inline">Save</span>
-          </button>
+
+        <!-- Desktop layout -->
+        <div class="hidden md:flex md:flex-row justify-between gap-6">
+          <div class="flex-1">
+            <h1 class="text-3xl font-black mb-3 leading-tight">{{ tour.title }}</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
+                <span>{{ tour.rating || '4.5' }}</span>
+                <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} reviews)</span>
+              </div>
+              <span class="text-slate-300">•</span>
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-slate-500 text-base">location_on</span>
+                <span>{{ tour.city?.name || 'Puno' }}, Peru</span>
+              </div>
+              <span class="text-slate-300">•</span>
+              <div class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-slate-500 text-base">schedule</span>
+                <span>{{ formatDuration(tour) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 items-start">
+            <button
+              @click="shareTour"
+              class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Share tour"
+            >
+              <span class="material-symbols-outlined text-lg">share</span>
+              <span>{{ t('share') }}</span>
+            </button>
+            <button
+              @click="toggleFavorite"
+              class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Save to favorites"
+            >
+              <span class="material-symbols-outlined text-lg" :class="isFavorite ? 'text-red-500 fill-1' : ''">favorite</span>
+              <span>{{ t('save') }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -77,7 +112,7 @@
           <!-- Reviews Section -->
           <section>
             <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold">Customer Reviews</h3>
+              <h3 class="text-xl font-bold">{{ t('customer_reviews') }}</h3>
               <div class="flex items-center gap-2">
                 <span class="font-bold text-2xl">{{ tour.rating || '4.5' }}</span>
                 <div class="flex">
@@ -98,7 +133,7 @@
                 <p class="text-slate-600 dark:text-slate-400">Incredible experience! Our guide was very knowledgeable and passionate about sharing the culture and history of Lake Titicaca.</p>
               </div>
             </div>
-            <button class="mt-6 font-bold text-primary hover:underline text-sm">View all {{ tour.reviews_count || 0 }} reviews</button>
+            <button class="mt-6 font-bold text-primary hover:underline text-sm">{{ t('view_all_reviews', { count: tour.reviews_count || 0 }) }}</button>
           </section>
         </div>
 
@@ -108,15 +143,14 @@
             <!-- Booking Widget Card -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-lg">
               <!-- Active Offer Banner -->
-              <div v-if="activeOffer" class="mb-4 p-3 rounded-lg flex items-center gap-3" :style="{ backgroundColor: activeOffer.color + '15', borderLeft: '4px solid ' + activeOffer.color }">
-                <span class="material-symbols-outlined text-2xl" :style="{ color: activeOffer.color }">sell</span>
+              <div v-if="activeOffer" class="mb-4 p-3 rounded-xl flex items-center gap-3" :style="{ backgroundColor: activeOffer.color + '12' }">
+                <span class="material-symbols-outlined text-xl" :style="{ color: activeOffer.color }">sell</span>
                 <div class="flex-1">
                   <p class="text-sm font-bold" :style="{ color: activeOffer.color }">
-                    ¡OFERTA ESPECIAL!
+                    {{ activeOffer.discount }}{{ activeOffer.discountType === 'percentage' ? '%' : ' USD' }} OFF
                   </p>
-                  <p class="text-xs text-slate-600 dark:text-slate-400">
-                    {{ activeOffer.discount }}{{ activeOffer.discountType === 'percentage' ? '%' : ' USD' }} de descuento
-                    hasta {{ formatOfferDate(activeOffer.endDate) }}
+                  <p class="text-[11px] text-slate-500">
+                    Hasta {{ formatOfferDate(activeOffer.endDate) }}
                   </p>
                 </div>
               </div>
@@ -130,12 +164,12 @@
                   <span class="text-3xl font-black text-primary">${{ (discountedPrice || 0).toFixed(2) }}</span>
                   <span class="text-sm text-slate-500">{{ currency }}</span>
                 </div>
-                <p class="text-sm text-slate-500 mt-1">per person</p>
+                <p class="text-sm text-slate-500 mt-1">{{ t('per_person_label') }}</p>
               </div>
 
               <!-- Date Selector (Calendar) -->
               <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tour Date</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('tour_date') }}</label>
                 <TourCalendar
                   v-model="selectedDate"
                   :min-date="minDate"
@@ -143,16 +177,6 @@
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
                 />
-
-                <!-- Date Status Messages -->
-                <div v-if="dateHasOffer && !isDateBlocked" class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-2">
-                  <span class="material-symbols-outlined text-green-500 text-sm mt-0.5">sell</span>
-                  <div class="flex-1">
-                    <p class="text-xs font-semibold text-green-700 dark:text-green-400">
-                      {{ activeOffer?.discount }}{{ activeOffer?.discountType === 'percentage' ? '%' : ' USD' }} OFF
-                    </p>
-                  </div>
-                </div>
 
                 <!-- Available Dates Info -->
                 <div v-if="(hasBlockedDates || hasOffers) && !isDateBlocked && !dateHasOffer && !selectedDate" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
@@ -165,14 +189,14 @@
 
               <!-- Time Selector -->
               <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Departure Time</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('departure_time') }}</label>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">schedule</span>
                   <select
                     v-model="selectedTime"
                     class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
                   >
-                    <option value="">Select time</option>
+                    <option value="">{{ t('select_time') }}</option>
                     <option v-for="time in availableTimes" :key="time.value" :value="time.value">
                       {{ time.label }}
                     </option>
@@ -182,7 +206,7 @@
 
               <!-- Travelers Selector -->
               <div class="mb-5">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('travelers') }}</label>
                 <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 bg-slate-50 dark:bg-slate-800">
                   <button
                     @click="decrementAdults"
@@ -191,7 +215,7 @@
                   >
                     <span class="material-symbols-outlined text-lg">remove</span>
                   </button>
-                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
+                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? t('adult') : t('adults') }}</span>
                   <button
                     @click="incrementAdults"
                     type="button"
@@ -205,7 +229,7 @@
               <!-- Price Breakdown -->
               <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">${{ (discountedPrice || basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">${{ (discountedPrice || basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? t('adult') : t('adults') }}</span>
                   <span class="font-semibold">${{ (total || 0).toFixed(2) }}</span>
                 </div>
                 <div v-if="activeOffer" class="flex justify-between text-sm">
@@ -217,7 +241,7 @@
                   <span class="font-semibold text-green-600">-${{ (groupDiscount || 0).toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
-                  <span>Total</span>
+                  <span>{{ t('total') }}</span>
                   <span class="text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
                 </div>
               </div>
@@ -229,7 +253,7 @@
                 class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span class="material-symbols-outlined">{{ isDateBlocked ? 'block' : 'check_circle' }}</span>
-                {{ isDateBlocked ? 'Fecha no disponible' : 'Book Now' }}
+                {{ isDateBlocked ? t('date_unavailable') : t('book_now') }}
               </button>
 
 
@@ -241,7 +265,7 @@
 
       <!-- Related Tours (Full Width) -->
       <section class="mt-20" v-if="relatedTours.length > 0">
-        <h2 class="text-2xl font-black mb-8">You might also like</h2>
+        <h2 class="text-2xl font-black mb-8">{{ t('you_might_like') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
@@ -266,23 +290,28 @@
               <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
             </div>
-            <p class="mt-2 font-black text-slate-900 dark:text-white">From ${{ relatedTour.min_price || 0 }}</p>
+            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} ${{ relatedTour.min_price || 0 }}</p>
           </NuxtLink>
         </div>
       </section>
     </main>
 
     <!-- Mobile Fixed Bottom CTA -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shadow-2xl z-40">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex flex-col">
-          <span class="text-xs text-slate-500">From</span>
-          <span class="text-2xl font-black text-primary">${{ (discountedPrice || basePrice || 0).toFixed(0) }}</span>
-          <span class="text-xs text-slate-500">per person</span>
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+      <div class="flex items-center justify-between px-4 py-2.5">
+        <div>
+          <span class="text-[10px] text-slate-400 block leading-none mb-0.5">{{ t('from') }}
+            <span v-if="activeOffer && originalPrice > discountedPrice" class="line-through">${{ originalPrice.toFixed(0) }}</span>
+          </span>
+          <span class="text-lg font-black text-primary leading-none">${{ (discountedPrice || basePrice || 0).toFixed(0) }}</span>
+          <span class="text-[10px] text-slate-400"> /{{ t('per_person_label') }}</span>
         </div>
-        <button @click="mobileBookingOpen = true" class="flex-1 bg-primary hover:bg-primary/90 text-white font-black py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined">calendar_today</span>
-          Book Now
+        <button
+          @click="mobileBookingOpen = true"
+          class="bg-primary active:bg-primary/80 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-1.5 text-xs active:scale-[0.98] transition-transform"
+        >
+          <span class="material-symbols-outlined text-base">calendar_today</span>
+          {{ t('book_now') }}
         </button>
       </div>
     </div>
@@ -292,29 +321,32 @@
       <Transition name="drawer">
         <div v-if="mobileBookingOpen" class="lg:hidden fixed inset-0 z-50">
           <div class="absolute inset-0 bg-black/50" @click="mobileBookingOpen = false"></div>
-          <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-center pt-3 pb-1">
+          <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[90vh] shadow-2xl flex flex-col drawer-sheet">
+            <!-- Drag handle -->
+            <div class="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div class="w-10 h-1 bg-slate-300 rounded-full"></div>
             </div>
-            <div class="p-5 space-y-4">
-              <!-- Price -->
-              <div class="flex items-baseline gap-2">
-                <span v-if="activeOffer && originalPrice > discountedPrice" class="text-lg text-slate-400 line-through">${{ originalPrice.toFixed(2) }}</span>
-                <span class="text-2xl font-black text-primary">${{ (discountedPrice || basePrice || 0).toFixed(2) }}</span>
-                <span class="text-sm text-slate-500">{{ currency }} / person</span>
-              </div>
 
-              <!-- Offer -->
-              <div v-if="activeOffer" class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
-                <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
-                <span class="text-xs font-bold text-green-700">
-                  {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-                </span>
+            <!-- Scrollable content -->
+            <div class="overflow-y-auto flex-1 px-5 pb-2 space-y-4">
+              <!-- Price + Offer -->
+              <div>
+                <div class="flex items-baseline gap-2">
+                  <span v-if="activeOffer && originalPrice > discountedPrice" class="text-base text-slate-400 line-through">${{ originalPrice.toFixed(0) }}</span>
+                  <span class="text-2xl font-black text-primary">${{ (discountedPrice || basePrice || 0).toFixed(0) }}</span>
+                  <span class="text-xs text-slate-500">{{ currency }} / person</span>
+                </div>
+                <div v-if="activeOffer" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border border-green-200 rounded-lg">
+                  <span class="material-symbols-outlined text-green-600 text-sm">local_offer</span>
+                  <span class="text-xs font-bold text-green-700">
+                    {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                  </span>
+                </div>
               </div>
 
               <!-- Calendar -->
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Date</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('tour_date') }}</label>
                 <TourCalendar
                   v-model="selectedDate"
                   :min-date="minDate"
@@ -324,46 +356,51 @@
                 />
               </div>
 
-              <!-- Time -->
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Departure Time</label>
-                <select v-model="selectedTime" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
-                  <option value="">Select time</option>
-                  <option v-for="time in availableTimes" :key="time.value" :value="time.value">{{ time.label }}</option>
-                </select>
-              </div>
-
-              <!-- Travelers -->
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
-                <div class="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
-                  <button @click="decrementAdults" type="button" class="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                    <span class="material-symbols-outlined text-lg">remove</span>
-                  </button>
-                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
-                  <button @click="incrementAdults" type="button" class="w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                    <span class="material-symbols-outlined text-lg">add</span>
-                  </button>
+              <!-- Time + Travelers in row -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ t('departure_time') }}</label>
+                  <select v-model="selectedTime" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                    <option value="">{{ t('select_time') }}</option>
+                    <option v-for="time in availableTimes" :key="time.value" :value="time.value">{{ time.label }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ t('travelers') }}</label>
+                  <div class="flex items-center justify-between border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
+                    <button @click="decrementAdults" type="button" class="w-7 h-7 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                      <span class="material-symbols-outlined text-base">remove</span>
+                    </button>
+                    <span class="font-bold text-sm">{{ adults }}</span>
+                    <button @click="incrementAdults" type="button" class="w-7 h-7 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                      <span class="material-symbols-outlined text-base">add</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Total -->
-              <div class="flex justify-between items-center pt-3 border-t border-slate-100">
-                <span class="font-bold text-slate-800">Total</span>
-                <span class="text-xl font-black text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
-              </div>
-
+            <!-- Sticky bottom: Total + Book button -->
+            <div class="flex-shrink-0 border-t border-slate-100 px-5 pt-3 safe-bottom-drawer">
               <!-- Error -->
-              <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
-                <span class="material-symbols-outlined text-red-500 text-base">error</span>
+              <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 mb-3 bg-red-50 border border-red-200 rounded-xl">
+                <span class="material-symbols-outlined text-red-500 text-sm">error</span>
                 <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
               </div>
 
-              <!-- Book button -->
-              <button @click="mobileHandleBooking" class="w-full bg-primary text-white font-black py-4 rounded-xl shadow-lg flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined">check_circle</span>
-                Book Now
-              </button>
+              <div class="flex items-center gap-3 pb-3">
+                <div class="flex-shrink-0">
+                  <span class="text-[10px] text-slate-400">{{ t('total') }}</span>
+                  <div class="text-lg font-black text-primary leading-tight">${{ (total || 0).toFixed(2) }}</div>
+                </div>
+                <button
+                  @click="mobileHandleBooking"
+                  class="flex-1 bg-primary active:bg-primary/80 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm active:scale-[0.98] transition-transform"
+                >
+                  <span class="material-symbols-outlined text-lg">check_circle</span>
+                  {{ t('book_now') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -375,7 +412,7 @@
   <div v-else-if="pending" class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      <p class="mt-4 text-slate-600">Loading tour...</p>
+      <p class="mt-4 text-slate-600">{{ t('loading_tour') }}</p>
     </div>
   </div>
 
@@ -383,9 +420,9 @@
   <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
       <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">search_off</span>
-      <p class="text-red-600 text-lg mb-4">Tour not found</p>
+      <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
       <NuxtLink to="/tours" class="text-primary hover:underline font-bold">
-        View all tours
+        {{ t('view_all_tours') }}
       </NuxtLink>
     </div>
   </div>
@@ -397,6 +434,7 @@ const route = useRoute()
 const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
+const { t } = useI18n()
 
 const slug = route.params.slug as string
 
@@ -428,8 +466,8 @@ const mobileBookingOpen = ref(false)
 const mobileError = ref('')
 
 function mobileHandleBooking() {
-  if (!selectedDate.value) { mobileError.value = 'Please select a date'; return }
-  if (!selectedTime.value) { mobileError.value = 'Please select a time'; return }
+  if (!selectedDate.value) { mobileError.value = t('please_select_date'); return }
+  if (!selectedTime.value) { mobileError.value = t('please_select_time'); return }
   mobileError.value = ''
   mobileBookingOpen.value = false
   handleBooking()
@@ -442,17 +480,16 @@ const blockedReason = ref('')
 
 // Computed - Base price with price_details logic
 const basePrice = computed(() => {
-  if (tour.value?.price_details && tour.value.price_details.length > 0) {
-    // Filter adult prices only
-    const adultPrices = tour.value.price_details.filter((p: any) => {
-      const ageStage = p.age_stage || {}
-      // Check if age_stage is for adults (typically min_age >= 12-18)
-      return ageStage.min_age >= 12 || ageStage.max_age >= 18
-    })
+  const details = tour.value?.price_details
+  if (details && details.length > 0) {
+    // Get active prices sorted by min_quantity
+    const activePrices = details
+      .filter((p: any) => p.active)
+      .sort((a: any, b: any) => (a.min_quantity || 1) - (b.min_quantity || 1))
 
-    if (adultPrices.length > 0) {
-      // Find the price that matches the current number of adults
-      const matchingPrice = adultPrices.find((p: any) => {
+    if (activePrices.length > 0) {
+      // Find the price range that matches the current number of adults
+      const matchingPrice = activePrices.find((p: any) => {
         const min = p.min_quantity || 1
         const max = p.max_quantity || Infinity
         return adults.value >= min && adults.value <= max
@@ -462,9 +499,14 @@ const basePrice = computed(() => {
         return parseFloat(matchingPrice.price || 0)
       }
 
-      // If no exact match, return the lowest price
-      const prices = adultPrices.map((p: any) => parseFloat(p.price || 0))
-      return Math.min(...prices)
+      // If adults exceed max range, use the last (highest quantity) price
+      const lastPrice = activePrices[activePrices.length - 1]
+      if (adults.value > (lastPrice.max_quantity || 0)) {
+        return parseFloat(lastPrice.price || 0)
+      }
+
+      // Fallback: lowest price
+      return Math.min(...activePrices.map((p: any) => parseFloat(p.price || 0)))
     }
   }
 
@@ -664,12 +706,12 @@ function handleBooking() {
   
   // Validate required fields
   if (!selectedDate.value) {
-    alert('Please select a tour date')
+    alert(t('please_select_date'))
     return
   }
 
   if (!selectedTime.value) {
-    alert('Please select a departure time')
+    alert(t('please_select_time'))
     return
   }
 
@@ -884,8 +926,32 @@ watchEffect(() => {
   }
 })
 
+// Favorite state
+const isFavorite = ref(false)
+
+function toggleFavorite() {
+  isFavorite.value = !isFavorite.value
+}
+
+async function shareTour() {
+  const url = window.location.href
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: tour.value?.title, url })
+    } catch {}
+  } else {
+    await navigator.clipboard.writeText(url)
+  }
+}
+
 // Helper functions
 function formatDuration(tour: any) {
+  if (tour.duration_quantity && tour.duration_unit) {
+    const qty = tour.duration_quantity
+    if (tour.duration_unit === 'hours') return `${qty} hour${qty > 1 ? 's' : ''}`
+    if (tour.duration_unit === 'days') return `${qty} day${qty > 1 ? 's' : ''}`
+    if (tour.duration_unit === 'minutes') return `${qty} min`
+  }
   if (tour.duration_days > 0) {
     return `${tour.duration_days} day${tour.duration_days > 1 ? 's' : ''}`
   }
@@ -893,6 +959,17 @@ function formatDuration(tour: any) {
     return `${tour.duration_hours} hour${tour.duration_hours > 1 ? 's' : ''}`
   }
   return 'Variable duration'
+}
+
+function formatDurationShort(tour: any) {
+  if (tour.duration_quantity && tour.duration_unit) {
+    if (tour.duration_unit === 'hours') return `${tour.duration_quantity}H`
+    if (tour.duration_unit === 'days') return `${tour.duration_quantity}D`
+    if (tour.duration_unit === 'minutes') return `${tour.duration_quantity}min`
+  }
+  if (tour.duration_days > 0) return `${tour.duration_days}D`
+  if (tour.duration_hours > 0) return `${tour.duration_hours}H`
+  return ''
 }
 
 </script>
@@ -934,6 +1011,19 @@ function formatDuration(tour: any) {
   @apply absolute left-0 top-1.5 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white z-10;
 }
 
-.drawer-enter-active, .drawer-leave-active { transition: all 0.3s ease; }
+.safe-bottom-drawer {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+
+/* Drawer sheet slide-up animation */
+.drawer-sheet {
+  transform: translateY(0);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer-enter-active { transition: opacity 0.3s ease; }
+.drawer-leave-active { transition: opacity 0.2s ease; }
 .drawer-enter-from, .drawer-leave-to { opacity: 0; }
+.drawer-enter-from .drawer-sheet { transform: translateY(100%); }
+.drawer-leave-to .drawer-sheet { transform: translateY(100%); }
 </style>

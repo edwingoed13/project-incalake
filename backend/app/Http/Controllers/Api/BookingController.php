@@ -158,10 +158,16 @@ class BookingController extends Controller
                 }
             }
 
+            // Calculate tax
+            $taxPercentage = $tour->tax_percentage ?? 0;
+            $taxAmount = $taxPercentage > 0 ? round($total * $taxPercentage / 100, 2) : 0;
+            $totalWithTax = $total + $taxAmount;
+
             // Ensure minimum amount for Culqi (requires at least $1.00 = 100 cents)
-            if ($total < 1.00) {
-                $total = 1.00;
+            if ($totalWithTax < 1.00) {
+                $totalWithTax = 1.00;
                 $subtotal = 1.00;
+                $taxAmount = 0;
             }
 
             // Generate unique booking code
@@ -186,7 +192,9 @@ class BookingController extends Controller
                 'currency' => $tour->currency ?? 'USD',
                 'subtotal' => $subtotal,
                 'discount' => $discount,
-                'total' => $total,
+                'tax_percentage' => $taxPercentage,
+                'tax_amount' => $taxAmount,
+                'total' => $totalWithTax,
                 'payment_method' => $paymentMethod,
                 'payment_status' => 'pending',
                 'status' => 'pending',

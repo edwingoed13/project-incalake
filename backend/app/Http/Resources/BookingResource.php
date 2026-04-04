@@ -71,6 +71,8 @@ class BookingResource extends JsonResource
                 'currency' => $this->currency,
                 'subtotal' => (float) $this->subtotal,
                 'discount' => (float) $this->discount,
+                'tax_percentage' => (float) ($this->tax_percentage ?? 0),
+                'tax_amount' => (float) ($this->tax_amount ?? 0),
                 'total' => (float) $this->total,
             ],
             'participants' => [

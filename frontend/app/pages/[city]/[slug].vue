@@ -153,9 +153,9 @@
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
                 />
                 <!-- Active offer indicator -->
-                <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
-                  <span class="text-xs font-bold text-green-700 dark:text-green-400">
+                <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12' }">
+                  <span class="material-symbols-outlined text-base" :style="{ color: activeOffer.color || '#f59e0b' }">sell</span>
+                  <span class="text-xs font-bold" :style="{ color: activeOffer.color || '#f59e0b' }">
                     {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
                   </span>
                 </div>
@@ -312,9 +312,9 @@
               </div>
 
               <!-- Offer banner -->
-              <div v-if="activeOffer" class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
-                <span class="material-symbols-outlined text-green-600 text-base">local_offer</span>
-                <span class="text-xs font-bold text-green-700">
+              <div v-if="activeOffer" class="flex items-center gap-2 px-3 py-2 rounded-xl" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12' }">
+                <span class="material-symbols-outlined text-base" :style="{ color: activeOffer.color || '#f59e0b' }">sell</span>
+                <span class="text-xs font-bold" :style="{ color: activeOffer.color || '#f59e0b' }">
                   {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
                 </span>
               </div>
@@ -489,17 +489,14 @@ watch(selectedTime, () => { if (mobileError.value) mobileError.value = '' })
 
 // Computed - Base price with price_details logic
 const basePrice = computed(() => {
-  if (tour.value?.price_details && tour.value.price_details.length > 0) {
-    // Filter adult prices only
-    const adultPrices = tour.value.price_details.filter((p: any) => {
-      const ageStage = p.age_stage || {}
-      // Check if age_stage is for adults (typically min_age >= 12-18)
-      return ageStage.min_age >= 12 || ageStage.max_age >= 18
-    })
+  const details = tour.value?.price_details
+  if (details && details.length > 0) {
+    const activePrices = details
+      .filter((p: any) => p.active)
+      .sort((a: any, b: any) => (a.min_quantity || 1) - (b.min_quantity || 1))
 
-    if (adultPrices.length > 0) {
-      // Find the price that matches the current number of adults
-      const matchingPrice = adultPrices.find((p: any) => {
+    if (activePrices.length > 0) {
+      const matchingPrice = activePrices.find((p: any) => {
         const min = p.min_quantity || 1
         const max = p.max_quantity || Infinity
         return adults.value >= min && adults.value <= max
@@ -509,13 +506,15 @@ const basePrice = computed(() => {
         return parseFloat(matchingPrice.price || 0)
       }
 
-      // If no exact match, return the lowest price
-      const prices = adultPrices.map((p: any) => parseFloat(p.price || 0))
-      return Math.min(...prices)
+      const lastPrice = activePrices[activePrices.length - 1]
+      if (adults.value > (lastPrice.max_quantity || 0)) {
+        return parseFloat(lastPrice.price || 0)
+      }
+
+      return Math.min(...activePrices.map((p: any) => parseFloat(p.price || 0)))
     }
   }
 
-  // Fallback to min_price or default
   return tour.value?.min_price || 0
 })
 

@@ -371,8 +371,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
             difficulty: data.difficulty || 'easy',
             capacityMin: 1, 
             capacityMax: data.max_capacity || 20,
-            duration: data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1),
-            durationUnit: data.duration_days > 0 ? 'days' : 'hours',
+            duration: data.duration_quantity || (data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1)),
+            durationUnit: data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours'),
             startTime: data.departure_time || '08:00',
             timezone: data.timezone || 'America/Lima',
             nearestCity: data.city?.name || '',
@@ -441,6 +441,43 @@ export const useTourWizardStore = defineStore('tourWizard', {
               }
             })
           }
+
+          // Map Step 4: Commercial Rules / Pricing
+          if (data.price_details && data.price_details.length > 0) {
+            // Group prices by age_stage_id
+            const grouped: Record<string, any[]> = {}
+            data.price_details.forEach((p: any) => {
+              const stageId = String(p.age_stage_id || p.age_stage?.id || '1')
+              if (!grouped[stageId]) grouped[stageId] = []
+              grouped[stageId].push(p)
+            })
+
+            this.commercialRules.ageStages = this.commercialRules.ageStages.map(stage => {
+              const prices = grouped[stage.id]
+              if (prices && prices.length > 0) {
+                stage.active = true
+                const ageStage = prices[0].age_stage || {}
+                stage.minAge = ageStage.min_age ?? stage.minAge
+                stage.maxAge = ageStage.max_age ?? stage.maxAge
+                stage.description = ageStage.description || stage.description
+                stage.nationalities = [{
+                  id: 'n1',
+                  nationalityId: 'general',
+                  ageMin: stage.minAge,
+                  ageMax: stage.maxAge,
+                  ranges: prices.map((p: any, i: number) => ({
+                    id: `r${i + 1}`,
+                    from: p.min_quantity || 1,
+                    to: p.max_quantity || 20,
+                    price: parseFloat(p.price || p.amount || 0)
+                  }))
+                }]
+              }
+              return stage
+            })
+          }
+          this.commercialRules.taxPercentage = data.tax_percentage ?? this.commercialRules.taxPercentage
+          this.commercialRules.advancePaymentPercentage = data.advance_payment_percentage ?? this.commercialRules.advancePaymentPercentage
 
           // Map Step 5: Multimedia
           this.multimedia = {
@@ -567,7 +604,24 @@ export const useTourWizardStore = defineStore('tourWizard', {
           order: img.order
         })).filter(img => typeof img.id === 'number'), // Only send existing images (IDs are numbers from DB, newly uploaded tempImages have UUIDs)
         temp_images: this.tempImages,
-        
+
+        // Step 4 Commercial Rules / Pricing
+        tax_percentage: this.commercialRules.taxPercentage,
+        advance_payment_percentage: this.commercialRules.advancePaymentPercentage,
+        prices: this.commercialRules.ageStages.reduce((acc: Record<string, any>, stage) => {
+          acc[stage.id] = {
+            active: stage.active,
+            ranges: stage.nationalities.flatMap(nat =>
+              nat.ranges.map(range => ({
+                from: range.from,
+                to: range.to,
+                price: range.price
+              }))
+            )
+          }
+          return acc
+        }, {}),
+
         // Step 6 Booking Options
         policy_type: this.bookingOptions.policyType,
         policy_description: this.bookingOptions.policyDescription,
