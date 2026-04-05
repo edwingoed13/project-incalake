@@ -82,8 +82,8 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     // Pre-render páginas estáticas para SEO
     prerender: {
-      crawlLinks: true,
-      routes: ['/']
+      crawlLinks: false,
+      routes: []
     }
   },
 
@@ -92,19 +92,8 @@ export default defineNuxtConfig({
 
   // SSR + SSG Híbrido: Optimización por tipo de página
   routeRules: {
-    // SSG - Páginas estáticas (pre-renderizadas en build)
-    '/': { prerender: true },
-    '/**/tours': { prerender: true },
-    '/**/about': { prerender: true },
-    '/**/contact': { prerender: true },
-
-    // SSR - Páginas dinámicas (renderizadas en servidor)
-    '/**/tours/**': { ssr: true },
-    '/**/checkout': { ssr: true },
-    '/**/booking-confirmation/**': { ssr: true },
-
-    // API routes - Sin caché (siempre fresh)
-    '/api/**': { cors: true, headers: { 'cache-control': 'no-cache' } }
+    // All pages SSR (rendered on request, not at build time)
+    '/**': { ssr: true }
   },
 
   // Sitemap automático para SEO
