@@ -1,0 +1,80 @@
+name: Deploy Backend to cPanel
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, xml, bcmath, curl, fileinfo, gd, zip
+
+      - name: Install Composer dependencies
+        working-directory: backend
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Prepare public directory for subdomain
+        run: |
+          # Copy public/ contents to a separate folder for the subdomain document root
+          mkdir -p deploy-public
+          cp -r backend/public/* deploy-public/
+          # Modify index.php to point to the app directory
+          sed -i "s|__DIR__.'/../vendor/autoload.php'|__DIR__.'/../incalake-api/vendor/autoload.php'|g" deploy-public/index.php
+          sed -i "s|__DIR__.'/../bootstrap/app.php'|__DIR__.'/../incalake-api/bootstrap/app.php'|g" deploy-public/index.php
+
+      - name: Create .htaccess for API
+        run: |
+          cat > deploy-public/.htaccess << 'HTACCESS'
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+              RewriteRule ^(.*)$ public/$1 [L]
+          </IfModule>
+          HTACCESS
+          cat > deploy-public/public/.htaccess 2>/dev/null << 'HTACCESS2' || true
+          <IfModule mod_rewrite.c>
+              RewriteEngine On
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^ index.php [L]
+          </IfModule>
+          HTACCESS2
+
+      - name: Deploy app code to incalake-api/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.incalake.com
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./backend/
+          server-dir: ./incalake-api/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.env
+            **/public/**
+            **/storage/logs/*
+            **/storage/framework/cache/data/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+
+      - name: Deploy public files to subdomain root
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.incalake.com
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./deploy-public/
+          server-dir: ./public_html/api.incalake.com/
