@@ -45,7 +45,7 @@
               <div class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
                 <span>{{ tour.rating || '4.5' }}</span>
-                <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} reviews)</span>
+                <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} {{ t('reviews') }})</span>
               </div>
               <span class="text-slate-300">•</span>
               <div class="flex items-center gap-1">
@@ -662,7 +662,7 @@ const durationLabel = computed(() => {
 
 const availableTimes = computed(() => {
   const times = []
-  const dur = durationLabel.value ? ` - Duration ${durationLabel.value}` : ''
+  const dur = durationLabel.value ? ` - ${t('duration_label')} ${durationLabel.value}` : ''
 
   if (tour.value?.departure_time) {
     const [hours, minutes] = tour.value.departure_time.split(':')
@@ -948,17 +948,13 @@ async function shareTour() {
 function formatDuration(tour: any) {
   if (tour.duration_quantity && tour.duration_unit) {
     const qty = tour.duration_quantity
-    if (tour.duration_unit === 'hours') return `${qty} hour${qty > 1 ? 's' : ''}`
-    if (tour.duration_unit === 'days') return `${qty} day${qty > 1 ? 's' : ''}`
-    if (tour.duration_unit === 'minutes') return `${qty} min`
+    if (tour.duration_unit === 'hours') return `${qty}H`
+    if (tour.duration_unit === 'days') return `${qty}D`
+    if (tour.duration_unit === 'minutes') return `${qty}min`
   }
-  if (tour.duration_days > 0) {
-    return `${tour.duration_days} day${tour.duration_days > 1 ? 's' : ''}`
-  }
-  if (tour.duration_hours > 0) {
-    return `${tour.duration_hours} hour${tour.duration_hours > 1 ? 's' : ''}`
-  }
-  return 'Variable duration'
+  if (tour.duration_days > 0) return `${tour.duration_days}D`
+  if (tour.duration_hours > 0) return `${tour.duration_hours}H`
+  return ''
 }
 
 function formatDurationShort(tour: any) {

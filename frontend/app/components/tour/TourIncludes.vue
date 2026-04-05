@@ -2,7 +2,7 @@
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
     <h2 class="text-2xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-6 flex items-center gap-2">
       <span class="material-symbols-outlined text-primary text-3xl">checklist</span>
-      What's Included & Not Included
+      {{ t('whats_included') }}
     </h2>
 
     <div class="space-y-3">
@@ -15,7 +15,7 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-green-500 text-xl">check_circle</span>
-            <span class="font-bold text-primary-light dark:text-primary-dark">What's Included</span>
+            <span class="font-bold text-primary-light dark:text-primary-dark">{{ t('included') }}</span>
           </div>
           <span
             class="material-symbols-outlined text-slate-400 transition-transform"
@@ -46,7 +46,7 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-red-500 text-xl">cancel</span>
-            <span class="font-bold text-primary-light dark:text-primary-dark">What's NOT Included</span>
+            <span class="font-bold text-primary-light dark:text-primary-dark">{{ t('not_included') }}</span>
           </div>
           <span
             class="material-symbols-outlined text-slate-400 transition-transform"
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+const { t } = useI18n()
 
 interface Props {
   tour: any

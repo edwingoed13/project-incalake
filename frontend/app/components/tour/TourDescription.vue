@@ -2,7 +2,7 @@
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
     <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
       <span class="material-symbols-outlined text-primary text-3xl">description</span>
-      Description
+      {{ t('description') }}
     </h2>
     <div class="prose prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-html="sanitizedDescription"></div>
@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-// sanitizeHtml is auto-imported
+const { t } = useI18n()
 
 interface Props {
   tour: any

@@ -30,6 +30,7 @@ return [
 
     'allowed_origins_patterns' => [
         '#https://.*\.trycloudflare\.com#',
+        '#https://.*\.up\.railway\.app#',
     ],
 
     'allowed_headers' => ['*'],

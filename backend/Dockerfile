@@ -1,33 +1,28 @@
 FROM php:8.2-cli
 
-WORKDIR /var/www/html
+WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    nodejs \
-    npm \
+    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev libzip-dev libcurl4-openssl-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring xml bcmath gd zip curl fileinfo \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Install dependencies (cached layer)
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+# Copy app code
 COPY . .
 
-RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache
+RUN composer dump-autoload --optimize \
+    && mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && php artisan storage:link 2>/dev/null || true
 
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 775 storage bootstrap/cache
+EXPOSE 8001
 
-RUN npm install && npm run build
-
-EXPOSE 9000
-
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=9000"]
+CMD php artisan migrate --force 2>/dev/null; php artisan serve --host=0.0.0.0 --port=${PORT:-8001}
