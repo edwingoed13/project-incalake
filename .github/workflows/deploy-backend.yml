@@ -20,37 +20,46 @@ jobs:
           php-version: '8.3'
           extensions: pdo_mysql, mbstring, xml, bcmath, curl, fileinfo, gd, zip
 
+      - name: Prepare directories
+        working-directory: backend
+        run: |
+          mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs
+          chmod -R 775 bootstrap/cache storage
+
+      - name: Remove duplicate files
+        working-directory: backend
+        run: |
+          rm -f app/Http/Resources/BookingResource_updated.php
+
       - name: Install Composer dependencies
         working-directory: backend
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: Prepare public directory for subdomain
+      - name: Prepare public for subdomain
         run: |
-          # Copy public/ contents to a separate folder for the subdomain document root
           mkdir -p deploy-public
           cp -r backend/public/* deploy-public/
-          # Modify index.php to point to the app directory
-          sed -i "s|__DIR__.'/../vendor/autoload.php'|__DIR__.'/../incalake-api/vendor/autoload.php'|g" deploy-public/index.php
-          sed -i "s|__DIR__.'/../bootstrap/app.php'|__DIR__.'/../incalake-api/bootstrap/app.php'|g" deploy-public/index.php
+          cat > deploy-public/index.php << 'PHPEOF'
+          <?php
 
-      - name: Create .htaccess for API
-        run: |
-          cat > deploy-public/.htaccess << 'HTACCESS'
-          <IfModule mod_rewrite.c>
-              RewriteEngine On
-              RewriteRule ^(.*)$ public/$1 [L]
-          </IfModule>
-          HTACCESS
-          cat > deploy-public/public/.htaccess 2>/dev/null << 'HTACCESS2' || true
-          <IfModule mod_rewrite.c>
-              RewriteEngine On
-              RewriteCond %{REQUEST_FILENAME} !-d
-              RewriteCond %{REQUEST_FILENAME} !-f
-              RewriteRule ^ index.php [L]
-          </IfModule>
-          HTACCESS2
+          use Illuminate\Http\Request;
 
-      - name: Deploy app code to incalake-api/
+          define('LARAVEL_START', microtime(true));
+
+          // Determine if the application is in maintenance mode...
+          if (file_exists($maintenance = __DIR__.'/../incalake-api/storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
+
+          // Register the Composer autoloader...
+          require __DIR__.'/../incalake-api/vendor/autoload.php';
+
+          // Bootstrap Laravel and handle the request...
+          (require_once __DIR__.'/../incalake-api/bootstrap/app.php')
+              ->handleRequest(Request::capture());
+          PHPEOF
+
+      - name: Deploy app code
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ftp.incalake.com
@@ -69,8 +78,9 @@ jobs:
             **/storage/framework/cache/data/**
             **/storage/framework/sessions/**
             **/storage/framework/views/**
+            **/*_updated.php
 
-      - name: Deploy public files to subdomain root
+      - name: Deploy public files to subdomain
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ftp.incalake.com
