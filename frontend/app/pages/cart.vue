@@ -259,10 +259,6 @@ function getImageUrl(path: string) {
                 <span class="text-slate-500">{{ t('tours') }} ({{ cartStore.itemCount }})</span>
                 <span class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</span>
               </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-slate-500">{{ t('participants') }}</span>
-                <span class="font-semibold">{{ cartStore.totalParticipants }}</span>
-              </div>
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('transaction_fees') }}</span>
                 <span class="font-semibold">${{ cartStore.totalTax.toFixed(2) }}</span>
