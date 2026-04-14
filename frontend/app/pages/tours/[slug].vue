@@ -446,10 +446,11 @@ const { data: response, pending, error } = await useAsyncData(
 
 const tour = computed(() => response.value?.data || null)
 
-// Fetch related tours
+// Fetch related tours (lazy - doesn't block navigation)
 const { data: relatedResponse } = await useAsyncData(
   `related-tours-${slug}`,
-  () => api('/tours?limit=4')
+  () => api('/tours?limit=4'),
+  { lazy: true, default: () => ({ data: [] }) }
 )
 
 const relatedTours = computed(() => {

@@ -90,10 +90,27 @@ export default defineNuxtConfig({
   // SSR activado para SEO
   // ssr: true, // Se comentó porque causaba error IPC en dev (Windows)
 
-  // SSR + SSG Híbrido: Optimización por tipo de página
+  // SSR + SPA + SWR Híbrido: Optimización por tipo de página
   routeRules: {
-    // All pages SSR (rendered on request, not at build time)
-    '/**': { ssr: true }
+    // SPA — páginas privadas (instant load, no SEO needed)
+    '/cart': { ssr: false },
+    '/checkout': { ssr: false },
+    '/payment/**': { ssr: false },
+    '/booking-confirmation/**': { ssr: false },
+    '/**/cart': { ssr: false },
+    '/**/checkout': { ssr: false },
+
+    // SWR — páginas públicas con cache (revalida en background)
+    '/': { swr: 3600 },
+    '/:locale(es|en|pt|fr|de|it)': { swr: 3600 },
+    '/:locale(es|en|pt|fr|de|it)/tours': { swr: 600 },
+    '/:locale(es|en|pt|fr|de|it)/tours/**': { swr: 3600 },
+    '/:locale(es|en|pt|fr|de|it)/:city/**': { swr: 3600 },
+    '/:locale(es|en|pt|fr|de|it)/about': { swr: 86400 },
+    '/:locale(es|en|pt|fr|de|it)/contact': { swr: 86400 },
+
+    // API pass-through, sin caché
+    '/api/**': { headers: { 'cache-control': 'no-cache' } }
   },
 
   // Sitemap automático para SEO

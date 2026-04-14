@@ -468,10 +468,11 @@ useHead({
   title: computed(() => `${c('hero', 'title', 'home_hero_title')} - Incalake Tours`),
 })
 
-// Fetch cities
+// Fetch cities (lazy - doesn't block home page render)
 const { data: citiesResponse } = await useAsyncData(
   'cities',
-  () => api('/cities')
+  () => api('/cities'),
+  { lazy: true, default: () => ({ data: [] }) }
 )
 const cities = computed(() => citiesResponse.value?.data || [])
 
