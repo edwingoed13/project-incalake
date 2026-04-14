@@ -259,7 +259,7 @@
               <div class="flex items-end justify-between pt-3 border-t border-slate-100">
                 <div>
                   <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
-                  <span class="text-lg font-black text-primary">${{ (tour.min_price || 0).toFixed(0) }}</span>
+                  <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
                 </div>
                 <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                   {{ t('view') }}
@@ -322,7 +322,7 @@
               <div class="flex items-end justify-between pt-3 border-t border-green-100">
                 <div>
                   <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
-                  <span class="text-lg font-black text-green-600">${{ (tour.min_price || 0).toFixed(0) }}</span>
+                  <span class="text-lg font-black text-green-600">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
                 </div>
                 <span class="text-xs font-bold text-green-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                   {{ t('view') }}
@@ -423,6 +423,7 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
+const currencyStore = useCurrencyStore()
 
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])

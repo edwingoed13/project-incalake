@@ -71,7 +71,7 @@
 
                 <!-- Price -->
                 <div class="text-right shrink-0">
-                  <p class="text-lg font-black text-slate-800">${{ (b.pricing?.total || 0).toFixed(2) }}</p>
+                  <p class="text-lg font-black text-slate-800">{{ currencyStore.formatConverted(b.pricing?.total || 0) }}</p>
                   <p class="text-[10px] text-slate-400">{{ b.pricing?.currency || 'USD' }}</p>
                 </div>
               </div>
@@ -97,16 +97,26 @@
             <div class="space-y-2 mb-3 pb-3 border-b border-slate-100">
               <div class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('subtotal') }} ({{ allBookings.length }} {{ allBookings.length === 1 ? t('booking') : t('bookings') }})</span>
-                <span class="font-semibold">${{ subtotalAmount.toFixed(2) }}</span>
+                <span class="font-semibold">{{ currencyStore.formatConverted(subtotalAmount) }}</span>
               </div>
               <div v-if="taxAmount > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('transaction_fees') }}</span>
-                <span class="font-semibold">${{ taxAmount.toFixed(2) }}</span>
+                <span class="font-semibold">{{ currencyStore.formatConverted(taxAmount) }}</span>
               </div>
             </div>
             <div class="flex justify-between items-center">
               <p class="font-black">{{ t('total_to_pay') }}</p>
-              <p class="text-2xl font-black text-primary">${{ grandTotal.toFixed(2) }} <span class="text-sm font-semibold text-slate-400">USD</span></p>
+              <p class="text-2xl font-black text-primary">
+                {{ currencyStore.formatConverted(grandTotal) }}
+                <span v-if="!currencyStore.isForeignCurrency" class="text-sm font-semibold text-slate-400">USD</span>
+              </p>
+            </div>
+            <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+              <div class="flex-1">
+                <p class="text-[11px] text-amber-800 leading-tight font-semibold">{{ t('payment_usd_notice') }}</p>
+                <p class="text-[10px] text-amber-700 mt-0.5">≈ ${{ grandTotal.toFixed(2) }} USD</p>
+              </div>
             </div>
           </div>
         </div>
@@ -122,7 +132,11 @@
                   :amount="grandTotal"
                   :currency="allBookings[0]?.pricing?.currency || 'USD'"
                   :description="`Incalake Tours - ${allBookings.length} booking(s)`"
-                  :customer-email="allBookings[0]?.customer?.email || ''"
+                  :customer-email="customerInfo.email"
+                  :customer-first-name="customerInfo.firstName"
+                  :customer-last-name="customerInfo.lastName"
+                  :customer-phone="customerInfo.phone"
+                  :customer-country="customerInfo.country"
                   @success="handlePaymentSuccess"
                   @error="handlePaymentError"
                 />
@@ -156,6 +170,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const { t } = useI18n()
+const currencyStore = useCurrencyStore()
 
 useHead({
   title: 'Payment - Complete Your Booking',
@@ -185,6 +200,25 @@ const taxAmount = computed(() =>
 )
 
 const grandTotal = computed(() => subtotalAmount.value + taxAmount.value)
+
+const customerInfo = computed(() => {
+  const c = allBookings.value[0]?.customer || {}
+  const fullName = (c.name || '').trim()
+  const parts = fullName.split(/\s+/)
+  const firstName = parts.length > 2
+    ? parts.slice(0, Math.ceil(parts.length / 2)).join(' ')
+    : parts[0] || ''
+  const lastName = parts.length > 2
+    ? parts.slice(Math.ceil(parts.length / 2)).join(' ')
+    : parts.slice(1).join(' ') || ''
+  return {
+    email: c.email || '',
+    firstName,
+    lastName,
+    phone: c.phone || '',
+    country: c.country || ''
+  }
+})
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)

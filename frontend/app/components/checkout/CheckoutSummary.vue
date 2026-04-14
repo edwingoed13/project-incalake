@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const cartStore = useCartStore()
+const currencyStore = useCurrencyStore()
 const localePath = useLocalePath()
 
 const formatDate = (d: string) => {
@@ -57,9 +58,9 @@ const guideTypeLabels: Record<string, string> = {
         </div>
 
         <div class="flex justify-between items-center pt-1">
-          <span v-if="item.hasOffer && item.originalPrice" class="text-[10px] line-through text-slate-400">${{ (item.originalPrice * item.adults).toFixed(2) }}</span>
+          <span v-if="item.hasOffer && item.originalPrice" class="text-[10px] line-through text-slate-400">{{ currencyStore.formatConverted(item.originalPrice * item.adults) }}</span>
           <span v-else></span>
-          <span class="text-sm font-black text-slate-800">${{ item.total.toFixed(2) }}</span>
+          <span class="text-sm font-black text-slate-800">{{ currencyStore.formatConverted(item.total) }}</span>
         </div>
       </div>
     </div>
@@ -68,17 +69,22 @@ const guideTypeLabels: Record<string, string> = {
     <div class="space-y-1.5 mb-4 pb-4 border-b border-slate-100">
       <div class="flex justify-between text-xs">
         <span class="text-slate-500">{{ t('subtotal') }}</span>
-        <span class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</span>
+        <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.subtotal) }}</span>
       </div>
       <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
         <span class="text-slate-500">{{ t('transaction_fees') }}</span>
-        <span class="font-semibold">${{ cartStore.totalTax.toFixed(2) }}</span>
+        <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
       </div>
     </div>
 
     <div class="flex justify-between items-center">
       <span class="font-black">{{ t('total') }}</span>
-      <span class="text-xl font-black text-primary">${{ cartStore.totalAmount.toFixed(2) }}</span>
+      <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(cartStore.totalAmount) }}</span>
+    </div>
+
+    <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+      <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+      <span class="text-[10px] text-amber-800 leading-tight">{{ t('payment_usd_notice') }}</span>
     </div>
 
     <!-- Trust -->

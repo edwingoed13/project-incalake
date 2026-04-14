@@ -159,10 +159,10 @@
               <div class="mb-5">
                 <div class="flex items-baseline gap-2">
                   <span v-if="activeOffer && originalPrice > discountedPrice" class="text-xl text-slate-400 line-through">
-                    ${{ originalPrice.toFixed(2) }}
+                    {{ currencyStore.formatConverted(originalPrice) }}
                   </span>
-                  <span class="text-3xl font-black text-primary">${{ (discountedPrice || 0).toFixed(2) }}</span>
-                  <span class="text-sm text-slate-500">{{ currency }}</span>
+                  <span class="text-3xl font-black text-primary">{{ currencyStore.formatConverted(discountedPrice || 0) }}</span>
+                  <span class="text-sm text-slate-500">{{ currencyStore.selectedCurrency }}</span>
                 </div>
                 <p class="text-sm text-slate-500 mt-1">{{ t('per_person_label') }}</p>
               </div>
@@ -229,20 +229,24 @@
               <!-- Price Breakdown -->
               <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">${{ (discountedPrice || basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? t('adult') : t('adults') }}</span>
-                  <span class="font-semibold">${{ (total || 0).toFixed(2) }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">{{ currencyStore.formatConverted(discountedPrice || basePrice || 0) }} x {{ adults }} {{ adults === 1 ? t('adult') : t('adults') }}</span>
+                  <span class="font-semibold">{{ currencyStore.formatConverted(total || 0) }}</span>
                 </div>
                 <div v-if="activeOffer" class="flex justify-between text-sm">
                   <span class="text-slate-600 dark:text-slate-400">{{ activeOffer.discountType === 'percentage' ? activeOffer.discount + '% de descuento' : '$' + activeOffer.discount + ' USD descuento' }}</span>
-                  <span class="font-semibold text-green-600">-${{ ((basePrice - discountedPrice) * adults).toFixed(2) }}</span>
+                  <span class="font-semibold text-green-600">-{{ currencyStore.formatConverted((basePrice - discountedPrice) * adults) }}</span>
                 </div>
                 <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
                   <span class="text-slate-600 dark:text-slate-400">Group discount</span>
-                  <span class="font-semibold text-green-600">-${{ (groupDiscount || 0).toFixed(2) }}</span>
+                  <span class="font-semibold text-green-600">-{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
                 </div>
                 <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
                   <span>{{ t('total') }}</span>
-                  <span class="text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
+                  <span class="text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
+                </div>
+                <div v-if="currencyStore.isForeignCurrency" class="flex items-start gap-1.5 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <span class="material-symbols-outlined text-amber-500 text-sm mt-0.5">info</span>
+                  <span class="text-[11px] text-slate-500 leading-tight">{{ t('payment_usd_notice') }}</span>
                 </div>
               </div>
 
@@ -290,7 +294,7 @@
               <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
             </div>
-            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} ${{ relatedTour.min_price || 0 }}</p>
+            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0, false) }}</p>
           </NuxtLink>
         </div>
       </section>
@@ -301,9 +305,9 @@
       <div class="flex items-center justify-between px-4 py-2.5">
         <div>
           <span class="text-[10px] text-slate-400 block leading-none mb-0.5">{{ t('from') }}
-            <span v-if="activeOffer && originalPrice > discountedPrice" class="line-through">${{ originalPrice.toFixed(0) }}</span>
+            <span v-if="activeOffer && originalPrice > discountedPrice" class="line-through">{{ currencyStore.formatConverted(originalPrice, false) }}</span>
           </span>
-          <span class="text-lg font-black text-primary leading-none">${{ (discountedPrice || basePrice || 0).toFixed(0) }}</span>
+          <span class="text-lg font-black text-primary leading-none">{{ currencyStore.formatConverted(discountedPrice || basePrice || 0, false) }}</span>
           <span class="text-[10px] text-slate-400"> /{{ t('per_person_label') }}</span>
         </div>
         <button
@@ -332,9 +336,9 @@
               <!-- Price + Offer -->
               <div>
                 <div class="flex items-baseline gap-2">
-                  <span v-if="activeOffer && originalPrice > discountedPrice" class="text-base text-slate-400 line-through">${{ originalPrice.toFixed(0) }}</span>
-                  <span class="text-2xl font-black text-primary">${{ (discountedPrice || basePrice || 0).toFixed(0) }}</span>
-                  <span class="text-xs text-slate-500">{{ currency }} / person</span>
+                  <span v-if="activeOffer && originalPrice > discountedPrice" class="text-base text-slate-400 line-through">{{ currencyStore.formatConverted(originalPrice, false) }}</span>
+                  <span class="text-2xl font-black text-primary">{{ currencyStore.formatConverted(discountedPrice || basePrice || 0, false) }}</span>
+                  <span class="text-xs text-slate-500">{{ currencyStore.selectedCurrency }} / person</span>
                 </div>
                 <div v-if="activeOffer" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border border-green-200 rounded-lg">
                   <span class="material-symbols-outlined text-green-600 text-sm">local_offer</span>
@@ -388,10 +392,15 @@
                 <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
               </div>
 
+              <div v-if="currencyStore.isForeignCurrency" class="flex items-start gap-1.5 mb-2 px-1">
+                <span class="material-symbols-outlined text-amber-500 text-xs mt-0.5">info</span>
+                <span class="text-[10px] text-slate-500 leading-tight">{{ t('payment_usd_notice') }}</span>
+              </div>
+
               <div class="flex items-center gap-3 pb-3">
                 <div class="flex-shrink-0">
                   <span class="text-[10px] text-slate-400">{{ t('total') }}</span>
-                  <div class="text-lg font-black text-primary leading-tight">${{ (total || 0).toFixed(2) }}</div>
+                  <div class="text-lg font-black text-primary leading-tight">{{ currencyStore.formatConverted(total || 0) }}</div>
                 </div>
                 <button
                   @click="mobileHandleBooking"
@@ -435,6 +444,7 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
 const { t } = useI18n()
+const currencyStore = useCurrencyStore()
 
 const slug = route.params.slug as string
 

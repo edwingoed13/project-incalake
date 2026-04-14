@@ -16,6 +16,10 @@ interface Props {
   currency: string
   description: string
   customerEmail: string
+  customerFirstName?: string
+  customerLastName?: string
+  customerPhone?: string
+  customerCountry?: string
 }
 
 const props = defineProps<Props>()
@@ -70,9 +74,13 @@ const initializeCulqi = () => {
       amount: amountInCents,
     }
 
-    const client = {
+    const client: Record<string, string> = {
       email: props.customerEmail || '',
     }
+    if (props.customerFirstName) client.firstName = props.customerFirstName
+    if (props.customerLastName) client.lastName = props.customerLastName
+    if (props.customerPhone) client.phoneNumber = props.customerPhone
+    if (props.customerCountry) client.countryCode = props.customerCountry
 
     const paymentMethods = {
       tarjeta: true,

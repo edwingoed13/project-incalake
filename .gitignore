@@ -100,3 +100,9 @@ Desktop.ini
 # yarn.lock
 # pnpm-lock.yaml
 # composer.lock
+# Database exports and storage backups (too large for git)
+storage-public.zip
+*_export.sql
+missing_tables.sql
+laravel_export.sql
+languages_export.sql

@@ -4,6 +4,7 @@ import type { CartItem } from '~/stores/cart'
 const { api } = useApi()
 const { t, locale } = useI18n()
 const cartStore = useCartStore()
+const currencyStore = useCurrencyStore()
 const router = useRouter()
 const config = useRuntimeConfig()
 const localePath = useLocalePath()
@@ -199,11 +200,11 @@ function getImageUrl(path: string) {
                 <!-- Price -->
                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                   <div v-if="item.hasOffer && item.originalPrice" class="text-xs">
-                    <span class="line-through text-slate-400">${{ (item.originalPrice * item.adults).toFixed(2) }}</span>
+                    <span class="line-through text-slate-400">{{ currencyStore.formatConverted(item.originalPrice * item.adults) }}</span>
                     <span class="text-green-600 font-semibold ml-1">-{{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }}</span>
                   </div>
                   <div v-else></div>
-                  <span class="text-lg font-black text-primary">${{ item.total.toFixed(2) }}</span>
+                  <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(item.total) }}</span>
                 </div>
               </div>
             </div>
@@ -257,17 +258,22 @@ function getImageUrl(path: string) {
             <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
               <div class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('tours') }} ({{ cartStore.itemCount }})</span>
-                <span class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</span>
+                <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.subtotal) }}</span>
               </div>
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('transaction_fees') }}</span>
-                <span class="font-semibold">${{ cartStore.totalTax.toFixed(2) }}</span>
+                <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
               </div>
             </div>
 
-            <div class="flex justify-between items-center mb-5">
+            <div class="flex justify-between items-center mb-3">
               <span class="font-black">{{ t('total') }}</span>
-              <span class="text-2xl font-black text-primary">${{ cartStore.totalAmount.toFixed(2) }}</span>
+              <span class="text-2xl font-black text-primary">{{ currencyStore.formatConverted(cartStore.totalAmount) }}</span>
+            </div>
+
+            <div v-if="currencyStore.isForeignCurrency" class="mb-4 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+              <span class="text-[11px] text-amber-800 leading-tight">{{ t('payment_usd_notice') }}</span>
             </div>
 
             <!-- Terms -->

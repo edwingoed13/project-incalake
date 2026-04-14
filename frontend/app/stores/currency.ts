@@ -1,18 +1,15 @@
 import { defineStore } from 'pinia'
 
 export const CURRENCIES = [
-  { code: 'USD', symbol: '$',   name: 'US Dollar (USD)' },
-  { code: 'PEN', symbol: 'S/.', name: 'Peruvian Sol (PEN)' },
-  { code: 'EUR', symbol: '€',   name: 'Euro (EUR)' },
-  { code: 'GBP', symbol: '£',   name: 'British Pound (GBP)' },
-  { code: 'BRL', symbol: 'R$',  name: 'Brazilian Real (BRL)' },
-  { code: 'COP', symbol: 'COP', name: 'Colombian Peso (COP)' },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar (CAD)' },
-  { code: 'AUD', symbol: 'A$',  name: 'Australian Dollar (AUD)' },
+  { code: 'USD', symbol: '$',    name: 'US Dollar (USD)' },
+  { code: 'PEN', symbol: 'S/',   name: 'Sol Peruano (PEN)' },
+  { code: 'EUR', symbol: '€',    name: 'Euro (EUR)' },
+  { code: 'BRL', symbol: 'R$',   name: 'Real Brasileño (BRL)' },
+  { code: 'MXN', symbol: 'Mex$', name: 'Peso Mexicano (MXN)' },
 ]
 
 const CACHE_KEY = 'currency_rates_cache'
-const CACHE_TTL = 60 * 60 * 1000 // 1 hour in ms
+const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 export const useCurrencyStore = defineStore('currency', () => {
   const selectedCurrency = ref<string>('USD')
@@ -23,6 +20,8 @@ export const useCurrencyStore = defineStore('currency', () => {
   const currentCurrency = computed(() =>
     CURRENCIES.find(c => c.code === selectedCurrency.value) ?? CURRENCIES[0]
   )
+
+  const isForeignCurrency = computed(() => selectedCurrency.value !== 'USD')
 
   function loadFromCache(): boolean {
     if (import.meta.client) {
@@ -52,25 +51,25 @@ export const useCurrencyStore = defineStore('currency', () => {
     loading.value = true
     error.value = null
     try {
+      // Frankfurter.app - ECB rates, free, no API key, no rate limits
+      const symbols = CURRENCIES.filter(c => c.code !== 'USD').map(c => c.code).join(',')
       const res = await fetch(
-        'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        `https://api.frankfurter.app/latest?from=USD&to=${symbols}`
       )
       const json = await res.json()
-      // json.usd contains all rates relative to USD
-      const usdRates: Record<string, number> = json.usd
       const result: Record<string, number> = { USD: 1 }
-      for (const cur of CURRENCIES) {
-        const key = cur.code.toLowerCase()
-        if (usdRates[key]) result[cur.code] = usdRates[key]
+      if (json.rates) {
+        for (const [code, rate] of Object.entries(json.rates)) {
+          result[code] = rate as number
+        }
       }
       rates.value = result
       saveToCache(result)
     } catch (e) {
       error.value = 'Could not fetch exchange rates'
-      // Fallback approximate rates
+      // Fallback approximate rates (updated 2026)
       rates.value = {
-        USD: 1, PEN: 3.75, EUR: 0.92, GBP: 0.79,
-        BRL: 4.97, COP: 3900, CAD: 1.36, AUD: 1.53
+        USD: 1, PEN: 3.75, EUR: 0.92, BRL: 5.1, MXN: 18.5
       }
     } finally {
       loading.value = false
@@ -84,27 +83,23 @@ export const useCurrencyStore = defineStore('currency', () => {
     return amountUSD * rate
   }
 
-  function formatConverted(amountUSD: number): string {
-    // Validate input
+  function formatConverted(amountUSD: number | null | undefined, showDecimals = true): string {
     if (amountUSD == null || isNaN(amountUSD)) {
       return '$0.00'
     }
 
     const converted = convert(amountUSD)
-    const { symbol, code } = currentCurrency.value
-
-    // COP needs no decimals (large numbers)
-    const decimals = code === 'COP' ? 0 : 2
-    const formatted = converted.toFixed(decimals)
-
-    // Add thousand separators for COP
-    if (code === 'COP') {
-      return `${symbol} ${Number(formatted).toLocaleString('es-CO')}`
-    }
-    return `${symbol}${formatted}`
+    const { symbol } = currentCurrency.value
+    const decimals = showDecimals ? 2 : 0
+    const formatted = converted.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    })
+    return `${symbol} ${formatted}`
   }
 
   function setCurrency(code: string) {
+    if (!CURRENCIES.find(c => c.code === code)) return
     selectedCurrency.value = code
     if (import.meta.client) {
       localStorage.setItem('selected_currency', code)
@@ -127,6 +122,7 @@ export const useCurrencyStore = defineStore('currency', () => {
     loading,
     error,
     currentCurrency,
+    isForeignCurrency,
     CURRENCIES,
     fetchRates,
     convert,

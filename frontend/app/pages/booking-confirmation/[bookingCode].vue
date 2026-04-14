@@ -87,7 +87,7 @@
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('total') }}</p>
-                <p class="text-sm font-bold text-primary mt-0.5">${{ (booking.pricing?.total || 0).toFixed(2) }}</p>
+                <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(booking.pricing?.total || 0) }}</p>
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">Status</p>
@@ -265,6 +265,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const currencyStore = useCurrencyStore()
 const route = useRoute()
 const { api } = useApi()
 const config = useRuntimeConfig()

@@ -97,13 +97,6 @@ export default defineI18nConfig(() => ({
       customer_reviews: 'Reseñas de Clientes',
       view_all_reviews: 'Ver todas las {count} reseñas',
       you_might_like: 'También te puede gustar',
-      description: 'Descripción',
-      detailed_itinerary: 'Itinerario Detallado',
-      whats_included: 'Qué Incluye y No Incluye',
-      included: 'Qué Incluye',
-      not_included: 'Qué NO Incluye',
-      important_info: 'Información Importante',
-      duration_label: 'Duración',
       date_unavailable: 'Fecha no disponible',
       offers_available: 'Hay ofertas disponibles en algunas fechas',
       dates_restricted: 'Algunas fechas tienen restricciones',
@@ -199,7 +192,6 @@ export default defineI18nConfig(() => ({
       tour_not_found: 'Tour no encontrado',
       view_all_tours: 'Ver todos los tours',
       loading_tour: 'Cargando tour...',
-      payment_usd_notice: 'Los precios son referenciales. El pago se procesa en USD.',
     },
     en: {
       welcome: 'Welcome',
@@ -293,13 +285,6 @@ export default defineI18nConfig(() => ({
       customer_reviews: 'Customer Reviews',
       view_all_reviews: 'View all {count} reviews',
       you_might_like: 'You might also like',
-      description: 'Description',
-      detailed_itinerary: 'Detailed Itinerary',
-      whats_included: 'What\'s Included & Not Included',
-      included: 'What\'s Included',
-      not_included: 'What\'s NOT Included',
-      important_info: 'Important Information',
-      duration_label: 'Duration',
       date_unavailable: 'Date unavailable',
       offers_available: 'Offers available on some dates',
       dates_restricted: 'Some dates have restrictions',
@@ -389,7 +374,6 @@ export default defineI18nConfig(() => ({
       tour_not_found: 'Tour not found',
       view_all_tours: 'View all tours',
       loading_tour: 'Loading tour...',
-      payment_usd_notice: 'Prices are for reference. Payment is processed in USD.',
     },
     pt: {
       welcome: 'Bem-vindo', tours: 'Tours', about: 'Sobre', contact: 'Contato',
@@ -406,7 +390,6 @@ export default defineI18nConfig(() => ({
       from: 'A partir de', per_person: '/ pessoa', view: 'Ver', all: 'Todos',
       search_placeholder: 'Buscar tours, destinos...', filters: 'Filtros', duration: 'Duração',
       loading: 'Carregando...', back: 'Voltar', cancel: 'Cancelar',
-      payment_usd_notice: 'Preços são apenas referenciais. Pagamento processado em USD.',
     },
     fr: {
       welcome: 'Bienvenue', tours: 'Tours', about: 'À propos', contact: 'Contact',
@@ -423,7 +406,6 @@ export default defineI18nConfig(() => ({
       from: 'À partir de', per_person: '/ personne', view: 'Voir', all: 'Tous',
       search_placeholder: 'Rechercher tours, destinations...', filters: 'Filtres', duration: 'Durée',
       loading: 'Chargement...', back: 'Retour', cancel: 'Annuler',
-      payment_usd_notice: 'Les prix sont à titre indicatif. Le paiement est traité en USD.',
     },
     de: {
       welcome: 'Willkommen', tours: 'Touren', about: 'Über uns', contact: 'Kontakt',
@@ -440,7 +422,6 @@ export default defineI18nConfig(() => ({
       from: 'Ab', per_person: '/ Person', view: 'Ansehen', all: 'Alle',
       search_placeholder: 'Touren, Reiseziele suchen...', filters: 'Filter', duration: 'Dauer',
       loading: 'Laden...', back: 'Zurück', cancel: 'Abbrechen',
-      payment_usd_notice: 'Preise sind Richtwerte. Zahlung wird in USD abgewickelt.',
     },
     it: {
       welcome: 'Benvenuto', tours: 'Tour', about: 'Chi siamo', contact: 'Contatto',
@@ -457,7 +438,6 @@ export default defineI18nConfig(() => ({
       from: 'Da', per_person: '/ persona', view: 'Vedi', all: 'Tutti',
       search_placeholder: 'Cerca tour, destinazioni...', filters: 'Filtri', duration: 'Durata',
       loading: 'Caricamento...', back: 'Indietro', cancel: 'Annulla',
-      payment_usd_notice: 'I prezzi sono indicativi. Il pagamento viene elaborato in USD.',
     },
   }
 }))

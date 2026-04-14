@@ -136,7 +136,7 @@
               <!-- Price Header -->
               <div class="mb-5">
                 <div class="flex items-baseline gap-2">
-                  <span class="text-3xl font-black text-primary">${{ (basePrice || 0).toFixed(2) }}</span>
+                  <span class="text-3xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
                   <span class="text-sm text-slate-500">{{ currency }}</span>
                 </div>
                 <p class="text-sm text-slate-500 mt-1">per person</p>
@@ -213,19 +213,19 @@
               <!-- Price Breakdown -->
               <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">${{ (basePrice || 0).toFixed(2) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
-                  <span class="font-semibold">${{ (subtotal || 0).toFixed(2) }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">{{ currencyStore.formatConverted(basePrice || 0) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
+                  <span class="font-semibold">{{ currencyStore.formatConverted(subtotal || 0) }}</span>
                 </div>
                 <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
                   <span class="text-green-600 dark:text-green-400 flex items-center gap-1">
                     <span class="material-symbols-outlined text-sm">local_offer</span>
                     {{ activeOffer?.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : 'Discount' }}
                   </span>
-                  <span class="font-semibold text-green-600">-${{ (groupDiscount || 0).toFixed(2) }}</span>
+                  <span class="font-semibold text-green-600">-{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
                 </div>
                 <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
                   <span>Total</span>
-                  <span class="text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
+                  <span class="text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
                 </div>
               </div>
 
@@ -307,7 +307,7 @@
             <div class="p-5 space-y-4">
               <!-- Price -->
               <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-black text-primary">${{ (basePrice || 0).toFixed(2) }}</span>
+                <span class="text-2xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0, false) }}</span>
                 <span class="text-sm text-slate-500">{{ currency }} / person</span>
               </div>
 
@@ -360,7 +360,7 @@
               <!-- Total -->
               <div class="flex justify-between items-center pt-3 border-t border-slate-100">
                 <span class="font-bold text-slate-800">Total</span>
-                <span class="text-xl font-black text-primary">${{ (total || 0).toFixed(2) }} {{ currency }}</span>
+                <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
               </div>
 
               <!-- Validation error -->
@@ -411,6 +411,7 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
 const { t, locale } = useI18n()
+const currencyStore = useCurrencyStore()
 
 const slug = route.params.slug as string
 const citySlug = route.params.city as string
