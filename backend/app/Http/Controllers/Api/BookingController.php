@@ -431,6 +431,26 @@ class BookingController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Calculate the expected PayPal payment amount for a booking.
+     * Respects the tour's advance_payment_percentage (CMS-configurable).
+     * If not set, charges 100% of the booking total.
+     */
+    protected function calculateExpectedPaymentAmount(Booking $booking): float
+    {
+        $tour = $booking->tour;
+        $percentage = 100;
+
+        if ($tour && $tour->advance_payment_percentage) {
+            $percentage = max(1, min(100, (int) $tour->advance_payment_percentage));
+        }
+
+        $total = (float) $booking->total;
+        $amount = round($total * $percentage / 100, 2);
+
+        return $amount;
+    }
+
     public function confirmPayPalPayment(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -455,18 +475,53 @@ class BookingController extends Controller
                 ], 400);
             }
 
-            // TODO: Integrate with PayPal API to capture payment
-            // For now, we'll simulate a successful payment
             $orderId = $request->order_id;
+            $paypal = app(\App\Services\PayPalService::class);
 
-            // Here you would call PayPal API to capture the order
-            // $response = PayPal::captureOrder($orderId);
+            // 1. Capture the order via PayPal REST API v2
+            $captureResponse = $paypal->captureOrder($orderId);
+            $status = $paypal->getCaptureStatus($captureResponse);
 
-            // Mark booking as paid
-            $booking->markAsPaid($orderId, [
+            if ($status !== 'COMPLETED') {
+                \Log::warning('PayPal capture not completed', [
+                    'booking_id' => $booking->id,
+                    'order_id' => $orderId,
+                    'status' => $status
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Pago no completado. Estado: {$status}"
+                ], 400);
+            }
+
+            // 2. Validate amount matches what we expected
+            $capturedAmount = $paypal->getCapturedAmount($captureResponse);
+            $expectedAmount = $this->calculateExpectedPaymentAmount($booking);
+
+            if ($capturedAmount === null || abs($capturedAmount - $expectedAmount) > 0.01) {
+                \Log::error('PayPal amount mismatch', [
+                    'booking_id' => $booking->id,
+                    'order_id' => $orderId,
+                    'expected' => $expectedAmount,
+                    'captured' => $capturedAmount
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El monto pagado no coincide con la reserva'
+                ], 400);
+            }
+
+            // 3. Get transaction ID for reconciliation
+            $transactionId = $paypal->getTransactionId($captureResponse) ?? $orderId;
+
+            // 4. Mark booking as paid with real PayPal data
+            $booking->markAsPaid($transactionId, [
                 'order_id' => $orderId,
+                'transaction_id' => $transactionId,
                 'gateway' => 'paypal',
-                'data' => $request->payment_data
+                'captured_amount' => $capturedAmount,
+                'payer' => $captureResponse['payer'] ?? null,
+                'capture_response' => $captureResponse,
             ]);
 
             // Send confirmation emails (only on successful payment, non-blocking)

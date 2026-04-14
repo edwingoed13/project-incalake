@@ -104,22 +104,16 @@ const initializePayPal = async () => {
         })
       },
 
-      onApprove: async (data: any, actions: any) => {
+      onApprove: async (data: any) => {
+        // Do NOT capture in client. Send order_id to backend for secure capture.
+        // Backend will validate amount and mark booking as paid.
         try {
-          const order = await actions.order.capture()
-
-          const paymentData = {
-            order_id: order.id,
-            payer: order.payer,
-            status: order.status,
-            purchase_units: order.purchase_units,
-            create_time: order.create_time,
-            update_time: order.update_time
-          }
-
-          emit('success', order.id, paymentData)
+          emit('success', data.orderID, {
+            order_id: data.orderID,
+            payer_id: data.payerID,
+          })
         } catch (error: any) {
-          errorMessage.value = 'Error capturing PayPal payment'
+          errorMessage.value = 'Error processing PayPal approval'
           emit('error', errorMessage.value)
         }
       },

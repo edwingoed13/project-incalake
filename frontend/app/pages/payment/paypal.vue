@@ -114,8 +114,8 @@
           <PayPalCheckout
             v-if="paymentConfig?.paypal_client_id"
             :client-id="paymentConfig.paypal_client_id"
-            :amount="booking.pricing?.total || 0"
-            :currency="booking.pricing?.currency || 'USD'"
+            :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
+            :currency="'USD'"
             :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
             @success="handlePaymentSuccess"
             @error="handlePaymentError"

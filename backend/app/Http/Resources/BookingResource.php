@@ -74,6 +74,8 @@ class BookingResource extends JsonResource
                 'tax_percentage' => (float) ($this->tax_percentage ?? 0),
                 'tax_amount' => (float) ($this->tax_amount ?? 0),
                 'total' => (float) $this->total,
+                'advance_payment_percentage' => (int) ($this->tour?->advance_payment_percentage ?? 100),
+                'amount_to_pay' => round((float) $this->total * ((int) ($this->tour?->advance_payment_percentage ?? 100)) / 100, 2),
             ],
             'participants' => [
                 'adults' => $this->adults,
