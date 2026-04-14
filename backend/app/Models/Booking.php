@@ -20,6 +20,8 @@ class Booking extends Model
         'tour_date',
         'tour_time',
         'customer_name',
+        'customer_first_name',
+        'customer_last_name',
         'customer_email',
         'customer_phone',
         'customer_country',

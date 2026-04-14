@@ -27,6 +27,8 @@ class BookingResource extends JsonResource
 
             // Customer info (flat)
             'customer_name' => $this->customer_name,
+            'customer_first_name' => $this->customer_first_name,
+            'customer_last_name' => $this->customer_last_name,
             'customer_email' => $this->customer_email,
             'customer_phone' => $this->customer_phone,
             'customer_country' => $this->customer_country,
@@ -63,6 +65,8 @@ class BookingResource extends JsonResource
             ],
             'customer' => [
                 'name' => $this->customer_name,
+                'first_name' => $this->customer_first_name,
+                'last_name' => $this->customer_last_name,
                 'email' => $this->customer_email,
                 'phone' => $this->customer_phone,
                 'country' => $this->customer_country,

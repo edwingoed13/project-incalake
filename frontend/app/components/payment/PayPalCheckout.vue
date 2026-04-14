@@ -40,6 +40,11 @@ interface Props {
   amount: number
   currency: string
   description: string
+  customerEmail?: string
+  customerFirstName?: string
+  customerLastName?: string
+  customerPhone?: string
+  customerCountry?: string
 }
 
 const props = defineProps<Props>()
@@ -79,6 +84,24 @@ const initializePayPal = async () => {
       },
 
       createOrder: async (data: any, actions: any) => {
+        const payer: any = {}
+        if (props.customerFirstName || props.customerLastName) {
+          payer.name = {
+            given_name: props.customerFirstName || '',
+            surname: props.customerLastName || '',
+          }
+        }
+        if (props.customerEmail) payer.email_address = props.customerEmail
+        if (props.customerPhone) {
+          payer.phone = {
+            phone_type: 'MOBILE',
+            phone_number: { national_number: props.customerPhone.replace(/\D/g, '') }
+          }
+        }
+        if (props.customerCountry) {
+          payer.address = { country_code: props.customerCountry }
+        }
+
         return actions.order.create({
           purchase_units: [{
             description: props.description,
@@ -87,6 +110,7 @@ const initializePayPal = async () => {
               value: props.amount.toFixed(2)
             }
           }],
+          ...(Object.keys(payer).length > 0 ? { payer } : {}),
           application_context: {
             shipping_preference: 'NO_SHIPPING'
           }

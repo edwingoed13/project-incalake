@@ -131,6 +131,11 @@
                 :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
                 :currency="'USD'"
                 :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
+                :customer-email="booking.customer?.email || ''"
+                :customer-first-name="booking.customer?.first_name || ''"
+                :customer-last-name="booking.customer?.last_name || ''"
+                :customer-phone="booking.customer?.phone || ''"
+                :customer-country="booking.customer?.country || ''"
                 @success="handlePaymentSuccess"
                 @error="handlePaymentError"
               />

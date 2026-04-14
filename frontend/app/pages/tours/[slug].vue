@@ -178,11 +178,11 @@
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
                 />
 
-                <!-- Available Dates Info -->
-                <div v-if="(hasBlockedDates || hasOffers) && !isDateBlocked && !dateHasOffer && !selectedDate" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <!-- Available Dates Info — only when offers are active -->
+                <div v-if="hasOffers && !isDateBlocked && !dateHasOffer && !selectedDate" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                   <p class="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1">
                     <span class="material-symbols-outlined text-sm">info</span>
-                    {{ hasOffers ? 'Hay ofertas disponibles en algunas fechas' : 'Algunas fechas tienen restricciones' }}
+                    {{ t('offers_available') }}
                   </p>
                 </div>
               </div>

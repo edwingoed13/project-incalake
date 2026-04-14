@@ -38,7 +38,9 @@ class BookingController extends Controller
             'adults' => 'required|integer|min:1',
             'children' => 'nullable|integer|min:0',
             'infants' => 'nullable|integer|min:0',
-            'customer_name' => 'required|string|max:255',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_first_name' => 'required_without:customer_name|nullable|string|max:100',
+            'customer_last_name' => 'required_without:customer_name|nullable|string|max:100',
             'customer_email' => 'required|email|max:255',
             'customer_phone' => 'nullable|string|max:255',
             'customer_country' => 'nullable|string|size:2',
@@ -173,6 +175,14 @@ class BookingController extends Controller
             // Generate unique booking code
             $bookingCode = Booking::generateBookingCode();
 
+            // Resolve customer name: prefer first_name + last_name, fallback to customer_name
+            $firstName = trim((string) ($request->customer_first_name ?? ''));
+            $lastName = trim((string) ($request->customer_last_name ?? ''));
+            $fullName = trim($firstName . ' ' . $lastName);
+            if ($fullName === '') {
+                $fullName = (string) $request->customer_name;
+            }
+
             // Create booking
             $booking = Booking::create([
                 'booking_code' => $bookingCode,
@@ -180,7 +190,9 @@ class BookingController extends Controller
                 'tour_title' => $tourTitle,
                 'tour_date' => $request->tour_date,
                 'tour_time' => $request->tour_time,
-                'customer_name' => $request->customer_name,
+                'customer_name' => $fullName,
+                'customer_first_name' => $firstName ?: null,
+                'customer_last_name' => $lastName ?: null,
                 'customer_email' => $request->customer_email,
                 'customer_phone' => $request->customer_phone,
                 'customer_country' => $request->customer_country,
@@ -299,8 +311,25 @@ class BookingController extends Controller
                 'currency_code' => $booking->currency,
                 'email' => $booking->customer_email,
                 'source_id' => $culqiToken,
-                'description' => $description
+                'description' => $description,
+                'metadata' => [
+                    'booking_code' => $booking->booking_code,
+                    'tour_title' => (string) substr($booking->tour_title ?? '', 0, 100),
+                    'customer_name' => $booking->customer_name,
+                ],
             ];
+
+            // Add antifraud_details if we have name data (improves approval rate + shows in Culqi panel)
+            $firstName = $booking->customer_first_name;
+            $lastName = $booking->customer_last_name;
+            if ($firstName || $lastName) {
+                $chargeData['antifraud_details'] = array_filter([
+                    'first_name' => $firstName ?: null,
+                    'last_name' => $lastName ?: null,
+                    'country_code' => $booking->customer_country ?: null,
+                    'phone' => $booking->customer_phone ?: null,
+                ]);
+            }
 
             \Log::info('Culqi charge request', [
                 'booking_id' => $booking->id,

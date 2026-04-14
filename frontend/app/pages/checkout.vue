@@ -148,6 +148,8 @@ const handleCheckoutSubmit = async (formData: any) => {
         children: item.children,
         infants: 0, // Not implemented yet in cart
         customer_name: formData.customer_name,
+        customer_first_name: formData.customer_first_name,
+        customer_last_name: formData.customer_last_name,
         customer_email: formData.customer_email,
         customer_phone: formData.customer_phone,
         customer_country: formData.customer_country,

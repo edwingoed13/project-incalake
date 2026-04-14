@@ -9,6 +9,8 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   submit: [data: {
+    customer_first_name: string
+    customer_last_name: string
     customer_name: string
     customer_email: string
     customer_phone: string
@@ -23,7 +25,8 @@ const cartStore = useCartStore()
 const { t } = useI18n()
 
 // Form data
-const customerName = ref('')
+const customerFirstName = ref('')
+const customerLastName = ref('')
 const customerEmail = ref('')
 const customerPhone = ref('')
 const customerCountry = ref('PE')
@@ -42,8 +45,12 @@ const errors = ref<Record<string, string>>({})
 const validateForm = () => {
   errors.value = {}
 
-  if (!customerName.value.trim()) {
-    errors.value.customer_name = t('checkout.full_name_required')
+  if (!customerFirstName.value.trim()) {
+    errors.value.customer_first_name = t('checkout.first_name_required')
+  }
+
+  if (!customerLastName.value.trim()) {
+    errors.value.customer_last_name = t('checkout.last_name_required')
   }
 
   if (!customerEmail.value.trim()) {
@@ -75,8 +82,11 @@ const handleSubmit = (e: Event) => {
   e.preventDefault()
 
   if (validateForm()) {
+    const fullName = `${customerFirstName.value.trim()} ${customerLastName.value.trim()}`.trim()
     emit('submit', {
-      customer_name: customerName.value,
+      customer_first_name: customerFirstName.value.trim(),
+      customer_last_name: customerLastName.value.trim(),
+      customer_name: fullName,
       customer_email: customerEmail.value,
       customer_phone: customerPhone.value,
       customer_country: customerCountry.value,
@@ -131,22 +141,42 @@ const modalTitle = computed(() => {
     </div>
 
     <form @submit="handleSubmit" class="space-y-4">
-      <!-- Customer Name -->
-      <div>
-        <label for="customer_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          {{ t('checkout.full_name') }} *
-        </label>
-        <input
-          id="customer_name"
-          v-model="customerName"
-          type="text"
-          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-          :class="errors.customer_name ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-          :placeholder="t('checkout.full_name_placeholder')"
-        />
-        <p v-if="errors.customer_name" class="mt-1 text-sm text-red-600 dark:text-red-400">
-          {{ errors.customer_name }}
-        </p>
+      <!-- First Name + Last Name (international standard) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="customer_first_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+            {{ t('checkout.first_name') }} *
+          </label>
+          <input
+            id="customer_first_name"
+            v-model="customerFirstName"
+            type="text"
+            autocomplete="given-name"
+            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            :class="errors.customer_first_name ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
+            :placeholder="t('checkout.first_name_placeholder')"
+          />
+          <p v-if="errors.customer_first_name" class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ errors.customer_first_name }}
+          </p>
+        </div>
+        <div>
+          <label for="customer_last_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+            {{ t('checkout.last_name') }} *
+          </label>
+          <input
+            id="customer_last_name"
+            v-model="customerLastName"
+            type="text"
+            autocomplete="family-name"
+            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            :class="errors.customer_last_name ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
+            :placeholder="t('checkout.last_name_placeholder')"
+          />
+          <p v-if="errors.customer_last_name" class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ errors.customer_last_name }}
+          </p>
+        </div>
       </div>
 
       <!-- Customer Email -->
