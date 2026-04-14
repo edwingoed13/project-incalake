@@ -4,10 +4,10 @@
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-2">
-          Complete Your Booking
+          {{ t('checkout.title') }}
         </h1>
         <p class="text-secondary-light dark:text-secondary-dark">
-          Fill in your details to secure your reservation
+          {{ t('checkout.subtitle') }}
         </p>
       </div>
 
@@ -27,7 +27,7 @@
               @click="error = null"
               class="mt-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
-              Dismiss
+              {{ t('checkout.dismiss') }}
             </button>
           </div>
         </div>
@@ -39,17 +39,17 @@
           shopping_cart
         </span>
         <h2 class="text-2xl font-black text-primary-light dark:text-primary-dark mb-2">
-          Your cart is empty
+          {{ t('checkout.empty_cart') }}
         </h2>
         <p class="text-secondary-light dark:text-secondary-dark mb-6">
-          Add some tours to your cart before checking out
+          {{ t('checkout.empty_cart_desc') }}
         </p>
         <button
           @click="router.push('/tours')"
           class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-all duration-200"
         >
           <span class="material-symbols-outlined">explore</span>
-          Explore Tours
+          {{ t('checkout.explore_tours') }}
         </button>
       </div>
 
@@ -79,10 +79,10 @@
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
           <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
           <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-2">
-            Processing Your Booking
+            {{ t('checkout.processing') }}
           </h3>
           <p class="text-secondary-light dark:text-secondary-dark">
-            Please wait while we prepare your payment...
+            {{ t('checkout.processing_desc') }}
           </p>
         </div>
       </div>
@@ -94,6 +94,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 // In Nuxt 3/4, useCartStore and useBookingStore are auto-imported
+
+const { t } = useI18n()
 
 // SEO Meta Tags
 useHead({

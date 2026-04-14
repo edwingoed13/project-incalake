@@ -15,17 +15,6 @@
       </div>
     </div>
 
-    <!-- Error Message -->
-    <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-      <div class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">error</span>
-        <div>
-          <p class="text-sm font-semibold text-red-900 dark:text-red-100">Payment Error</p>
-          <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ errorMessage }}</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

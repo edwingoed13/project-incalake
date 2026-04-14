@@ -163,11 +163,13 @@
 
               <!-- Time Selector -->
               <div class="mb-4">
-                <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
                   <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
-                  <span v-if="tour.duration_hours || tour.duration_days" class="text-xs font-semibold text-primary flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">schedule</span>
-                    {{ formatDuration(tour) }}
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                    <span class="material-symbols-outlined text-xs">public</span>
+                    <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
+                    <span class="sm:hidden">{{ tzInfo.code }} ·</span>
+                    {{ tzInfo.gmt }}
                   </span>
                 </div>
                 <div class="relative">
@@ -333,7 +335,15 @@
 
               <!-- Time -->
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Departure Time</label>
+                <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                    <span class="material-symbols-outlined text-xs">public</span>
+                    <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
+                    <span class="sm:hidden">{{ tzInfo.code }} ·</span>
+                    {{ tzInfo.gmt }}
+                  </span>
+                </div>
                 <select
                   v-model="selectedTime"
                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"
@@ -586,19 +596,43 @@ const durationLabel = computed(() => {
   return ''
 })
 
+const tzInfo = computed(() => {
+  const tz = tour.value?.timezone
+  if (tz === 'America/Lima') return { code: 'HP', gmt: 'GMT-5', name: t('peruvian_time') }
+  if (tz === 'America/La_Paz') return { code: 'HB', gmt: 'GMT-4', name: t('bolivian_time') }
+  return null
+})
+
 const availableTimes = computed(() => {
   const times = []
-  const dur = durationLabel.value ? ` - ${t('duration_label')} ${durationLabel.value}` : ''
+  const defaultDur = durationLabel.value ? ` - ${t('duration_label')} ${durationLabel.value}` : ''
 
-  if (tour.value?.departure_time) {
-    const [hours, minutes] = tour.value.departure_time.split(':')
+  const formatDuration = (duration: any, unit: any) => {
+    if (!duration) return defaultDur
+    const unitLabel = unit === 'days' ? (duration > 1 ? t('days') : t('day')) : (duration > 1 ? t('hours') : t('hour'))
+    return ` - ${t('duration_label')} ${duration} ${unitLabel}`
+  }
+
+  const formatTimeStr = (raw: string, durStr: string) => {
+    const [hours, minutes] = raw.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
     const hour12 = hour % 12 || 12
-    times.push({
-      value: tour.value.departure_time,
-      label: `${hour12}:${minutes} ${ampm}${dur}`
-    })
+    return { value: raw, label: `${hour12}:${minutes} ${ampm}${durStr}` }
+  }
+
+  const multi = tour.value?.departure_times
+  if (Array.isArray(multi) && multi.length > 0) {
+    for (const item of multi) {
+      if (!item) continue
+      if (typeof item === 'string') {
+        times.push(formatTimeStr(item, defaultDur))
+      } else if (item.time) {
+        times.push(formatTimeStr(item.time, formatDuration(item.duration, item.duration_unit)))
+      }
+    }
+  } else if (tour.value?.departure_time) {
+    times.push(formatTimeStr(tour.value.departure_time, defaultDur))
   }
 
   if (times.length === 0) {

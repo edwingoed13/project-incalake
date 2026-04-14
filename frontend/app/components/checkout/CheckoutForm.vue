@@ -20,6 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const cartStore = useCartStore()
+const { t } = useI18n()
 
 // Form data
 const customerName = ref('')
@@ -42,29 +43,29 @@ const validateForm = () => {
   errors.value = {}
 
   if (!customerName.value.trim()) {
-    errors.value.customer_name = 'Full name is required'
+    errors.value.customer_name = t('checkout.full_name_required')
   }
 
   if (!customerEmail.value.trim()) {
-    errors.value.customer_email = 'Email is required'
+    errors.value.customer_email = t('checkout.email_required')
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.value)) {
-    errors.value.customer_email = 'Invalid email address'
+    errors.value.customer_email = t('checkout.email_invalid')
   }
 
   if (!customerPhone.value.trim()) {
-    errors.value.customer_phone = 'Phone number is required'
+    errors.value.customer_phone = t('checkout.phone_required')
   }
 
   if (!customerCountry.value) {
-    errors.value.customer_country = 'Country is required'
+    errors.value.customer_country = t('checkout.country_required')
   }
 
   if (props.pickupAvailable && !pickupLocation.value.trim()) {
-    errors.value.pickup_location = 'Pickup location is required'
+    errors.value.pickup_location = t('checkout.pickup_required')
   }
 
   if (!acceptedTerms.value) {
-    errors.value.accepted_terms = 'You must accept the terms and conditions to continue'
+    errors.value.accepted_terms = t('checkout.terms_required')
   }
 
   return Object.keys(errors.value).length === 0
@@ -113,21 +114,27 @@ const closePoliciesModal = () => {
 }
 
 const modalTitle = computed(() => {
-  if (toursPolicies.value.length === 0) return 'Policies'
-  if (toursPolicies.value.length === 1) return `Policies - ${toursPolicies.value[0].title}`
-  return `Policies - ${toursPolicies.value.length} Tours`
+  if (toursPolicies.value.length === 0) return t('checkout.policies')
+  if (toursPolicies.value.length === 1) return `${t('checkout.policies')} - ${toursPolicies.value[0].title}`
+  return t('checkout.policies_tours', { n: toursPolicies.value.length })
 })
 </script>
 
 <template>
   <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-800">
-    <h2 class="text-xl font-black mb-6">Customer Information</h2>
+    <div class="mb-6">
+      <h2 class="text-xl font-black">{{ t('checkout.customer_info') }}</h2>
+      <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+        <span class="material-symbols-outlined text-sm">info</span>
+        {{ t('checkout.customer_info_note') }}
+      </p>
+    </div>
 
     <form @submit="handleSubmit" class="space-y-4">
       <!-- Customer Name -->
       <div>
         <label for="customer_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Full Name *
+          {{ t('checkout.full_name') }} *
         </label>
         <input
           id="customer_name"
@@ -135,7 +142,7 @@ const modalTitle = computed(() => {
           type="text"
           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           :class="errors.customer_name ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-          placeholder="John Doe"
+          :placeholder="t('checkout.full_name_placeholder')"
         />
         <p v-if="errors.customer_name" class="mt-1 text-sm text-red-600 dark:text-red-400">
           {{ errors.customer_name }}
@@ -145,7 +152,7 @@ const modalTitle = computed(() => {
       <!-- Customer Email -->
       <div>
         <label for="customer_email" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Email Address *
+          {{ t('checkout.email') }} *
         </label>
         <input
           id="customer_email"
@@ -163,7 +170,7 @@ const modalTitle = computed(() => {
       <!-- Customer Phone -->
       <div>
         <label for="customer_phone" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Phone Number *
+          {{ t('checkout.phone') }} *
         </label>
         <input
           id="customer_phone"
@@ -181,7 +188,7 @@ const modalTitle = computed(() => {
       <!-- Customer Country -->
       <div>
         <label for="customer_country" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Country *
+          {{ t('checkout.country') }} *
         </label>
         <select
           id="customer_country"
@@ -201,7 +208,7 @@ const modalTitle = computed(() => {
       <!-- Pickup Location (if available) -->
       <div v-if="pickupAvailable">
         <label for="pickup_location" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Pickup Location *
+          {{ t('checkout.pickup_location') }} *
         </label>
         <input
           id="pickup_location"
@@ -209,7 +216,7 @@ const modalTitle = computed(() => {
           type="text"
           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           :class="errors.pickup_location ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-          placeholder="Hotel address or meeting point"
+          :placeholder="t('checkout.pickup_placeholder')"
         />
         <p v-if="errors.pickup_location" class="mt-1 text-sm text-red-600 dark:text-red-400">
           {{ errors.pickup_location }}
@@ -219,21 +226,21 @@ const modalTitle = computed(() => {
       <!-- Customer Notes -->
       <div>
         <label for="customer_notes" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          Additional Notes (optional)
+          {{ t('checkout.notes') }}
         </label>
         <textarea
           id="customer_notes"
           v-model="customerNotes"
           rows="3"
           class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
-          placeholder="Special requests, dietary restrictions, etc."
+          :placeholder="t('checkout.notes_placeholder')"
         ></textarea>
       </div>
 
       <!-- Payment Method -->
       <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
-          Método de pago
+          {{ t('checkout.payment_method') }}
         </label>
         <div class="grid grid-cols-2 gap-3">
           <label
@@ -242,7 +249,7 @@ const modalTitle = computed(() => {
           >
             <input type="radio" v-model="paymentMethod" value="culqi" class="sr-only" />
             <span class="material-symbols-outlined text-2xl" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'">credit_card</span>
-            <span class="text-sm font-bold" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">Tarjeta</span>
+            <span class="text-sm font-bold" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">{{ t('checkout.card') }}</span>
             <span class="text-[10px] text-slate-500">Visa, Mastercard, Amex</span>
           </label>
           <label
@@ -252,7 +259,7 @@ const modalTitle = computed(() => {
             <input type="radio" v-model="paymentMethod" value="paypal" class="sr-only" />
             <span class="material-symbols-outlined text-2xl" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-400'">account_balance_wallet</span>
             <span class="text-sm font-bold" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-700 dark:text-slate-300'">PayPal</span>
-            <span class="text-[10px] text-slate-500">PayPal o tarjeta</span>
+            <span class="text-[10px] text-slate-500">{{ t('checkout.paypal_or_card') }}</span>
           </label>
         </div>
       </div>
@@ -266,15 +273,15 @@ const modalTitle = computed(() => {
             class="mt-1 mr-3 w-5 h-5 text-primary border-slate-300 dark:border-slate-600 rounded focus:ring-primary"
           />
           <span class="text-sm text-slate-700 dark:text-slate-300">
-            I accept the
+            {{ t('checkout.accept_terms_pre') }}
             <a
               href="#"
               @click.prevent="viewPolicies"
               class="text-primary hover:text-primary/80 font-semibold underline"
             >
-              terms and conditions
+              {{ t('checkout.accept_terms_link') }}
             </a>
-            and cancellation policies of each tour
+            {{ t('checkout.accept_terms_post') }}
           </span>
         </label>
         <p v-if="errors.accepted_terms" class="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -289,7 +296,7 @@ const modalTitle = computed(() => {
         :class="acceptedTerms ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/20' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'"
       >
         <span class="material-symbols-outlined">payment</span>
-        <span>Continue to Payment</span>
+        <span>{{ t('checkout.continue_payment') }}</span>
       </button>
     </form>
 

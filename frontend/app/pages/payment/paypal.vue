@@ -111,9 +111,22 @@
 
         <!-- Right Column: Payment Method -->
         <div>
+          <!-- Recoverable payment error (cancellation, declined card, etc.) -->
+          <div v-if="paymentError" class="mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-xl">info</span>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ paymentError }}</p>
+                <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">Puedes intentarlo de nuevo abajo.</p>
+              </div>
+              <button @click="paymentError = null" class="text-amber-600 hover:text-amber-700">
+                <span class="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+          </div>
           <ClientOnly>
             <template v-if="paymentConfig?.paypal_client_id">
-              <PayPalCheckout
+              <PaymentPayPalCheckout
                 :client-id="paymentConfig.paypal_client_id"
                 :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
                 :currency="'USD'"
@@ -190,6 +203,7 @@ const cartStore = useCartStore()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
+const paymentError = ref<string | null>(null)
 const processingPayment = ref(false)
 const booking = ref<any>(null)
 const paymentConfig = ref<any>(null)
@@ -216,8 +230,13 @@ onMounted(async () => {
 
     // Get payment configuration
     const { api } = useApi()
-    const configResponse = await api('/payment/config')
-    paymentConfig.value = configResponse.data
+    const configResponse: any = await api('/payment/config')
+    paymentConfig.value = configResponse?.data || configResponse
+    console.log('[PayPal Page] Payment config:', paymentConfig.value)
+
+    if (!paymentConfig.value?.paypal_client_id) {
+      throw new Error('PayPal no esta configurado correctamente')
+    }
 
     loading.value = false
 
@@ -269,9 +288,9 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
   }
 }
 
-// Handle payment error
+// Handle payment error (non-fatal, user can retry)
 const handlePaymentError = (errorMsg: string) => {
-  error.value = errorMsg
-  console.error('Payment error:', errorMsg)
+  paymentError.value = errorMsg
+  console.warn('Payment error (recoverable):', errorMsg)
 }
 </script>

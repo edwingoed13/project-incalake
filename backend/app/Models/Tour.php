@@ -28,6 +28,7 @@ class Tour extends Model
         'duration_days',
         'duration_hours',
         'departure_time',
+        'departure_times',
         'departure_period',
         'duration_quantity',
         'duration_unit',
@@ -90,6 +91,7 @@ class Tour extends Model
         'operational_info_required' => 'array',
         'personal_info_required' => 'array',
         'guide_languages' => 'array',
+        'departure_times' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

@@ -181,39 +181,80 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-        <!-- Hora de Salida -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Hora de Salida <span class="text-primary">*</span></label>
-          <div class="flex gap-3">
-            <div class="relative flex-1 group">
-              <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors cursor-pointer">schedule</span>
-              <input 
-                v-model="store.basicInfo.startTime"
-                class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold" 
-                type="time"
+        <!-- Horarios de Salida (múltiples, con duración) -->
+        <div class="space-y-2 md:col-span-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Horarios de Salida y Duración <span class="text-primary">*</span></label>
+            <button
+              type="button"
+              @click="addDepartureTime"
+              class="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span class="material-symbols-outlined text-sm">add_circle</span>
+              Agregar horario
+            </button>
+          </div>
+          <div class="space-y-2">
+            <div v-for="(item, idx) in store.basicInfo.startTimes" :key="idx" class="grid grid-cols-[1fr_100px_110px_auto] gap-2 items-center">
+              <!-- Hora -->
+              <div class="relative group">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">schedule</span>
+                <input
+                  v-model="item.time"
+                  @input="syncPrimaryStartTime"
+                  class="w-full pl-10 pr-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
+                  type="time"
+                />
+              </div>
+              <!-- Duración -->
+              <input
+                v-model.number="item.duration"
+                @input="syncPrimaryDuration"
+                min="0"
+                step="0.5"
+                class="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
+                type="number"
+                placeholder="Duración"
               />
-            </div>
-            <div class="relative w-24">
-              <select class="w-full h-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold">
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-              <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">expand_more</span>
+              <!-- Unidad -->
+              <div class="relative">
+                <select
+                  v-model="item.durationUnit"
+                  @change="syncPrimaryDuration"
+                  class="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold text-sm"
+                >
+                  <option value="hours">Horas</option>
+                  <option value="days">Días</option>
+                </select>
+                <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">expand_more</span>
+              </div>
+              <!-- Eliminar -->
+              <button
+                v-if="store.basicInfo.startTimes.length > 1"
+                type="button"
+                @click="removeDepartureTime(idx)"
+                class="p-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                :title="`Eliminar horario ${idx + 1}`"
+              >
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+              <div v-else class="w-[42px]"></div>
             </div>
           </div>
+          <p class="text-[10px] text-slate-400 mt-1">El primer horario se usa como principal. Cada horario tiene su propia duración.</p>
         </div>
 
-        <!-- Duración Aproximada -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Duración Aproximada <span class="text-primary">*</span></label>
+        <!-- Duración Aproximada (legacy, sincronizado con el primer horario) -->
+        <div class="space-y-2 hidden">
+          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Duración Aproximada</label>
           <div class="flex gap-3">
-            <input 
+            <input
               v-model.number="store.basicInfo.duration"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold" 
+              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
               type="number"
             />
             <div class="relative flex-1">
-              <select 
+              <select
                 v-model="store.basicInfo.durationUnit"
                 class="w-full h-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
               >
@@ -262,6 +303,61 @@ const store = useTourWizardStore()
 const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
 const { initCityAutocomplete, cleanup } = useGooglePlaces()
+
+// Ensure startTimes array exists (migration from single startTime)
+if (!Array.isArray(store.basicInfo.startTimes) || store.basicInfo.startTimes.length === 0) {
+  store.basicInfo.startTimes = [{
+    time: store.basicInfo.startTime || '08:00',
+    duration: store.basicInfo.duration || 1,
+    durationUnit: store.basicInfo.durationUnit || 'hours',
+  }]
+} else {
+  // Migrate old string[] format to object[] format
+  store.basicInfo.startTimes = store.basicInfo.startTimes.map((t: any) => {
+    if (typeof t === 'string') {
+      return {
+        time: t,
+        duration: store.basicInfo.duration || 1,
+        durationUnit: store.basicInfo.durationUnit || 'hours',
+      }
+    }
+    return {
+      time: t.time || '08:00',
+      duration: Number(t.duration) || 1,
+      durationUnit: t.durationUnit || 'hours',
+    }
+  })
+}
+
+const addDepartureTime = () => {
+  // Copy duration from last entry so user doesn't have to re-enter
+  const last = store.basicInfo.startTimes[store.basicInfo.startTimes.length - 1]
+  store.basicInfo.startTimes.push({
+    time: '08:00',
+    duration: last?.duration || store.basicInfo.duration || 1,
+    durationUnit: last?.durationUnit || store.basicInfo.durationUnit || 'hours',
+  })
+}
+
+const removeDepartureTime = (idx: number) => {
+  if (store.basicInfo.startTimes.length <= 1) return
+  store.basicInfo.startTimes.splice(idx, 1)
+  syncPrimaryStartTime()
+  syncPrimaryDuration()
+}
+
+const syncPrimaryStartTime = () => {
+  store.basicInfo.startTime = store.basicInfo.startTimes[0]?.time || '08:00'
+}
+
+const syncPrimaryDuration = () => {
+  // Keep top-level duration fields in sync with first schedule for backward compat
+  const first = store.basicInfo.startTimes[0]
+  if (first) {
+    store.basicInfo.duration = first.duration || 1
+    store.basicInfo.durationUnit = first.durationUnit || 'hours'
+  }
+}
 
 // Edit mode detection
 const isEditMode = computed(() => !!store.tourId && store.tourId !== 'new')

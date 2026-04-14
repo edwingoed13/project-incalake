@@ -189,7 +189,15 @@
 
               <!-- Time Selector -->
               <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('departure_time') }}</label>
+                <div class="flex items-baseline justify-between gap-2 mb-2">
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">{{ t('departure_time') }}</label>
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                    <span class="material-symbols-outlined text-xs">public</span>
+                    <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
+                    <span class="sm:hidden">{{ tzInfo.code }} ·</span>
+                    {{ tzInfo.gmt }}
+                  </span>
+                </div>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">schedule</span>
                   <select
@@ -579,9 +587,20 @@ const hasBlockedDates = computed(() => {
   return availabilityData.value?.blocks && availabilityData.value.blocks.length > 0
 })
 
-// Check if there are offers
+// Check if there are offers that are still valid (not expired)
 const hasOffers = computed(() => {
-  return availabilityData.value?.offers && availabilityData.value.offers.length > 0
+  const offers = availabilityData.value?.offers
+  if (!Array.isArray(offers) || offers.length === 0) return false
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return offers.some((offer: any) => {
+    if (!offer?.endDate) return false
+    const end = new Date(offer.endDate)
+    end.setHours(23, 59, 59, 999)
+    return end >= today
+  })
 })
 
 // Check if selected date has an offer
@@ -671,19 +690,43 @@ const durationLabel = computed(() => {
   return ''
 })
 
+const tzInfo = computed(() => {
+  const tz = tour.value?.timezone
+  if (tz === 'America/Lima') return { code: 'HP', gmt: 'GMT-5', name: t('peruvian_time') }
+  if (tz === 'America/La_Paz') return { code: 'HB', gmt: 'GMT-4', name: t('bolivian_time') }
+  return null
+})
+
 const availableTimes = computed(() => {
   const times = []
-  const dur = durationLabel.value ? ` - ${t('duration_label')} ${durationLabel.value}` : ''
+  const defaultDur = durationLabel.value ? ` - ${t('duration_label')} ${durationLabel.value}` : ''
 
-  if (tour.value?.departure_time) {
-    const [hours, minutes] = tour.value.departure_time.split(':')
+  const formatDuration = (duration: any, unit: any) => {
+    if (!duration) return defaultDur
+    const unitLabel = unit === 'days' ? (duration > 1 ? t('days') : t('day')) : (duration > 1 ? t('hours') : t('hour'))
+    return ` - ${t('duration_label')} ${duration} ${unitLabel}`
+  }
+
+  const formatTimeStr = (raw: string, durStr: string) => {
+    const [hours, minutes] = raw.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
     const hour12 = hour % 12 || 12
-    times.push({
-      value: tour.value.departure_time,
-      label: `${hour12}:${minutes} ${ampm}${dur}`
-    })
+    return { value: raw, label: `${hour12}:${minutes} ${ampm}${durStr}` }
+  }
+
+  const multi = tour.value?.departure_times
+  if (Array.isArray(multi) && multi.length > 0) {
+    for (const item of multi) {
+      if (!item) continue
+      if (typeof item === 'string') {
+        times.push(formatTimeStr(item, defaultDur))
+      } else if (item.time) {
+        times.push(formatTimeStr(item.time, formatDuration(item.duration, item.duration_unit)))
+      }
+    }
+  } else if (tour.value?.departure_time) {
+    times.push(formatTimeStr(tour.value.departure_time, defaultDur))
   }
 
   if (times.length === 0) {

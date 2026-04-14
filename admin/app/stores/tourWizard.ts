@@ -14,6 +14,7 @@ export interface TourStep1 {
   duration: number
   durationUnit: 'hours' | 'days'
   startTime: string
+  startTimes: Array<{ time: string; duration: number; durationUnit: 'hours' | 'days' }>
   timezone: string
   nearestCity: string
   nearestAirport: string
@@ -207,6 +208,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       duration: 1,
       durationUnit: 'hours',
       startTime: '08:00',
+      startTimes: [{ time: '08:00', duration: 1, durationUnit: 'hours' }],
       timezone: 'America/Lima',
       nearestCity: '',
       nearestAirport: '',
@@ -374,6 +376,24 @@ export const useTourWizardStore = defineStore('tourWizard', {
             duration: data.duration_quantity || (data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1)),
             durationUnit: data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours'),
             startTime: data.departure_time || '08:00',
+            startTimes: (() => {
+              const arr = data.departure_times
+              if (Array.isArray(arr) && arr.length > 0) {
+                return arr.map((item: any) => {
+                  if (typeof item === 'string') {
+                    return { time: item.substring(0, 5), duration: data.duration_quantity || data.duration_hours || 1, durationUnit: (data.duration_unit || 'hours') as 'hours' | 'days' }
+                  }
+                  return {
+                    time: (item?.time || '').substring(0, 5) || '08:00',
+                    duration: Number(item?.duration) || Number(item?.duration_quantity) || 1,
+                    durationUnit: (item?.durationUnit || item?.duration_unit || 'hours') as 'hours' | 'days',
+                  }
+                }).filter((x: any) => x.time)
+              }
+              const qty = data.duration_quantity || (data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1))
+              const unit = (data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours')) as 'hours' | 'days'
+              return [{ time: data.departure_time || '08:00', duration: qty, durationUnit: unit }]
+            })(),
             timezone: data.timezone || 'America/Lima',
             nearestCity: data.city?.name || '',
             nearestAirport: '',
@@ -588,7 +608,14 @@ export const useTourWizardStore = defineStore('tourWizard', {
         difficulty: this.basicInfo.difficulty,
         target_audience: this.basicInfo.targetAudience,
         capacity: this.basicInfo.capacityMax,
-        departure_time: (this.basicInfo.startTime || '08:00').substring(0, 5),
+        departure_time: (this.basicInfo.startTimes?.[0]?.time || this.basicInfo.startTime || '08:00').substring(0, 5),
+        departure_times: (this.basicInfo.startTimes || [])
+          .map((item: any) => ({
+            time: (item?.time || '').substring(0, 5),
+            duration: Number(item?.duration) || 1,
+            duration_unit: item?.durationUnit || 'hours',
+          }))
+          .filter((item: any) => /^\d{2}:\d{2}$/.test(item.time)),
         timezone: this.basicInfo.timezone,
         duration_quantity: this.basicInfo.duration,
         duration_unit: this.basicInfo.durationUnit,

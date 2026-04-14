@@ -85,6 +85,7 @@ class TourResource extends JsonResource
             'capacity' => $this->capacity,
             'cupos' => $this->cupos,
             'departure_time' => $this->departure_time,
+            'departure_times' => $this->departure_times ?? [],
             'departure_period' => $this->departure_period,
             'timezone' => $this->timezone,
             'tax_percentage' => $this->tax_percentage,

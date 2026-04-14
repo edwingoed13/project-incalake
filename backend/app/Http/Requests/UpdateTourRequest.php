@@ -30,6 +30,10 @@ class UpdateTourRequest extends FormRequest
             'cupos' => 'nullable|integer|min:0',
 
             'departure_time' => 'nullable|string|max:5',
+            'departure_times' => 'nullable|array',
+            'departure_times.*.time' => 'required_with:departure_times|string|max:5',
+            'departure_times.*.duration' => 'nullable|numeric|min:0',
+            'departure_times.*.duration_unit' => 'nullable|in:hours,days,minutes',
             'departure_period' => 'nullable|in:AM,PM',
             'duration_quantity' => 'nullable|numeric|min:0',
             'duration_unit' => 'nullable|in:days,hours,minutes',

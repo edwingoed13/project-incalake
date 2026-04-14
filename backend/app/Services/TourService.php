@@ -177,6 +177,37 @@ class TourService
             $data['duration_hours'] = DurationUnit::tryFrom($unit)?->toHours($data['duration_quantity']) ?? $data['duration_quantity'];
         }
 
+        // Normalize departure_times and sync top-level fields from first schedule (backward compat)
+        if (!empty($data['departure_times']) && is_array($data['departure_times'])) {
+            $normalized = [];
+            foreach ($data['departure_times'] as $item) {
+                if (is_string($item)) {
+                    if (empty($item)) continue;
+                    $normalized[] = [
+                        'time' => substr($item, 0, 5),
+                        'duration' => (float)($data['duration_quantity'] ?? 1),
+                        'duration_unit' => $data['duration_unit'] ?? 'hours',
+                    ];
+                } elseif (is_array($item) && !empty($item['time'])) {
+                    $normalized[] = [
+                        'time' => substr($item['time'], 0, 5),
+                        'duration' => (float)($item['duration'] ?? 1),
+                        'duration_unit' => $item['duration_unit'] ?? 'hours',
+                    ];
+                }
+            }
+            $data['departure_times'] = $normalized;
+
+            if (!empty($normalized)) {
+                $first = $normalized[0];
+                $data['departure_time'] = $first['time'];
+                // Sync top-level duration with first schedule for legacy display
+                $data['duration_quantity'] = $first['duration'];
+                $data['duration_unit'] = $first['duration_unit'];
+                $data['duration_hours'] = DurationUnit::tryFrom($first['duration_unit'])?->toHours($first['duration']) ?? $first['duration'];
+            }
+        }
+
         return $data;
     }
 
