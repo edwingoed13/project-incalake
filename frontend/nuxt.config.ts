@@ -101,12 +101,16 @@ export default defineNuxtConfig({
 
     // SWR — páginas públicas con cache (revalida en background)
     '/': { swr: 3600 },
-    '/:locale(es|en|pt|fr|de|it)': { swr: 3600 },
-    '/:locale(es|en|pt|fr|de|it)/tours': { swr: 600 },
-    '/:locale(es|en|pt|fr|de|it)/tours/**': { swr: 3600 },
-    '/:locale(es|en|pt|fr|de|it)/:city/**': { swr: 3600 },
-    '/:locale(es|en|pt|fr|de|it)/about': { swr: 86400 },
-    '/:locale(es|en|pt|fr|de|it)/contact': { swr: 86400 },
+    '/es': { swr: 3600 },
+    '/en': { swr: 3600 },
+    '/pt': { swr: 3600 },
+    '/fr': { swr: 3600 },
+    '/de': { swr: 3600 },
+    '/it': { swr: 3600 },
+    '/**/tours': { swr: 600 },
+    '/**/tours/**': { swr: 3600 },
+    '/**/about': { swr: 86400 },
+    '/**/contact': { swr: 86400 },
 
     // API pass-through, sin caché
     '/api/**': { headers: { 'cache-control': 'no-cache' } }
