@@ -433,23 +433,17 @@ const searchInputRef = ref<HTMLInputElement | null>(null)
 let searchTimer: any = null
 const langCode = computed(() => locale.value.toUpperCase())
 
-// Fetch page content from API (dynamic, admin-editable)
-const pageContent = ref<any>(null)
+// ── Non-blocking data fetching (fixes IPC connection closed on Windows) ──
 
-async function fetchPageContent() {
-  try {
-    const res = await api(`/pages/home?language=${langCode.value}`)
-    pageContent.value = (res as any)?.data?.content || null
-  } catch (e) {
-    pageContent.value = null
-  }
-}
-
-await fetchPageContent()
-watch(langCode, () => fetchPageContent())
+// Page content from API (dynamic, admin-editable)
+const { data: pageContentData } = useAsyncData(
+  `home-content-${langCode.value}`,
+  () => api(`/pages/home?language=${langCode.value}`).catch(() => null),
+  { lazy: true, default: () => null, watch: [langCode] }
+)
+const pageContent = computed(() => (pageContentData.value as any)?.data?.content || null)
 
 // Reactive helper: get content from API or fall back to i18n
-// Returns a getter function that Vue's template will track reactively
 function c(section: string, field: string, fallbackKey: string): string {
   const content = pageContent.value
   if (content) {
@@ -470,14 +464,14 @@ useHead({
 })
 
 // Fetch cities (lazy - doesn't block home page render)
-const { data: citiesResponse } = await useAsyncData(
+const { data: citiesResponse } = useAsyncData(
   'cities',
-  () => api('/cities'),
+  () => api('/cities').catch(() => ({ data: [] })),
   { lazy: true, default: () => ({ data: [] }) }
 )
-const cities = computed(() => citiesResponse.value?.data || [])
+const cities = computed(() => (citiesResponse.value as any)?.data || [])
 
-// Show only 5 main destinations: Puno first, then Cusco, Arequipa, Copacabana, Uyuni
+// Show only 5 main destinations
 const featuredSlugs = ['puno', 'cusco', 'arequipa', 'la-paz', 'copacabana', 'uyuni']
 const featuredCities = computed(() => {
   return featuredSlugs
@@ -485,44 +479,33 @@ const featuredCities = computed(() => {
     .filter(Boolean)
 })
 
-// Fetch featured tours by current language
-const tours = ref<any[]>([])
-const toursPending = ref(false)
+// Fetch featured tours by current language (lazy, non-blocking)
+const { data: toursData, status: toursStatus } = useAsyncData(
+  `tours-featured-${langCode.value}`,
+  () => api(`/tours?active=1&per_page=8&language=${langCode.value}`).catch(() => ({ data: [] })),
+  { lazy: true, default: () => ({ data: [] }), watch: [langCode] }
+)
+const tours = computed(() => {
+  const data = (toursData.value as any)?.data
+  return Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+})
+const toursPending = computed(() => toursStatus.value === 'pending')
 
-async function fetchTours() {
-  toursPending.value = true
-  try {
-    const res = await api(`/tours?active=1&per_page=8&language=${langCode.value}`)
-    const data = (res as any)?.data
-    tours.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
-  } catch (e) {
-    tours.value = []
-  } finally {
-    toursPending.value = false
-  }
-}
-
-await fetchTours()
-watch(langCode, () => fetchTours())
-
-// Tours with active offers
-const toursWithOffers = ref<any[]>([])
-
-async function fetchToursWithOffers() {
-  try {
-    const res = await api(`/tours?active=1&per_page=100&language=${langCode.value}`)
-    const data = (res as any)?.data
-    const allTours = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
-    const today = new Date().toISOString().split('T')[0]
-    toursWithOffers.value = allTours.filter((tour: any) => {
-      const offers = tour.availability_data?.offers || []
-      return offers.some((o: any) => o.endDate >= today)
-    })
-  } catch (e) { toursWithOffers.value = [] }
-}
-
-await fetchToursWithOffers()
-watch(langCode, () => fetchToursWithOffers())
+// Tours with active offers (lazy, non-blocking)
+const { data: allToursData } = useAsyncData(
+  `tours-offers-${langCode.value}`,
+  () => api(`/tours?active=1&per_page=100&language=${langCode.value}`).catch(() => ({ data: [] })),
+  { lazy: true, default: () => ({ data: [] }), watch: [langCode] }
+)
+const toursWithOffers = computed(() => {
+  const data = (allToursData.value as any)?.data
+  const allTours = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+  const today = new Date().toISOString().split('T')[0]
+  return allTours.filter((tour: any) => {
+    const offers = tour.availability_data?.offers || []
+    return offers.some((o: any) => o.endDate >= today)
+  })
+})
 
 function getOfferLabel(tour: any) {
   const today = new Date().toISOString().split('T')[0]
@@ -532,26 +515,29 @@ function getOfferLabel(tour: any) {
   return active.discountType === 'percentage' ? `${active.discount}% OFF` : `$${active.discount} OFF`
 }
 
-// Fetch featured reviews
-const featuredReviews = ref<any[]>([])
+// Fetch featured reviews (lazy, non-blocking)
+const { data: reviewsData } = useAsyncData(
+  `reviews-featured-${locale.value}`,
+  async () => {
+    try {
+      const res = await api(`/reviews?featured=1&per_page=9&language=${locale.value}`)
+      const reviews = (res as any)?.data || []
+      if (reviews.length < 3) {
+        const res2 = await api(`/reviews?featured=1&per_page=9`)
+        return (res2 as any)?.data || []
+      }
+      return reviews
+    } catch { return [] }
+  },
+  { lazy: true, default: () => [] }
+)
+const featuredReviews = computed(() => reviewsData.value || [])
 const reviewSlide = ref(0)
 const maxSlide = computed(() => Math.max(0, Math.ceil(featuredReviews.value.length / 3) - 1))
 
 function slideReviews(dir: number) {
   reviewSlide.value = Math.max(0, Math.min(maxSlide.value, reviewSlide.value + dir))
 }
-
-async function fetchFeaturedReviews() {
-  try {
-    const res = await api(`/reviews?featured=1&per_page=9&language=${locale.value}`)
-    featuredReviews.value = (res as any)?.data || []
-    if (featuredReviews.value.length < 3) {
-      const res2 = await api(`/reviews?featured=1&per_page=9`)
-      featuredReviews.value = (res2 as any)?.data || []
-    }
-  } catch (e) { featuredReviews.value = [] }
-}
-await fetchFeaturedReviews()
 
 // Hero image: from API or default
 const defaultHeroImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuC_RYQ7qkkoEaBPmoTKZzaG0YqRCjHegCR7RyERPQkd1TtLTQg9RBjbabWhebnRMrUB20ewsrsBPSVd6DSHmHht2CDGuVapyxM2-QivgVXECSdMWlVIrUHpRWi-kYXNgGWzL5n8LrG0LDy65HR5hOFM_toPA7xM8lnDtR4JFasVk-50uf1v5cmyZfqOvKFkinf3_DBwZiEeJp-2fgM5W72REPm0RxDXSlTGjmg4V1Jfto_VIJ4AUc9TPFiZlRzbS-VIy24MMT2dYVq1'

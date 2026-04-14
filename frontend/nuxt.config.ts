@@ -87,8 +87,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // SSR activado para SEO
-  // ssr: true, // Se comentó porque causaba error IPC en dev (Windows)
+  // SSR activado para SEO (IPC fix applied via non-blocking data fetching)
 
   // SSR + SPA + SWR Híbrido: Optimización por tipo de página
   routeRules: {

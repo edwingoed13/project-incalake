@@ -111,25 +111,34 @@
 
         <!-- Right Column: Payment Method -->
         <div>
-          <PayPalCheckout
-            v-if="paymentConfig?.paypal_client_id"
-            :client-id="paymentConfig.paypal_client_id"
-            :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
-            :currency="'USD'"
-            :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
-            @success="handlePaymentSuccess"
-            @error="handlePaymentError"
-          />
-
-          <div v-else class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
-            <div class="flex items-start gap-3">
-              <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">warning</span>
-              <div>
-                <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-1">Configuration Error</h3>
-                <p class="text-yellow-700 dark:text-yellow-300">Payment gateway is not configured properly.</p>
+          <ClientOnly>
+            <template v-if="paymentConfig?.paypal_client_id">
+              <PayPalCheckout
+                :client-id="paymentConfig.paypal_client_id"
+                :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
+                :currency="'USD'"
+                :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
+                @success="handlePaymentSuccess"
+                @error="handlePaymentError"
+              />
+            </template>
+            <template v-else>
+              <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
+                <div class="flex items-start gap-3">
+                  <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">warning</span>
+                  <div>
+                    <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-1">Configuration Error</h3>
+                    <p class="text-yellow-700 dark:text-yellow-300">Payment gateway is not configured properly.</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </template>
+            <template #fallback>
+              <div class="flex justify-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            </template>
+          </ClientOnly>
         </div>
       </div>
     </div>
@@ -189,15 +198,17 @@ onMounted(async () => {
   try {
     // Get booking code from query params
     const bookingCode = route.query.booking as string
+    const email = route.query.email as string
 
     if (!bookingCode) {
       throw new Error('Booking code is required')
     }
 
-    // Load booking details
-    const bookingData = await bookingStore.getBooking(bookingCode)
+    // Load booking details (pass email to satisfy backend auth)
+    const response: any = await bookingStore.getBooking(bookingCode, email)
+    const bookingData = response?.booking || response?.data || response
 
-    if (!bookingData) {
+    if (!bookingData || !bookingData.booking_code) {
       throw new Error('Booking not found')
     }
 
