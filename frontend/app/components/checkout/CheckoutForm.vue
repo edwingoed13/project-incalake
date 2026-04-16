@@ -201,19 +201,14 @@ const modalTitle = computed(() => {
 
       <!-- Customer Country (first, so phone prefix updates) -->
       <div>
-        <label for="customer_country" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
           {{ t('checkout.country') }} *
         </label>
-        <select
-          id="customer_country"
+        <CheckoutCountrySelector
           v-model="customerCountry"
-          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors appearance-none"
-          :class="errors.customer_country ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-        >
-          <option v-for="country in countries" :key="country.code" :value="country.code">
-            {{ countryFlag(country.code) }} {{ country.name }} ({{ country.dial }})
-          </option>
-        </select>
+          :error="errors.customer_country"
+          :placeholder="t('checkout.country_placeholder')"
+        />
         <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600 dark:text-red-400">
           {{ errors.customer_country }}
         </p>
