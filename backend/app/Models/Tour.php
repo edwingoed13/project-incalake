@@ -163,10 +163,27 @@ class Tour extends Model
     }
 
     /**
-     * Get minimum price (from active prices)
+     * Get minimum price (from active prices).
+     * Uses the age_stage with the most price entries (main/adult stage)
+     * to stay consistent with what the booking widget shows.
      */
     public function getMinPriceAttribute(): ?float
     {
+        // Find the primary age_stage (the one with most price rows = main pricing group)
+        $mainStage = $this->prices()
+            ->where('active', true)
+            ->selectRaw('age_stage_id, COUNT(*) as cnt')
+            ->groupBy('age_stage_id')
+            ->orderByDesc('cnt')
+            ->first();
+
+        if ($mainStage) {
+            return $this->prices()
+                ->where('active', true)
+                ->where('age_stage_id', $mainStage->age_stage_id)
+                ->min('amount');
+        }
+
         return $this->prices()->where('active', true)->min('amount');
     }
 
