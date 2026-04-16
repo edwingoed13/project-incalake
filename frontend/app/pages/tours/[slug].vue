@@ -165,6 +165,10 @@
                   <span class="text-sm text-slate-500">{{ currencyStore.selectedCurrency }}</span>
                 </div>
                 <p class="text-sm text-slate-500 mt-1">{{ t('per_person_label') }}</p>
+                <p v-if="currencyStore.isForeignCurrency" class="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-xs">info</span>
+                  {{ t('payment_usd_notice') }}
+                </p>
               </div>
 
               <!-- Date Selector (Calendar) -->

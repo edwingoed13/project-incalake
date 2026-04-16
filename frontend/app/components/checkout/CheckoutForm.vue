@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { countries } from '~/utils/countries'
+import { countries, countryFlag } from '~/utils/countries'
 
 interface Props {
   pickupAvailable?: boolean
@@ -227,7 +227,7 @@ const modalTitle = computed(() => {
           :class="errors.customer_country ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
         >
           <option v-for="country in countries" :key="country.code" :value="country.code">
-            {{ country.name }}
+            {{ countryFlag(country.code) }} {{ country.name }}
           </option>
         </select>
         <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600 dark:text-red-400">
