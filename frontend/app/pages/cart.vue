@@ -270,7 +270,19 @@ function getImageUrl(path: string) {
                 <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.subtotal) }}</span>
               </div>
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
-                <span class="text-slate-500">{{ t('transaction_fees') }}</span>
+                <span class="text-slate-500 flex items-center gap-1">
+                  {{ t('transaction_fees') }}
+                  <span class="relative group cursor-help">
+                    <span class="material-symbols-outlined text-slate-400 text-xs">info</span>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                      <div v-for="item in sortedCartItems" :key="'tax-'+item.id" class="flex justify-between py-0.5">
+                        <span class="truncate mr-2">{{ item.tourTitle }}</span>
+                        <span class="shrink-0 font-semibold">{{ item.taxPercentage || 0 }}%</span>
+                      </div>
+                      <div class="w-2 h-2 bg-slate-800 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                    </div>
+                  </span>
+                </span>
                 <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
               </div>
             </div>
