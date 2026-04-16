@@ -51,20 +51,43 @@ export const useCurrencyStore = defineStore('currency', () => {
     loading.value = true
     error.value = null
     try {
-      // Frankfurter.app - ECB rates, free, no API key, no rate limits
+      // Try multiple APIs for CORS compatibility
       const symbols = CURRENCIES.filter(c => c.code !== 'USD').map(c => c.code).join(',')
-      const res = await fetch(
-        `https://api.frankfurter.app/latest?from=USD&to=${symbols}`
-      )
-      const json = await res.json()
-      const result: Record<string, number> = { USD: 1 }
-      if (json.rates) {
-        for (const [code, rate] of Object.entries(json.rates)) {
-          result[code] = rate as number
+      let result: Record<string, number> = { USD: 1 }
+      let fetched = false
+
+      // Option 1: open.er-api.com (free, CORS enabled)
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD')
+        const json = await res.json()
+        if (json?.rates) {
+          for (const c of CURRENCIES) {
+            if (c.code !== 'USD' && json.rates[c.code]) {
+              result[c.code] = json.rates[c.code]
+            }
+          }
+          fetched = true
         }
+      } catch {}
+
+      // Option 2: Frankfurter (fallback, may have CORS issues)
+      if (!fetched) {
+        try {
+          const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${symbols}`)
+          const json = await res.json()
+          if (json?.rates) {
+            for (const [code, rate] of Object.entries(json.rates)) {
+              result[code] = rate as number
+            }
+            fetched = true
+          }
+        } catch {}
       }
-      rates.value = result
-      saveToCache(result)
+
+      if (fetched) {
+        rates.value = result
+        saveToCache(result)
+      }
     } catch (e) {
       error.value = 'Could not fetch exchange rates'
       // Fallback approximate rates (updated 2026)
