@@ -199,44 +199,22 @@ const modalTitle = computed(() => {
         </p>
       </div>
 
-      <!-- Customer Country (first, so phone prefix updates) -->
+      <!-- Phone / WhatsApp with integrated country selector -->
       <div>
         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          {{ t('checkout.country') }} *
-        </label>
-        <CheckoutCountrySelector
-          v-model="customerCountry"
-          :error="errors.customer_country"
-          :placeholder="t('checkout.country_placeholder')"
-        />
-        <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600 dark:text-red-400">
-          {{ errors.customer_country }}
-        </p>
-      </div>
-
-      <!-- Customer Phone / WhatsApp -->
-      <div>
-        <label for="customer_phone" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
           {{ t('checkout.phone_whatsapp') }} *
         </label>
-        <div class="flex">
-          <span class="inline-flex items-center px-3 bg-slate-100 dark:bg-slate-700 border border-r-0 rounded-l-lg text-sm font-semibold text-slate-600 dark:text-slate-300"
-            :class="errors.customer_phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-          >
-            {{ countryFlag(customerCountry) }} {{ selectedDialCode }}
-          </span>
-          <input
-            id="customer_phone"
-            v-model="customerPhone"
-            type="tel"
-            autocomplete="tel"
-            class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-r-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-            :class="errors.customer_phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-            placeholder="999 999 999"
-          />
-        </div>
+        <CheckoutPhoneInput
+          v-model:phone="customerPhone"
+          v-model:country="customerCountry"
+          :phone-error="errors.customer_phone"
+          :country-error="errors.customer_country"
+        />
         <p v-if="errors.customer_phone" class="mt-1 text-sm text-red-600 dark:text-red-400">
           {{ errors.customer_phone }}
+        </p>
+        <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ errors.customer_country }}
         </p>
       </div>
 
