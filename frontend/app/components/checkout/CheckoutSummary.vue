@@ -25,6 +25,11 @@ const guideTypeLabels = computed<Record<string, string>>(() => ({
   live_guide: t('guide_live'), audio_guide: t('guide_audio'),
   informative_brochures: t('guide_brochures'), no_guide: t('guide_self'),
 }))
+
+// Sort items by tour date (earliest first)
+const sortedItems = computed(() =>
+  [...cartStore.items].sort((a, b) => a.selectedDate.localeCompare(b.selectedDate))
+)
 </script>
 
 <template>
@@ -38,7 +43,7 @@ const guideTypeLabels = computed<Record<string, string>>(() => ({
 
     <!-- Tours -->
     <div class="space-y-3 mb-4 pb-4 border-b border-slate-100">
-      <div v-for="item in cartStore.items" :key="item.id" class="space-y-1.5">
+      <div v-for="item in sortedItems" :key="item.id" class="space-y-1.5">
         <h4 class="text-sm font-bold text-slate-800 line-clamp-1">{{ item.tourTitle }}</h4>
 
         <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '15', color: item.offerColor || '#22c55e' }">

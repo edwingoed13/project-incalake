@@ -9,6 +9,11 @@ const router = useRouter()
 const config = useRuntimeConfig()
 const localePath = useLocalePath()
 
+// Sort cart items by tour date (earliest first)
+const sortedCartItems = computed(() =>
+  [...cartStore.items].sort((a, b) => a.selectedDate.localeCompare(b.selectedDate))
+)
+
 // Tour details cache (for policies, guide info not in cart)
 const tourDetails = ref<Record<number, any>>({})
 
@@ -134,7 +139,7 @@ function getImageUrl(path: string) {
         <!-- Items (2 cols) -->
         <div class="lg:col-span-2 space-y-4">
           <div
-            v-for="item in cartStore.items"
+            v-for="item in sortedCartItems"
             :key="item.id"
             class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
           >
