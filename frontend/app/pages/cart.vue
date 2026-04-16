@@ -90,23 +90,27 @@ function proceedToCheckout() {
   router.push(localePath('/checkout'))
 }
 
+const localeMap: Record<string, string> = {
+  es: 'es-PE', en: 'en-US', pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', it: 'it-IT'
+}
+
 const formatDate = (d: string) => {
   if (!d) return ''
   const [y, m, day] = d.split('-').map(Number)
-  return new Date(y, m - 1, day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(y, m - 1, day).toLocaleDateString(localeMap[locale.value] || 'en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const formatTime = (t: string) => {
-  if (!t) return ''
-  const [h, m] = t.split(':')
+const formatTime = (ti: string) => {
+  if (!ti) return ''
+  const [h, m] = ti.split(':')
   const hour = parseInt(h)
   return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
 }
 
-const guideTypeLabels: Record<string, string> = {
-  live_guide: 'Live Tour Guide', audio_guide: 'Audio Guide',
-  informative_brochures: 'Brochures', no_guide: 'Self-guided', none: '',
-}
+const guideTypeLabels = computed<Record<string, string>>(() => ({
+  live_guide: t('guide_live'), audio_guide: t('guide_audio'),
+  informative_brochures: t('guide_brochures'), no_guide: t('guide_self'), none: '',
+}))
 
 function getImageUrl(path: string) {
   if (!path) return ''
@@ -187,7 +191,7 @@ function getImageUrl(path: string) {
                   </div>
                   <div class="flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-sm">group</span>
-                    {{ item.adults }} adult{{ item.adults !== 1 ? 's' : '' }}{{ item.children > 0 ? `, ${item.children} children` : '' }}
+                    {{ item.adults }} {{ item.adults === 1 ? t('adult') : t('adults') }}{{ item.children > 0 ? `, ${item.children} ${t('children_label')}` : '' }}
                   </div>
                   <div v-if="item.guideType && item.guideType !== 'none'" class="flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-sm">record_voice_over</span>
