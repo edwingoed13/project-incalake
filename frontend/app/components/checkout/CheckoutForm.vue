@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { countries, countryFlag } from '~/utils/countries'
+import { countries, countryFlag, getDialCode } from '~/utils/countries'
 
 interface Props {
   pickupAvailable?: boolean
@@ -34,6 +34,8 @@ const customerNotes = ref('')
 const pickupLocation = ref('')
 const paymentMethod = ref<'culqi' | 'paypal'>('culqi')
 const acceptedTerms = ref(false)
+
+const selectedDialCode = computed(() => getDialCode(customerCountry.value))
 
 // Modal state
 const showPoliciesModal = ref(false)
@@ -197,25 +199,7 @@ const modalTitle = computed(() => {
         </p>
       </div>
 
-      <!-- Customer Phone -->
-      <div>
-        <label for="customer_phone" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          {{ t('checkout.phone') }} *
-        </label>
-        <input
-          id="customer_phone"
-          v-model="customerPhone"
-          type="tel"
-          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-          :class="errors.customer_phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
-          placeholder="+51 999 999 999"
-        />
-        <p v-if="errors.customer_phone" class="mt-1 text-sm text-red-600 dark:text-red-400">
-          {{ errors.customer_phone }}
-        </p>
-      </div>
-
-      <!-- Customer Country -->
+      <!-- Customer Country (first, so phone prefix updates) -->
       <div>
         <label for="customer_country" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
           {{ t('checkout.country') }} *
@@ -227,11 +211,37 @@ const modalTitle = computed(() => {
           :class="errors.customer_country ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
         >
           <option v-for="country in countries" :key="country.code" :value="country.code">
-            {{ countryFlag(country.code) }} {{ country.name }}
+            {{ countryFlag(country.code) }} {{ country.name }} ({{ country.dial }})
           </option>
         </select>
         <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600 dark:text-red-400">
           {{ errors.customer_country }}
+        </p>
+      </div>
+
+      <!-- Customer Phone / WhatsApp -->
+      <div>
+        <label for="customer_phone" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+          {{ t('checkout.phone_whatsapp') }} *
+        </label>
+        <div class="flex">
+          <span class="inline-flex items-center px-3 bg-slate-100 dark:bg-slate-700 border border-r-0 rounded-l-lg text-sm font-semibold text-slate-600 dark:text-slate-300"
+            :class="errors.customer_phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
+          >
+            {{ countryFlag(customerCountry) }} {{ selectedDialCode }}
+          </span>
+          <input
+            id="customer_phone"
+            v-model="customerPhone"
+            type="tel"
+            autocomplete="tel"
+            class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-r-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            :class="errors.customer_phone ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
+            placeholder="999 999 999"
+          />
+        </div>
+        <p v-if="errors.customer_phone" class="mt-1 text-sm text-red-600 dark:text-red-400">
+          {{ errors.customer_phone }}
         </p>
       </div>
 
