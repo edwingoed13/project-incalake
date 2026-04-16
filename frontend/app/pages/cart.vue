@@ -271,7 +271,7 @@ function getImageUrl(path: string) {
               </div>
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500 flex items-center gap-1">
-                  {{ t('transaction_fees') }}
+                  {{ t('transaction_fees') }} ({{ cartStore.taxPercentageLabel }})
                   <span class="relative group cursor-help">
                     <span class="material-symbols-outlined text-slate-400 text-xs">info</span>
                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">

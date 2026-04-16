@@ -54,6 +54,14 @@ export const useCartStore = defineStore('cart', {
       return this.subtotal + this.totalTax
     },
 
+    // Returns the tax % label: "18%" if all same, or "mix" if different
+    taxPercentageLabel: (state) => {
+      const percentages = [...new Set(state.items.map(i => i.taxPercentage || 0).filter(p => p > 0))]
+      if (percentages.length === 0) return ''
+      if (percentages.length === 1) return `${percentages[0]}%`
+      return percentages.map(p => `${p}%`).join(', ')
+    },
+
     totalParticipants: (state) => {
       return state.items.reduce((sum, item) => sum + item.adults + item.children, 0)
     },
