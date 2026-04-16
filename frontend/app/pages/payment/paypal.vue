@@ -284,7 +284,8 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
     cartStore.clearCart()
 
     // Redirect to booking confirmation
-    router.push(`/booking-confirmation/${booking.value.booking_code}`)
+    const email = route.query.email as string || booking.value.customer?.email || ''
+    router.push(`/booking-confirmation/${booking.value.booking_code}?email=${encodeURIComponent(email)}`)
 
   } catch (err: any) {
     console.error('Payment confirmation error:', err)
