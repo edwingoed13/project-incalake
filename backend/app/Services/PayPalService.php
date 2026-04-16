@@ -108,9 +108,9 @@ class PayPalService
         $response = Http::withToken($token)
             ->withHeaders([
                 'Content-Type' => 'application/json',
-                // Idempotency: retry-safe capture
                 'PayPal-Request-Id' => "capture-{$orderId}",
             ])
+            ->withBody('{}', 'application/json')
             ->post("{$this->baseUrl}/v2/checkout/orders/{$orderId}/capture");
 
         if (!$response->successful()) {
