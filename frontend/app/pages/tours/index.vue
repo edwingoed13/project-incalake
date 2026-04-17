@@ -99,7 +99,23 @@
           <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-semibold text-red-500 flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">close</span> {{ t('clear_all') }}
           </button>
-          <span class="text-xs font-bold text-slate-400">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <span class="text-xs font-bold text-slate-400 mr-2">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <div class="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <button
+              @click="viewMode = 'grid'"
+              class="p-1.5 transition-colors"
+              :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
+            >
+              <span class="material-symbols-outlined text-base">grid_view</span>
+            </button>
+            <button
+              @click="viewMode = 'list'"
+              class="p-1.5 transition-colors"
+              :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
+            >
+              <span class="material-symbols-outlined text-base">view_list</span>
+            </button>
+          </div>
         </div>
       </div>
       <div v-if="openFilter" class="fixed inset-0" @click="openFilter = ''"></div>
@@ -211,7 +227,7 @@
       </div>
 
       <!-- DESKTOP: Grid cards -->
-      <div v-if="filteredTours.length > 0" class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         <NuxtLink
           v-for="tour in paginatedTours.data"
           :key="'d-'+tour.id"
@@ -239,6 +255,51 @@
                 <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
               <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </span>
+            </div>
+          </div>
+        </NuxtLink>
+      </div>
+
+      <!-- DESKTOP: List view -->
+      <div v-if="filteredTours.length > 0 && viewMode === 'list'" class="hidden md:block space-y-4">
+        <NuxtLink
+          v-for="tour in paginatedTours.data"
+          :key="'l-'+tour.id"
+          :to="getTourLink(tour)"
+          class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3"
+        >
+          <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0">
+            <img :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <div v-if="hasActiveOffer(tour)" class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-xs">local_offer</span>{{ getOfferLabel(tour) }}
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+            <div>
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+                <span class="material-symbols-outlined text-xs">location_on</span>{{ tour.city?.name || 'Puno' }}
+              </div>
+              <h3 class="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+              <p v-if="tour.short_description" class="text-xs text-slate-500 line-clamp-2 mb-3">{{ tour.short_description }}</p>
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span v-if="formatDuration(tour)" class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+                  <span class="font-bold text-slate-700">4.5</span>
+                </span>
+              </div>
+            </div>
+            <div class="flex items-end justify-between mt-2">
+              <div>
+                <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
+                <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
+              </div>
+              <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </span>
             </div>
@@ -276,6 +337,9 @@ const currencyStore = useCurrencyStore()
 const langCode = computed(() => locale.value.toUpperCase())
 
 useHead({ title: computed(() => `${t('tours')} - Incalake Tours`) })
+
+// View mode toggle
+const viewMode = ref<'grid' | 'list'>('grid')
 
 // Filter state
 const route = useRoute()
