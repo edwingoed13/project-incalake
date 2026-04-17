@@ -74,13 +74,18 @@
                 Fecha Desde
               </label>
               <div class="relative group">
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   v-model="store.availability.start"
+                  :min="todayISO"
                   class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
                 >
                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">event_available</span>
               </div>
+              <p v-if="store.availability.start && store.availability.start < todayISO" class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">warning</span>
+                La fecha de inicio es anterior a hoy. Se ignorará en el frontend.
+              </p>
             </div>
 
             <!-- Date To -->
@@ -90,9 +95,10 @@
                 Fecha Hasta
               </label>
               <div class="relative group">
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   v-model="store.availability.end"
+                  :min="store.availability.start || todayISO"
                   class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
                 >
                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">event_busy</span>
@@ -448,6 +454,8 @@ import { useTourWizardStore } from '~/stores/tourWizard'
 import { ref, reactive } from 'vue'
 
 const store = useTourWizardStore()
+
+const todayISO = new Date().toISOString().split('T')[0]
 
 const activeTab = ref('availability')
 
