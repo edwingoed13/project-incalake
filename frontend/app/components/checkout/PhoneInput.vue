@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { countries, countryFlag, getDialCode } from '~/utils/countries'
+import { countries, countryFlagUrl, getDialCode } from '~/utils/countries'
 
 interface Props {
   phone: string
@@ -86,7 +86,7 @@ watch(open, (val) => {
           phoneError || countryError ? 'border-red-500' : open ? 'border-primary' : 'border-slate-300 dark:border-slate-700',
         ]"
       >
-        <span class="text-base leading-none">{{ countryFlag(country) }}</span>
+        <img :src="countryFlagUrl(country)" :alt="country" class="w-5 h-4 object-cover rounded-sm" />
         <span class="text-slate-700 dark:text-slate-300">{{ dialCode }}</span>
         <span class="material-symbols-outlined text-slate-400 text-sm transition-transform" :class="{ 'rotate-180': open }">expand_more</span>
       </button>
@@ -135,7 +135,7 @@ watch(open, (val) => {
             class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-primary/5 transition-colors"
             :class="c.code === country ? 'bg-primary/10 active-item' : ''"
           >
-            <span class="text-base leading-none w-6 text-center">{{ countryFlag(c.code) }}</span>
+            <img :src="countryFlagUrl(c.code)" :alt="c.code" class="w-5 h-4 object-cover rounded-sm" />
             <span class="flex-1 text-sm" :class="c.code === country ? 'font-bold text-primary' : 'text-slate-700 dark:text-slate-300'">
               {{ c.name }}
             </span>

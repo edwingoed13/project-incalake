@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { countries, countryFlag } from '~/utils/countries'
+import { countries, countryFlagUrl } from '~/utils/countries'
 
 interface Props {
   modelValue: string
@@ -83,7 +83,7 @@ watch(open, (val) => {
         error ? 'border-red-500' : open ? 'border-primary ring-2 ring-primary/20' : 'border-slate-300 dark:border-slate-700',
       ]"
     >
-      <span v-if="selectedCountry" class="text-lg leading-none">{{ countryFlag(selectedCountry.code) }}</span>
+      <img v-if="selectedCountry" :src="countryFlagUrl(selectedCountry.code)" :alt="selectedCountry.code" class="w-5 h-4 object-cover rounded-sm" />
       <span v-if="selectedCountry" class="flex-1 text-sm font-medium text-slate-800 dark:text-white">
         {{ selectedCountry.name }}
         <span class="text-slate-400 ml-1">({{ selectedCountry.dial }})</span>
@@ -125,7 +125,7 @@ watch(open, (val) => {
               country.code === modelValue ? 'bg-primary/10 active-country' : '',
             ]"
           >
-            <span class="text-lg leading-none w-6 text-center">{{ countryFlag(country.code) }}</span>
+            <img :src="countryFlagUrl(country.code)" :alt="country.code" class="w-5 h-4 object-cover rounded-sm" />
             <span class="flex-1 text-sm" :class="country.code === modelValue ? 'font-bold text-primary' : 'text-slate-700 dark:text-slate-300'">
               {{ country.name }}
             </span>

@@ -1,10 +1,15 @@
-// ISO 3166-1 alpha-2 code → flag emoji helper
+// ISO 3166-1 alpha-2 code → flag emoji (works on macOS/mobile, fallback text on Windows)
 export function countryFlag(code: string): string {
   return code
     .toUpperCase()
     .split('')
     .map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
     .join('')
+}
+
+// Flag image URL via flagcdn.com (works everywhere including Windows)
+export function countryFlagUrl(code: string, size: number = 24): string {
+  return `https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${code.toLowerCase()}.png`
 }
 
 export interface Country {
