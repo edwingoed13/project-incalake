@@ -181,6 +181,8 @@
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
                   :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                  :availability-start="tour?.availability_data?.start || ''"
+                  :availability-end="tour?.availability_data?.end || ''"
                 />
 
                 <!-- Available Dates Info — only when offers are active -->
@@ -371,6 +373,8 @@
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
                   :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                  :availability-start="tour?.availability_data?.start || ''"
+                  :availability-end="tour?.availability_data?.end || ''"
                 />
               </div>
 

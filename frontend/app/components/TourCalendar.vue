@@ -99,6 +99,9 @@ const { t } = useI18n()
 interface Props {
   modelValue: string
   minDate?: string
+  maxDate?: string  // Availability period end
+  availabilityStart?: string  // Availability period start
+  availabilityEnd?: string  // Availability period end
   offers?: Array<{ startDate: string; endDate: string; discount: number; discountType: string; color?: string }>
   blocks?: Array<{ startDate: string; endDate: string }>
   activeDays?: number[]
@@ -107,6 +110,9 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   minDate: '',
+  maxDate: '',
+  availabilityStart: '',
+  availabilityEnd: '',
   offers: () => [],
   blocks: () => [],
   activeDays: () => [0, 1, 2, 3, 4, 5, 6],
@@ -188,11 +194,14 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
     const dayOfWeek = new Date(year, month, d).getDay() // 0=Sun, 6=Sat
 
     const isPast = dateStr < todayStr || (props.minDate && dateStr < props.minDate)
+    // Check if date is outside the tour's availability range (start/end)
+    const isBeforeRange = props.availabilityStart && dateStr < props.availabilityStart
+    const isAfterRange = props.availabilityEnd && dateStr > props.availabilityEnd
     const rangeBlocked = props.blocks.some(b => dateStr >= b.startDate && dateStr <= b.endDate)
     // Check if this date is a blocked holiday (DD-MM format)
     const ddmm = `${String(d).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}`
     const isHoliday = props.specialDays.includes(ddmm)
-    const isBlocked = rangeBlocked || isHoliday
+    const isBlocked = rangeBlocked || isHoliday || isBeforeRange || isAfterRange
     const isActiveDay = props.activeDays.includes(dayOfWeek)
     const matchingOffer = props.offers.find(o => dateStr >= o.startDate && dateStr <= o.endDate)
 
