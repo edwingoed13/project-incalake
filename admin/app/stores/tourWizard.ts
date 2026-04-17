@@ -550,7 +550,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
                requireAvailability: data.require_availability || false,
                start: data.availability_data.start || new Date().toISOString().split('T')[0],
                end: data.availability_data.end || defaultEnd,
-               activeDays: data.availability_data.activeDays || [1, 2, 3, 4, 5, 6, 0],
+               activeDays: (data.availability_data.activeDays || [1, 2, 3, 4, 5, 6, 0]).map((d: any) => Number(d)),
                specialDays: data.availability_data.specialDays || [],
                blocks: data.availability_data.blocks || [],
                offers: data.availability_data.offers || []
