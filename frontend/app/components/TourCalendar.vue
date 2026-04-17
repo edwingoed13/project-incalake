@@ -102,6 +102,7 @@ interface Props {
   offers?: Array<{ startDate: string; endDate: string; discount: number; discountType: string; color?: string }>
   blocks?: Array<{ startDate: string; endDate: string }>
   activeDays?: number[]
+  specialDays?: string[]  // Holidays in "DD-MM" format (e.g. "25-12")
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -109,6 +110,7 @@ const props = withDefaults(defineProps<Props>(), {
   offers: () => [],
   blocks: () => [],
   activeDays: () => [0, 1, 2, 3, 4, 5, 6],
+  specialDays: () => [],
 })
 
 const emit = defineEmits<{
@@ -186,7 +188,11 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
     const dayOfWeek = new Date(year, month, d).getDay() // 0=Sun, 6=Sat
 
     const isPast = dateStr < todayStr || (props.minDate && dateStr < props.minDate)
-    const isBlocked = props.blocks.some(b => dateStr >= b.startDate && dateStr <= b.endDate)
+    const rangeBlocked = props.blocks.some(b => dateStr >= b.startDate && dateStr <= b.endDate)
+    // Check if this date is a blocked holiday (DD-MM format)
+    const ddmm = `${String(d).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}`
+    const isHoliday = props.specialDays.includes(ddmm)
+    const isBlocked = rangeBlocked || isHoliday
     const isActiveDay = props.activeDays.includes(dayOfWeek)
     const matchingOffer = props.offers.find(o => dateStr >= o.startDate && dateStr <= o.endDate)
 

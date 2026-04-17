@@ -180,6 +180,7 @@
                   :offers="tour?.offers_data || []"
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
                 />
 
                 <!-- Available Dates Info — only when offers are active -->
@@ -369,6 +370,7 @@
                   :offers="tour?.offers_data || []"
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
                 />
               </div>
 

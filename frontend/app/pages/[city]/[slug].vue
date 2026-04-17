@@ -151,6 +151,7 @@
                   :offers="tour?.offers_data || []"
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
                 />
                 <!-- Active offer indicator -->
                 <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12' }">
@@ -330,6 +331,7 @@
                   :offers="tour?.offers_data || []"
                   :blocks="tour?.blocks_data || []"
                   :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
                 />
               </div>
 

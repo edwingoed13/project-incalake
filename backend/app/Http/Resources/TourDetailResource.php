@@ -78,6 +78,7 @@ class TourDetailResource extends JsonResource
             // Extract blocks and offers from availability_data (where admin stores them)
             'blocks_data' => $this->availability_data['blocks'] ?? $this->blocks_data ?? [],
             'offers_data' => $this->availability_data['offers'] ?? $this->offers_data ?? [],
+            'special_days' => $this->availability_data['specialDays'] ?? [],
 
             'featured_image' => $this->featured_image_path,
             'thumbnail' => $this->thumbnail_path,
