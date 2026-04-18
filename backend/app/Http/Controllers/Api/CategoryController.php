@@ -26,9 +26,12 @@ class CategoryController extends Controller
             // Eager loading
             $query->with(['translations', 'tours']);
 
-            // Filter by language_id
-            if ($request->has('language_id')) {
-                $query->where('language_id', $request->language_id);
+            // Filter by translations' language_id (categories_new has no language column itself)
+            if ($request->filled('language_id')) {
+                $languageId = $request->language_id;
+                $query->whereHas('translations', function ($q) use ($languageId) {
+                    $q->where('language_id', $languageId);
+                });
             }
 
             // Search by name

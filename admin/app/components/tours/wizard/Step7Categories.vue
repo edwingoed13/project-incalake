@@ -185,7 +185,7 @@ const fetchCategories = async () => {
   loadingCategories.value = true
   try {
     const response: any = await $fetch(`${config.public.apiUrl}/categories`, {
-      params: { language_id: 1, per_page: 200, sort_by: 'id', sort_order: 'asc' },
+      params: { per_page: 200, sort_by: 'id', sort_order: 'asc' },
     })
     const list = response?.data || []
     categories.value = list.map((c: any): Category => ({
