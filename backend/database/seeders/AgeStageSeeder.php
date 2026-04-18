@@ -14,16 +14,16 @@ class AgeStageSeeder extends Seeder
     {
         $ageStages = [
             [
-                'description' => 'Niño',
-                'min_age' => 0,
-                'max_age' => 3,
+                'description' => 'Adulto',
+                'min_age' => 16,
+                'max_age' => 99,
                 'editable' => false,
                 'translations' => null
             ],
             [
-                'description' => 'Adulto',
-                'min_age' => 18,
-                'max_age' => 99,
+                'description' => 'Niño',
+                'min_age' => 3,
+                'max_age' => 11,
                 'editable' => false,
                 'translations' => null
             ],
