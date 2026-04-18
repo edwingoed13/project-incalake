@@ -60,9 +60,10 @@
             </div>
 
             <div class="space-y-6">
-              <div 
-                v-for="(nat, natIndex) in ageStage.nationalities" 
+              <div
+                v-for="(nat, natIndex) in ageStage.nationalities"
                 :key="nat.id"
+                :ref="el => { if (el) natRefs[nat.id] = el as HTMLElement }"
                 class="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950 shadow-sm space-y-5"
               >
                 <!-- Nationality Header -->
@@ -247,8 +248,10 @@ import type { AgeStagePrice, NationalityPrice } from '~/stores/tourWizard'
 
 const store = useTourWizardStore()
 
-const addNationality = (ageStage: AgeStagePrice) => {
-  ageStage.nationalities.push({
+const natRefs = reactive<Record<string, HTMLElement>>({})
+
+const addNationality = async (ageStage: AgeStagePrice) => {
+  const newNat = {
     id: crypto.randomUUID(),
     nationalityId: '',
     ageMin: ageStage.minAge,
@@ -256,7 +259,15 @@ const addNationality = (ageStage: AgeStagePrice) => {
     ranges: [
       { id: crypto.randomUUID(), from: 1, to: 1, price: 0 }
     ]
-  })
+  }
+  ageStage.nationalities.push(newNat)
+  await nextTick()
+  const el = natRefs[newNat.id]
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const select = el.querySelector('select') as HTMLSelectElement | null
+    select?.focus()
+  }
 }
 
 const removeNationality = (ageStage: AgeStagePrice, index: number) => {

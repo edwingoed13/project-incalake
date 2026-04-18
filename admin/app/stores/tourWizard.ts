@@ -239,24 +239,24 @@ export const useTourWizardStore = defineStore('tourWizard', {
     commercialRules: {
       paymentMethod: 'all',
       ageStages: [
-        { 
-          id: '1', 
-          description: 'Adulto', 
-          minAge: 18, 
-          maxAge: 99, 
-          active: true, 
+        {
+          id: '1',
+          description: 'Adulto',
+          minAge: 16,
+          maxAge: 99,
+          active: true,
           nationalities: [
-            { 
-              id: 'n1', 
-              nationalityId: 'general', 
-              ageMin: 18, 
-              ageMax: 99, 
+            {
+              id: 'n1',
+              nationalityId: 'general',
+              ageMin: 16,
+              ageMax: 99,
               ranges: [
                 { id: 'r1', from: 1, to: 1, price: 49 },
                 { id: 'r2', from: 2, to: 20, price: 45 }
-              ] 
+              ]
             }
-          ] 
+          ]
         },
         { 
           id: '2', 
@@ -464,22 +464,35 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
           // Map Step 4: Commercial Rules / Pricing
           if (data.price_details && data.price_details.length > 0) {
-            // Group prices by age_stage_id
+            // Group prices by description (Adulto/Niño) — backend ageStage IDs don't align with admin slot IDs
+            const normalize = (s: string) => String(s || '').toLowerCase().trim()
             const grouped: Record<string, any[]> = {}
+            const backendStageIds: Record<string, number> = {}
             data.price_details.forEach((p: any) => {
-              const stageId = String(p.age_stage_id || p.age_stage?.id || '1')
-              if (!grouped[stageId]) grouped[stageId] = []
-              grouped[stageId].push(p)
+              const rawName = p.age_stage?.description || p.age_stage?.name || ''
+              const key = normalize(rawName)
+              if (!key) return
+              if (!grouped[key]) grouped[key] = []
+              grouped[key].push(p)
+              if (p.age_stage_id) backendStageIds[key] = p.age_stage_id
             })
 
             this.commercialRules.ageStages = this.commercialRules.ageStages.map(stage => {
-              const prices = grouped[stage.id]
+              const key = normalize(stage.description)
+              const prices = grouped[key]
               if (prices && prices.length > 0) {
                 stage.active = true
                 const ageStage = prices[0].age_stage || {}
-                stage.minAge = ageStage.min_age ?? stage.minAge
-                stage.maxAge = ageStage.max_age ?? stage.maxAge
-                stage.description = ageStage.description || stage.description
+                // Keep defaults if DB values look invalid for this stage label (e.g. Adulto with 0-3)
+                const dbMin = ageStage.min_age
+                const dbMax = ageStage.max_age
+                const validRange = typeof dbMin === 'number' && typeof dbMax === 'number' && dbMax > dbMin
+                if (validRange) {
+                  stage.minAge = dbMin
+                  stage.maxAge = dbMax
+                }
+                // Remember backend id so save can write under the correct age_stage_id
+                if (backendStageIds[key]) (stage as any).backendId = backendStageIds[key]
                 stage.nationalities = [{
                   id: 'n1',
                   nationalityId: 'general',
@@ -636,8 +649,13 @@ export const useTourWizardStore = defineStore('tourWizard', {
         tax_percentage: this.commercialRules.taxPercentage,
         advance_payment_percentage: this.commercialRules.advancePaymentPercentage,
         prices: this.commercialRules.ageStages.reduce((acc: Record<string, any>, stage) => {
-          acc[stage.id] = {
+          // Use backend age_stage id if we know it; otherwise fall back to local slot id
+          const stageKey = String((stage as any).backendId || stage.id)
+          acc[stageKey] = {
             active: stage.active,
+            description: stage.description,
+            min_age: stage.minAge,
+            max_age: stage.maxAge,
             ranges: stage.nationalities.flatMap(nat =>
               nat.ranges.map(range => ({
                 from: range.from,

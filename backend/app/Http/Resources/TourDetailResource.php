@@ -120,7 +120,8 @@ class TourDetailResource extends JsonResource
                         'active' => $price->active,
                         'age_stage' => $price->ageStage ? [
                             'id' => $price->ageStage->id,
-                            'name' => $price->ageStage->name,
+                            'name' => $price->ageStage->description,
+                            'description' => $price->ageStage->description,
                             'min_age' => $price->ageStage->min_age,
                             'max_age' => $price->ageStage->max_age,
                         ] : null,
