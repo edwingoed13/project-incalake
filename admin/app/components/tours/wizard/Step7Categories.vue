@@ -33,7 +33,7 @@
             Limpiar
           </button>
           <div class="text-[10px] font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
-            {{ store.selectedCategories.length }} / {{ mockCategories.length }}
+            {{ store.selectedCategories.length }} / {{ categories.length }}
           </div>
         </div>
       </div>
@@ -67,8 +67,14 @@
         </div>
       </div>
 
+      <!-- Loading state -->
+      <div v-if="loadingCategories" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+        <span class="material-symbols-outlined animate-spin text-lg align-middle mr-2">progress_activity</span>
+        Cargando categorías...
+      </div>
+
       <!-- All categories as chips (wraps naturally, no truncation) -->
-      <div v-if="filteredCategories.length > 0" class="flex flex-wrap gap-2">
+      <div v-else-if="filteredCategories.length > 0" class="flex flex-wrap gap-2">
         <button
           v-for="cat in filteredCategories"
           :key="cat.id"
@@ -87,7 +93,8 @@
 
       <!-- No results -->
       <div v-else class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        No se encontraron categorías para «{{ categorySearch }}»
+        <template v-if="categorySearch">No se encontraron categorías para «{{ categorySearch }}»</template>
+        <template v-else>No hay categorías disponibles</template>
       </div>
     </section>
 
@@ -129,27 +136,43 @@
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const store = useTourWizardStore()
+const config = useRuntimeConfig()
+
+type Category = { id: number; name: string; description: string; icon: string; code?: string }
 
 const categorySearch = ref('')
+const categories = ref<Category[]>([])
+const loadingCategories = ref(false)
 
-const normalize = (s: string) => s
+const normalize = (s: string) => (s || '')
   .toLowerCase()
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
 
+// Resolve an icon for a backend category based on code or name keywords
+const iconFor = (code: string, name: string): string => {
+  const slug = normalize(code || name).replace(/\s+/g, '-')
+  if (iconByCode[slug]) return iconByCode[slug]
+  const norm = normalize(name)
+  for (const [keyword, icon] of Object.entries(iconByKeyword)) {
+    if (norm.includes(keyword)) return icon
+  }
+  return 'category'
+}
+
 const filteredCategories = computed(() => {
   const q = normalize(categorySearch.value.trim())
-  if (!q) return mockCategories
-  return mockCategories.filter(c =>
+  if (!q) return categories.value
+  return categories.value.filter(c =>
     normalize(c.name).includes(q) || normalize(c.description).includes(q)
   )
 })
 
 const selectedCategoriesList = computed(() =>
-  mockCategories.filter(c => store.selectedCategories.includes(c.id))
+  categories.value.filter(c => store.selectedCategories.includes(c.id))
 )
 
 const toggleCategory = (id: number) => {
@@ -158,47 +181,114 @@ const toggleCategory = (id: number) => {
   else store.selectedCategories.splice(idx, 1)
 }
 
-const mockCategories = [
-  { id: 1, name: 'Turismo Cultural', icon: 'account_balance', description: 'Enfoque en la cultura y patrimonio.' },
-  { id: 2, name: 'Turismo Vivencial', icon: 'diversity_3', description: 'Experiencias directas con comunidades.' },
-  { id: 3, name: 'Turismo Rural', icon: 'agriculture', description: 'Actividades en el entorno rural.' },
-  { id: 4, name: 'Turismo Místico', icon: 'self_improvement', description: 'Rituales y espiritualidad ancestral.' },
-  { id: 5, name: 'Turismo Histórico', icon: 'history_edu', description: 'Visitas a sitios de relevancia histórica.' },
-  { id: 6, name: 'Turismo Religioso', icon: 'church', description: 'Peregrinaciones y fe religiosa.' },
-  { id: 7, name: 'Turismo Arqueológico', icon: 'temple_hindu', description: 'Ruinas y monumentos antiguos.' },
-  { id: 8, name: 'Turismo Etnográfico', icon: 'groups', description: 'Estudio y vivencia de costumbres etnográficas.' },
-  { id: 9, name: 'Turismo de Naturaleza', icon: 'nature_people', description: 'Observación y disfrute de la naturaleza.' },
-  { id: 10, name: 'Turismo de Aventura', icon: 'hiking', description: 'Deportes extremos y desafíos físicos.' },
-  { id: 11, name: 'Ecoturismo', icon: 'eco', description: 'Turismo ecológico y sostenible.' },
-  { id: 12, name: 'Turismo de Montaña', icon: 'landscape', description: 'Actividades en entornos montañosos.' },
-  { id: 13, name: 'Turismo de Trekking', icon: 'hiking', description: 'Caminatas por senderos naturales.' },
-  { id: 14, name: 'Turismo de Observación de Aves', icon: 'flutter_dash', description: 'Birdwatching y avistamiento faunístico.' },
-  { id: 15, name: 'Turismo Fotográfico', icon: 'photo_camera', description: 'Enfoque en capturar paisajes y momentos.' },
-  { id: 16, name: 'Turismo Científico', icon: 'biotech', description: 'Investigación y trasfondo científico.' },
-  { id: 17, name: 'Turismo de Sol y Playa', icon: 'beach_access', description: 'Relajación en costas y balnearios.' },
-  { id: 18, name: 'Turismo Termal', icon: 'hot_tub', description: 'Baños en aguas termales curativas.' },
-  { id: 19, name: 'Turismo de Spa', icon: 'spa', description: 'Bienestar y tratamientos estéticos.' },
-  { id: 20, name: 'Turismo Romántico', icon: 'favorite', description: 'Viajes de pareja y lunas de miel.' },
-  { id: 21, name: 'Turismo Familiar', icon: 'family_restroom', description: 'Actividades para todas las edades.' },
-  { id: 22, name: 'Turismo Temático', icon: 'theater_comedy', description: 'Centrado en un tema específico o hobby.' },
-  { id: 23, name: 'Turismo Urbano', icon: 'location_city', description: 'Exploración de metrópolis y entornos urbanos.' },
-  { id: 24, name: 'Turismo Gastronómico', icon: 'restaurant', description: 'Degustación de cocina local y tradicional.' },
-  { id: 25, name: 'Turismo de Compras', icon: 'shopping_bag', description: 'Visitas a centros comerciales y ferias.' },
-  { id: 26, name: 'Turismo de Eventos', icon: 'event', description: 'Asistencia a ferias, congresos o eventos.' },
-  { id: 27, name: 'Turismo de Festividades', icon: 'celebration', description: 'Participación en fiestas locales y carnavales.' },
-  { id: 28, name: 'Turismo Musical', icon: 'music_note', description: 'Conciertos, festivales y tours musicales.' },
-  { id: 29, name: 'Turismo Cinematográfico', icon: 'movie', description: 'Visitas a locaciones de películas famosas.' },
-  { id: 30, name: 'Turismo Educativo', icon: 'school', description: 'Aprendizaje y visitas académicas.' },
-  { id: 31, name: 'Turismo Académico', icon: 'menu_book', description: 'Congresos y simposios universitarios.' },
-  { id: 32, name: 'Turismo Idiomático', icon: 'translate', description: 'Inmersión para aprender nuevos idiomas.' },
-  { id: 33, name: 'Turismo LGBTQ+ Friendly', icon: 'diversity_1', description: 'Destinos y servicios inclusivos.' },
-  { id: 34, name: 'Turismo Corporativo', icon: 'business_center', description: 'Viajes de empresas y convenciones.' },
-  { id: 35, name: 'Turismo de Negocios', icon: 'monitoring', description: 'Cierre de contratos y reuniones comerciales.' },
-  { id: 36, name: 'Turismo de Incentivos', icon: 'workspace_premium', description: 'Premios corporativos para empleados.' },
-  { id: 37, name: 'Turismo Ferroviario', icon: 'train', description: 'Viajes escénicos en tren.' },
-  { id: 38, name: 'Turismo en Bicicleta', icon: 'directions_bike', description: 'Cicloturismo y rutas en bici.' },
-  { id: 39, name: 'Turismo Deportivo', icon: 'sports_soccer', description: 'Asistencia a partidos o práctica de deportes.' }
-]
+const fetchCategories = async () => {
+  loadingCategories.value = true
+  try {
+    const response: any = await $fetch(`${config.public.apiUrl}/categories`, {
+      params: { language_id: 1, per_page: 200, sort_by: 'id', sort_order: 'asc' },
+    })
+    const list = response?.data || []
+    categories.value = list.map((c: any): Category => ({
+      id: c.id,
+      name: c.name || c.code || 'Categoría',
+      description: c.description || '',
+      icon: iconFor(c.code || '', c.name || ''),
+      code: c.code,
+    }))
+  } catch (err) {
+    console.error('[Step7] Error loading categories:', err)
+  } finally {
+    loadingCategories.value = false
+  }
+}
+
+onMounted(fetchCategories)
+
+// Icon lookup by code (most reliable — backend codes are stable)
+const iconByCode: Record<string, string> = {
+  'turismo-cultural': 'account_balance',
+  'turismo-vivencial': 'diversity_3',
+  'turismo-rural': 'agriculture',
+  'turismo-mistico': 'self_improvement',
+  'turismo-historico': 'history_edu',
+  'turismo-religioso': 'church',
+  'turismo-arqueologico': 'temple_hindu',
+  'turismo-etnografico': 'groups',
+  'turismo-naturaleza': 'nature_people',
+  'turismo-aventura': 'hiking',
+  'ecoturismo': 'eco',
+  'turismo-montana': 'landscape',
+  'turismo-trekking': 'hiking',
+  'turismo-aves': 'flutter_dash',
+  'turismo-fotografico': 'photo_camera',
+  'turismo-cientifico': 'biotech',
+  'turismo-sol-playa': 'beach_access',
+  'turismo-termal': 'hot_tub',
+  'turismo-spa': 'spa',
+  'turismo-romantico': 'favorite',
+  'turismo-familiar': 'family_restroom',
+  'turismo-tematico': 'theater_comedy',
+  'turismo-urbano': 'location_city',
+  'turismo-gastronomico': 'restaurant',
+  'turismo-compras': 'shopping_bag',
+  'turismo-eventos': 'event',
+  'turismo-festividades': 'celebration',
+  'turismo-musical': 'music_note',
+  'turismo-cinematografico': 'movie',
+  'turismo-educativo': 'school',
+  'turismo-academico': 'menu_book',
+  'turismo-idiomatico': 'translate',
+  'turismo-lgbtq': 'diversity_1',
+  'turismo-corporativo': 'business_center',
+  'turismo-negocios': 'monitoring',
+  'turismo-incentivos': 'workspace_premium',
+  'turismo-ferroviario': 'train',
+  'turismo-bicicleta': 'directions_bike',
+  'turismo-deportivo': 'sports_soccer',
+}
+
+// Fallback: match by keyword in name if code is not recognized
+const iconByKeyword: Record<string, string> = {
+  cultural: 'account_balance',
+  vivencial: 'diversity_3',
+  rural: 'agriculture',
+  mistic: 'self_improvement',
+  histor: 'history_edu',
+  religi: 'church',
+  arqueolog: 'temple_hindu',
+  etnograf: 'groups',
+  naturaleza: 'nature_people',
+  aventura: 'hiking',
+  ecoturismo: 'eco',
+  montana: 'landscape',
+  trekking: 'hiking',
+  ave: 'flutter_dash',
+  fotograf: 'photo_camera',
+  cientif: 'biotech',
+  playa: 'beach_access',
+  termal: 'hot_tub',
+  spa: 'spa',
+  romant: 'favorite',
+  familiar: 'family_restroom',
+  tematic: 'theater_comedy',
+  urbano: 'location_city',
+  gastron: 'restaurant',
+  compras: 'shopping_bag',
+  evento: 'event',
+  festivid: 'celebration',
+  musical: 'music_note',
+  cine: 'movie',
+  educ: 'school',
+  academ: 'menu_book',
+  idiom: 'translate',
+  lgbtq: 'diversity_1',
+  corporativ: 'business_center',
+  negocio: 'monitoring',
+  incentiv: 'workspace_premium',
+  ferrov: 'train',
+  bicicleta: 'directions_bike',
+  deport: 'sports_soccer',
+}
 
 const suggestedTags = ['Uros', 'Taquile', 'Amantani', 'Sillustani', 'Tierra de los Incas', 'Atractivos Cercanos', 'Turismo Vivencial', 'Foto Tour']
 const selectedTags = ref<string[]>([])
