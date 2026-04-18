@@ -463,36 +463,23 @@ export const useTourWizardStore = defineStore('tourWizard', {
           }
 
           // Map Step 4: Commercial Rules / Pricing
+          // Match prices by age_stage_id to the admin slot with the same id.
+          // Slot labels/ranges are hardcoded defaults and are NOT overridden by
+          // the age_stages row — some legacy rows have description/ranges that
+          // don't match the data actually stored under them.
           if (data.price_details && data.price_details.length > 0) {
-            // Group prices by description (Adulto/Niño) — backend ageStage IDs don't align with admin slot IDs
-            const normalize = (s: string) => String(s || '').toLowerCase().trim()
             const grouped: Record<string, any[]> = {}
-            const backendStageIds: Record<string, number> = {}
             data.price_details.forEach((p: any) => {
-              const rawName = p.age_stage?.description || p.age_stage?.name || ''
-              const key = normalize(rawName)
-              if (!key) return
-              if (!grouped[key]) grouped[key] = []
-              grouped[key].push(p)
-              if (p.age_stage_id) backendStageIds[key] = p.age_stage_id
+              const stageId = String(p.age_stage_id || p.age_stage?.id || '')
+              if (!stageId) return
+              if (!grouped[stageId]) grouped[stageId] = []
+              grouped[stageId].push(p)
             })
 
             this.commercialRules.ageStages = this.commercialRules.ageStages.map(stage => {
-              const key = normalize(stage.description)
-              const prices = grouped[key]
+              const prices = grouped[stage.id]
               if (prices && prices.length > 0) {
                 stage.active = true
-                const ageStage = prices[0].age_stage || {}
-                // Keep defaults if DB values look invalid for this stage label (e.g. Adulto with 0-3)
-                const dbMin = ageStage.min_age
-                const dbMax = ageStage.max_age
-                const validRange = typeof dbMin === 'number' && typeof dbMax === 'number' && dbMax > dbMin
-                if (validRange) {
-                  stage.minAge = dbMin
-                  stage.maxAge = dbMax
-                }
-                // Remember backend id so save can write under the correct age_stage_id
-                if (backendStageIds[key]) (stage as any).backendId = backendStageIds[key]
                 stage.nationalities = [{
                   id: 'n1',
                   nationalityId: 'general',
@@ -649,13 +636,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
         tax_percentage: this.commercialRules.taxPercentage,
         advance_payment_percentage: this.commercialRules.advancePaymentPercentage,
         prices: this.commercialRules.ageStages.reduce((acc: Record<string, any>, stage) => {
-          // Use backend age_stage id if we know it; otherwise fall back to local slot id
-          const stageKey = String((stage as any).backendId || stage.id)
-          acc[stageKey] = {
+          acc[stage.id] = {
             active: stage.active,
-            description: stage.description,
-            min_age: stage.minAge,
-            max_age: stage.maxAge,
             ranges: stage.nationalities.flatMap(nat =>
               nat.ranges.map(range => ({
                 from: range.from,
