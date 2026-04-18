@@ -88,6 +88,9 @@ export default defineI18nConfig(() => ({
       guide_self: 'Sin guía',
       tour_date: 'Fecha del Tour',
       select_date: 'Seleccionar fecha',
+      difficulty_easy: 'Fácil',
+      difficulty_moderate: 'Moderado',
+      difficulty_hard: 'Difícil',
       departure_time: 'Hora de Salida',
       select_time: 'Seleccionar',
       peruvian_time: 'Hora Peruana',
@@ -335,6 +338,9 @@ export default defineI18nConfig(() => ({
       guide_self: 'Self-guided',
       tour_date: 'Tour Date',
       select_date: 'Select date',
+      difficulty_easy: 'Easy',
+      difficulty_moderate: 'Moderate',
+      difficulty_hard: 'Hard',
       departure_time: 'Departure Time',
       select_time: 'Select',
       peruvian_time: 'Peruvian Time',
@@ -499,6 +505,7 @@ export default defineI18nConfig(() => ({
       hero_description: 'Descubra experiências incríveis no lago navegável mais alto do mundo.',
       share: 'Compartilhar', save: 'Salvar', book_now: 'Reservar', per_person_label: 'por pessoa',
       tour_date: 'Data do Tour', select_date: 'Selecionar data', departure_time: 'Horário de Saída',
+      difficulty_easy: 'Fácil', difficulty_moderate: 'Moderado', difficulty_hard: 'Difícil',
       select_time: 'Selecionar', peruvian_time: 'Horário Peruano', bolivian_time: 'Horário Boliviano',
       checkout: {
         title: 'Complete sua Reserva',
@@ -560,6 +567,7 @@ export default defineI18nConfig(() => ({
       hero_description: 'Découvrez des expériences incroyables sur le plus haut lac navigable du monde.',
       share: 'Partager', save: 'Sauvegarder', book_now: 'Réserver', per_person_label: 'par personne',
       tour_date: 'Date du Tour', select_date: 'Sélectionner la date', departure_time: 'Heure de Départ',
+      difficulty_easy: 'Facile', difficulty_moderate: 'Modéré', difficulty_hard: 'Difficile',
       select_time: 'Sélectionner', peruvian_time: 'Heure Péruvienne', bolivian_time: 'Heure Bolivienne',
       checkout: {
         title: 'Finalisez votre Réservation',
@@ -621,6 +629,7 @@ export default defineI18nConfig(() => ({
       hero_description: 'Entdecken Sie atemberaubende Erlebnisse am höchsten schiffbaren See der Welt.',
       share: 'Teilen', save: 'Speichern', book_now: 'Buchen', per_person_label: 'pro Person',
       tour_date: 'Tourdatum', select_date: 'Datum wählen', departure_time: 'Abfahrtszeit',
+      difficulty_easy: 'Leicht', difficulty_moderate: 'Mittel', difficulty_hard: 'Schwer',
       select_time: 'Wählen', peruvian_time: 'Peruanische Zeit', bolivian_time: 'Bolivianische Zeit',
       checkout: {
         title: 'Buchung abschließen',
@@ -682,6 +691,7 @@ export default defineI18nConfig(() => ({
       hero_description: 'Scopri esperienze mozzafiato nel lago navigabile più alto del mondo.',
       share: 'Condividi', save: 'Salva', book_now: 'Prenota', per_person_label: 'a persona',
       tour_date: 'Data del Tour', select_date: 'Seleziona data', departure_time: 'Ora di Partenza',
+      difficulty_easy: 'Facile', difficulty_moderate: 'Moderato', difficulty_hard: 'Difficile',
       select_time: 'Seleziona', peruvian_time: 'Ora Peruviana', bolivian_time: 'Ora Boliviana',
       checkout: {
         title: 'Completa la tua Prenotazione',

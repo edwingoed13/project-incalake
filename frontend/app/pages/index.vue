@@ -243,10 +243,10 @@
                   :class="{
                     'bg-green-500/90 text-white': tour.difficulty === 'easy',
                     'bg-yellow-500/90 text-white': tour.difficulty === 'moderate',
-                    'bg-red-500/90 text-white': tour.difficulty === 'hard',
+                    'bg-red-500/90 text-white': tour.difficulty === 'hard' || tour.difficulty === 'difficult',
                   }"
                 >
-                  {{ tour.difficulty }}
+                  {{ translateDifficulty(tour.difficulty) }}
                 </span>
               </div>
             </div>
@@ -421,9 +421,17 @@
 <script setup lang="ts">
 const { api } = useApi()
 const config = useRuntimeConfig()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
+
+function translateDifficulty(value: string | null | undefined): string {
+  if (!value) return ''
+  const raw = String(value).toLowerCase()
+  const key = raw === 'difficult' ? 'hard' : raw
+  const k = `difficulty_${key}`
+  return te(k) ? t(k) : value
+}
 
 const searchQuery = ref('')
 const searchResults = ref<any[]>([])

@@ -169,6 +169,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const config = useRuntimeConfig()
+const { t, te } = useI18n()
 
 const imageUrl = computed(() => {
   const image = props.tour.featured_image || props.tour.thumbnail
@@ -178,23 +179,21 @@ const imageUrl = computed(() => {
 })
 
 const difficultyLabel = computed(() => {
-  const difficulties: Record<string, string> = {
-    easy: 'Easy',
-    moderate: 'Moderate',
-    difficult: 'Difficult',
-    hard: 'Hard'
-  }
-  return difficulties[props.tour.difficulty] || props.tour.difficulty
+  const raw = String(props.tour.difficulty || '').toLowerCase()
+  const key = raw === 'difficult' ? 'hard' : raw
+  const i18nKey = `difficulty_${key}`
+  return te(i18nKey) ? t(i18nKey) : props.tour.difficulty
 })
 
 const difficultyClass = computed(() => {
+  const raw = String(props.tour.difficulty || '').toLowerCase()
   const classes: Record<string, string> = {
     easy: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     moderate: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     difficult: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
     hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   }
-  return classes[props.tour.difficulty] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+  return classes[raw] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
 })
 
 const duration = computed(() => {

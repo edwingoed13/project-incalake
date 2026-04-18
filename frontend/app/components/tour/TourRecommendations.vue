@@ -23,7 +23,7 @@
         <div>
           <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Difficulty Level</h4>
           <p class="text-sm text-slate-600 dark:text-slate-400">
-            {{ tour.difficulty === 'easy' ? 'Easy' : tour.difficulty === 'moderate' ? 'Moderate' : 'Difficult' }}
+            {{ difficultyLabel }}
           </p>
         </div>
       </div>
@@ -47,13 +47,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 interface Props {
   tour: any
 }
 
 const props = defineProps<Props>()
+
+const difficultyLabel = computed(() => {
+  const raw = String(props.tour?.difficulty || '').toLowerCase()
+  const key = raw === 'difficult' ? 'hard' : raw
+  const k = `difficulty_${key}`
+  return te(k) ? t(k) : (props.tour?.difficulty || '')
+})
 
 const sanitizedRecommendations = computed(() => sanitizeHtml(props.tour.recommendations || ''))
 const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_bring || ''))
