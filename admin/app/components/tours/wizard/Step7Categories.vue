@@ -19,49 +19,75 @@
       </div>
     </section>
 
-    <!-- Categories Grid -->
-    <section class="space-y-6">
-      <div class="flex items-center justify-between px-2">
-         <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Categorías Disponibles</h4>
-         <div class="text-[10px] font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
-            {{ store.selectedCategories.length }} Seleccionadas
-         </div>
+    <!-- Categories -->
+    <section class="space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 px-2">
+        <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Categorías Disponibles</h4>
+        <div class="flex items-center gap-2">
+          <button
+            v-if="store.selectedCategories.length > 0"
+            type="button"
+            @click="store.selectedCategories = []"
+            class="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors"
+          >
+            Limpiar
+          </button>
+          <div class="text-[10px] font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
+            {{ store.selectedCategories.length }} / {{ mockCategories.length }}
+          </div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        <label 
-          v-for="cat in mockCategories" 
+      <!-- Search input -->
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">search</span>
+        <input
+          v-model="categorySearch"
+          type="search"
+          placeholder="Buscar categoría (ej. aventura, naturaleza, cultural)"
+          class="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
+        />
+      </div>
+
+      <!-- Selected chips (pinned) -->
+      <div v-if="selectedCategoriesList.length > 0" class="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
+        <div class="text-[10px] font-black uppercase tracking-widest text-primary/70">Seleccionadas</div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="cat in selectedCategoriesList"
+            :key="'sel-' + cat.id"
+            type="button"
+            @click="toggleCategory(cat.id)"
+            class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-primary text-white text-xs font-bold shadow-sm hover:bg-primary/90 transition-all"
+          >
+            <span class="material-symbols-outlined text-sm filled">{{ cat.icon }}</span>
+            <span>{{ cat.name }}</span>
+            <span class="material-symbols-outlined text-sm hover:scale-110 transition-transform">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- All categories as chips (wraps naturally, no truncation) -->
+      <div v-if="filteredCategories.length > 0" class="flex flex-wrap gap-2">
+        <button
+          v-for="cat in filteredCategories"
           :key="cat.id"
-          class="glass-card p-3 rounded-[1rem] border transition-all cursor-pointer group relative overflow-hidden flex items-center gap-3 select-none"
-          :class="store.selectedCategories.includes(cat.id) 
-            ? 'border-primary bg-primary/5 shadow-md shadow-primary/10 ring-1 ring-primary/20' 
-            : 'border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:border-slate-200 dark:hover:border-slate-700'"
+          type="button"
+          @click="toggleCategory(cat.id)"
+          :title="cat.description"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-bold transition-all select-none"
+          :class="store.selectedCategories.includes(cat.id)
+            ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
+            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary/40 hover:text-primary'"
         >
-          <input 
-            type="checkbox" 
-            :value="cat.id" 
-            v-model="store.selectedCategories" 
-            class="hidden" 
-          />
-          
-          <div class="size-8 shrink-0 rounded-xl flex items-center justify-center transition-all"
-            :class="store.selectedCategories.includes(cat.id) ? 'bg-primary text-white shadow-sm shadow-primary/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'"
-          >
-            <span class="material-symbols-outlined text-lg filled">{{ cat.icon }}</span>
-          </div>
+          <span class="material-symbols-outlined text-base" :class="store.selectedCategories.includes(cat.id) ? 'filled' : ''">{{ cat.icon }}</span>
+          <span>{{ cat.name }}</span>
+        </button>
+      </div>
 
-          <div class="flex-1 min-w-0">
-            <h5 class="text-[11px] font-bold truncate transition-colors leading-tight" :class="store.selectedCategories.includes(cat.id) ? 'text-primary' : 'text-slate-700 dark:text-slate-300'" :title="cat.name + '\n' + cat.description">
-              {{ cat.name }}
-            </h5>
-          </div>
-
-          <div class="size-4 shrink-0 rounded-md flex items-center justify-center transition-all"
-            :class="store.selectedCategories.includes(cat.id) ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'"
-          >
-            <span class="material-symbols-outlined text-[10px] text-white font-black scale-0 transition-transform" :class="{'scale-100': store.selectedCategories.includes(cat.id)}">check</span>
-          </div>
-        </label>
+      <!-- No results -->
+      <div v-else class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+        No se encontraron categorías para «{{ categorySearch }}»
       </div>
     </section>
 
@@ -103,9 +129,34 @@
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
+
+const categorySearch = ref('')
+
+const normalize = (s: string) => s
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+
+const filteredCategories = computed(() => {
+  const q = normalize(categorySearch.value.trim())
+  if (!q) return mockCategories
+  return mockCategories.filter(c =>
+    normalize(c.name).includes(q) || normalize(c.description).includes(q)
+  )
+})
+
+const selectedCategoriesList = computed(() =>
+  mockCategories.filter(c => store.selectedCategories.includes(c.id))
+)
+
+const toggleCategory = (id: number) => {
+  const idx = store.selectedCategories.indexOf(id)
+  if (idx === -1) store.selectedCategories.push(id)
+  else store.selectedCategories.splice(idx, 1)
+}
 
 const mockCategories = [
   { id: 1, name: 'Turismo Cultural', icon: 'account_balance', description: 'Enfoque en la cultura y patrimonio.' },
