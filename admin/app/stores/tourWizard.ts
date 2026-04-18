@@ -776,18 +776,21 @@ export const useTourWizardStore = defineStore('tourWizard', {
           console.log('[Store] Tour saved successfully')
         }
       } catch (error: any) {
-        console.error('[Store] Error saving tour:', error)
-        console.error('[Store] Error response data:', error.data)
-        console.error('[Store] Validation errors:', error.data?.errors)
         const validationErrors = error.data?.errors
+        const messages = validationErrors
+          ? Object.entries(validationErrors)
+              .map(([field, msgs]: [string, any]) => `  ${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+              .join('\n')
+          : (error.data?.message || error.message || 'Error desconocido')
+
+        console.error('[Store] Error saving tour (422):\n' + messages)
+        console.error('[Store] Full payload sent:', JSON.stringify(payload, null, 2))
+        console.error('[Store] Full response:', JSON.stringify(error.data, null, 2))
+
         if (validationErrors) {
-          const messages = Object.entries(validationErrors)
-            .map(([field, msgs]: [string, any]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
-            .join('\n')
-          alert(`Errores de validación:\n${messages}`)
+          alert('Errores de validación:\n' + messages)
         } else {
-          const errorMsg = error.data?.message || 'Error al conectar con el servidor'
-          alert(`Error al guardar: ${errorMsg}`)
+          alert('Error al guardar: ' + messages)
         }
       } finally {
         this.loading = false
