@@ -38,9 +38,9 @@
         <div class="relative">
           <button
             @click="langOpen = !langOpen"
-            class="flex items-center gap-1 px-2 py-1.5 text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
+            class="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
           >
-            <span class="text-sm">{{ langFlags[locale] || '🌐' }}</span>
+            <img :src="flagSrc(locale, 20)" :alt="locale" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
             <span class="hidden sm:inline">{{ langShortLabels[locale] || locale.toUpperCase() }}</span>
             <span class="material-symbols-outlined text-xs transition-transform" :class="{ 'rotate-180': langOpen }">expand_more</span>
           </button>
@@ -54,8 +54,8 @@
               class="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-primary/5 hover:text-primary transition-colors"
               :class="{ 'bg-primary/5 text-primary font-semibold': locale === loc.code }"
             >
-              <span class="flex items-center gap-2">
-                <span class="text-base">{{ langFlags[loc.code] || '🌐' }}</span>
+              <span class="flex items-center gap-2.5">
+                <img :src="flagSrc(loc.code, 24)" :alt="loc.code" class="w-6 h-auto rounded-sm shadow-sm" loading="lazy" />
                 <span class="text-xs font-semibold">{{ loc.name }}</span>
               </span>
               <span v-if="locale === loc.code" class="material-symbols-outlined text-sm text-primary">check</span>
@@ -127,6 +127,26 @@
             {{ t(link.key) }}
           </NuxtLink>
 
+          <!-- Mobile Language -->
+          <div class="pt-3 mt-3 border-t border-slate-100">
+            <p class="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Language</p>
+            <div class="grid grid-cols-3 gap-1.5 px-4">
+              <NuxtLink
+                v-for="loc in locales"
+                :key="loc.code"
+                :to="switchLocalePath(loc.code)"
+                @click="mobileOpen = false"
+                class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-all"
+                :class="locale === loc.code
+                  ? 'border-primary bg-primary/5 text-primary font-bold'
+                  : 'border-slate-200 text-slate-600 hover:border-primary/40'"
+              >
+                <img :src="flagSrc(loc.code, 20)" :alt="loc.code" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
+                <span class="text-[10px] font-bold">{{ langShortLabels[loc.code] || loc.code.toUpperCase() }}</span>
+              </NuxtLink>
+            </div>
+          </div>
+
           <!-- Mobile Currency -->
           <div class="pt-3 mt-3 border-t border-slate-100">
             <p class="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Currency</p>
@@ -152,6 +172,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { countryFlagUrl } from '~/utils/countries'
 import { useCartStore } from '~/stores/cart'
 import { useCurrencyStore, CURRENCIES } from '~/stores/currency'
 
@@ -166,12 +187,18 @@ const langOpen = ref(false)
 const currOpen = ref(false)
 const mobileOpen = ref(false)
 
-const langFlags: Record<string, string> = {
-  es: '🇪🇸', en: '🇬🇧', pt: '🇵🇹', fr: '🇫🇷', de: '🇩🇪', it: '🇮🇹'
+// Locale → ISO country code for flagcdn images (emojis don't render on Windows)
+const langCountryCode: Record<string, string> = {
+  es: 'es', en: 'gb', pt: 'pt', fr: 'fr', de: 'de', it: 'it'
 }
 
 const langShortLabels: Record<string, string> = {
   es: 'ESP', en: 'ENG', pt: 'POR', fr: 'FRA', de: 'DEU', it: 'ITA'
+}
+
+const flagSrc = (locCode: string, size = 24) => {
+  const cc = langCountryCode[locCode] || locCode
+  return countryFlagUrl(cc, size)
 }
 
 const navLinks = [
