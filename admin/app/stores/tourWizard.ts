@@ -584,7 +584,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
       const config = useRuntimeConfig()
       const defaultApiUrl = config.public.apiUrl
       const isNew = !this.tourId || this.tourId === 'new'
-      const method = isNew ? 'POST' : 'PUT'
+      // cPanel/mod_security blocks PUT on shared hosts — the backend route
+      // accepts both PUT and POST, so we always use POST for updates.
+      const method = 'POST'
       const url = isNew ? `${defaultApiUrl}/admin/tours` : `${defaultApiUrl}/admin/tours/${this.tourId}`
 
       // Build translations object keyed by language_id (as the backend expects)

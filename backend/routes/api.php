@@ -162,10 +162,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Admin routes - Tours management - More restrictive rate limit
+    // NOTE: cPanel/mod_security blocks PUT/DELETE on some shared hosts, so
+    // update/destroy also accept POST as a fallback (admin sends POST).
     Route::middleware(['throttle:30,1'])->prefix('admin/tours')->group(function () {
         Route::post('/', [TourController::class, 'store'])->name('api.admin.tours.store');
-        Route::put('/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
-        Route::delete('/{id}', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
+        Route::match(['put', 'post'], '/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
+        Route::match(['delete', 'post'], '/{id}/delete', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
         Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
     });
 
