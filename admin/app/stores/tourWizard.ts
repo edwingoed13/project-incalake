@@ -24,6 +24,7 @@ export interface TourStep1 {
     lng: number
   }
   languageId?: number
+  status?: 'draft' | 'published' | 'archived'
 }
 
 export interface TourStep2Content {
@@ -213,7 +214,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
       nearestCity: '',
       nearestAirport: '',
       cityId: undefined,
-      languageId: undefined
+      languageId: undefined,
+      status: 'draft'
     } as TourStep1,
 
     // Step 2 Data (Multi-language)
@@ -398,7 +400,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
             nearestCity: data.city?.name || '',
             nearestAirport: '',
             cityId: data.city?.id,
-            languageId: data.primary_language?.id
+            languageId: data.primary_language?.id,
+            status: data.status || 'draft'
           }
           
           // Map Step 2: Content & SEO (translations)
@@ -607,6 +610,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         city_longitude: this.basicInfo.cityCoordinates?.lng || null,
         code: this.basicInfo.code,
         service_type: this.basicInfo.serviceType,
+        status: this.basicInfo.status || 'draft',
         difficulty: this.basicInfo.difficulty,
         target_audience: this.basicInfo.targetAudience,
         capacity: this.basicInfo.capacityMax,
