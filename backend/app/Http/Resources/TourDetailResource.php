@@ -101,6 +101,7 @@ class TourDetailResource extends JsonResource
             'city' => [
                 'id' => $this->city_id,
                 'name' => $this->city_name ?? $this->city?->name,
+                'slug' => $this->city?->slug,
             ],
 
             'primary_language' => [

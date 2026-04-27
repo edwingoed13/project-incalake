@@ -19,6 +19,7 @@ export interface TourStep1 {
   nearestCity: string
   nearestAirport: string
   cityId?: number
+  citySlug?: string
   cityCoordinates?: {
     lat: number
     lng: number
@@ -400,6 +401,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
             nearestCity: data.city?.name || '',
             nearestAirport: '',
             cityId: data.city?.id,
+            citySlug: data.city?.slug || '',
             languageId: data.primary_language?.id,
             status: data.status || 'draft'
           }

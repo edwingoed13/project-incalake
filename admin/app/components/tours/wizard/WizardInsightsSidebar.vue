@@ -21,16 +21,21 @@
         {{ store.basicInfo.status === 'published' ? 'Update Published Tour' : 'Publish Tour Now' }}
       </button>
 
-      <button
-        @click="previewTour"
-        :disabled="!previewUrl"
-        :title="previewUrl || 'Guarda el tour para generar el slug y poder previsualizar'"
-        class="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all border border-primary/20"
-      >
-        <span class="material-symbols-outlined text-base">visibility</span>
-        Preview Tour
-        <span class="material-symbols-outlined text-sm">open_in_new</span>
-      </button>
+      <div class="space-y-1.5">
+        <button
+          @click="previewTour"
+          :disabled="!previewUrl"
+          :title="previewUrl || 'Guarda el tour para generar el slug y poder previsualizar'"
+          class="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all border border-primary/20"
+        >
+          <span class="material-symbols-outlined text-base">visibility</span>
+          Preview Tour
+          <span class="material-symbols-outlined text-sm">open_in_new</span>
+        </button>
+        <div v-if="previewUrl" class="px-2 py-1 text-[9px] font-mono text-slate-400 break-all leading-tight">
+          {{ previewUrl }}
+        </div>
+      </div>
 
       <div class="grid grid-cols-2 gap-3">
         <button
@@ -155,10 +160,24 @@ const previewSlug = computed(() => {
   return l ? (store.contentSEO[l].slug || '').trim() : ''
 })
 
+// Slugify city name as fallback when the API didn't expose city.slug yet
+const slugifyCity = (name: string) => (name || '')
+  .toLowerCase()
+  .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  .replace(/[^a-z0-9\s-]/g, '')
+  .trim()
+  .replace(/\s+/g, '-')
+
+const previewCitySlug = computed(() => {
+  return store.basicInfo.citySlug || slugifyCity(store.basicInfo.nearestCity || '') || 'puno'
+})
+
 const previewUrl = computed(() => {
   if (!store.tourId || store.tourId === 'new') return ''
   if (!previewSlug.value) return ''
-  return `${FRONTEND_URL}/${previewLang.value}/tours/${previewSlug.value}`
+  // Frontend route: /{lang}/{city.slug}/{tour.slug} — the /tours/{slug} variant
+  // is not pre-rendered in production and 404s.
+  return `${FRONTEND_URL}/${previewLang.value}/${previewCitySlug.value}/${previewSlug.value}`
 })
 
 const previewTour = () => {
