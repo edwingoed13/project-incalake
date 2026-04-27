@@ -330,7 +330,7 @@ import TiptapEditor from '~/components/common/TiptapEditor.vue'
 import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
-const { initCityAutocomplete } = useGooglePlaces()
+const { initCityAutocomplete, initPlaceAutocomplete } = useGooglePlaces()
 
 const tourLanguages = computed(() => {
   return Object.keys(store.contentSEO).filter(code => {
@@ -409,18 +409,18 @@ const setupMap = () => {
     zoomControl: true,
   })
 
-  // Setup autocomplete for the search input
+  // Setup autocomplete for the search input — generic places (POIs, landmarks, hotels, etc.)
   nextTick(() => {
     if (mapSearchInput.value) {
-      initCityAutocomplete(mapSearchInput.value, (placeData: any) => {
-        newPoint.value.name = placeData.cityName || placeData.formatted_address || ''
+      initPlaceAutocomplete(mapSearchInput.value, (placeData: any) => {
+        newPoint.value.name = placeData.name || placeData.formatted_address || ''
         newPoint.value.description = placeData.formatted_address || ''
         newPoint.value.coordinates = `${placeData.lat},${placeData.lng}`
 
         // Center map on selected location
         if (map.value && placeData.lat && placeData.lng) {
           map.value.setCenter({ lat: placeData.lat, lng: placeData.lng })
-          map.value.setZoom(12)
+          map.value.setZoom(14)
         }
       })
     }

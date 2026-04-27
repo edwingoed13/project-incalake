@@ -135,6 +135,60 @@ export const useGooglePlaces = () => {
     }
   }
 
+  // Initialize generic place autocomplete (POIs, landmarks, hotels, restaurants...)
+  // Use this for map route points where users may type "mirador", "hotel X", etc.
+  const initPlaceAutocomplete = async (
+    inputElement: HTMLInputElement,
+    onPlaceSelected?: (place: any) => void
+  ) => {
+    if (!inputElement) return null
+
+    try {
+      await loadGoogleMaps()
+
+      if (!window.google?.maps?.places) {
+        console.error('Google Places API not available')
+        return null
+      }
+
+      if (inputElement.hasAttribute('data-autocomplete-initialized')) {
+        return null
+      }
+      inputElement.setAttribute('data-autocomplete-initialized', 'true')
+
+      const autocomplete = new window.google.maps.places.Autocomplete(inputElement, {
+        // No types restriction = matches establishments, geocoded addresses, regions, etc.
+        fields: ['formatted_address', 'name', 'address_components', 'geometry', 'types'],
+      })
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        if (!place) return
+
+        const lat = place.geometry?.location?.lat()
+        const lng = place.geometry?.location?.lng()
+
+        if (onPlaceSelected) {
+          onPlaceSelected({
+            name: place.name || '',
+            formatted_address: place.formatted_address || '',
+            types: place.types || [],
+            lat,
+            lng,
+          })
+        }
+
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }))
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }))
+      })
+
+      return autocomplete
+    } catch (error) {
+      console.error('Error initializing Google Places autocomplete:', error)
+      return null
+    }
+  }
+
   // Cleanup function
   const cleanup = (inputElement: HTMLInputElement) => {
     if (inputElement) {
@@ -147,6 +201,7 @@ export const useGooglePlaces = () => {
     googleLoaded,
     loadGoogleMaps,
     initCityAutocomplete,
+    initPlaceAutocomplete,
     cleanup
   }
 }
