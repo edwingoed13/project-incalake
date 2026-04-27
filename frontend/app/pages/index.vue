@@ -594,7 +594,8 @@ function getImageUrl(path: string) {
 
 function getTourLink(tour: any) {
   const slug = tour.slug || tour.id
-  return localePath(`/tours/${slug}`)
+  const citySlug = tour.city?.slug || 'puno'
+  return localePath(`/${citySlug}/${slug}`)
 }
 
 function onSearchFocus() {

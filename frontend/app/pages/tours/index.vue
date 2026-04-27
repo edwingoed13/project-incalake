@@ -514,7 +514,10 @@ function formatCityName(slug: string) {
   return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-function getTourLink(tour: any) { return localePath(`/tours/${tour.slug || tour.id}`) }
+function getTourLink(tour: any) {
+  const citySlug = tour.city?.slug || 'puno'
+  return localePath(`/${citySlug}/${tour.slug || tour.id}`)
+}
 
 function hasActiveOffer(tour: any) {
   const today = new Date().toISOString().split('T')[0]

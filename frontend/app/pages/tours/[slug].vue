@@ -474,6 +474,16 @@ const { data: response, pending, error } = await useAsyncData(
 
 const tour = computed(() => response.value?.data || null)
 
+// Permanent redirect to canonical /{city}/{slug} URL — keeps SEO clean and
+// avoids the 404 we get when this URL is loaded directly via Vercel's ISR.
+const localePath = useLocalePath()
+if (import.meta.server && tour.value?.city?.slug) {
+  await navigateTo(
+    localePath(`/${tour.value.city.slug}/${slug}`),
+    { redirectCode: 301 }
+  )
+}
+
 // Fetch related tours (lazy - doesn't block navigation)
 const { data: relatedResponse } = await useAsyncData(
   `related-tours-${slug}`,

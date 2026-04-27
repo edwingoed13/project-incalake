@@ -107,8 +107,8 @@ export default defineNuxtConfig({
     '/fr': { swr: 3600 },
     '/de': { swr: 3600 },
     '/it': { swr: 3600 },
+    // Listing page only — individual tour detail pages are under /{city}/{slug}
     '/**/tours': { swr: 60 },
-    '/**/tours/**': { swr: 60 },
     '/**/about': { swr: 86400 },
     '/**/contact': { swr: 86400 },
 

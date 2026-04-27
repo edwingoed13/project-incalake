@@ -45,6 +45,7 @@ class TourResource extends JsonResource
             'city' => [
                 'id' => $this->city_id,
                 'name' => $this->city_name,
+                'slug' => $this->city?->slug,
             ],
             'service_type' => $this->service_type,
             // Available languages for this tour

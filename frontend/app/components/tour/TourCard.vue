@@ -211,6 +211,10 @@ const duration = computed(() => {
 })
 
 const tourLink = computed(() => {
-  return props.tour.slug ? `/tours/${props.tour.slug}` : `/tours/${props.tour.id}`
+  // Canonical pattern: /{city.slug}/{tour.slug}. The /tours/{slug} variant
+  // lives in pages/ but is masked by [city]/[slug] on direct URL load and 404s.
+  const citySlug = props.tour.city?.slug || 'puno'
+  const slug = props.tour.slug || props.tour.id
+  return `/${citySlug}/${slug}`
 })
 </script>
