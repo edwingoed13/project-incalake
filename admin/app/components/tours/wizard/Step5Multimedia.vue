@@ -45,6 +45,28 @@
                  Add
                </button>
              </div>
+             <!-- Saved URL preview chip — shows the full URL at a glance even on tablet -->
+             <div v-if="currentLangSeo?.youtubeUrl" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+               <span class="material-symbols-outlined text-sm text-slate-400 shrink-0">link</span>
+               <a :href="currentLangSeo.youtubeUrl" target="_blank" rel="noopener noreferrer"
+                  :title="currentLangSeo.youtubeUrl"
+                  class="flex-1 text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate hover:text-primary transition-colors">
+                 {{ currentLangSeo.youtubeUrl }}
+               </a>
+               <button
+                 type="button"
+                 @click="copyVideoUrl"
+                 :title="urlCopied ? 'Copiado' : 'Copiar URL'"
+                 class="text-slate-400 hover:text-primary transition-colors shrink-0"
+               >
+                 <span class="material-symbols-outlined text-base">{{ urlCopied ? 'check' : 'content_copy' }}</span>
+               </button>
+               <a :href="currentLangSeo.youtubeUrl" target="_blank" rel="noopener noreferrer"
+                  title="Abrir en nueva pestaña"
+                  class="text-slate-400 hover:text-primary transition-colors shrink-0">
+                 <span class="material-symbols-outlined text-base">open_in_new</span>
+               </a>
+             </div>
              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Each language has its own video. Supported: YouTube, Vimeo.</p>
           </div>
         </div>
@@ -385,6 +407,19 @@ const videoLanguages = computed(() => {
 const updateVideoUrl = (url: string) => {
   if (store.contentSEO[store.currentLanguage]) {
     store.contentSEO[store.currentLanguage].youtubeUrl = url
+  }
+}
+
+const urlCopied = ref(false)
+const copyVideoUrl = async () => {
+  const url = currentLangSeo.value?.youtubeUrl
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    urlCopied.value = true
+    setTimeout(() => { urlCopied.value = false }, 1500)
+  } catch (err) {
+    console.error('Clipboard write failed:', err)
   }
 }
 
