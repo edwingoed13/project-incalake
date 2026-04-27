@@ -141,16 +141,36 @@ const publishTour = async () => {
 
 const FRONTEND_URL = (config.public as any).frontendUrl || 'https://incalake-frontend.vercel.app'
 
+// Pick the first language that actually has a slug, preferring the current language
+const previewLang = computed(() => {
+  const langs = [store.currentLanguage || 'es', 'es', 'en', 'pt', 'fr', 'de', 'it']
+  for (const l of langs) {
+    if (store.contentSEO?.[l]?.slug) return l
+  }
+  return ''
+})
+
+const previewSlug = computed(() => {
+  const l = previewLang.value
+  return l ? (store.contentSEO[l].slug || '').trim() : ''
+})
+
 const previewUrl = computed(() => {
-  const lang = store.currentLanguage || 'es'
-  const seo = store.contentSEO?.[lang]
-  const slug = seo?.slug
-  if (!slug || !store.tourId || store.tourId === 'new') return ''
-  return `${FRONTEND_URL}/${lang}/tours/${slug}`
+  if (!store.tourId || store.tourId === 'new') return ''
+  if (!previewSlug.value) return ''
+  return `${FRONTEND_URL}/${previewLang.value}/tours/${previewSlug.value}`
 })
 
 const previewTour = () => {
-  if (!previewUrl.value) return
+  if (!store.tourId || store.tourId === 'new') {
+    alert('Guarda el tour primero — no hay slug todavía.')
+    return
+  }
+  if (!previewSlug.value) {
+    alert('Ningún idioma tiene slug guardado.\nVe a Step 2 (Description & SEO), genera/guarda el slug y vuelve a intentar.')
+    return
+  }
+  console.log('[Preview] Opening:', previewUrl.value)
   window.open(previewUrl.value, '_blank', 'noopener,noreferrer')
 }
 
