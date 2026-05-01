@@ -27,6 +27,7 @@ class Tour extends Model
         'cupos',
         'duration_days',
         'duration_hours',
+        'duration_minutes',
         'departure_time',
         'departure_times',
         'departure_period',
@@ -76,6 +77,7 @@ class Tour extends Model
         'cupos' => 'integer',
         'duration_days' => 'integer',
         'duration_hours' => 'integer',
+        'duration_minutes' => 'integer',
         'booking_anticipation_hours' => 'integer',
         'tax_percentage' => 'decimal:2',
         'advance_payment_percentage' => 'integer',
@@ -206,6 +208,9 @@ class Tour extends Model
         }
         if ($this->duration_hours > 0) {
             $parts[] = $this->duration_hours . ($this->duration_hours === 1 ? ' hour' : ' hours');
+        }
+        if ($this->duration_minutes > 0) {
+            $parts[] = $this->duration_minutes . ' min';
         }
         return implode(' ', $parts) ?: 'N/A';
     }

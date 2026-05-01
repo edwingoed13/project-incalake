@@ -67,9 +67,12 @@ export interface TourStep1 {
   capacityMin: number
   capacityMax: number
   duration: number
-  durationUnit: 'hours' | 'days'
+  durationUnit: 'hours' | 'days' | 'minutes'
+  durationDays: number
+  durationHours: number
+  durationMinutes: number
   startTime: string
-  startTimes: Array<{ time: string; duration: number; durationUnit: 'hours' | 'days' }>
+  startTimes: Array<{ time: string; duration: number; durationUnit: 'hours' | 'days' | 'minutes'; days?: number; hours?: number; minutes?: number }>
   timezone: string
   nearestCity: string
   nearestAirport: string
@@ -264,8 +267,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
       capacityMax: 20,
       duration: 1,
       durationUnit: 'hours',
+      durationDays: 0,
+      durationHours: 1,
+      durationMinutes: 0,
       startTime: '08:00',
-      startTimes: [{ time: '08:00', duration: 1, durationUnit: 'hours' }],
+      startTimes: [{ time: '08:00', duration: 1, durationUnit: 'hours', days: 0, hours: 1, minutes: 0 }],
       timezone: 'America/Lima',
       nearestCity: '',
       nearestAirport: '',
@@ -435,22 +441,51 @@ export const useTourWizardStore = defineStore('tourWizard', {
             durationUnit: data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours'),
             startTime: data.departure_time || '08:00',
             startTimes: (() => {
+              // Helper: derive {days, hours, minutes} from any duration shape an
+              // older record might have stored (numeric+unit, or already split).
+              const splitDuration = (item: any) => {
+                if (item && (item.days != null || item.hours != null || item.minutes != null)) {
+                  return {
+                    days: Number(item.days) || 0,
+                    hours: Number(item.hours) || 0,
+                    minutes: Number(item.minutes) || 0,
+                  }
+                }
+                const qty = Number(item?.duration ?? item?.duration_quantity ?? data.duration_quantity ?? 0)
+                const unit = item?.durationUnit || item?.duration_unit || data.duration_unit || 'hours'
+                if (unit === 'days') return { days: Math.floor(qty), hours: 0, minutes: 0 }
+                if (unit === 'minutes') return { days: 0, hours: Math.floor(qty / 60), minutes: qty % 60 }
+                // hours (allow fractional like 2.5 -> 2h 30m)
+                const h = Math.floor(qty)
+                return { days: 0, hours: h, minutes: Math.round((qty - h) * 60) }
+              }
+
               const arr = data.departure_times
               if (Array.isArray(arr) && arr.length > 0) {
                 return arr.map((item: any) => {
-                  if (typeof item === 'string') {
-                    return { time: item.substring(0, 5), duration: data.duration_quantity || data.duration_hours || 1, durationUnit: (data.duration_unit || 'hours') as 'hours' | 'days' }
-                  }
+                  const time = typeof item === 'string'
+                    ? item.substring(0, 5)
+                    : ((item?.time || '').substring(0, 5) || '08:00')
+                  const parts = splitDuration(typeof item === 'string' ? null : item)
                   return {
-                    time: (item?.time || '').substring(0, 5) || '08:00',
-                    duration: Number(item?.duration) || Number(item?.duration_quantity) || 1,
-                    durationUnit: (item?.durationUnit || item?.duration_unit || 'hours') as 'hours' | 'days',
+                    time,
+                    duration: Number((typeof item === 'object' ? item?.duration : null) ?? data.duration_quantity ?? 1),
+                    durationUnit: ((typeof item === 'object' ? item?.durationUnit || item?.duration_unit : null) || data.duration_unit || 'hours') as 'hours' | 'days' | 'minutes',
+                    days: parts.days,
+                    hours: parts.hours,
+                    minutes: parts.minutes,
                   }
                 }).filter((x: any) => x.time)
               }
-              const qty = data.duration_quantity || (data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1))
-              const unit = (data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours')) as 'hours' | 'days'
-              return [{ time: data.departure_time || '08:00', duration: qty, durationUnit: unit }]
+              const days = Number(data.duration_days) || 0
+              const hours = Number(data.duration_hours) || 0
+              const minutes = Number(data.duration_minutes) || 0
+              return [{
+                time: data.departure_time || '08:00',
+                duration: data.duration_quantity || hours || days || 1,
+                durationUnit: (data.duration_unit || (days > 0 ? 'days' : 'hours')) as 'hours' | 'days' | 'minutes',
+                days, hours, minutes,
+              }]
             })(),
             timezone: data.timezone || 'America/Lima',
             nearestCity: data.city?.name || '',
@@ -458,7 +493,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
             cityId: data.city?.id,
             citySlug: data.city?.slug || '',
             languageId: data.primary_language?.id,
-            status: data.status || 'draft'
+            status: data.status || 'draft',
+            durationDays: Number(data.duration_days) || 0,
+            durationHours: Number(data.duration_hours) || (Number(data.duration_quantity) && data.duration_unit === 'hours' ? Number(data.duration_quantity) : 0),
+            durationMinutes: Number(data.duration_minutes) || 0,
           }
           
           // Map Step 2: Content & SEO (translations)
@@ -673,15 +711,27 @@ export const useTourWizardStore = defineStore('tourWizard', {
         capacity: this.basicInfo.capacityMax,
         departure_time: (this.basicInfo.startTimes?.[0]?.time || this.basicInfo.startTime || '08:00').substring(0, 5),
         departure_times: (this.basicInfo.startTimes || [])
-          .map((item: any) => ({
-            time: (item?.time || '').substring(0, 5),
-            duration: Number(item?.duration) || 1,
-            duration_unit: item?.durationUnit || 'hours',
-          }))
+          .map((item: any) => {
+            const days = Number(item?.days) || 0
+            const hours = Number(item?.hours) || 0
+            const minutes = Number(item?.minutes) || 0
+            // Keep legacy duration/duration_unit in sync (some readers still use them)
+            const legacyQty = days > 0 ? days : (hours > 0 ? hours : minutes)
+            const legacyUnit = days > 0 ? 'days' : (hours > 0 ? 'hours' : 'minutes')
+            return {
+              time: (item?.time || '').substring(0, 5),
+              duration: Number(item?.duration) || legacyQty || 1,
+              duration_unit: item?.durationUnit || legacyUnit || 'hours',
+              days, hours, minutes,
+            }
+          })
           .filter((item: any) => /^\d{2}:\d{2}$/.test(item.time)),
         timezone: this.basicInfo.timezone,
         duration_quantity: this.basicInfo.duration,
         duration_unit: this.basicInfo.durationUnit,
+        duration_days: Number(this.basicInfo.durationDays) || 0,
+        duration_hours: Number(this.basicInfo.durationHours) || 0,
+        duration_minutes: Number(this.basicInfo.durationMinutes) || 0,
         youtube_url: this.multimedia.youtubeUrl,
         gallery_layout: this.multimedia.galleryLayout,
         media_gallery: this.multimedia.images.map(img => ({

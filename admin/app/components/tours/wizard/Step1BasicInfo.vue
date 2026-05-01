@@ -195,7 +195,14 @@
             </button>
           </div>
           <div class="space-y-2">
-            <div v-for="(item, idx) in store.basicInfo.startTimes" :key="idx" class="grid grid-cols-[1fr_100px_110px_auto] gap-2 items-center">
+            <div class="grid grid-cols-[1fr_70px_70px_70px_auto] gap-2 px-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span>Hora salida</span>
+              <span class="text-center">Días</span>
+              <span class="text-center">Horas</span>
+              <span class="text-center">Min</span>
+              <span></span>
+            </div>
+            <div v-for="(item, idx) in store.basicInfo.startTimes" :key="idx" class="grid grid-cols-[1fr_70px_70px_70px_auto] gap-2 items-center">
               <!-- Hora -->
               <div class="relative group">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">schedule</span>
@@ -206,28 +213,33 @@
                   type="time"
                 />
               </div>
-              <!-- Duración -->
+              <!-- Días -->
               <input
-                v-model.number="item.duration"
+                v-model.number="item.days"
                 @input="syncPrimaryDuration"
-                min="0"
-                step="0.5"
-                class="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
+                min="0" max="30"
+                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
                 type="number"
-                placeholder="Duración"
+                placeholder="0"
               />
-              <!-- Unidad -->
-              <div class="relative">
-                <select
-                  v-model="item.durationUnit"
-                  @change="syncPrimaryDuration"
-                  class="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold text-sm"
-                >
-                  <option value="hours">Horas</option>
-                  <option value="days">Días</option>
-                </select>
-                <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">expand_more</span>
-              </div>
+              <!-- Horas -->
+              <input
+                v-model.number="item.hours"
+                @input="syncPrimaryDuration"
+                min="0" max="23"
+                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
+                type="number"
+                placeholder="0"
+              />
+              <!-- Minutos -->
+              <input
+                v-model.number="item.minutes"
+                @input="syncPrimaryDuration"
+                min="0" max="59"
+                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
+                type="number"
+                placeholder="0"
+              />
               <!-- Eliminar -->
               <button
                 v-if="store.basicInfo.startTimes.length > 1"
@@ -241,7 +253,7 @@
               <div v-else class="w-[42px]"></div>
             </div>
           </div>
-          <p class="text-[10px] text-slate-400 mt-1">El primer horario se usa como principal. Cada horario tiene su propia duración.</p>
+          <p class="text-[10px] text-slate-400 mt-1">Combina días + horas + minutos en cualquier mezcla (ej. 2D 8H, o 0D 2H 30M). El primer horario se usa como principal.</p>
         </div>
 
         <!-- Duración Aproximada (legacy, sincronizado con el primer horario) -->
@@ -304,27 +316,55 @@ const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
 const { initCityAutocomplete, cleanup } = useGooglePlaces()
 
+// Convert any legacy {duration, durationUnit} into {days, hours, minutes}
+const splitLegacyDuration = (qty: number, unit: string) => {
+  if (unit === 'days') return { days: Math.floor(qty), hours: 0, minutes: 0 }
+  if (unit === 'minutes') return { days: 0, hours: Math.floor(qty / 60), minutes: qty % 60 }
+  // hours (allow fractional like 2.5 -> 2h 30m)
+  const h = Math.floor(qty)
+  return { days: 0, hours: h, minutes: Math.round((qty - h) * 60) }
+}
+
+const ensureBreakdown = (t: any) => {
+  if (t && (t.days != null || t.hours != null || t.minutes != null)) {
+    return {
+      days: Number(t.days) || 0,
+      hours: Number(t.hours) || 0,
+      minutes: Number(t.minutes) || 0,
+    }
+  }
+  return splitLegacyDuration(Number(t?.duration) || 0, t?.durationUnit || 'hours')
+}
+
 // Ensure startTimes array exists (migration from single startTime)
 if (!Array.isArray(store.basicInfo.startTimes) || store.basicInfo.startTimes.length === 0) {
+  const fallback = splitLegacyDuration(store.basicInfo.duration || 0, store.basicInfo.durationUnit || 'hours')
   store.basicInfo.startTimes = [{
     time: store.basicInfo.startTime || '08:00',
     duration: store.basicInfo.duration || 1,
     durationUnit: store.basicInfo.durationUnit || 'hours',
+    days: store.basicInfo.durationDays ?? fallback.days,
+    hours: store.basicInfo.durationHours ?? fallback.hours,
+    minutes: store.basicInfo.durationMinutes ?? fallback.minutes,
   }]
 } else {
-  // Migrate old string[] format to object[] format
+  // Migrate old string[] format to object[] format and ensure D/H/M present
   store.basicInfo.startTimes = store.basicInfo.startTimes.map((t: any) => {
     if (typeof t === 'string') {
+      const parts = splitLegacyDuration(store.basicInfo.duration || 0, store.basicInfo.durationUnit || 'hours')
       return {
         time: t,
         duration: store.basicInfo.duration || 1,
         durationUnit: store.basicInfo.durationUnit || 'hours',
+        ...parts,
       }
     }
+    const parts = ensureBreakdown(t)
     return {
       time: t.time || '08:00',
       duration: Number(t.duration) || 1,
       durationUnit: t.durationUnit || 'hours',
+      ...parts,
     }
   })
 }
@@ -336,6 +376,9 @@ const addDepartureTime = () => {
     time: '08:00',
     duration: last?.duration || store.basicInfo.duration || 1,
     durationUnit: last?.durationUnit || store.basicInfo.durationUnit || 'hours',
+    days: last?.days ?? 0,
+    hours: last?.hours ?? 1,
+    minutes: last?.minutes ?? 0,
   })
 }
 
@@ -354,9 +397,27 @@ const syncPrimaryDuration = () => {
   // Keep top-level duration fields in sync with first schedule for backward compat
   const first = store.basicInfo.startTimes[0]
   if (first) {
-    store.basicInfo.duration = first.duration || 1
-    store.basicInfo.durationUnit = first.durationUnit || 'hours'
+    const days = Number(first.days) || 0
+    const hours = Number(first.hours) || 0
+    const minutes = Number(first.minutes) || 0
+    store.basicInfo.durationDays = days
+    store.basicInfo.durationHours = hours
+    store.basicInfo.durationMinutes = minutes
+    // Pick the most-significant unit for the legacy fields
+    if (days > 0) {
+      store.basicInfo.duration = days
+      store.basicInfo.durationUnit = 'days'
+    } else if (hours > 0) {
+      store.basicInfo.duration = hours
+      store.basicInfo.durationUnit = 'hours'
+    } else {
+      store.basicInfo.duration = minutes
+      store.basicInfo.durationUnit = 'minutes'
+    }
+    return
   }
+  // Below this point the original function continues using `first` which is now null —
+  // skip the legacy lines below by exiting early.
 }
 
 // Edit mode detection
