@@ -83,7 +83,7 @@
       >
         <span class="material-symbols-outlined text-sm">link</span>
       </button>
-      <button 
+      <button
         type="button"
         @click="editor.chain().focus().unsetLink().run()"
         v-if="editor.isActive('link')"
@@ -92,6 +92,49 @@
       >
         <span class="material-symbols-outlined text-sm">link_off</span>
       </button>
+
+      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+
+      <!-- Insert table -->
+      <button
+        type="button"
+        @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"
+        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        title="Insertar tabla 3x3"
+      >
+        <span class="material-symbols-outlined text-sm">table</span>
+      </button>
+
+      <!-- Table editing controls — only visible when cursor is inside a table -->
+      <template v-if="editor.isActive('table')">
+        <button type="button" @click="editor.chain().focus().addColumnBefore().run()" title="Agregar columna a la izquierda" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">format_indent_decrease</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().addColumnAfter().run()" title="Agregar columna a la derecha" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">format_indent_increase</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().deleteColumn().run()" title="Eliminar columna" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-rose-500">
+          <span class="material-symbols-outlined text-sm">view_column</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().addRowBefore().run()" title="Agregar fila arriba" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">vertical_align_top</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().addRowAfter().run()" title="Agregar fila abajo" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">vertical_align_bottom</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().deleteRow().run()" title="Eliminar fila" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-rose-500">
+          <span class="material-symbols-outlined text-sm">table_rows</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().toggleHeaderRow().run()" title="Alternar fila de encabezado" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">view_headline</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().mergeOrSplit().run()" title="Combinar / dividir celdas" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <span class="material-symbols-outlined text-sm">join</span>
+        </button>
+        <button type="button" @click="editor.chain().focus().deleteTable().run()" title="Eliminar tabla" class="p-2 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors text-rose-500">
+          <span class="material-symbols-outlined text-sm">delete</span>
+        </button>
+      </template>
     </div>
 
     <!-- Editor Surface -->
