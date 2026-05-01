@@ -24,7 +24,22 @@
 
     <!-- Pricing Hierarchical (3 Levels) -->
     <section class="space-y-6">
-      <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Precios por Etapa de Edad, Nacionalidad y Cantidad</h3>
+      <div class="flex items-center justify-between gap-3">
+        <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Precios por Etapa de Edad, Nacionalidad y Cantidad</h3>
+        <div v-if="hasConflicts" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold">
+          <span class="material-symbols-outlined text-base">error</span>
+          {{ Object.keys(conflictsByRange).length }} rango(s) con conflicto
+        </div>
+      </div>
+
+      <div v-if="hasConflicts" class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/40">
+        <p class="text-sm text-rose-700 dark:text-rose-300 font-medium leading-relaxed">
+          <span class="font-bold">⚠ Hay rangos en conflicto.</span>
+          Los rangos no pueden solaparse ni duplicarse dentro de la misma nacionalidad.
+          Ejemplo válido: <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">1-1</code>, <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">2-5</code>, <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">6-20</code>.
+          Resuelve los rangos resaltados antes de guardar.
+        </p>
+      </div>
       
       <div class="space-y-8">
         <div 
@@ -111,27 +126,43 @@
                           </tr>
                         </thead>
                         <tbody class="space-y-2">
-                          <tr v-for="(range, rIndex) in nat.ranges" :key="range.id" class="group">
-                            <td class="py-1 px-2">
-                              <input v-model.number="range.from" type="number" class="w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white" />
-                            </td>
-                            <td class="py-1 text-center text-slate-300">-</td>
-                            <td class="py-1 px-2">
-                              <input v-model.number="range.to" type="number" class="w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white" />
-                            </td>
-                            <td class="py-1 text-center text-slate-300">:</td>
-                            <td class="py-1 px-2">
-                              <div class="flex items-center gap-1 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg px-2 py-1.5 focus-within:border-primary transition-all">
-                                <span class="text-[10px] font-bold text-slate-400">$</span>
-                                <input v-model.number="range.price" type="number" step="0.01" class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-mono dark:text-white" />
-                              </div>
-                            </td>
-                            <td class="py-1 text-right">
-                              <button @click="removeRange(nat, rIndex)" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all">
-                                <span class="material-symbols-outlined text-xs">close</span>
-                              </button>
-                            </td>
-                          </tr>
+                          <template v-for="(range, rIndex) in nat.ranges" :key="range.id">
+                            <tr class="group" :class="{ 'bg-rose-50/50 dark:bg-rose-900/10': conflictsByRange[range.id] }">
+                              <td class="py-1 px-2">
+                                <input v-model.number="range.from" type="number" min="1"
+                                  :class="conflictsByRange[range.id]
+                                    ? 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-700 rounded-lg text-sm focus:ring-rose-400 dark:text-white'
+                                    : 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white'" />
+                              </td>
+                              <td class="py-1 text-center text-slate-300">-</td>
+                              <td class="py-1 px-2">
+                                <input v-model.number="range.to" type="number" min="1"
+                                  :class="conflictsByRange[range.id]
+                                    ? 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-700 rounded-lg text-sm focus:ring-rose-400 dark:text-white'
+                                    : 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white'" />
+                              </td>
+                              <td class="py-1 text-center text-slate-300">:</td>
+                              <td class="py-1 px-2">
+                                <div class="flex items-center gap-1 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg px-2 py-1.5 focus-within:border-primary transition-all">
+                                  <span class="text-[10px] font-bold text-slate-400">$</span>
+                                  <input v-model.number="range.price" type="number" step="0.01" class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-mono dark:text-white" />
+                                </div>
+                              </td>
+                              <td class="py-1 text-right">
+                                <button @click="removeRange(nat, rIndex)" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all">
+                                  <span class="material-symbols-outlined text-xs">close</span>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr v-if="conflictsByRange[range.id]">
+                              <td colspan="6" class="px-2 pb-2">
+                                <div class="flex items-start gap-2 text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
+                                  <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">error</span>
+                                  <span>{{ conflictsByRange[range.id].join(' · ') }}</span>
+                                </div>
+                              </td>
+                            </tr>
+                          </template>
                         </tbody>
                       </table>
                     </div>
@@ -243,6 +274,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, nextTick, reactive } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
 import type { AgeStagePrice, NationalityPrice } from '~/stores/tourWizard'
 
@@ -275,20 +307,86 @@ const removeNationality = (ageStage: AgeStagePrice, index: number) => {
 }
 
 const addRange = (nat: NationalityPrice) => {
-  const lastRange = nat.ranges[nat.ranges.length - 1]
-  const nextFrom = lastRange ? lastRange.to + 1 : 1
-  
+  // Pick the smallest 'from' that doesn't overlap any existing range, regardless
+  // of insertion order. If the user has 1-1 and 5-5, the next slot is 6-6.
+  const maxTo = nat.ranges.length
+    ? Math.max(...nat.ranges.map(r => Number(r.to) || 0))
+    : 0
+  const nextFrom = maxTo + 1
+  const lastPrice = nat.ranges[nat.ranges.length - 1]?.price ?? 0
+
   nat.ranges.push({
     id: crypto.randomUUID(),
     from: nextFrom,
     to: nextFrom,
-    price: lastRange ? lastRange.price : 0
+    price: lastPrice,
   })
 }
 
 const removeRange = (nat: NationalityPrice, index: number) => {
   nat.ranges.splice(index, 1)
 }
+
+/**
+ * Conflict detection per nationality. Returns a map keyed by range.id with the
+ * list of human-readable issues for that row. Watch the whole store reactively
+ * so the UI updates as the editor types.
+ */
+const conflictsByRange = computed(() => {
+  const map: Record<string, string[]> = {}
+
+  for (const stage of store.commercialRules.ageStages) {
+    if (!stage.active) continue
+    for (const nat of stage.nationalities) {
+      const rs = nat.ranges
+      for (let i = 0; i < rs.length; i++) {
+        const r = rs[i]
+        const id = r.id
+        const errs = map[id] || []
+        const from = Number(r.from)
+        const to = Number(r.to)
+
+        // Invalid bounds
+        if (!Number.isFinite(from) || from < 1) errs.push('"Desde" debe ser ≥ 1')
+        if (!Number.isFinite(to) || to < 1) errs.push('"Hasta" debe ser ≥ 1')
+        if (Number.isFinite(from) && Number.isFinite(to) && from > to) {
+          errs.push('"Desde" no puede ser mayor que "Hasta"')
+        }
+
+        // Compare against previous ranges in the same nationality
+        for (let j = 0; j < i; j++) {
+          const o = rs[j]
+          const ofrom = Number(o.from)
+          const oto = Number(o.to)
+          if (!Number.isFinite(ofrom) || !Number.isFinite(oto)) continue
+
+          const overlaps = from <= oto && to >= ofrom
+          if (overlaps) {
+            const exact = from === ofrom && to === oto
+            if (exact) {
+              errs.push(`Duplicado del rango ${ofrom}-${oto}`)
+            } else if (from >= ofrom && to <= oto) {
+              errs.push(`Está contenido en ${ofrom}-${oto}`)
+            } else if (from <= ofrom && to >= oto) {
+              errs.push(`Contiene al rango ${ofrom}-${oto}`)
+            } else {
+              errs.push(`Se solapa con ${ofrom}-${oto}`)
+            }
+          }
+        }
+
+        if (errs.length) map[id] = errs
+      }
+    }
+  }
+  return map
+})
+
+const hasConflicts = computed(() => Object.keys(conflictsByRange.value).length > 0)
+
+// Expose to the wizard: this is referenced by the Save flow if you want to block
+// (hook this up in WizardInsightsSidebar later with a watch on store).
+defineExpose({ hasConflicts, conflictsByRange })
 </script>
 
 <style scoped>

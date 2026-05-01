@@ -686,6 +686,42 @@ export const useTourWizardStore = defineStore('tourWizard', {
         return
       }
 
+      // Validate price ranges — prevent saving when ranges overlap, duplicate
+      // or have invalid bounds inside the same nationality.
+      const priceErrors: string[] = []
+      for (const stage of this.commercialRules.ageStages) {
+        if (!stage.active) continue
+        for (const nat of stage.nationalities) {
+          for (let i = 0; i < nat.ranges.length; i++) {
+            const r = nat.ranges[i]
+            const from = Number(r.from)
+            const to = Number(r.to)
+            if (!Number.isFinite(from) || from < 1 || !Number.isFinite(to) || to < 1) {
+              priceErrors.push(`${stage.description}: rango con valores inválidos (${r.from}-${r.to})`)
+              continue
+            }
+            if (from > to) {
+              priceErrors.push(`${stage.description}: ${from}-${to} → "Desde" mayor que "Hasta"`)
+              continue
+            }
+            for (let j = 0; j < i; j++) {
+              const o = nat.ranges[j]
+              const ofrom = Number(o.from)
+              const oto = Number(o.to)
+              if (!Number.isFinite(ofrom) || !Number.isFinite(oto)) continue
+              if (from <= oto && to >= ofrom) {
+                priceErrors.push(`${stage.description}: rango ${from}-${to} se solapa con ${ofrom}-${oto}`)
+                break
+              }
+            }
+          }
+        }
+      }
+      if (priceErrors.length) {
+        alert('No se puede guardar — hay conflictos en los rangos de precios:\n\n' + priceErrors.join('\n'))
+        return
+      }
+
       this.loading = true
       const config = useRuntimeConfig()
       const defaultApiUrl = config.public.apiUrl
