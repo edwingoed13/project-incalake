@@ -96,3 +96,29 @@
     min-width: 44px;
   }
 }
+
+/* Cancellation policy / booking-text tables produced by the admin TiptapEditor */
+.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75em 0;
+  font-size: 0.875rem;
+}
+
+.tiptap-table th,
+.tiptap-table td {
+  border: 1px solid rgb(226 232 240);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.tiptap-table th {
+  background: rgb(248 250 252);
+  font-weight: 700;
+  color: rgb(71 85 105);
+}
+
+.tiptap-table tbody tr:nth-child(even) td {
+  background: rgb(250 250 250);
+}

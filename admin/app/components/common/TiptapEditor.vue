@@ -105,6 +105,10 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 import { watch, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
@@ -127,7 +131,14 @@ const editor = useEditor({
     }),
     Placeholder.configure({
       placeholder: props.placeholder || 'Start typing...'
-    })
+    }),
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: { class: 'tiptap-table' }
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -192,5 +203,35 @@ onBeforeUnmount(() => {
 .tiptap ol {
   list-style-type: decimal;
   padding-left: 1.5em;
+}
+
+.tiptap table,
+table.tiptap-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75em 0;
+  font-size: 0.875rem;
+}
+
+.tiptap table th,
+.tiptap table td,
+table.tiptap-table th,
+table.tiptap-table td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.tiptap table th,
+table.tiptap-table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+}
+
+.tiptap table tr:nth-child(even) td,
+table.tiptap-table tbody tr:nth-child(even) td {
+  background: #fafafa;
 }
 </style>

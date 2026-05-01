@@ -2,6 +2,61 @@ import { defineStore } from 'pinia'
 import { nextTick } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
+// Default cancellation policy table — kept in sync with
+// backend/app/Support/StandardCancellationPolicy.php. New tours start with
+// this prefilled per language; admins can edit per-tour if they need to.
+const buildPolicyTable = (headers: string[], rows: string[][]) => {
+  const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const head = `<thead><tr>${headers.map(h => `<th>${escape(h)}</th>`).join('')}</tr></thead>`
+  const body = `<tbody>${rows.map(r => `<tr>${r.map(c => `<td>${escape(c)}</td>`).join('')}</tr>`).join('')}</tbody>`
+  return `<table class="tiptap-table">${head}${body}</table>`
+}
+
+const STANDARD_POLICY: Record<string, string> = {
+  es: buildPolicyTable(
+    ['Periodo de Anticipación para Anulación', 'Penalidad', 'Detalles'],
+    [
+      ['Hasta 48 horas antes del inicio del tour', '20% del total', 'Gastos administrativos, comisiones de tarjeta de crédito/débito y otros relacionados.'],
+      ['Dentro de las 48 horas antes del inicio del tour', '100% del total', 'Monto total acordado del servicio.'],
+    ],
+  ),
+  en: buildPolicyTable(
+    ['Cancellation Notice Period', 'Penalty', 'Details'],
+    [
+      ['Up to 48 hours before the tour starts', '20% of total', 'Administrative costs, credit/debit card fees and other related charges.'],
+      ['Within 48 hours before the tour starts', '100% of total', 'Full agreed service amount.'],
+    ],
+  ),
+  pt: buildPolicyTable(
+    ['Prazo de Antecedência para Cancelamento', 'Penalidade', 'Detalhes'],
+    [
+      ['Até 48 horas antes do início do tour', '20% do total', 'Despesas administrativas, taxas de cartão de crédito/débito e outras relacionadas.'],
+      ['Dentro de 48 horas antes do início do tour', '100% do total', 'Valor total acordado do serviço.'],
+    ],
+  ),
+  fr: buildPolicyTable(
+    ["Période d'Anticipation pour Annulation", 'Pénalité', 'Détails'],
+    [
+      ["Jusqu'à 48 heures avant le début du tour", '20% du total', 'Frais administratifs, commissions de carte de crédit/débit et autres frais associés.'],
+      ['Dans les 48 heures avant le début du tour', '100% du total', 'Montant total convenu du service.'],
+    ],
+  ),
+  de: buildPolicyTable(
+    ['Stornierungsfrist', 'Gebühr', 'Details'],
+    [
+      ['Bis zu 48 Stunden vor Tourbeginn', '20% des Gesamtbetrags', 'Verwaltungskosten, Kredit-/Debitkartengebühren und andere damit verbundene Kosten.'],
+      ['Innerhalb von 48 Stunden vor Tourbeginn', '100% des Gesamtbetrags', 'Vollständig vereinbarter Servicebetrag.'],
+    ],
+  ),
+  it: buildPolicyTable(
+    ['Periodo di Preavviso per Annullamento', 'Penalità', 'Dettagli'],
+    [
+      ["Fino a 48 ore prima dell'inizio del tour", '20% del totale', 'Spese amministrative, commissioni di carta di credito/debito e altre correlate.'],
+      ["Entro 48 ore prima dell'inizio del tour", '100% del totale', 'Importo totale concordato del servizio.'],
+    ],
+  ),
+}
+
 export interface TourStep1 {
   title: string
   subtitle: string
@@ -221,12 +276,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
     // Step 2 Data (Multi-language)
     contentSEO: {
-      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      pt: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      it: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.en, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.es, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.fr, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.de, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      pt: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.pt, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      it: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.it, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
     } as Record<string, any>,
 
     // Step 3 Data (Multi-language)
