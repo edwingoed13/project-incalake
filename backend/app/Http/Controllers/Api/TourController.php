@@ -77,6 +77,20 @@ class TourController extends Controller
                 });
             }
 
+            // Filter by tag slug (single or comma-separated list)
+            if ($request->filled('tag')) {
+                $slugs = collect(explode(',', (string) $request->tag))
+                    ->map(fn ($s) => trim($s))
+                    ->filter()
+                    ->values()
+                    ->all();
+                if (!empty($slugs)) {
+                    $query->whereHas('tags', function ($q) use ($slugs) {
+                        $q->whereIn('slug', $slugs);
+                    });
+                }
+            }
+
             // Filter tours that have a translation in the requested language
             if ($request->has('language')) {
                 $lang = strtoupper($request->language);

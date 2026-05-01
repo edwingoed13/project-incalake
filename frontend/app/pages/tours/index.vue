@@ -164,10 +164,15 @@
     <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-3 md:py-6">
 
       <!-- Active filters badges -->
-      <div v-if="selectedCitySlug || selectedDuration || selectedPrice" class="flex flex-wrap items-center gap-1.5 mb-3">
+      <div v-if="selectedCitySlug || selectedTagSlug || selectedDuration || selectedPrice" class="flex flex-wrap items-center gap-1.5 mb-3">
         <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
           <button @click="selectedCitySlug = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
+        </span>
+        <span v-if="selectedTagSlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-500/10 text-violet-600 text-[10px] font-semibold rounded-full">
+          <span class="material-symbols-outlined text-[10px]">label</span>
+          {{ activeTagInfo?.name || selectedTagSlug }}
+          <button @click="selectedTagSlug = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
         </span>
         <span v-if="selectedDuration" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ durationLabels[selectedDuration] }}
@@ -347,11 +352,27 @@ const openFilter = ref('')
 const mobileSheet = ref('')
 const searchQuery = ref((route.query.search as string) || '')
 const selectedCitySlug = ref((route.query.city as string) || '')
+const selectedTagSlug = ref((route.query.tag as string) || '')
 const selectedDuration = ref('')
 const selectedPrice = ref('')
 const sortBy = ref('featured')
 const currentPage = ref(1)
 const perPage = 12
+
+// Active tag info (for the chip displayed at the top of the listing)
+const activeTagInfo = ref<{ slug: string; name: string } | null>(null)
+watch(selectedTagSlug, async (slug) => {
+  if (!slug) { activeTagInfo.value = null; return }
+  try {
+    const response: any = await $fetch(`${apiBase()}/tags`, { params: { search: slug } })
+    const match = (response?.data || []).find((t: any) => t.slug === slug)
+    activeTagInfo.value = match ? { slug: match.slug, name: match.name } : { slug, name: slug }
+  } catch {
+    activeTagInfo.value = { slug, name: slug }
+  }
+}, { immediate: true })
+
+const apiBase = () => useRuntimeConfig().public.apiBase
 
 const durationLabels = computed<Record<string, string>>(() => ({ half: t('half_day'), full: t('full_day'), multi: t('multi_day') }))
 const priceLabels = computed<Record<string, string>>(() => ({ budget: t('price_under_50'), mid: '$50-$99', premium: '$100-$199', luxury: '$200+' }))
@@ -423,6 +444,7 @@ async function fetchTours() {
   try {
     let url = `/tours?per_page=500&active=1&language=${langCode.value}`
     if (selectedCitySlug.value) url += `&city_slug=${selectedCitySlug.value}`
+    if (selectedTagSlug.value) url += `&tag=${encodeURIComponent(selectedTagSlug.value)}`
     const res = await api(url)
     const data = (res as any)?.data
     tours.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
@@ -431,7 +453,7 @@ async function fetchTours() {
 }
 
 await fetchTours()
-watch([langCode, selectedCitySlug], () => { fetchTours(); fetchCitiesWithCounts() })
+watch([langCode, selectedCitySlug, selectedTagSlug], () => { fetchTours(); fetchCitiesWithCounts() })
 function refresh() { fetchTours() }
 
 // Client-side filters
@@ -477,12 +499,12 @@ const visiblePages = computed(() => {
   return pages
 })
 
-const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedDuration.value || selectedPrice.value || sortBy.value !== 'featured')
+const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || sortBy.value !== 'featured')
 
 watch([searchQuery, selectedDuration, selectedPrice, sortBy, selectedCitySlug], () => { currentPage.value = 1 })
 
 function clearFilters() {
-  searchQuery.value = ''; selectedCitySlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; sortBy.value = 'featured'; currentPage.value = 1
+  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; sortBy.value = 'featured'; currentPage.value = 1
 }
 
 function handlePageChange(page: number) {
