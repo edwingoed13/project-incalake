@@ -38,6 +38,7 @@ class TourTranslation extends Model
         'youtube_url',
         'media_texts',
         'booking_texts',
+        'custom_sections',
     ];
 
     protected $casts = [
@@ -49,6 +50,7 @@ class TourTranslation extends Model
         'policies' => 'array',
         'media_texts' => 'array',
         'booking_texts' => 'array',
+        'custom_sections' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

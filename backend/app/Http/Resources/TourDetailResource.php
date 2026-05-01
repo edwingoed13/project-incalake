@@ -204,6 +204,7 @@ class TourDetailResource extends JsonResource
                     'youtube_url' => $trans->youtube_url,
                     'media_texts' => $trans->media_texts ?? [],
                     'booking_texts' => $trans->booking_texts ?? [],
+                    'custom_sections' => $trans->custom_sections ?? [],
                 ];
             }),
 

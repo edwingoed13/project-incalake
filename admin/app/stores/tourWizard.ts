@@ -128,6 +128,7 @@ export interface TourStep3Content {
   thingsToBring: string
   generalPolicies: string
   cancellationPolicy: string
+  customSections: Array<{ id: string; title: string; content: string }>
   mapPoints: MapPoint[]
   timelineItems?: TimelineItem[]
 }
@@ -292,12 +293,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
     // Step 3 Data (Multi-language)
     detailedContent: {
-      en: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
-      es: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
-      fr: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
-      de: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
-      pt: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
-      it: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] },
+      en: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
+      es: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
+      fr: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
+      de: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
+      pt: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
+      it: { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] },
     } as Record<string, TourStep3Content>,
 
     commercialRules: {
@@ -508,7 +509,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
                 this.contentSEO[langCode] = { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', mediaTexts: [] }
               }
               if (!this.detailedContent[langCode]) {
-                this.detailedContent[langCode] = { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', mapPoints: [] }
+                this.detailedContent[langCode] = { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] }
               }
               if (this.contentSEO[langCode]) {
                 this.contentSEO[langCode] = {
@@ -539,6 +540,13 @@ export const useTourWizardStore = defineStore('tourWizard', {
                      thingsToBring: trans.what_to_bring || '',
                      generalPolicies: trans.policies || '',
                      cancellationPolicy: trans.cancellation_policy || '',
+                     customSections: Array.isArray(trans.custom_sections)
+                       ? trans.custom_sections.map((s: any, i: number) => ({
+                           id: s.id || `cs-${i}-${Date.now()}`,
+                           title: s.title || '',
+                           content: s.content || '',
+                         }))
+                       : [],
                      // Map points are the same for all languages
                      mapPoints: (data.map_points || []).map((point: any) => ({
                        id: point.id,
@@ -861,6 +869,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
             what_to_bring: detailed?.thingsToBring,
             policies: detailed?.generalPolicies,
             cancellation_policy: detailed?.cancellationPolicy,
+            custom_sections: (detailed?.customSections || [])
+              .filter((s: any) => (s.title || '').trim() || (s.content || '').trim())
+              .map((s: any) => ({ title: s.title || '', content: s.content || '' })),
 
             // Per-language multimedia
             youtube_url: seoData.youtubeUrl || '',

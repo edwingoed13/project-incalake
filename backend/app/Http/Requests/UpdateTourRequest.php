@@ -108,6 +108,9 @@ class UpdateTourRequest extends FormRequest
             'translations.*.youtube_url' => 'nullable|string|max:500',
             'translations.*.media_texts' => 'nullable|array',
             'translations.*.booking_texts' => 'nullable|array',
+            'translations.*.custom_sections' => 'nullable|array',
+            'translations.*.custom_sections.*.title' => 'nullable|string|max:255',
+            'translations.*.custom_sections.*.content' => 'nullable|string',
 
             'tax_percentage' => 'nullable|numeric|min:0|max:100',
             'advance_payment_percentage' => 'nullable|integer|min:0|max:100',

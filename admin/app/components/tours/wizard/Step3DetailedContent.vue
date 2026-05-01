@@ -318,6 +318,62 @@
           </div>
         </section>
 
+        <!-- Section: Custom additional sections -->
+        <section class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/50">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-violet-500">add_circle</span>
+              <div>
+                <h4 class="text-xl font-bold text-slate-900 dark:text-white">Secciones adicionales</h4>
+                <p class="text-xs text-slate-500 mt-0.5">Agrega bloques con título y contenido para información específica del tour (ej. requisitos especiales, equipos, contactos).</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              @click="addCustomSection"
+              class="px-4 py-2 bg-violet-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-violet-600 active:scale-95 transition-all flex items-center gap-2 shrink-0"
+            >
+              <span class="material-symbols-outlined text-sm">add</span>
+              Agregar
+            </button>
+          </div>
+
+          <div v-if="!currentLangData.customSections?.length" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+            Sin secciones adicionales. Click en "Agregar" para crear una.
+          </div>
+
+          <div v-else class="space-y-4">
+            <div
+              v-for="(section, idx) in currentLangData.customSections"
+              :key="section.id"
+              class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 space-y-3 shadow-sm"
+            >
+              <div class="flex items-center gap-3">
+                <span class="size-7 rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400 flex items-center justify-center text-xs font-black">{{ idx + 1 }}</span>
+                <input
+                  v-model="section.title"
+                  type="text"
+                  placeholder="Título de la sección (ej. Requisitos especiales)"
+                  class="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-sm font-bold focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition-all dark:text-white"
+                />
+                <button
+                  type="button"
+                  @click="removeCustomSection(idx)"
+                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                  title="Eliminar sección"
+                >
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+              <TiptapEditor
+                v-model="section.content"
+                placeholder="Contenido de la sección (texto, listas, imágenes, tablas)..."
+                :key="'cs-' + section.id + '-' + store.currentLanguage"
+              />
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>
@@ -340,8 +396,31 @@ const tourLanguages = computed(() => {
 })
 
 const currentLangData = computed(() => {
-  return store.detailedContent[store.currentLanguage]
+  const data = store.detailedContent[store.currentLanguage]
+  // Tours saved before custom_sections existed don't have the array — backfill
+  if (data && !Array.isArray(data.customSections)) {
+    data.customSections = []
+  }
+  return data
 })
+
+const addCustomSection = () => {
+  if (!currentLangData.value) return
+  if (!Array.isArray(currentLangData.value.customSections)) {
+    currentLangData.value.customSections = []
+  }
+  currentLangData.value.customSections.push({
+    id: `cs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: '',
+    content: '',
+  })
+}
+
+const removeCustomSection = (idx: number) => {
+  if (!currentLangData.value?.customSections) return
+  if (!confirm('¿Eliminar esta sección? Esta acción no se puede deshacer hasta guardar.')) return
+  currentLangData.value.customSections.splice(idx, 1)
+}
 
 // Map State
 const map = ref<any>(null)

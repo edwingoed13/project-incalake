@@ -68,6 +68,14 @@
           <!-- Cancellation Policies -->
           <TourPolicies v-if="tour.cancellation_policy || tour.policies" :tour="tour" />
 
+          <!-- Custom additional sections (admin Step 3) -->
+          <section v-if="customSections.length" class="space-y-6">
+            <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
+              <h3 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white">{{ section.title }}</h3>
+              <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="section.content"></div>
+            </div>
+          </section>
+
           <!-- Location Map -->
           <!-- Location Map -->
           <TourLocation :tour="tour" />
@@ -442,6 +450,18 @@ const { data: response, pending, error } = await useAsyncData(
 )
 
 const tour = computed(() => response.value?.data || null)
+
+// Custom additional sections — pulled from the active language's translation
+const customSections = computed(() => {
+  const t = tour.value
+  if (!t) return []
+  const lang = (locale.value || 'es').toUpperCase()
+  const trans = (t.translations || []).find((x: any) => x.language?.code?.toUpperCase() === lang)
+    || (t.translations || []).find((x: any) => x.language?.code?.toUpperCase() === 'ES')
+    || (t.translations || [])[0]
+  const sections = trans?.custom_sections || []
+  return Array.isArray(sections) ? sections.filter((s: any) => (s.title || '').trim() || (s.content || '').trim()) : []
+})
 
 // Fetch related tours (lazy - doesn't block navigation)
 const { data: relatedResponse } = await useAsyncData(
