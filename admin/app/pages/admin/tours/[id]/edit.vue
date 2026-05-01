@@ -40,7 +40,7 @@
             <Step5Multimedia v-else-if="store.currentStep === 5" />
             <Step6BookingOptions v-else-if="store.currentStep === 6" />
             <Step7Categories v-else-if="store.currentStep === 7" />
-            <Step8Availability v-else-if="store.currentStep === 8" />
+            <Step8FinalReview v-else-if="store.currentStep === 8" />
             <div v-else class="glass-card p-12 rounded-3xl flex flex-col items-center justify-center text-slate-400 border-dashed">
                <span class="material-symbols-outlined text-6xl mb-4 opacity-20">construction</span>
                <p class="text-xl font-bold">Paso {{ store.currentStep }} en construcción</p>
@@ -72,7 +72,7 @@ import Step4CommercialRules from '~/components/tours/wizard/Step4CommercialRules
 import Step5Multimedia from '~/components/tours/wizard/Step5Multimedia.vue'
 import Step6BookingOptions from '~/components/tours/wizard/Step6BookingOptions.vue'
 import Step7Categories from '~/components/tours/wizard/Step7Categories.vue'
-import Step8Availability from '~/components/tours/wizard/Step8Availability.vue'
+import Step8FinalReview from '~/components/tours/wizard/Step8FinalReview.vue'
 
 definePageMeta({
   layout: false // Disable the standard admin layout to use the custom Wizard shell
@@ -89,7 +89,7 @@ const stepLabels = [
   { id: 5, category: 'Visual Assets', title: 'Media Assets', description: 'Upload high-quality photos and videos that showcase the best of your tour experience.' },
   { id: 6, category: 'Workflow Setup', title: 'Booking Options', description: 'Define custom fields and requirements that customers must provide during the booking process.' },
   { id: 7, category: 'Classification', title: 'Categories', description: 'Assign your tour to relevant categories to help users find it through filters.' },
-  { id: 8, category: 'Verification', title: 'Final Review', description: 'A complete overview of your tour listing. Check everything carefully before publishing.' },
+  { id: 8, category: 'Verification', title: 'Final Review', description: 'Resumen del tour. Revisa cada paso y publica. La disponibilidad (calendario, bloqueos, ofertas) se gestiona aparte.' },
 ]
 
 const currentStepLabel = computed(() => {

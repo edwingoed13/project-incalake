@@ -255,6 +255,9 @@
                   <NuxtLink :to="`/admin/tours/${tour.id}/edit`" class="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block" title="Editar">
                     <span class="material-symbols-outlined text-lg">edit</span>
                   </NuxtLink>
+                  <NuxtLink :to="`/admin/tours/${tour.id}/availability`" class="p-2 text-slate-400 hover:text-violet-500 transition-colors hover:bg-violet-50 rounded-xl block" title="Calendario y disponibilidad">
+                    <span class="material-symbols-outlined text-lg">calendar_month</span>
+                  </NuxtLink>
                   <button @click="openCloneModal(tour)" class="p-2 text-slate-400 hover:text-green-500 transition-colors hover:bg-green-50 rounded-xl" title="Clonar">
                     <span class="material-symbols-outlined text-lg">content_copy</span>
                   </button>
