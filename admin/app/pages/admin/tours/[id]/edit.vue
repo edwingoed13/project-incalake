@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { useRoute } from 'vue-router'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onBeforeUnmount, watch } from 'vue'
 
 // Import components directly to avoid auto-import issues during development if needed
 import AdminTopbar from '~/components/admin/AdminTopbar.vue'
@@ -111,6 +111,29 @@ onMounted(async () => {
     if (langParam) {
       store.currentLanguage = langParam
     }
+  }
+})
+
+// Autosave — debounce 2s after the last change. Skips while a save is already
+// running (the store guards against concurrent saves) and on brand-new tours.
+let autosaveTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => store.isDirty, (dirty) => {
+  if (autosaveTimer) {
+    clearTimeout(autosaveTimer)
+    autosaveTimer = null
+  }
+  if (!dirty) return
+  if (!store.tourId || store.tourId === 'new') return
+  autosaveTimer = setTimeout(() => {
+    store.autosave()
+    autosaveTimer = null
+  }, 2000)
+})
+
+onBeforeUnmount(() => {
+  if (autosaveTimer) {
+    clearTimeout(autosaveTimer)
+    autosaveTimer = null
   }
 })
 </script>

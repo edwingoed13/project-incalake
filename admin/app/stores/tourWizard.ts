@@ -252,6 +252,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
     totalSteps: 8,
     isDirty: false,
     loading: false,
+    autosaveEnabled: true,
+    autosaving: false,
+    autosaveError: null as string | null,
+    lastSavedAt: null as number | null,
     tourId: null as string | null,
     currentLanguage: 'en',
     availableLanguages: [] as any[],
@@ -681,10 +685,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
       }
     },
 
-    async saveCurrentProgress() {
+    async saveCurrentProgress(options: { silent?: boolean } = {}) {
+      const silent = options.silent === true
       const auth = useAuthStore()
       if (!auth.token) {
-        alert('Sesión expirada. Por favor vuelve a loguearte.')
+        if (!silent) alert('Sesión expirada. Por favor vuelve a loguearte.')
         return
       }
 
@@ -720,7 +725,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         }
       }
       if (priceErrors.length) {
-        alert('No se puede guardar — hay conflictos en los rangos de precios:\n\n' + priceErrors.join('\n'))
+        if (!silent) alert('No se puede guardar — hay conflictos en los rangos de precios:\n\n' + priceErrors.join('\n'))
         return
       }
 
@@ -932,6 +937,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
         if (response.success) {
           this.isDirty = false
+          this.lastSavedAt = Date.now()
+          this.autosaveError = null
           if (isNew) {
             this.tourId = response.data.id
             // Redirect or update route if needed
@@ -951,12 +958,43 @@ export const useTourWizardStore = defineStore('tourWizard', {
         console.error('[Store] Full response:', JSON.stringify(error.data, null, 2))
 
         if (validationErrors) {
-          alert('Errores de validación:\n' + messages)
+          if (!silent) alert('Errores de validación:\n' + messages)
         } else {
-          alert('Error al guardar: ' + messages)
+          if (!silent) alert('Error al guardar: ' + messages)
         }
       } finally {
         this.loading = false
+      }
+    },
+
+    /**
+     * Silent autosave — same payload as saveCurrentProgress but never alerts the
+     * user. Skipped on new tours (the first save must be manual to create the
+     * record), when there's nothing dirty, or while a save is already running.
+     */
+    async autosave() {
+      if (!this.autosaveEnabled) return
+      if (!this.isDirty) return
+      if (this.loading || this.autosaving) return
+      // Don't autosave brand-new tours — the first save creates the row.
+      if (!this.tourId || this.tourId === 'new') return
+
+      const auth = useAuthStore()
+      if (!auth.token) return
+
+      this.autosaving = true
+      this.autosaveError = null
+      try {
+        const wasDirty = this.isDirty
+        await this.saveCurrentProgress({ silent: true })
+        if (wasDirty && this.isDirty) {
+          // Save aborted (validation conflict) — surface it inline.
+          this.autosaveError = 'Hay conflictos sin resolver. Guardado manual requerido.'
+        }
+      } catch (e: any) {
+        this.autosaveError = e?.message || 'Error al autoguardar'
+      } finally {
+        this.autosaving = false
       }
     }
   }

@@ -68,16 +68,34 @@
     <div class="space-y-4">
       <div class="flex justify-between items-end">
         <h4 class="text-sm font-bold text-slate-900 dark:text-white">Listing Quality</h4>
-        <span class="text-lg font-black text-primary">{{ qualityScore }}%</span>
+        <span class="text-lg font-black" :class="qualityColor.text">{{ qualityScore }}%</span>
       </div>
       <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-        <div class="bg-primary h-full rounded-full transition-all duration-1000" :style="{ width: qualityScore + '%' }"></div>
+        <div class="h-full rounded-full transition-all duration-700" :class="qualityColor.bg" :style="{ width: qualityScore + '%' }"></div>
       </div>
-      <div class="p-3 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10">
-        <p class="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-          <span class="text-primary font-bold">Pro Tip:</span> Tours with clear subtitles and precise durations see 40% higher booking rates.
+      <div class="p-3 rounded-xl border space-y-2" :class="qualityColor.banner">
+        <p v-if="qualityHint" class="text-[11px] font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+          <span class="font-bold" :class="qualityColor.text">{{ qualityHintLabel }}:</span>
+          {{ qualityHint }}
+        </p>
+        <p v-else class="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 leading-relaxed">
+          <span class="font-bold">Excelente:</span> Tu tour está completo y listo para publicar.
         </p>
       </div>
+      <details class="text-[11px] text-slate-500">
+        <summary class="cursor-pointer font-bold hover:text-primary">Ver desglose</summary>
+        <ul class="mt-2 space-y-1">
+          <li v-for="b in qualityBreakdown" :key="b.label" class="flex items-center justify-between gap-2">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm" :class="b.score >= b.max ? 'text-emerald-500' : (b.score > 0 ? 'text-amber-500' : 'text-slate-300')">
+                {{ b.score >= b.max ? 'check_circle' : (b.score > 0 ? 'pending' : 'radio_button_unchecked') }}
+              </span>
+              {{ b.label }}
+            </span>
+            <span class="font-mono">{{ b.score }}/{{ b.max }}</span>
+          </li>
+        </ul>
+      </details>
     </div>
 
     <div class="space-y-4">
@@ -95,26 +113,13 @@
       <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Your tour is currently pinned to {{ store.basicInfo.nearestCity || 'default location' }}. You can adjust the meeting point later.</p>
     </div>
 
-    <div class="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Reciente</h4>
-      <div class="space-y-4">
-        <div class="flex gap-3">
-          <div class="size-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-lg">check</span>
-          </div>
-          <div>
-            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Wizard Initialized</p>
-            <p class="text-[10px] text-slate-400">Hace un momento</p>
-          </div>
-        </div>
-        <div v-if="store.isDirty" class="flex gap-3 animate-pulse">
-          <div class="size-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-lg">edit</span>
-          </div>
-          <div>
-            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Cambios pendientes</p>
-            <p class="text-[10px] text-slate-400">Waiting for save...</p>
-          </div>
+    <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-6">
+      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Estado</h4>
+      <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border" :class="autosaveStyle.box">
+        <span class="material-symbols-outlined text-lg" :class="['shrink-0', autosaveStyle.icon, autosaveStyle.spin ? 'animate-spin' : '']">{{ autosaveStyle.iconName }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{{ autosaveStyle.subtitle }}</p>
         </div>
       </div>
     </div>
@@ -123,12 +128,84 @@
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const store = useTourWizardStore()
 const router = useRouter()
 const config = useRuntimeConfig()
+
+// Tick every second so "hace X s" updates without the user moving the mouse.
+const now = ref(Date.now())
+let nowTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => { nowTimer = setInterval(() => { now.value = Date.now() }, 1000) })
+onBeforeUnmount(() => { if (nowTimer) clearInterval(nowTimer) })
+
+const formatRelative = (ts: number) => {
+  const seconds = Math.max(0, Math.floor((now.value - ts) / 1000))
+  if (seconds < 5) return 'hace un momento'
+  if (seconds < 60) return `hace ${seconds}s`
+  const m = Math.floor(seconds / 60)
+  if (m < 60) return `hace ${m} min`
+  const h = Math.floor(m / 60)
+  return `hace ${h} h`
+}
+
+const autosaveStyle = computed(() => {
+  if (store.autosaving || store.loading) {
+    return {
+      box: 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700',
+      icon: 'text-slate-500',
+      iconName: 'sync',
+      spin: true,
+      text: 'text-slate-700 dark:text-slate-300',
+      title: 'Guardando…',
+      subtitle: 'Sincronizando cambios',
+    }
+  }
+  if (store.autosaveError) {
+    return {
+      box: 'bg-rose-50 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800/40',
+      icon: 'text-rose-500',
+      iconName: 'error',
+      spin: false,
+      text: 'text-rose-700 dark:text-rose-300',
+      title: 'Error al autoguardar',
+      subtitle: store.autosaveError,
+    }
+  }
+  if (store.isDirty) {
+    return {
+      box: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40',
+      icon: 'text-amber-500',
+      iconName: 'edit',
+      spin: false,
+      text: 'text-amber-700 dark:text-amber-300',
+      title: 'Cambios sin guardar',
+      subtitle: 'Se guardará automáticamente en 2s',
+    }
+  }
+  if (store.lastSavedAt) {
+    return {
+      box: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/40',
+      icon: 'text-emerald-500',
+      iconName: 'check_circle',
+      spin: false,
+      text: 'text-emerald-700 dark:text-emerald-300',
+      title: 'Guardado',
+      subtitle: formatRelative(store.lastSavedAt),
+    }
+  }
+  return {
+    box: 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700',
+    icon: 'text-slate-400',
+    iconName: 'cloud',
+    spin: false,
+    text: 'text-slate-700 dark:text-slate-300',
+    title: 'Sin cambios',
+    subtitle: 'Edita para autoguardar',
+  }
+})
 
 const cancel = () => {
   if (confirm('Se perderán los cambios no guardados. ¿Deseas salir?')) {
@@ -193,12 +270,119 @@ const previewTour = () => {
   window.open(previewUrl.value, '_blank', 'noopener,noreferrer')
 }
 
+// Real listing-quality breakdown — see claude-design.md §7.
+const qualityBreakdown = computed(() => {
+  const lang = store.currentLanguage || 'es'
+  const seo = store.contentSEO?.[lang] || {}
+  const detailed = store.detailedContent?.[lang] || {}
+  const images = store.multimedia?.images || []
+  const stages = store.commercialRules?.ageStages || []
+  const filledLangs = Object.keys(store.contentSEO || {}).filter(k => (store.contentSEO[k]?.title || '').trim()).length
+
+  // 1) Básicos (20)
+  let basics = 0
+  if (store.basicInfo.title) basics += 5
+  if (store.basicInfo.code) basics += 5
+  if (store.basicInfo.cityId || store.basicInfo.nearestCity) basics += 5
+  const hasDuration = (store.basicInfo.durationDays || 0) + (store.basicInfo.durationHours || 0) + (store.basicInfo.durationMinutes || 0) > 0
+    || Number(store.basicInfo.duration) > 0
+  if (hasDuration) basics += 5
+
+  // 2) Descripción + SEO (15)
+  let descSeo = 0
+  if ((seo.shortDescription || '').trim()) descSeo += 5
+  if ((seo.metaTitle || '').trim()) descSeo += 5
+  if ((seo.metaDescription || '').trim()) descSeo += 5
+
+  // 3) Fotos (25 max)
+  const imgCount = images.length
+  let media = 0
+  if (imgCount >= 1) media += 5
+  if (imgCount >= 5) media += 10
+  if (imgCount >= 10) media += 5
+  if (images.some((i: any) => i.isPrimary)) media += 5
+
+  // 4) Itinerario (15)
+  let itin = 0
+  if (((detailed as any).detailedDescription || '').trim()) itin += 8
+  const itineraryItems = Array.isArray((detailed as any).itinerary) ? (detailed as any).itinerary.length : 0
+  if (((detailed as any).itineraryText || '').trim() || itineraryItems > 0) itin += 7
+
+  // 5) Includes / excludes (10)
+  let inc = 0
+  if (((detailed as any).inclusions || '').trim()) inc += 5
+  if (((detailed as any).exclusions || '').trim()) inc += 5
+
+  // 6) Precios + booking (15)
+  let pricing = 0
+  const hasActivePrices = stages.some((s: any) =>
+    s.active && (s.nationalities || []).some((n: any) => (n.ranges || []).some((r: any) => Number(r.price) > 0))
+  )
+  if (hasActivePrices) pricing += 10
+  if (Number(store.commercialRules?.taxPercentage) > 0) pricing += 5
+
+  // 7) Traducciones (10)
+  let trans = 0
+  if (filledLangs >= 1) trans += 4
+  if (filledLangs >= 3) trans += 3
+  if (filledLangs >= 6) trans += 3
+
+  return [
+    { key: 'basics', label: 'Información básica', score: basics, max: 20 },
+    { key: 'descSeo', label: 'Descripción y SEO', score: descSeo, max: 15 },
+    { key: 'media', label: 'Galería de fotos', score: media, max: 25 },
+    { key: 'itin', label: 'Itinerario', score: itin, max: 15 },
+    { key: 'inc', label: 'Incluye / no incluye', score: inc, max: 10 },
+    { key: 'pricing', label: 'Precios y reservas', score: pricing, max: 15 },
+    { key: 'trans', label: 'Traducciones', score: trans, max: 10 },
+  ]
+})
+
 const qualityScore = computed(() => {
-  let score = 20
-  if (store.basicInfo.title) score += 20
-  if (store.basicInfo.subtitle) score += 20
-  if (store.basicInfo.code) score += 20
-  if (store.basicInfo.nearestCity) score += 20
-  return score
+  const total = qualityBreakdown.value.reduce((s, b) => s + b.score, 0)
+  return Math.min(100, Math.round(total))
+})
+
+const qualityColor = computed(() => {
+  const s = qualityScore.value
+  if (s >= 80) return {
+    text: 'text-emerald-500',
+    bg: 'bg-emerald-500',
+    banner: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/40',
+  }
+  if (s >= 40) return {
+    text: 'text-amber-500',
+    bg: 'bg-amber-500',
+    banner: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40',
+  }
+  return {
+    text: 'text-rose-500',
+    bg: 'bg-rose-500',
+    banner: 'bg-rose-50 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800/40',
+  }
+})
+
+const qualityHintLabel = computed(() => {
+  const s = qualityScore.value
+  if (s >= 80) return 'Listo'
+  if (s >= 40) return 'Casi listo'
+  return 'Necesita más trabajo'
+})
+
+// First missing item — surfaces the next thing the editor should fill in.
+const qualityHint = computed(() => {
+  const breakdown = qualityBreakdown.value
+  const incomplete = breakdown.find(b => b.score < b.max)
+  if (!incomplete) return ''
+  const tips: Record<string, string> = {
+    basics: 'Completa título, código, ciudad y duración del tour.',
+    descSeo: 'Agrega descripción corta, meta title y meta description en SEO.',
+    media: 'Sube al menos 5 fotos y marca una como principal (HERO).',
+    itin: 'Llena la descripción detallada y el itinerario.',
+    inc: 'Define qué incluye y qué no incluye el tour.',
+    pricing: 'Activa al menos un rango de precio y configura el porcentaje de impuestos.',
+    trans: 'Agrega más traducciones (mínimo 3 idiomas para llegar a 100%).',
+  }
+  return tips[incomplete.key] || ''
 })
 </script>
