@@ -30,11 +30,11 @@
         <section class="space-y-4">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">article</span>
-            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Detailed Tour Description</h3>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Descripción detallada del tour</h3>
           </div>
-          <TiptapEditor 
-            v-model="currentLangData.detailedDescription" 
-            placeholder="Write a long, engaging description of the experience..."
+          <TiptapEditor
+            v-model="currentLangData.detailedDescription"
+            placeholder="Escribe una descripción larga y atractiva de la experiencia..."
           />
         </section>
 
@@ -42,11 +42,11 @@
         <section class="space-y-4 pt-10 border-t border-slate-100 dark:border-slate-800/50">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">route</span>
-            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Tour Itinerary (Rich Text)</h3>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Itinerario del tour</h3>
           </div>
-          <TiptapEditor 
-            v-model="currentLangData.itineraryText" 
-            placeholder="Outline the detailed itinerary using lists, headings, and bold text..."
+          <TiptapEditor
+            v-model="currentLangData.itineraryText"
+            placeholder="Describe el itinerario con listas, títulos y texto en negrita..."
           />
         </section>
 
@@ -55,7 +55,7 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary">calendar_today</span>
-              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Build your daily schedule</h3>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Construye la ruta del tour</h3>
             </div>
           </div>
           
@@ -63,7 +63,7 @@
             <!-- Left: Map Preview -->
             <div class="space-y-6">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Tour Map Points</h4>
+                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider">Puntos del tour en el mapa</h4>
               </div>
 
               <!-- Map Preview -->
@@ -79,7 +79,7 @@
               <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div class="flex items-center gap-2 mb-2">
                   <span class="material-symbols-outlined text-primary text-sm">add_location</span>
-                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Add New Point</h5>
+                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Agregar nuevo punto</h5>
                 </div>
 
                 <div class="space-y-2">
@@ -87,14 +87,14 @@
                     ref="mapSearchInput"
                     v-model="newPoint.name"
                     class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                    placeholder="Search location (Google Places)..."
+                    placeholder="Buscar ubicación (Google Places)..."
                     @input="onMapSearchInput"
                   />
 
                   <textarea
                     v-model="newPoint.description"
                     class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-                    placeholder="Description (optional)"
+                    placeholder="Descripción (opcional)"
                     rows="2"
                   ></textarea>
 
@@ -103,22 +103,22 @@
                       v-model="newPoint.type"
                       class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     >
-                      <option value="">Select type...</option>
-                      <option value="punto_reunion">Meeting Point</option>
-                      <option value="punto_parada">Stop Point</option>
-                      <option value="lugar_turistico">Tourist Attraction</option>
-                      <option value="restaurant">Restaurant</option>
+                      <option value="">Seleccionar tipo...</option>
+                      <option value="punto_reunion">Punto de encuentro</option>
+                      <option value="punto_parada">Punto de parada</option>
+                      <option value="lugar_turistico">Atractivo turístico</option>
+                      <option value="restaurant">Restaurante</option>
                       <option value="hotel">Hotel</option>
-                      <option value="aeropuerto">Airport</option>
-                      <option value="estacion_tren">Train Station</option>
-                      <option value="puerto">Port/Harbor</option>
-                      <option value="otro">Other</option>
+                      <option value="aeropuerto">Aeropuerto</option>
+                      <option value="estacion_tren">Estación de tren</option>
+                      <option value="puerto">Puerto</option>
+                      <option value="otro">Otro</option>
                     </select>
 
                     <input
                       v-model="newPoint.coordinates"
                       class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                      placeholder="Lat,Lng (auto-filled)"
+                      placeholder="Lat,Lng (auto-llenado)"
                       readonly
                     />
 
@@ -128,7 +128,7 @@
                       class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1"
                     >
                       <span class="material-symbols-outlined text-sm">add</span>
-                      Add
+                      Agregar
                     </button>
                   </div>
                 </div>
@@ -138,7 +138,7 @@
               <div class="space-y-2">
                 <div class="flex items-center gap-2 mb-2">
                   <span class="material-symbols-outlined text-primary text-sm">route</span>
-                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Route Points ({{ currentLangData.mapPoints?.length || 0 }})</h5>
+                  <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Puntos de la ruta ({{ currentLangData.mapPoints?.length || 0 }})</h5>
                 </div>
 
                 <div v-if="currentLangData.mapPoints && currentLangData.mapPoints.length > 0" class="space-y-2">
@@ -172,7 +172,7 @@
                           @click="movePointUp(index)"
                           :disabled="index === 0"
                           class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Move up"
+                          title="Mover arriba"
                         >
                           <span class="material-symbols-outlined text-sm">arrow_upward</span>
                         </button>
@@ -180,21 +180,21 @@
                           @click="movePointDown(index)"
                           :disabled="index === currentLangData.mapPoints.length - 1"
                           class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Move down"
+                          title="Mover abajo"
                         >
                           <span class="material-symbols-outlined text-sm">arrow_downward</span>
                         </button>
                         <button
                           @click="editPoint(index)"
                           class="p-1 text-slate-400 hover:text-blue-500"
-                          title="Edit"
+                          title="Editar"
                         >
                           <span class="material-symbols-outlined text-sm">edit</span>
                         </button>
                         <button
                           @click="removePoint(index)"
                           class="p-1 text-slate-400 hover:text-red-500"
-                          title="Delete"
+                          title="Eliminar"
                         >
                           <span class="material-symbols-outlined text-sm">delete</span>
                         </button>
@@ -206,12 +206,12 @@
                       <input
                         v-model="editingPoint.name"
                         class="w-full px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm"
-                        placeholder="Name"
+                        placeholder="Nombre"
                       />
                       <textarea
                         v-model="editingPoint.description"
                         class="w-full px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-sm resize-none"
-                        placeholder="Description"
+                        placeholder="Descripción"
                         rows="2"
                       ></textarea>
                       <div class="flex gap-2">
@@ -240,13 +240,13 @@
                           @click="cancelEdit"
                           class="px-3 py-1 text-xs font-bold text-slate-600 hover:text-slate-800"
                         >
-                          Cancel
+                          Cancelar
                         </button>
                         <button
                           @click="saveEdit"
                           class="px-3 py-1 bg-primary text-white text-xs font-bold rounded hover:bg-primary-600"
                         >
-                          Save
+                          Guardar
                         </button>
                       </div>
                     </div>
@@ -255,8 +255,8 @@
 
                 <div v-else class="py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400">
                   <span class="material-symbols-outlined text-3xl mb-2 opacity-30">location_off</span>
-                  <p class="text-xs font-medium">No map points added yet</p>
-                  <p class="text-[10px] opacity-60 mt-1">Add points to create the tour route</p>
+                  <p class="text-xs font-medium">Aún no hay puntos en el mapa</p>
+                  <p class="text-[10px] opacity-60 mt-1">Agrega puntos para crear la ruta del tour</p>
                 </div>
               </div>
 
@@ -269,16 +269,16 @@
           <div class="space-y-4">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-emerald-500">check_circle</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">What's Included</h4>
+              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué incluye</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.inclusions" placeholder="What is included in the price? Use bullet points." />
+            <TiptapEditor v-model="currentLangData.inclusions" placeholder="¿Qué incluye el precio? Usa lista con viñetas." />
           </div>
           <div class="space-y-4">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-rose-500">cancel</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">What's Excluded</h4>
+              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué NO incluye</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.exclusions" placeholder="What is NOT included? Be clear to avoid complaints." />
+            <TiptapEditor v-model="currentLangData.exclusions" placeholder="¿Qué NO está incluido? Sé claro para evitar reclamos." />
           </div>
         </section>
 
@@ -287,16 +287,16 @@
           <div class="space-y-4">
             <div class="flex items-center gap-2 text-primary">
               <span class="material-symbols-outlined">lightbulb</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Recommendations</h4>
+              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Recomendaciones</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.recommendations" placeholder="Tips for traveleres, best time to visit, etc." />
+            <TiptapEditor v-model="currentLangData.recommendations" placeholder="Consejos para viajeros, mejor época para visitar, etc." />
           </div>
           <div class="space-y-4">
             <div class="flex items-center gap-2 text-primary">
               <span class="material-symbols-outlined">backpack</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">What to Bring?</h4>
+              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué llevar</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.thingsToBring" placeholder="Clothes, equipment, documents required..." />
+            <TiptapEditor v-model="currentLangData.thingsToBring" placeholder="Ropa, equipo, documentos requeridos..." />
           </div>
         </section>
 
@@ -305,16 +305,16 @@
           <div class="space-y-4">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-primary">gavel</span>
-              <h4 class="text-xl font-bold">General Policies</h4>
+              <h4 class="text-xl font-bold">Políticas generales</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.generalPolicies" placeholder="General rules, age restrictions, health requirements..." />
+            <TiptapEditor v-model="currentLangData.generalPolicies" placeholder="Reglas generales, restricciones de edad, requisitos de salud..." />
           </div>
           <div class="space-y-4">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-rose-500">priority_high</span>
-              <h4 class="text-xl font-bold">Cancellation Policy *</h4>
+              <h4 class="text-xl font-bold">Política de cancelación *</h4>
             </div>
-            <TiptapEditor v-model="currentLangData.cancellationPolicy" placeholder="Define clearly when a refund is possible or not." />
+            <TiptapEditor v-model="currentLangData.cancellationPolicy" placeholder="Define claramente cuándo procede un reembolso y cuándo no." />
           </div>
         </section>
 

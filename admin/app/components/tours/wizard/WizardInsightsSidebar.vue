@@ -7,7 +7,7 @@
         v-if="store.currentStep < store.totalSteps"
         class="w-full py-3 text-xs font-black text-white bg-primary rounded-xl shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
       >
-        Next Step
+        Siguiente paso
         <span class="material-symbols-outlined text-sm">arrow_forward</span>
       </button>
       <button
@@ -18,7 +18,7 @@
       >
         <span v-if="!store.loading" class="material-symbols-outlined text-sm">rocket_launch</span>
         <span v-else class="animate-spin text-sm">sync</span>
-        {{ store.basicInfo.status === 'published' ? 'Update Published Tour' : 'Publish Tour Now' }}
+        {{ store.basicInfo.status === 'published' ? 'Actualizar tour publicado' : 'Publicar tour' }}
       </button>
 
       <div class="space-y-1.5">
@@ -29,7 +29,7 @@
           class="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all border border-primary/20"
         >
           <span class="material-symbols-outlined text-base">visibility</span>
-          Preview Tour
+          Previsualizar tour
           <span class="material-symbols-outlined text-sm">open_in_new</span>
         </button>
         <div v-if="previewUrl" class="px-2 py-1 text-[9px] font-mono text-slate-400 break-all leading-tight">
@@ -45,14 +45,14 @@
         >
           <span v-if="!store.loading" class="material-symbols-outlined text-base">save</span>
           <span v-else class="animate-spin text-base">sync</span>
-          Save
+          Guardar
         </button>
         <button
           @click="cancel"
           class="flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
         >
           <span class="material-symbols-outlined text-base">close</span>
-          Cancel
+          Cancelar
         </button>
       </div>
 
@@ -67,7 +67,7 @@
 
     <div class="space-y-4">
       <div class="flex justify-between items-end">
-        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Listing Quality</h4>
+        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Calidad del listado</h4>
         <span class="text-lg font-black" :class="qualityColor.text">{{ qualityScore }}%</span>
       </div>
       <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
@@ -99,7 +99,7 @@
     </div>
 
     <div class="space-y-4">
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Location Context</h4>
+      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Ubicación</h4>
       <div class="relative rounded-2xl overflow-hidden aspect-video border border-slate-200 dark:border-slate-800 group bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
          <!-- Simulación de mapa -->
          <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">map</span>
@@ -110,7 +110,7 @@
             </div>
          </div>
       </div>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Your tour is currently pinned to {{ store.basicInfo.nearestCity || 'default location' }}. You can adjust the meeting point later.</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Tu tour está anclado a {{ store.basicInfo.nearestCity || 'ubicación por defecto' }}. Puedes ajustar el punto de encuentro después.</p>
     </div>
 
     <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-6">
@@ -263,7 +263,7 @@ const previewTour = () => {
     return
   }
   if (!previewSlug.value) {
-    alert('Ningún idioma tiene slug guardado.\nVe a Step 2 (Description & SEO), genera/guarda el slug y vuelve a intentar.')
+    alert('Ningún idioma tiene slug guardado.\nVe al paso 2 (Descripción y SEO), genera/guarda el slug y vuelve a intentar.')
     return
   }
   console.log('[Preview] Opening:', previewUrl.value)

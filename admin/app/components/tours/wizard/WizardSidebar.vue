@@ -41,13 +41,13 @@ import { useTourWizardStore } from '~/stores/tourWizard'
 const store = useTourWizardStore()
 
 const steps = [
-  { id: 1, label: 'Basic Information', icon: 'info' },
-  { id: 2, label: 'Description & SEO', icon: 'description' },
-  { id: 3, label: 'Detailed Content', icon: 'map' },
-  { id: 4, label: 'Pricing Rules', icon: 'payments' },
-  { id: 5, label: 'Media Assets', icon: 'image' },
-  { id: 6, label: 'Booking Options', icon: 'settings' },
-  { id: 7, label: 'Categories', icon: 'verified' },
-  { id: 8, label: 'Final Review', icon: 'check_circle' },
+  { id: 1, label: 'Información básica', icon: 'info' },
+  { id: 2, label: 'Descripción y SEO', icon: 'description' },
+  { id: 3, label: 'Contenido detallado', icon: 'map' },
+  { id: 4, label: 'Precios', icon: 'payments' },
+  { id: 5, label: 'Galería y video', icon: 'image' },
+  { id: 6, label: 'Opciones de reserva', icon: 'settings' },
+  { id: 7, label: 'Categorías', icon: 'verified' },
+  { id: 8, label: 'Revisión final', icon: 'check_circle' },
 ]
 </script>

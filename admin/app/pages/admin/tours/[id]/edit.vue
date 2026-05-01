@@ -82,14 +82,14 @@ const store = useTourWizardStore()
 const route = useRoute()
 
 const stepLabels = [
-  { id: 1, category: 'Foundation Step', title: 'Basic Information', description: 'Start by providing the essential details of your tour. These fields will be used for initial indexing and customer search filters.' },
-  { id: 2, category: 'Content Creation', title: 'Description & SEO', description: 'Craft compelling titles and descriptions to attract travelers and optimize for search engines.' },
-  { id: 3, category: 'Itinerary Planning', title: 'Detailed Content', description: 'Outline the daily itinerary, what is included, and specific recommendations for travelers.' },
-  { id: 4, category: 'Commercial Rules', title: 'Pricing & Tiers', description: 'Configure price categories by age, nationality, and group size to maximize revenue.' },
-  { id: 5, category: 'Visual Assets', title: 'Media Assets', description: 'Upload high-quality photos and videos that showcase the best of your tour experience.' },
-  { id: 6, category: 'Workflow Setup', title: 'Booking Options', description: 'Define custom fields and requirements that customers must provide during the booking process.' },
-  { id: 7, category: 'Classification', title: 'Categories', description: 'Assign your tour to relevant categories to help users find it through filters.' },
-  { id: 8, category: 'Verification', title: 'Final Review', description: 'Resumen del tour. Revisa cada paso y publica. La disponibilidad (calendario, bloqueos, ofertas) se gestiona aparte.' },
+  { id: 1, category: 'Datos generales', title: 'Información básica', description: 'Comienza con los datos esenciales del tour. Se usan para indexación interna y filtros de búsqueda del cliente.' },
+  { id: 2, category: 'Contenido', title: 'Descripción y SEO', description: 'Crea títulos y descripciones atractivas para captar viajeros y posicionar en buscadores.' },
+  { id: 3, category: 'Itinerario', title: 'Contenido detallado', description: 'Define el itinerario, qué incluye y qué no, y recomendaciones específicas para viajeros.' },
+  { id: 4, category: 'Reglas comerciales', title: 'Precios y rangos', description: 'Configura precios por etapa de edad, nacionalidad y cantidad de pasajeros.' },
+  { id: 5, category: 'Multimedia', title: 'Galería y video', description: 'Sube fotos de calidad y un video que muestren lo mejor de la experiencia.' },
+  { id: 6, category: 'Reservas', title: 'Opciones de reserva', description: 'Define políticas, anticipación, datos requeridos, recojo, guía y otras reglas de la reserva.' },
+  { id: 7, category: 'Clasificación', title: 'Categorías y etiquetas', description: 'Asigna categorías y etiquetas para que los viajeros encuentren el tour mediante filtros.' },
+  { id: 8, category: 'Publicar', title: 'Revisión final', description: 'Resumen del tour. Revisa cada paso y publica. La disponibilidad (calendario, bloqueos, ofertas) se gestiona aparte.' },
 ]
 
 const currentStepLabel = computed(() => {

@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">play_circle</span>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Video Highlights</h3>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Video destacado</h3>
         </div>
         <!-- Language tabs for video -->
         <div class="flex gap-1.5">
@@ -42,7 +42,7 @@
                   <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">link</span>
                </div>
                <button class="px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all">
-                 Add
+                 Agregar
                </button>
              </div>
              <!-- Saved URL preview chip — shows the full URL at a glance even on tablet -->
@@ -67,7 +67,7 @@
                  <span class="material-symbols-outlined text-base">open_in_new</span>
                </a>
              </div>
-             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Each language has its own video. Supported: YouTube, Vimeo.</p>
+             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Cada idioma tiene su propio video. Soportados: YouTube, Vimeo.</p>
           </div>
         </div>
 
@@ -81,7 +81,7 @@
            />
            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-400">
               <span class="material-symbols-outlined text-4xl mb-2 opacity-50">smart_display</span>
-              <p class="text-xs font-bold uppercase tracking-widest opacity-50 text-center">Video Preview ({{ store.currentLanguage.toUpperCase() }})<br/><span class="text-[9px] font-medium">Enter a URL to see it here</span></p>
+              <p class="text-xs font-bold uppercase tracking-widest opacity-50 text-center">Vista previa del video ({{ store.currentLanguage.toUpperCase() }})<br/><span class="text-[9px] font-medium">Ingresa una URL para ver aquí</span></p>
            </div>
 
            <!-- Preview Overlay -->
@@ -112,7 +112,7 @@
         <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
           <span class="material-symbols-outlined filled">grid_view</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Gallery Layout Detection</h3>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Detección de layout de galería</h3>
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -187,7 +187,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">photo_library</span>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Image Gallery</h3>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Galería de imágenes</h3>
         </div>
         <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
           {{ store.multimedia.images.length }} / 20 images
@@ -206,7 +206,7 @@
         <div class="size-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
           <span class="material-symbols-outlined text-5xl">cloud_upload</span>
         </div>
-        <p class="text-2xl font-black text-slate-900 dark:text-white mb-2">Drag and drop photos here</p>
+        <p class="text-2xl font-black text-slate-900 dark:text-white mb-2">Arrastra y suelta fotos aquí</p>
         <p class="text-xs text-slate-500 mb-8 uppercase tracking-[0.2em] font-bold">Support JPEG, PNG, or WebP • Recommended 1920x1080px</p>
         <button class="bg-slate-900 dark:bg-primary text-white px-10 py-4 rounded-2xl font-black text-sm hover:shadow-2xl hover:shadow-primary/30 transition-all group-hover:scale-105 active:scale-95">
           Browse Files
