@@ -122,3 +122,27 @@
 .tiptap-table tbody tr:nth-child(even) td {
   background: rgb(250 250 250);
 }
+
+/* Inline images / YouTube embeds / highlights produced by the admin Tiptap */
+img.tiptap-image,
+.prose img.tiptap-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.75em 0;
+}
+
+iframe.tiptap-youtube {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 8px;
+  margin: 0.75em 0;
+}
+
+mark.tiptap-highlight {
+  background: #fde68a;
+  padding: 0 2px;
+  border-radius: 3px;
+}
