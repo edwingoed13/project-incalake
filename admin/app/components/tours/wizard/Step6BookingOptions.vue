@@ -21,6 +21,57 @@
       </div>
     </div>
 
+    <!-- 0. Plantillas / Presets -->
+    <section class="rounded-3xl border-2 border-dashed border-violet-200 dark:border-violet-800/40 bg-violet-50/30 dark:bg-violet-900/10 p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="size-10 rounded-xl bg-violet-500 text-white flex items-center justify-center">
+          <span class="material-symbols-outlined">flash_on</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Plantillas rápidas</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Aplica una plantilla y todos los campos de abajo se rellenan. Después puedes editar lo que necesites.</p>
+        </div>
+        <button
+          v-if="appliedPreset"
+          type="button"
+          @click="appliedPreset = null"
+          class="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500"
+        >
+          Quitar plantilla
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <button
+          v-for="preset in presets"
+          :key="preset.id"
+          type="button"
+          @click="applyPreset(preset)"
+          class="text-left p-4 rounded-2xl border-2 transition-all bg-white dark:bg-slate-900 hover:shadow-md"
+          :class="appliedPreset === preset.id
+            ? 'border-violet-500 ring-2 ring-violet-200 dark:ring-violet-800/50'
+            : 'border-slate-200 dark:border-slate-800 hover:border-violet-300'"
+        >
+          <div class="flex items-start gap-3">
+            <span class="text-2xl shrink-0">{{ preset.emoji }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-black text-slate-900 dark:text-white">{{ preset.name }}</h4>
+                <span v-if="appliedPreset === preset.id" class="text-[9px] font-black uppercase tracking-widest text-violet-600 bg-violet-100 dark:bg-violet-900/30 px-1.5 py-0.5 rounded">Aplicada</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">{{ preset.description }}</p>
+              <ul class="mt-2 space-y-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <li v-for="feat in preset.summary" :key="feat" class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px] text-violet-500">check</span>
+                  {{ feat }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </button>
+      </div>
+    </section>
+
     <!-- 1. Políticas y Cancelaciones -->
     <section class="glass-card p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 space-y-6">
       <div class="flex items-center gap-3 mb-2">
@@ -398,6 +449,90 @@ import PickupMapModal from '~/components/tours/wizard/PickupMapModal.vue'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
+
+// === Presets de configuración rápida ===
+type Preset = {
+  id: string
+  emoji: string
+  name: string
+  description: string
+  summary: string[]
+  apply: (b: any) => void
+}
+
+const presets: Preset[] = [
+  {
+    id: 'group-tour',
+    emoji: '🚌',
+    name: 'Tour grupal',
+    description: 'Reserva con guía en vivo y recojo en hoteles del centro.',
+    summary: ['Política estándar', 'Anticipación 24h', 'Recojo en hoteles · 5km', 'Guía bilingüe ES/EN'],
+    apply: (b) => {
+      b.policyType = 'standard'
+      b.bookingAnticipationQuantity = 24
+      b.bookingAnticipationUnit = 'hours'
+      b.dataRequirementType = 'leader'
+      b.personalInfoRequired = ['first_name', 'last_name', 'email', 'phone_whatsapp']
+      b.operationalInfoRequired = []
+      b.enableMeetingPoint = false
+      b.enableHotelPickup = true
+      b.pickupRadiusKm = 5
+      b.guideType = 'live_guide'
+      b.guideLanguages = [1, 2]
+    },
+  },
+  {
+    id: 'simple-ticket',
+    emoji: '🎫',
+    name: 'Entrada simple',
+    description: 'Tickets o experiencias autónomas, sin guía ni recojo.',
+    summary: ['Política personalizada', 'Anticipación 1h', 'Punto de encuentro fijo', 'Sin guía'],
+    apply: (b) => {
+      b.policyType = 'custom'
+      b.bookingAnticipationQuantity = 1
+      b.bookingAnticipationUnit = 'hours'
+      b.dataRequirementType = 'leader'
+      b.personalInfoRequired = ['first_name', 'last_name', 'email']
+      b.operationalInfoRequired = []
+      b.enableMeetingPoint = true
+      b.enableHotelPickup = false
+      b.guideType = 'no_guide'
+      b.guideLanguages = []
+    },
+  },
+  {
+    id: 'premium-private',
+    emoji: '⭐',
+    name: 'Premium privado',
+    description: 'Servicio privado, recojo amplio, datos completos por pasajero.',
+    summary: ['Política estándar', 'Anticipación 1 día', 'Recojo · 25km', 'Guía multilingüe', 'Datos completos'],
+    apply: (b) => {
+      b.policyType = 'standard'
+      b.bookingAnticipationQuantity = 1
+      b.bookingAnticipationUnit = 'days'
+      b.dataRequirementType = 'all'
+      b.personalInfoRequired = ['first_name', 'last_name', 'email', 'phone_whatsapp', 'document', 'nationality']
+      b.operationalInfoRequired = ['age', 'allergies']
+      b.enableMeetingPoint = false
+      b.enableHotelPickup = true
+      b.pickupRadiusKm = 25
+      b.guideType = 'live_guide'
+      b.guideLanguages = [1, 2, 3, 4, 5, 6]
+    },
+  },
+]
+
+const appliedPreset = ref<string | null>(null)
+
+const applyPreset = (preset: Preset) => {
+  if (appliedPreset.value === preset.id) {
+    // Click en plantilla ya aplicada → no hace nada extra
+    return
+  }
+  if (!confirm(`¿Aplicar la plantilla "${preset.name}"? Reemplazará la configuración actual de reserva.`)) return
+  preset.apply(store.bookingOptions)
+  appliedPreset.value = preset.id
+}
 
 const tourLanguages = computed(() => {
   return Object.keys(store.contentSEO).filter(code => {
