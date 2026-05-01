@@ -174,6 +174,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes - Upload
     Route::post('/admin/pages/upload-image', [UploadController::class, 'uploadPageImage'])->name('api.admin.pages.upload-image');
 
+    // Admin routes - One-shot maintenance (artisan replacement for hosts without SSH)
+    Route::prefix('admin/maintenance')->group(function () {
+        Route::post('/backfill-standard-policy', [\App\Http\Controllers\Api\MaintenanceController::class, 'backfillStandardPolicy'])
+            ->name('api.admin.maintenance.backfill-standard-policy');
+    });
+
     // Admin routes - Reviews management
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [ReviewController::class, 'adminIndex'])->name('api.admin.reviews.index');
