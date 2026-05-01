@@ -175,8 +175,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/pages/upload-image', [UploadController::class, 'uploadPageImage'])->name('api.admin.pages.upload-image');
 
     // Admin routes - One-shot maintenance (artisan replacement for hosts without SSH)
+    // Accept GET + POST so the call can be made directly from the browser
+    // address bar when CORS / mod_security blocks JS-initiated POSTs.
     Route::prefix('admin/maintenance')->group(function () {
-        Route::post('/backfill-standard-policy', [\App\Http\Controllers\Api\MaintenanceController::class, 'backfillStandardPolicy'])
+        Route::match(['get', 'post'], '/backfill-standard-policy', [\App\Http\Controllers\Api\MaintenanceController::class, 'backfillStandardPolicy'])
             ->name('api.admin.maintenance.backfill-standard-policy');
     });
 
