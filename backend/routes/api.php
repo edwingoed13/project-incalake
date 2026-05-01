@@ -116,6 +116,9 @@ Route::post('/ai-translation-test', [AITranslationSettingsController::class, 'te
 Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
 Route::get('/dashboard/recent-bookings', [App\Http\Controllers\Api\DashboardController::class, 'recentBookings']);
 
+// Tags — public listing (used by both admin wizard and public tour filter)
+Route::get('/tags', [App\Http\Controllers\Api\TagController::class, 'index'])->name('api.tags.index');
+
 // Protected routes - Require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -143,6 +146,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [CategoryController::class, 'store'])->name('api.admin.categories.store');
         Route::put('/{id}', [CategoryController::class, 'update'])->name('api.admin.categories.update');
         Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('api.admin.categories.destroy');
+    });
+
+    // Admin routes - Tags management
+    Route::prefix('admin/tags')->group(function () {
+        Route::post('/', [App\Http\Controllers\Api\TagController::class, 'store'])->name('api.admin.tags.store');
+        Route::match(['put', 'post'], '/{id}', [App\Http\Controllers\Api\TagController::class, 'update'])->name('api.admin.tags.update');
+        Route::match(['delete', 'post'], '/{id}/delete', [App\Http\Controllers\Api\TagController::class, 'destroy'])->name('api.admin.tags.destroy');
     });
 
     // Admin routes - Languages management

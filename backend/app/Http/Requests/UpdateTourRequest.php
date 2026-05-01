@@ -126,6 +126,9 @@ class UpdateTourRequest extends FormRequest
             'categories' => 'nullable|array',
             'categories.*' => 'integer|exists:categories_new,id',
 
+            'tags' => 'nullable|array',
+            'tags.*' => 'integer|exists:tags,id',
+
             'map_points' => 'nullable|array',
             'map_points.*.name' => 'required|string|max:255',
             'map_points.*.description' => 'nullable|string',

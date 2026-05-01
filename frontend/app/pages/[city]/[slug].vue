@@ -76,7 +76,22 @@
             </div>
           </section>
 
-          <!-- Location Map -->
+          <!-- Tags chips -->
+          <section v-if="tour.tags && tour.tags.length" class="space-y-3">
+            <h3 class="text-sm font-black uppercase tracking-widest text-slate-500">{{ t('tags') || 'Etiquetas' }}</h3>
+            <div class="flex flex-wrap gap-2">
+              <NuxtLink
+                v-for="tag in tour.tags"
+                :key="tag.id"
+                :to="localePath(`/tours?tag=${tag.slug}`)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 text-violet-700 dark:text-violet-300 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
+              >
+                <span class="material-symbols-outlined text-sm">label</span>
+                {{ tag.name }}
+              </NuxtLink>
+            </div>
+          </section>
+
           <!-- Location Map -->
           <TourLocation :tour="tour" />
 
@@ -435,6 +450,7 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
 const { t, locale } = useI18n()
+const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
 
 const slug = route.params.slug as string

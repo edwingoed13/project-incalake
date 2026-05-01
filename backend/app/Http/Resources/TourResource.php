@@ -48,6 +48,14 @@ class TourResource extends JsonResource
                 'slug' => $this->city?->slug,
             ],
             'service_type' => $this->service_type,
+            'tags' => $this->whenLoaded('tags', function () use ($request) {
+                $lang = strtoupper($request->language ?? 'ES');
+                return $this->tags->map(fn ($t) => [
+                    'id' => $t->id,
+                    'slug' => $t->slug,
+                    'name' => $t->nameFor($lang),
+                ]);
+            }, []),
             // Available languages for this tour
             'available_languages' => $this->whenLoaded('translations', function () {
                 return $this->translations->map(function ($translation) {

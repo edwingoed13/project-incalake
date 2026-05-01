@@ -169,6 +169,15 @@ class TourDetailResource extends JsonResource
 
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
 
+            'tags' => $this->whenLoaded('tags', function () use ($language) {
+                return $this->tags->map(fn ($t) => [
+                    'id' => $t->id,
+                    'slug' => $t->slug,
+                    'name' => $t->nameFor($language),
+                    'translations' => $t->translations ?? [],
+                ]);
+            }, []),
+
             // 'faqs' => TourFaqResource::collection($this->whenLoaded('faqs')),
 
             // 'schema_markup' => $this->whenLoaded('schemaMarkup', function () {

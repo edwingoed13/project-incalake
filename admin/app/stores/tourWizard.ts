@@ -375,6 +375,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
     } as TourStep6,
 
     selectedCategories: [] as number[],
+    selectedTags: [] as number[],
     categories: [] as Category[],
 
     availability: {
@@ -648,6 +649,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
           // Map Step 7 Categories
           this.selectedCategories = data.categories?.map((c: any) => c.id) || []
+          this.selectedTags = data.tags?.map((t: any) => t.id) || []
 
           // Map Step 8 Availability
           if (data.availability_data) {
@@ -830,6 +832,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
         // Step 7 Categories
         categories: this.selectedCategories,
+        tags: this.selectedTags,
 
         // Map points from Step 3 (use current language or first available)
         map_points: this.detailedContent[this.currentLanguage]?.mapPoints ||

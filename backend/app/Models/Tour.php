@@ -129,6 +129,11 @@ class Tour extends Model
             ->withTimestamps();
     }
 
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'tour_tag');
+    }
+
     public function mapPoints(): HasMany
     {
         return $this->hasMany(TourMapPoint::class)->orderBy('order');

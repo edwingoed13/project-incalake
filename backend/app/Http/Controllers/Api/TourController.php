@@ -42,6 +42,7 @@ class TourController extends Controller
                 'prices.ageStage',
                 'mediaGallery',
                 'categories',
+                'tags',
             ]);
 
             if ($request->has('status')) {
@@ -172,6 +173,7 @@ class TourController extends Controller
                 'mediaGallery',
                 'mapPoints',
                 'categories.translations',
+                'tags',
                 'city',
             ])->findOrFail($id);
 
@@ -206,6 +208,7 @@ class TourController extends Controller
                 'mediaGallery',
                 'mapPoints',
                 'categories.translations',
+                'tags',
                 'city',
             ])
             ->whereHas('translations', function ($query) use ($slug) {

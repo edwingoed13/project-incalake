@@ -51,6 +51,10 @@ class TourService
                 $tour->categories()->sync($data['categories']);
             }
 
+            if (isset($data['tags'])) {
+                $tour->tags()->sync($data['tags']);
+            }
+
             if (isset($data['map_points'])) {
                 $this->syncMapPoints($tour, $data['map_points']);
             }
@@ -95,6 +99,10 @@ class TourService
 
             if (isset($data['categories'])) {
                 $tour->categories()->sync($data['categories']);
+            }
+
+            if (isset($data['tags'])) {
+                $tour->tags()->sync($data['tags']);
             }
 
             if (isset($data['map_points'])) {
