@@ -193,6 +193,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin/maintenance')->group(function () {
         Route::match(['get', 'post'], '/backfill-standard-policy', [\App\Http\Controllers\Api\MaintenanceController::class, 'backfillStandardPolicy'])
             ->name('api.admin.maintenance.backfill-standard-policy');
+        Route::match(['get', 'post'], '/run-migrations', [\App\Http\Controllers\Api\MaintenanceController::class, 'runMigrations'])
+            ->name('api.admin.maintenance.run-migrations');
+        Route::match(['get', 'post'], '/seed-standard-tags', [\App\Http\Controllers\Api\MaintenanceController::class, 'seedStandardTags'])
+            ->name('api.admin.maintenance.seed-standard-tags');
+        Route::match(['get', 'post'], '/expand-anticipation-enum', [\App\Http\Controllers\Api\MaintenanceController::class, 'expandAnticipationEnum'])
+            ->name('api.admin.maintenance.expand-anticipation-enum');
     });
 
     // Admin routes - Reviews management

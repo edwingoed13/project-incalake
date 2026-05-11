@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Language;
+use App\Models\Tag;
 use App\Models\TourTranslation;
 use App\Support\StandardCancellationPolicy;
+use Database\Seeders\StandardTagsSeeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 /**
  * One-shot maintenance endpoints that the admin UI can trigger when SSH /
@@ -70,5 +74,80 @@ class MaintenanceController extends Controller
                 'total' => $translations->count(),
             ],
         ]);
+    }
+
+    /**
+     * Run pending migrations from the browser when cPanel doesn't allow artisan.
+     * Returns the migration output for verification.
+     */
+    public function runMigrations(): JsonResponse
+    {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $output = Artisan::output();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Migraciones ejecutadas correctamente.',
+                'output' => $output,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al ejecutar migraciones.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Seed the 15 standardized tourism tags. Idempotent — updateOrCreate by slug.
+     * Returns the resulting tag count.
+     */
+    public function seedStandardTags(): JsonResponse
+    {
+        try {
+            $before = Tag::count();
+            (new StandardTagsSeeder())->run();
+            $after = Tag::count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tags estándar aplicados correctamente.',
+                'stats' => [
+                    'before' => $before,
+                    'after' => $after,
+                    'added' => $after - $before,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al seedear tags.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * One-shot SQL: expand booking_anticipation_unit enum to include 'minutes'.
+     * Use this if `runMigrations` fails or the migration was already applied locally.
+     */
+    public function expandAnticipationEnum(): JsonResponse
+    {
+        try {
+            DB::statement("ALTER TABLE tours MODIFY COLUMN booking_anticipation_unit ENUM('minutes', 'hours', 'days') NOT NULL DEFAULT 'hours'");
+
+            return response()->json([
+                'success' => true,
+                'message' => "Enum 'booking_anticipation_unit' actualizado a ('minutes', 'hours', 'days').",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al alterar enum.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
