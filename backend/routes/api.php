@@ -199,6 +199,8 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.seed-standard-tags');
         Route::match(['get', 'post'], '/expand-anticipation-enum', [\App\Http\Controllers\Api\MaintenanceController::class, 'expandAnticipationEnum'])
             ->name('api.admin.maintenance.expand-anticipation-enum');
+        Route::match(['get', 'post'], '/merge-tag', [\App\Http\Controllers\Api\MaintenanceController::class, 'mergeTag'])
+            ->name('api.admin.maintenance.merge-tag');
     });
 
     // Admin routes - Reviews management
