@@ -1,286 +1,490 @@
 <template>
-  <div class="flex flex-col gap-10 pb-20">
+  <div class="flex flex-col gap-5 pb-20">
     <!-- Payment Methods -->
-    <section class="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <h4 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">credit_card</span>
-        Método de Pago Aceptado *
-      </h4>
-      <div class="flex flex-col gap-3">
-        <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-          <input type="radio" v-model="store.commercialRules.paymentMethod" value="all" class="w-5 h-5 text-primary border-slate-300 dark:border-slate-700 focus:ring-primary bg-transparent" />
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Todos los métodos (PayPal y Culqi)</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-          <input type="radio" v-model="store.commercialRules.paymentMethod" value="culqi" class="w-5 h-5 text-primary border-slate-300 dark:border-slate-700 focus:ring-primary bg-transparent" />
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Solo Culqi</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
-          <input type="radio" v-model="store.commercialRules.paymentMethod" value="paypal" class="w-5 h-5 text-primary border-slate-300 dark:border-slate-700 focus:ring-primary bg-transparent" />
-          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Solo PayPal</span>
-        </label>
-      </div>
-    </section>
-
-    <!-- Pricing Hierarchical (3 Levels) -->
-    <section class="space-y-6">
-      <div class="flex items-center justify-between gap-3">
-        <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Precios por Etapa de Edad, Nacionalidad y Cantidad</h3>
-        <div v-if="hasConflicts" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold">
-          <span class="material-symbols-outlined text-base">error</span>
-          {{ Object.keys(conflictsByRange).length }} rango(s) con conflicto
+    <UCard :ui="{ body: 'p-5' }">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-credit-card" class="size-5 text-primary" />
+          <h3 class="text-base font-bold">Método de pago aceptado <span class="text-primary">*</span></h3>
         </div>
-      </div>
-
-      <div v-if="hasConflicts" class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/40">
-        <p class="text-sm text-rose-700 dark:text-rose-300 font-medium leading-relaxed">
-          <span class="font-bold">⚠ Hay rangos en conflicto.</span>
-          Los rangos no pueden solaparse ni duplicarse dentro de la misma nacionalidad.
-          Ejemplo válido: <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">1-1</code>, <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">2-5</code>, <code class="bg-rose-100 dark:bg-rose-900/30 px-1 rounded">6-20</code>.
-          Resuelve los rangos resaltados antes de guardar.
-        </p>
-      </div>
-      
-      <div class="space-y-8">
-        <div 
-          v-for="ageStage in store.commercialRules.ageStages" 
-          :key="ageStage.id"
-          class="glass-card rounded-2xl border-2 transition-all overflow-hidden"
-          :class="ageStage.active ? 'border-primary/30 shadow-lg shadow-primary/5' : 'border-slate-200 dark:border-slate-800 opacity-60'"
+      </template>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button
+          v-for="opt in paymentMethodOptions"
+          :key="opt.value"
+          type="button"
+          :class="[
+            'p-4 rounded-xl border-2 text-left transition-all flex items-start gap-3',
+            store.commercialRules.paymentMethod === opt.value
+              ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+              : 'border-default hover:border-muted',
+          ]"
+          @click="store.commercialRules.paymentMethod = opt.value"
         >
-          <!-- Age Stage Header -->
-          <div class="p-6 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+          <div :class="['size-9 rounded-lg flex items-center justify-center shrink-0', store.commercialRules.paymentMethod === opt.value ? 'bg-primary text-white' : 'bg-elevated text-muted']">
+            <UIcon :name="opt.icon" class="size-5" />
+          </div>
+          <div class="min-w-0">
+            <p class="font-bold text-sm">{{ opt.label }}</p>
+            <p class="text-[11px] text-muted mt-0.5">{{ opt.description }}</p>
+          </div>
+          <UIcon
+            v-if="store.commercialRules.paymentMethod === opt.value"
+            name="i-lucide-circle-check"
+            class="size-4 text-primary shrink-0 ml-auto"
+          />
+        </button>
+      </div>
+    </UCard>
+
+    <!-- Pricing — Age Stage Selector + Editor -->
+    <UCard :ui="{ body: 'p-5 space-y-4' }">
+      <template #header>
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-coins" class="size-5 text-primary" />
             <div>
-              <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ ageStage.description }}</h4>
-              <p class="text-xs text-slate-500 font-medium tracking-wide">
-                Rango de edad: {{ ageStage.minAge }} - {{ ageStage.maxAge >= 99 ? '+' : ageStage.maxAge }} años
-              </p>
+              <h3 class="text-base font-bold">Precios por etapa de edad</h3>
+              <p class="text-xs text-muted mt-0.5">Configura precios por nacionalidad y cantidad de pasajeros</p>
             </div>
-            <label class="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-950 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
-              <input type="checkbox" v-model="ageStage.active" class="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" />
-              <span class="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Activo</span>
-            </label>
           </div>
+          <UBadge
+            v-if="hasConflicts"
+            color="error"
+            variant="subtle"
+            size="md"
+            icon="i-lucide-triangle-alert"
+          >
+            {{ Object.keys(conflictsByRange).length }} rango(s) en conflicto
+          </UBadge>
+        </div>
+      </template>
 
-          <!-- Nationalities (only if Active) -->
-          <div v-if="ageStage.active" class="p-6 space-y-6">
-            <div class="flex justify-start">
-               <button 
-                @click="addNationality(ageStage)"
-                class="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-               >
-                 <span class="material-symbols-outlined text-sm">add_circle</span>
-                 Agregar Nacionalidad
-               </button>
+      <UAlert
+        v-if="hasConflicts"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        title="Hay rangos en conflicto"
+        description="Los rangos no pueden solaparse ni duplicarse dentro de la misma nacionalidad. Ejemplo válido: 1-1, 2-5, 6-20. Resuelve los rangos resaltados antes de guardar."
+      />
+
+      <!-- Add Age Stage -->
+      <div class="flex items-center justify-between gap-3 flex-wrap pb-2">
+        <p class="text-sm font-semibold">
+          Etapas de edad configuradas ({{ store.commercialRules.ageStages.length }})
+        </p>
+        <UDropdownMenu
+          :items="[
+            availablePresets.map(p => ({
+              label: p.description,
+              icon: 'i-lucide-circle-plus',
+              kbds: [`${p.minAge}-${p.maxAge >= 99 ? '+' : p.maxAge}`],
+              onSelect: () => addAgeStage(p),
+            })),
+            [{ label: 'Personalizada', icon: 'i-lucide-pencil', onSelect: () => addAgeStage() }],
+          ]"
+          :content="{ align: 'end' }"
+        >
+          <UButton icon="i-lucide-plus" color="primary" size="sm" trailing-icon="i-lucide-chevron-down">
+            Agregar etapa
+          </UButton>
+        </UDropdownMenu>
+      </div>
+
+      <!-- Age Stages — Each one collapsible -->
+      <div class="space-y-3">
+        <div
+          v-for="(ageStage, stageIndex) in store.commercialRules.ageStages"
+          :key="ageStage.id"
+          :class="[
+            'rounded-xl border-2 overflow-hidden transition-all',
+            ageStage.active ? 'border-primary/30' : 'border-default opacity-70',
+          ]"
+        >
+          <!-- Collapsible Header -->
+          <button
+            type="button"
+            class="w-full px-5 py-4 bg-elevated/40 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/60 transition-colors text-left"
+            @click="toggleStage(String(ageStage.id))"
+          >
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <UIcon
+                name="i-lucide-chevron-down"
+                class="size-5 text-muted transition-transform shrink-0"
+                :class="{ 'rotate-180': isStageExpanded(String(ageStage.id)) }"
+              />
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-bold text-base">{{ ageStage.description }}</h4>
+                  <UBadge color="neutral" variant="subtle" size="xs">
+                    {{ ageStage.minAge }} - {{ ageStage.maxAge >= 99 ? '+' : ageStage.maxAge }} años
+                  </UBadge>
+                  <UBadge
+                    v-if="ageStage.nationalities.length > 0"
+                    color="primary"
+                    variant="subtle"
+                    size="xs"
+                    icon="i-lucide-flag"
+                  >
+                    {{ ageStage.nationalities.length }} nacionalidad{{ ageStage.nationalities.length === 1 ? '' : 'es' }}
+                  </UBadge>
+                </div>
+              </div>
             </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-default border border-default" @click.stop>
+              <USwitch v-model="ageStage.active" color="primary" size="sm" />
+              <span class="text-xs font-bold uppercase tracking-widest text-muted">
+                {{ ageStage.active ? 'Activa' : 'Inactiva' }}
+              </span>
+            </div>
+          </button>
 
-            <div class="space-y-6">
-              <div
-                v-for="(nat, natIndex) in ageStage.nationalities"
-                :key="nat.id"
-                :ref="el => { if (el) natRefs[nat.id] = el as HTMLElement }"
-                class="rounded-xl border border-slate-200 dark:border-slate-800 p-5 bg-white dark:bg-slate-950 shadow-sm space-y-5"
-              >
-                <!-- Nationality Header -->
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                  <div class="flex items-center gap-4 flex-1">
-                    <select 
-                      v-model="nat.nationalityId"
-                      class="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary outline-none min-w-[200px] dark:text-white"
-                    >
-                      <option value="">-- Seleccionar Nacionalidad --</option>
-                      <option value="general">General</option>
-                      <option value="peruano">Peruano</option>
-                      <option value="latino">Latinoamericano</option>
-                      <option value="extranjero">Extranjero</option>
-                    </select>
-
-                    <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
-                      <span>Rango:</span>
-                      <input v-model.number="nat.ageMin" type="number" class="w-14 px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded text-center focus:ring-primary" />
-                      <span>-</span>
-                      <input v-model.number="nat.ageMax" type="number" class="w-14 px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded text-center focus:ring-primary" />
-                    </div>
-                  </div>
-
-                  <button @click="removeNationality(ageStage, natIndex)" class="text-slate-300 hover:text-rose-500 transition-colors">
-                    <span class="material-symbols-outlined text-sm">delete</span>
-                  </button>
-                </div>
-
-                <!-- Price Ranges Table -->
-                <div v-if="nat.nationalityId" class="space-y-4">
-                  <div class="bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
-                    <h5 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Precios por Cantidad de PAX</h5>
-                    
-                    <div class="overflow-hidden">
-                      <table class="w-full text-left border-collapse">
-                        <thead>
-                          <tr class="text-[10px] font-black uppercase text-slate-400">
-                            <th class="pb-3 px-2">Desde (Pax)</th>
-                            <th class="pb-3 text-center">-</th>
-                            <th class="pb-3 px-2">Hasta (Pax)</th>
-                            <th class="pb-3 text-center">:</th>
-                            <th class="pb-3 px-2">Precio USD</th>
-                            <th class="pb-3"></th>
-                          </tr>
-                        </thead>
-                        <tbody class="space-y-2">
-                          <template v-for="(range, rIndex) in nat.ranges" :key="range.id">
-                            <tr class="group" :class="{ 'bg-rose-50/50 dark:bg-rose-900/10': conflictsByRange[range.id] }">
-                              <td class="py-1 px-2">
-                                <input v-model.number="range.from" type="number" min="1"
-                                  :class="conflictsByRange[range.id]
-                                    ? 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-700 rounded-lg text-sm focus:ring-rose-400 dark:text-white'
-                                    : 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white'" />
-                              </td>
-                              <td class="py-1 text-center text-slate-300">-</td>
-                              <td class="py-1 px-2">
-                                <input v-model.number="range.to" type="number" min="1"
-                                  :class="conflictsByRange[range.id]
-                                    ? 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-700 rounded-lg text-sm focus:ring-rose-400 dark:text-white'
-                                    : 'w-20 px-3 py-1.5 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg text-sm focus:ring-primary dark:text-white'" />
-                              </td>
-                              <td class="py-1 text-center text-slate-300">:</td>
-                              <td class="py-1 px-2">
-                                <div class="flex items-center gap-1 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-lg px-2 py-1.5 focus-within:border-primary transition-all">
-                                  <span class="text-[10px] font-bold text-slate-400">$</span>
-                                  <input v-model.number="range.price" type="number" step="0.01" class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-mono dark:text-white" />
-                                </div>
-                              </td>
-                              <td class="py-1 text-right">
-                                <button @click="removeRange(nat, rIndex)" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all">
-                                  <span class="material-symbols-outlined text-xs">close</span>
-                                </button>
-                              </td>
-                            </tr>
-                            <tr v-if="conflictsByRange[range.id]">
-                              <td colspan="6" class="px-2 pb-2">
-                                <div class="flex items-start gap-2 text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
-                                  <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">error</span>
-                                  <span>{{ conflictsByRange[range.id].join(' · ') }}</span>
-                                </div>
-                              </td>
-                            </tr>
-                          </template>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <button 
-                      @click="addRange(nat)"
-                      class="mt-4 px-3 py-1.5 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all"
-                    >
-                      <span class="material-symbols-outlined text-xs">add</span>
-                      Agregar Rango de Precio
-                    </button>
-                  </div>
-                </div>
-                <div v-else class="text-center py-4 text-xs italic text-slate-400 font-medium">
-                  Selecciona una nacionalidad para configurar precios
+          <!-- Collapsible Body -->
+          <Transition
+            enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+            leave-active-class="transition-all duration-200 ease-in overflow-hidden"
+            enter-from-class="max-h-0 opacity-0"
+            enter-to-class="max-h-[2000px] opacity-100"
+            leave-from-class="max-h-[2000px] opacity-100"
+            leave-to-class="max-h-0 opacity-0"
+          >
+            <div v-if="isStageExpanded(String(ageStage.id))" class="border-t border-default">
+              <!-- Stage Metadata (editable) -->
+              <div class="px-5 py-4 bg-elevated/20 border-b border-default">
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
+                  <UFormField label="Nombre de la etapa">
+                    <UInput
+                      v-model="ageStage.description"
+                      placeholder="Ej: Adulto, Niño, Adulto Mayor..."
+                      icon="i-lucide-tag"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UFormField label="Edad mín">
+                    <UInputNumber v-model="ageStage.minAge" :min="0" :max="120" class="w-24" />
+                  </UFormField>
+                  <UFormField label="Edad máx">
+                    <UInputNumber v-model="ageStage.maxAge" :min="0" :max="120" class="w-24" />
+                  </UFormField>
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    color="error"
+                    variant="ghost"
+                    title="Eliminar etapa de edad"
+                    @click="removeAgeStage(stageIndex)"
+                  >
+                    Eliminar etapa
+                  </UButton>
                 </div>
               </div>
 
-               <div v-if="ageStage.nationalities.length === 0" class="text-center py-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl text-slate-400 text-sm">
-                Haz clic en "Agregar Nacionalidad" para configurar precios
+              <div v-if="ageStage.active" class="p-5 space-y-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <p class="text-sm font-semibold">
+                    Nacionalidades configuradas ({{ ageStage.nationalities.length }})
+                  </p>
+                  <UButton
+                    icon="i-lucide-plus"
+                    color="success"
+                    size="sm"
+                    @click="addNationality(ageStage)"
+                  >
+                    Agregar nacionalidad
+                  </UButton>
+                </div>
+
+                <div class="space-y-3">
+                  <UCard
+                    v-for="(nat, natIndex) in ageStage.nationalities"
+                    :key="nat.id"
+                    :ref="el => { if (el) natRefs[nat.id] = (el as any)?.$el || el as HTMLElement }"
+                    :ui="{ body: 'p-4 space-y-4' }"
+                  >
+                    <!-- Nationality Header -->
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                      <div class="flex items-center gap-3 flex-wrap flex-1">
+                        <UFormField label="Nacionalidad" :ui="{ wrapper: 'min-w-[200px]' }">
+                          <USelectMenu
+                            v-model="nat.nationalityId"
+                            :items="nationalityOptions"
+                            value-key="value"
+                            class="w-full"
+                          />
+                        </UFormField>
+                        <UFormField label="Edad mín">
+                          <UInputNumber v-model="nat.ageMin" :min="0" :max="120" class="w-20" />
+                        </UFormField>
+                        <UFormField label="Edad máx">
+                          <UInputNumber v-model="nat.ageMax" :min="0" :max="120" class="w-20" />
+                        </UFormField>
+                      </div>
+                      <UButton
+                        icon="i-lucide-trash-2"
+                        color="error"
+                        variant="ghost"
+                        size="sm"
+                        title="Eliminar nacionalidad"
+                        @click="removeNationality(ageStage, natIndex)"
+                      />
+                    </div>
+
+                    <!-- Pricing table -->
+                    <div v-if="nat.nationalityId" class="space-y-3">
+                      <p class="text-[10px] font-black uppercase tracking-widest text-muted">Precios por cantidad de pasajeros</p>
+
+                      <div class="bg-elevated/30 rounded-lg border border-default overflow-hidden">
+                        <div class="grid grid-cols-[1fr_1fr_1.4fr_auto] gap-2 px-3 py-2 border-b border-default text-[10px] font-black uppercase tracking-widest text-muted">
+                          <span>Desde (pax)</span>
+                          <span>Hasta (pax)</span>
+                          <span>Precio USD</span>
+                          <span class="w-7"></span>
+                        </div>
+                        <div class="divide-y divide-default">
+                          <div
+                            v-for="(range, rIndex) in nat.ranges"
+                            :key="range.id"
+                          >
+                            <div
+                              class="grid grid-cols-[1fr_1fr_1.4fr_auto] gap-2 px-3 py-2 items-center group transition-colors"
+                              :class="{ 'bg-error/5': conflictsByRange[range.id] }"
+                            >
+                              <UInputNumber
+                                v-model="range.from"
+                                :min="1"
+                                class="w-full"
+                                :ui="{ root: conflictsByRange[range.id] ? 'ring-2 ring-error/30' : '' }"
+                              />
+                              <UInputNumber
+                                v-model="range.to"
+                                :min="1"
+                                class="w-full"
+                                :ui="{ root: conflictsByRange[range.id] ? 'ring-2 ring-error/30' : '' }"
+                              />
+                              <UInput
+                                v-model.number="range.price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                class="w-full"
+                              >
+                                <template #leading>
+                                  <span class="text-xs font-bold text-muted">$</span>
+                                </template>
+                              </UInput>
+                              <UButton
+                                icon="i-lucide-x"
+                                color="error"
+                                variant="ghost"
+                                size="xs"
+                                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Eliminar rango"
+                                @click="removeRange(nat, rIndex)"
+                              />
+                            </div>
+                            <div
+                              v-if="conflictsByRange[range.id]"
+                              class="px-3 pb-2 -mt-1 text-[11px] text-error font-semibold flex items-start gap-1.5"
+                            >
+                              <UIcon name="i-lucide-triangle-alert" class="size-3.5 shrink-0 mt-0.5" />
+                              <span>{{ conflictsByRange[range.id].join(' · ') }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <UButton
+                        icon="i-lucide-plus"
+                        color="primary"
+                        variant="soft"
+                        size="sm"
+                        @click="addRange(nat)"
+                      >
+                        Agregar rango de precio
+                      </UButton>
+                    </div>
+
+                    <p v-else class="text-center text-xs italic text-muted py-2">
+                      Selecciona una nacionalidad para configurar precios
+                    </p>
+                  </UCard>
+
+                  <UAlert
+                    v-if="ageStage.nationalities.length === 0"
+                    color="neutral"
+                    variant="subtle"
+                    icon="i-lucide-info"
+                    title="Sin nacionalidades configuradas"
+                    description='Haz clic en "Agregar nacionalidad" para definir precios para esta etapa de edad.'
+                  />
+                </div>
+              </div>
+
+              <div v-else class="p-6 text-center">
+                <UIcon name="i-lucide-circle-pause" class="size-8 text-muted mx-auto mb-2" />
+                <p class="text-sm text-muted">Activa esta etapa de edad para configurar precios</p>
               </div>
             </div>
-          </div>
-          <div v-else class="p-6 text-center text-sm italic text-slate-400">
-            Activa esta etapa de edad para configurar precios
-          </div>
+          </Transition>
         </div>
       </div>
-    </section>
+    </UCard>
 
     <!-- General Config Section -->
-    <section class="glass-card p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-8 bg-white dark:bg-slate-950 shadow-sm relative overflow-hidden">
-      <div class="absolute -left-10 -top-10 size-40 bg-primary/5 rounded-full blur-3xl"></div>
-      
-      <h4 class="text-lg font-black text-slate-900 dark:text-white tracking-widest uppercase flex items-center gap-3 relative z-10">
-        <span class="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-           <span class="material-symbols-outlined text-sm">settings</span>
-        </span>
-        Configuración de Precios Generales
-      </h4>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
-        <!-- Taxes -->
-        <div class="space-y-3">
-          <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">
-            Tasas e impuestos a aplicar (%)
-          </label>
-          <div class="flex items-center gap-3">
-            <div class="flex-1 flex items-center gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-3 focus-within:ring-2 focus-within:ring-primary transition-all">
-              <input 
-                type="number" 
-                v-model.number="store.commercialRules.taxPercentage" 
-                step="0.01" min="0" max="100"
-                class="w-full bg-transparent border-none p-0 focus:ring-0 text-xl font-black dark:text-white"
-              />
-              <span class="text-xl font-black text-slate-300">%</span>
-            </div>
-          </div>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-            Este porcentaje se añadirá al precio final del tour para cubrir comisiones de pasarela o impuestos locales.
-          </p>
+    <UCard :ui="{ body: 'p-5 space-y-4' }">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-settings-2" class="size-5 text-primary" />
+          <h3 class="text-base font-bold">Configuración de precios generales</h3>
         </div>
+      </template>
 
-        <!-- First Payment -->
-        <div class="space-y-3">
-          <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">
-            Porcentaje de primera cuota (%)
-          </label>
-          <div class="flex items-center gap-3">
-            <div class="flex-1 flex items-center gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-3 focus-within:ring-2 focus-within:ring-primary transition-all">
-              <input 
-                type="number" 
-                v-model.number="store.commercialRules.advancePaymentPercentage" 
-                min="1" max="100"
-                class="w-full bg-transparent border-none p-0 focus:ring-0 text-xl font-black dark:text-white"
-              />
-              <span class="text-xl font-black text-slate-300">%</span>
-            </div>
-          </div>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-            100% = Pago completo requerido | Menor a 100% = Permite reserva con pago inicial.
-          </p>
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <UFormField label="Tasas e impuestos (%)" hint="Se añadirá al precio final para cubrir comisiones o impuestos locales">
+          <UInput
+            v-model.number="store.commercialRules.taxPercentage"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            class="w-full"
+          >
+            <template #trailing>
+              <span class="text-sm font-bold text-muted">%</span>
+            </template>
+          </UInput>
+        </UFormField>
+
+        <UFormField label="Primera cuota (%)" hint="100% = pago completo · Menos = permite reserva con pago inicial">
+          <UInput
+            v-model.number="store.commercialRules.advancePaymentPercentage"
+            type="number"
+            min="1"
+            max="100"
+            class="w-full"
+          >
+            <template #trailing>
+              <span class="text-sm font-bold text-muted">%</span>
+            </template>
+          </UInput>
+        </UFormField>
       </div>
 
-      <!-- Warning Message -->
-      <div 
+      <UAlert
         v-if="store.commercialRules.advancePaymentPercentage < 100"
-        class="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-3 transition-all animate-in fade-in slide-in-from-top-2"
-      >
-        <span class="material-symbols-outlined text-amber-500">warning</span>
-        <p class="text-xs text-amber-700 dark:text-amber-400 font-medium">
-          <strong>Importante:</strong> Al permitir un pago menor al 100%, los clientes podrán reservar pagando solo una parte. El monto restante deberá ser gestionado directamente con el cliente o al inicio del tour.
-        </p>
-      </div>
-    </section>
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        title="Reserva parcial habilitada"
+        description="Los clientes podrán reservar pagando solo una parte. El monto restante deberá gestionarse directamente con el cliente o al inicio del tour."
+      />
+    </UCard>
 
     <!-- Tips -->
-    <div class="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-4">
-      <span class="material-symbols-outlined text-primary">lightbulb</span>
-      <div class="space-y-2">
-        <h5 class="text-sm font-bold text-primary italic">Estructura Profesional de Precios</h5>
-        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          Este sistema de 3 niveles te permite una flexibilidad total: define precios base, ajusta según el origen del pasajero (Local vs Extranjero) y recompensa a los grupos grandes con descuentos automáticos por volumen de PAX.
-        </p>
-      </div>
-    </div>
+    <UAlert
+      color="primary"
+      variant="subtle"
+      icon="i-lucide-lightbulb"
+      title="Estructura profesional de precios"
+      description="Este sistema de 3 niveles te da flexibilidad total: define precios base, ajusta según el origen del pasajero (Local vs Extranjero) y recompensa a los grupos grandes con descuentos automáticos por volumen de PAX."
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
 import type { AgeStagePrice, NationalityPrice } from '~/stores/tourWizard'
 
 const store = useTourWizardStore()
+const { confirm } = useConfirm()
 
 const natRefs = reactive<Record<string, HTMLElement>>({})
+
+// Each age stage is a collapsible. State persisted in localStorage so F5 keeps it.
+const {
+  expandedSections: expandedStages,
+  toggleSection: toggleStage,
+  isSectionExpanded: isStageExpanded,
+} = useCollapsibles('wizard:step4-stages')
+
+// Track whether we've already seeded the default (open first stage) — once seeded,
+// the user's choice to close everything is respected on subsequent loads.
+const SEED_KEY = 'wizard:step4-stages:seeded'
+const initExpanded = () => {
+  if (!import.meta.client) return
+  if (sessionStorage.getItem(SEED_KEY)) return
+  if (store.commercialRules.ageStages.length && expandedStages.value.size === 0) {
+    expandedStages.value = new Set([String(store.commercialRules.ageStages[0].id)])
+    sessionStorage.setItem(SEED_KEY, '1')
+  }
+}
+initExpanded()
+
+const paymentMethodOptions = [
+  { value: 'all', label: 'Todos los métodos', description: 'PayPal + Culqi', icon: 'i-lucide-credit-card' },
+  { value: 'culqi', label: 'Solo Culqi', description: 'Tarjetas locales (Perú)', icon: 'i-lucide-circle-dollar-sign' },
+  { value: 'paypal', label: 'Solo PayPal', description: 'Pagos internacionales', icon: 'i-lucide-globe' },
+]
+
+const nationalityOptions = [
+  { value: '', label: '-- Seleccionar Nacionalidad --' },
+  { value: 'general', label: 'General' },
+  { value: 'peruano', label: 'Peruano' },
+  { value: 'latino', label: 'Latinoamericano' },
+  { value: 'extranjero', label: 'Extranjero' },
+]
+
+// Plantillas comunes de etapas de edad — para que se agreguen con un click
+const stagePresets = [
+  { description: 'Infante', minAge: 0, maxAge: 2 },
+  { description: 'Niño', minAge: 3, maxAge: 11 },
+  { description: 'Adolescente', minAge: 12, maxAge: 17 },
+  { description: 'Adulto', minAge: 18, maxAge: 64 },
+  { description: 'Adulto Mayor', minAge: 65, maxAge: 99 },
+]
+
+const usedDescriptions = computed(() =>
+  new Set(store.commercialRules.ageStages.map((s) => s.description.toLowerCase().trim())),
+)
+
+const availablePresets = computed(() =>
+  stagePresets.filter((p) => !usedDescriptions.value.has(p.description.toLowerCase())),
+)
+
+const addAgeStage = (preset?: { description: string; minAge: number; maxAge: number }) => {
+  const newId = crypto.randomUUID()
+  const stage: AgeStagePrice = {
+    id: newId,
+    description: preset?.description || 'Nueva etapa',
+    minAge: preset?.minAge ?? 0,
+    maxAge: preset?.maxAge ?? 99,
+    active: true,
+    nationalities: [],
+  }
+  store.commercialRules.ageStages.push(stage)
+  // Auto-expand the new stage
+  expandedStages.value = new Set([...expandedStages.value, String(newId)])
+}
+
+const removeAgeStage = async (index: number) => {
+  const stage = store.commercialRules.ageStages[index]
+  if (!stage) return
+  const ok = await confirm({
+    title: 'Eliminar etapa de edad',
+    description: `Vas a eliminar "${stage.description}" y todas sus configuraciones de precios y nacionalidades.`,
+    confirmLabel: 'Eliminar',
+    confirmColor: 'error',
+    confirmIcon: 'i-lucide-trash-2',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
+  store.commercialRules.ageStages.splice(index, 1)
+  const next = new Set(expandedStages.value)
+  next.delete(String(stage.id))
+  expandedStages.value = next
+}
 
 const addNationality = async (ageStage: AgeStagePrice) => {
   const newNat = {

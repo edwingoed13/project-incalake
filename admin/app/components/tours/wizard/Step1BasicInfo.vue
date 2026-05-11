@@ -1,308 +1,260 @@
 <template>
-  <div class="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  <div class="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <!-- Section: Basic Information -->
-    <div class="glass-card p-8 rounded-3xl shadow-sm space-y-8 border border-white/10">
-      <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary">info</span>
-        Información Básica del Tour
-      </h3>
+    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
+      <template #header>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <UIcon name="i-lucide-info" class="size-5 text-primary" />
+          Información básica del tour
+        </h3>
+      </template>
 
       <!-- Editing language banner (edit mode) -->
-      <div v-if="isEditMode" class="mb-6 flex items-center gap-4 px-5 py-4 bg-primary/5 border border-primary/20 rounded-2xl">
-        <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg">
-          {{ currentLangFlag }}
-        </div>
-        <div class="flex-1">
-          <p class="text-sm font-black text-slate-900 dark:text-white">
-            Editando traducción: <span class="text-primary">{{ currentLangName }} ({{ store.currentLanguage.toUpperCase() }})</span>
-          </p>
-          <p class="text-[10px] text-slate-500 font-medium">Código del tour: <span class="font-mono font-black">{{ store.basicInfo.code }}</span></p>
-        </div>
-        <!-- Show other available translations -->
-        <div class="flex gap-1">
-          <span
-            v-for="lang in tourTranslationCodes"
-            :key="lang"
-            :class="lang === store.currentLanguage
-              ? 'bg-primary text-white'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-500'"
-            class="px-2 py-1 text-[9px] font-black rounded-md uppercase"
-          >
-            {{ lang }}
-          </span>
-        </div>
+      <UAlert
+        v-if="isEditMode"
+        color="primary"
+        variant="subtle"
+        class="mb-4"
+        :title="`Editando: ${currentLangName} (${store.currentLanguage.toUpperCase()})`"
+        :description="`Código: ${store.basicInfo.code}`"
+      >
+        <template #icon>
+          <span class="text-lg">{{ currentLangFlag }}</span>
+        </template>
+        <template #leading>
+          <span class="text-lg">{{ currentLangFlag }}</span>
+        </template>
+      </UAlert>
+
+      <!-- Other-language pills (under banner) -->
+      <div v-if="isEditMode && tourTranslationCodes.length > 1" class="flex gap-1 mb-4">
+        <UBadge
+          v-for="lang in tourTranslationCodes"
+          :key="lang"
+          :color="lang === store.currentLanguage ? 'primary' : 'neutral'"
+          :variant="lang === store.currentLanguage ? 'solid' : 'subtle'"
+          size="sm"
+          class="uppercase"
+        >
+          {{ lang }}
+        </UBadge>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
         <!-- Idioma Principal (solo al crear un tour nuevo) -->
         <template v-if="!isEditMode">
-          <div class="col-span-2 space-y-2">
-            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              Idioma Principal del Tour <span class="text-primary">*</span>
-              <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(selecciona primero para generar el código)</span>
-            </label>
-            <div class="relative">
-              <select
-                v-model="selectedLanguageId"
-                class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-              >
-                <option v-for="lang in availableLanguages" :key="lang.id" :value="lang.id">
-                  {{ lang.country }} ({{ lang.code.toUpperCase() }})
-                </option>
-              </select>
-              <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-            </div>
-          </div>
+          <UFormField label="Idioma principal del tour" hint="Selecciona primero para generar el código" class="md:col-span-2" required>
+            <USelect
+              v-model="selectedLanguageId"
+              :items="languageItems"
+              placeholder="Selecciona idioma"
+              class="w-full"
+            />
+          </UFormField>
 
-          <!-- Código del Tour (solo crear) -->
-          <div class="space-y-2">
-            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              Código del Tour <span class="text-primary">*</span>
-              <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(generado automáticamente)</span>
-            </label>
-            <div class="relative group">
-              <input
-                v-model="store.basicInfo.code"
-                class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-mono font-bold tracking-wider"
-                placeholder="ES000"
-                readonly
-                type="text"
-              />
-              <div class="mt-1.5 flex items-center gap-1.5 px-1">
-                <span class="material-symbols-outlined text-[14px] text-green-500">check_circle</span>
-                <span class="text-[10px] font-bold text-green-600 uppercase">Código generado: {{ store.basicInfo.code || '...' }}</span>
-              </div>
-            </div>
-          </div>
+          <UFormField label="Código del tour" hint="Generado automáticamente" required>
+            <UInput
+              v-model="store.basicInfo.code"
+              placeholder="ES000"
+              readonly
+              icon="i-lucide-hash"
+              class="w-full font-mono"
+            >
+              <template #trailing>
+                <UIcon v-if="store.basicInfo.code" name="i-lucide-check-circle" class="size-4 text-success" />
+              </template>
+            </UInput>
+          </UFormField>
         </template>
 
         <!-- Shared fields info (edit mode) -->
-        <div v-if="isEditMode" class="col-span-2 flex items-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl">
-          <span class="material-symbols-outlined text-amber-500 text-base">info</span>
-          <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400">Los siguientes campos son compartidos entre todos los idiomas de este tour.</p>
-        </div>
+        <UAlert
+          v-if="isEditMode"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-info"
+          title="Campos compartidos"
+          description="Estos campos aplican a todos los idiomas del tour."
+          class="md:col-span-2"
+        />
 
         <!-- Ciudad de Salida -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Ciudad de salida <span class="text-primary">*</span>
-            <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(escribe para buscar)</span>
-          </label>
-          <div class="relative group">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-            <input
-              ref="cityInputRef"
-              v-model="citySearchQuery"
-              @input="onCitySearch"
-              class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
-              placeholder="Ej: Puno, Cusco..."
-              type="text"
-            />
-            
-            <!-- City Search Results -->
-            <div v-if="cityResults.length > 0" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <ul class="py-2">
-                    <li 
-                        v-for="city in cityResults" 
-                        :key="city.id"
-                        @click="selectCity(city)"
-                        class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer flex items-center gap-3 transition-colors text-slate-700 dark:text-slate-300"
-                    >
-                        <span class="material-symbols-outlined text-slate-400">location_on</span>
-                        <div>
-                            <div class="font-bold text-slate-900 dark:text-white">{{ city.name }}</div>
-                            <div class="text-[10px] text-slate-500 uppercase font-medium">{{ city.country_code }}</div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <div v-if="store.basicInfo.nearestCity" class="mt-1.5 flex items-center gap-1.5 px-1">
-              <span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
-              <span class="text-[10px] font-bold text-primary uppercase">Ciudad seleccionada: {{ store.basicInfo.nearestCity }}</span>
-            </div>
+        <UFormField label="Ciudad de salida" hint="Escribe para buscar" required>
+          <UInput
+            :ref="setCityInputRef"
+            v-model="citySearchQuery"
+            @input="onCitySearch"
+            placeholder="Ej: Puno, Cusco..."
+            icon="i-lucide-map-pin"
+            class="w-full"
+          />
+          <div v-if="cityResults.length > 0" class="absolute z-50 w-full mt-2 bg-default border border-default rounded-xl shadow-xl overflow-hidden">
+            <ul class="py-1 max-h-60 overflow-y-auto">
+              <li
+                v-for="city in cityResults"
+                :key="city.id"
+                @click="selectCity(city)"
+                class="px-3 py-2 hover:bg-elevated cursor-pointer flex items-center gap-3 transition-colors"
+              >
+                <UIcon name="i-lucide-map-pin" class="size-4 text-muted" />
+                <div>
+                  <div class="text-sm font-semibold">{{ city.name }}</div>
+                  <div class="text-[10px] text-muted uppercase">{{ city.country_code }}</div>
+                </div>
+              </li>
+            </ul>
           </div>
-        </div>
+          <template #help>
+            <span v-if="store.basicInfo.nearestCity" class="text-success font-semibold">
+              <UIcon name="i-lucide-check-circle" class="size-3 inline align-middle" />
+              {{ store.basicInfo.nearestCity }}
+            </span>
+          </template>
+        </UFormField>
 
         <!-- Tipo de Servicio -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Tipo de servicio <span class="text-primary">*</span></label>
-          <div class="relative">
-            <select 
-              v-model="store.basicInfo.serviceType"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-            >
-              <option value="tour">Tour</option>
-              <option value="package">Paquete</option>
-              <option value="experience">Experiencia</option>
-              <option value="transport">Transporte</option>
-            </select>
-            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-          </div>
-        </div>
+        <UFormField label="Tipo de servicio" required>
+          <USelect
+            v-model="store.basicInfo.serviceType"
+            :items="serviceTypeItems"
+            class="w-full"
+          />
+        </UFormField>
 
         <!-- Dificultad -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Dificultad <span class="text-primary">*</span></label>
-          <div class="relative">
-            <select 
-              v-model="store.basicInfo.difficulty"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-            >
-              <option value="easy">Fácil</option>
-              <option value="moderate">Moderado</option>
-              <option value="hard">Difícil</option>
-            </select>
-            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-          </div>
-        </div>
+        <UFormField label="Dificultad" required>
+          <USelect
+            v-model="store.basicInfo.difficulty"
+            :items="difficultyItems"
+            class="w-full"
+          />
+        </UFormField>
 
         <!-- Capacidad Máxima -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Capacidad máxima <span class="text-primary">*</span>
-            <span class="text-[10px] lowercase font-medium ml-1 opacity-60">(por defecto: 99 personas)</span>
-          </label>
-          <input 
-            v-model.number="store.basicInfo.capacityMax"
-            class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold" 
-            type="number"
-            min="1"
+        <UFormField label="Capacidad máxima" hint="Personas por reserva" required>
+          <UInputNumber
+            v-model="store.basicInfo.capacityMax"
+            :min="1"
+            :max="999"
+            class="w-full"
           />
-        </div>
+        </UFormField>
       </div>
-    </div>
+    </UCard>
 
     <!-- Section: Schedules & Duration -->
-    <div class="glass-card p-8 rounded-3xl shadow-sm space-y-8 border border-white/10">
-      <h3 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary">calendar_today</span>
-        Horarios y Duración
-      </h3>
+    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
+      <template #header>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <UIcon name="i-lucide-calendar-clock" class="size-5 text-primary" />
+          Horarios y duración
+        </h3>
+      </template>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
         <!-- Horarios de Salida (múltiples, con duración) -->
-        <div class="space-y-2 md:col-span-2">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Horarios de Salida y Duración <span class="text-primary">*</span></label>
-            <button
-              type="button"
+        <div class="md:col-span-2 space-y-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold">
+                Horarios de salida y duración <span class="text-primary">*</span>
+              </p>
+              <p class="text-[11px] text-muted mt-0.5">Combina D + H + Min (ej. 2D 8H, o 0D 2H 30M)</p>
+            </div>
+            <UButton
+              icon="i-lucide-plus-circle"
+              color="primary"
+              variant="link"
+              size="sm"
               @click="addDepartureTime"
-              class="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
             >
-              <span class="material-symbols-outlined text-sm">add_circle</span>
               Agregar horario
-            </button>
+            </UButton>
           </div>
-          <div class="space-y-2">
-            <div class="grid grid-cols-[1fr_70px_70px_70px_auto] gap-2 px-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              <span>Hora salida</span>
-              <span class="text-center">Días</span>
-              <span class="text-center">Horas</span>
-              <span class="text-center">Min</span>
-              <span></span>
-            </div>
-            <div v-for="(item, idx) in store.basicInfo.startTimes" :key="idx" class="grid grid-cols-[1fr_70px_70px_70px_auto] gap-2 items-center">
-              <!-- Hora -->
-              <div class="relative group">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">schedule</span>
-                <input
-                  v-model="item.time"
-                  @input="syncPrimaryStartTime"
-                  class="w-full pl-10 pr-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
-                  type="time"
-                />
-              </div>
-              <!-- Días -->
-              <input
-                v-model.number="item.days"
-                @input="syncPrimaryDuration"
-                min="0" max="30"
-                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
-                type="number"
-                placeholder="0"
-              />
-              <!-- Horas -->
-              <input
-                v-model.number="item.hours"
-                @input="syncPrimaryDuration"
-                min="0" max="23"
-                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
-                type="number"
-                placeholder="0"
-              />
-              <!-- Minutos -->
-              <input
-                v-model.number="item.minutes"
-                @input="syncPrimaryDuration"
-                min="0" max="59"
-                class="w-full px-2 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold text-center"
-                type="number"
-                placeholder="0"
-              />
-              <!-- Eliminar -->
-              <button
-                v-if="store.basicInfo.startTimes.length > 1"
-                type="button"
-                @click="removeDepartureTime(idx)"
-                class="p-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                :title="`Eliminar horario ${idx + 1}`"
-              >
-                <span class="material-symbols-outlined">delete</span>
-              </button>
-              <div v-else class="w-[42px]"></div>
-            </div>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-1">Combina días + horas + minutos en cualquier mezcla (ej. 2D 8H, o 0D 2H 30M). El primer horario se usa como principal.</p>
-        </div>
 
-        <!-- Duración Aproximada (legacy, sincronizado con el primer horario) -->
-        <div class="space-y-2 hidden">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Duración Aproximada</label>
-          <div class="flex gap-3">
-            <input
-              v-model.number="store.basicInfo.duration"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white font-bold"
-              type="number"
-            />
-            <div class="relative flex-1">
-              <select
-                v-model="store.basicInfo.durationUnit"
-                class="w-full h-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-              >
-                <option value="hours">Horas</option>
-                <option value="days">Días</option>
-              </select>
-              <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+          <div class="space-y-2">
+            <div
+              v-for="(item, idx) in store.basicInfo.startTimes"
+              :key="idx"
+              class="grid grid-cols-[1.6fr_repeat(3,minmax(0,1fr))_auto] gap-2 items-end"
+            >
+              <UFormField :label="idx === 0 ? 'Hora de salida' : undefined" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+                <UInput
+                  v-model="item.time"
+                  type="time"
+                  icon="i-lucide-clock"
+                  class="w-full"
+                  @input="syncPrimaryStartTime"
+                />
+              </UFormField>
+
+              <UFormField :label="idx === 0 ? 'Días' : undefined" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted text-center block' }">
+                <UInputNumber
+                  v-model="item.days"
+                  :min="0"
+                  :max="30"
+                  class="w-full"
+                  @update:model-value="syncPrimaryDuration"
+                />
+              </UFormField>
+
+              <UFormField :label="idx === 0 ? 'Horas' : undefined" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted text-center block' }">
+                <UInputNumber
+                  v-model="item.hours"
+                  :min="0"
+                  :max="23"
+                  class="w-full"
+                  @update:model-value="syncPrimaryDuration"
+                />
+              </UFormField>
+
+              <UFormField :label="idx === 0 ? 'Minutos' : undefined" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted text-center block' }">
+                <UInputNumber
+                  v-model="item.minutes"
+                  :min="0"
+                  :max="59"
+                  :step="5"
+                  class="w-full"
+                  @update:model-value="syncPrimaryDuration"
+                />
+              </UFormField>
+
+              <div class="flex items-center justify-end">
+                <UButton
+                  v-if="store.basicInfo.startTimes.length > 1"
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  :title="`Eliminar horario ${idx + 1}`"
+                  @click="removeDepartureTime(idx)"
+                />
+                <div v-else class="size-8" />
+              </div>
             </div>
           </div>
+
+          <p class="text-[10px] text-muted">El primer horario se usa como principal.</p>
         </div>
 
         <!-- Zona Horaria -->
-        <div class="space-y-2">
-          <label class="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Zona Horaria <span class="text-primary">*</span></label>
-          <div class="relative">
-            <select 
-              v-model="store.basicInfo.timezone"
-              class="w-full px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900/50 focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all text-slate-900 dark:text-white appearance-none font-bold"
-            >
-              <option value="America/Lima">Hora Peruana (GMT-5)</option>
-              <option value="America/La_Paz">Hora Boliviana (GMT-4)</option>
-            </select>
-            <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
-          </div>
-        </div>
+        <UFormField label="Zona horaria" required>
+          <USelect
+            v-model="store.basicInfo.timezone"
+            :items="timezoneItems"
+            class="w-full"
+          />
+        </UFormField>
 
         <!-- Active Toggle -->
-        <div class="flex items-center pt-8">
-          <label class="relative inline-flex items-center cursor-pointer group">
-            <input type="checkbox" v-model="isTourActive" class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-            <span class="ml-3 text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">Tour activo</span>
-          </label>
-        </div>
+        <UFormField label="Estado">
+          <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-elevated">
+            <USwitch v-model="isTourActive" color="primary" />
+            <span class="text-sm font-semibold">Tour activo</span>
+          </div>
+        </UFormField>
       </div>
-    </div>
+    </UCard>
   </div>
 </template>
 
@@ -312,6 +264,25 @@ import { useTourWizardStore } from '~/stores/tourWizard'
 import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
+
+// Items para los USelect (Nuxt UI espera { label, value })
+const serviceTypeItems = [
+  { label: 'Tour', value: 'tour' },
+  { label: 'Paquete', value: 'package' },
+  { label: 'Experiencia', value: 'experience' },
+  { label: 'Transporte', value: 'transport' },
+]
+
+const difficultyItems = [
+  { label: 'Fácil', value: 'easy' },
+  { label: 'Moderado', value: 'moderate' },
+  { label: 'Difícil', value: 'hard' },
+]
+
+const timezoneItems = [
+  { label: 'Hora Peruana (GMT-5)', value: 'America/Lima' },
+  { label: 'Hora Boliviana (GMT-4)', value: 'America/La_Paz' },
+]
 const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
 const { initCityAutocomplete, cleanup } = useGooglePlaces()
@@ -447,11 +418,31 @@ const selectedLanguageId = ref<number | null>(null)
 const selectedLanguageCode = ref('es')
 const isTourActive = ref(true)
 
+// Items derivados para el USelect de idioma
+const languageItems = computed(() =>
+  availableLanguages.value.map((lang: any) => ({
+    label: `${lang.country} (${lang.code.toUpperCase()})`,
+    value: lang.id,
+  }))
+)
+
 // City search state
 const citySearchQuery = ref('')
 const cityResults = ref<any[]>([])
 const isSearchingCities = ref(false)
 const cityInputRef = ref<HTMLInputElement | null>(null)
+
+// Resolve the native <input> from inside UInput's Vue instance.
+// Nuxt UI v4 wraps the input inside a div, so we query the DOM after mount.
+const setCityInputRef = (el: any) => {
+  if (!el) {
+    cityInputRef.value = null
+    return
+  }
+  // Try the component's exposed inputRef first, fallback to querying inner input
+  const native = el.inputRef?.value || el.$el?.querySelector?.('input') || (el.tagName === 'INPUT' ? el : null)
+  cityInputRef.value = native
+}
 
 // Fetch languages on mount
 const fetchLanguages = async () => {

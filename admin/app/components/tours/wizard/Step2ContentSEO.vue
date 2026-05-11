@@ -1,117 +1,120 @@
 <template>
-  <div class="flex flex-col gap-8">
-    <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-      <!-- Content title for current language -->
-      <div class="px-8 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span class="material-symbols-outlined text-primary text-lg font-bold">translate</span>
-          </div>
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Editando contenido en</p>
-            <div class="flex items-center gap-2 mt-1">
-              <button
-                v-for="lang in tourLanguages"
-                :key="lang"
-                @click="store.currentLanguage = lang"
-                class="px-2 py-0.5 rounded text-[10px] font-black uppercase transition-all"
-                :class="store.currentLanguage === lang ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-700'"
-              >
-                {{ lang }}
-              </button>
+  <div class="flex flex-col gap-5">
+    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4 space-y-6' }">
+      <template #header>
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <UIcon name="i-lucide-languages" class="size-5 text-primary" />
+            </div>
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-widest text-muted">Editando contenido en</p>
+              <div class="flex items-center gap-1 mt-1">
+                <UButton
+                  v-for="lang in tourLanguages"
+                  :key="lang"
+                  size="xs"
+                  :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
+                  :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
+                  class="uppercase font-black tracking-wider"
+                  @click="store.currentLanguage = lang"
+                >
+                  {{ lang }}
+                </UButton>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
 
-      <!-- Content per Language -->
-      <div v-if="currentLangData" class="p-8 space-y-10">
+      <div v-if="currentLangData" class="space-y-6">
         <!-- Section: Tour Content -->
-        <section class="space-y-6">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">description</span>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Tour Content</h3>
-          </div>
-          <div class="space-y-4">
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Tour Title (Public)</label>
-              <input 
-                v-model="currentLangData.title"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-white" 
-                placeholder="e.g. Magical Paris Sunset Tour" 
-                type="text"
-              />
-            </div>
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Descripción Corta</label>
-              <textarea 
-                v-model="currentLangData.shortDescription"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-white min-h-[80px] resize-none" 
-                placeholder="Resumen breve para listados..."
-              ></textarea>
-            </div>
-          </div>
+        <section class="space-y-3">
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <UIcon name="i-lucide-file-text" class="size-5 text-primary" />
+            Contenido del tour
+          </h3>
+          <UFormField label="Título público" required>
+            <UInput
+              v-model="currentLangData.title"
+              placeholder="Ej. Tour mágico al atardecer en Cusco"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Descripción corta" hint="Resumen para listados de búsqueda">
+            <UTextarea
+              v-model="currentLangData.shortDescription"
+              :rows="3"
+              placeholder="Resumen breve para listados..."
+              class="w-full"
+            />
+          </UFormField>
         </section>
+
+        <USeparator />
 
         <!-- Section: SEO Settings -->
-        <section class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary">search</span>
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">SEO Settings</h3>
-            </div>
-            <div class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Google Preview</div>
+        <section class="space-y-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h3 class="text-base font-bold flex items-center gap-2">
+              <UIcon name="i-lucide-search" class="size-5 text-primary" />
+              Configuración SEO
+            </h3>
+            <UBadge color="neutral" variant="subtle" size="sm" class="uppercase tracking-widest">Google Preview</UBadge>
           </div>
 
-          <div class="space-y-6">
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Meta Title</label>
-              <input 
-                v-model="currentLangData.metaTitle"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-white" 
-                placeholder="Magical Paris Sunset Tour | Incalake" 
-                type="text"
+          <UFormField
+            label="Meta title"
+            :hint="`${(currentLangData.metaTitle || '').length}/60 · recomendado 50-60 chars`"
+            :error="(currentLangData.metaTitle || '').length > 60 ? 'Excede los 60 caracteres recomendados' : undefined"
+          >
+            <UInput
+              v-model="currentLangData.metaTitle"
+              placeholder="Tour Mágico al Atardecer en Cusco | Incalake"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField label="Meta description" hint="Recomendado 150-160 chars para resultados de búsqueda">
+            <UTextarea
+              v-model="currentLangData.metaDescription"
+              :rows="3"
+              placeholder="Resumen breve para resultados de búsqueda..."
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField label="URL slug">
+            <div class="flex w-full">
+              <span class="inline-flex items-center px-3 text-[11px] text-muted font-mono whitespace-nowrap bg-elevated border border-r-0 border-default rounded-l-md">
+                incalake.com/{{ store.currentLanguage }}/tours/
+              </span>
+              <UInput
+                v-model="currentLangData.slug"
+                placeholder="tour-magico-cusco"
+                class="flex-1 min-w-0"
+                :ui="{ base: 'rounded-l-none' }"
+                @input="sanitizeSlug"
               />
-              <div class="flex justify-between mt-1">
-                <p class="text-[11px] text-slate-400">Recommended length: 50-60 chars</p>
-                <p class="text-[11px]" :class="currentLangData.metaTitle.length > 60 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ (currentLangData.metaTitle || '').length }}/60</p>
-              </div>
             </div>
+          </UFormField>
 
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Meta Description</label>
-              <textarea 
-                v-model="currentLangData.metaDescription"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-white min-h-[100px] resize-none" 
-                placeholder="Hook users with a brief summary for search results..."
-              ></textarea>
-              <p class="text-[11px] text-slate-400 mt-1">Recommended length: 150-160 chars</p>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-bold text-slate-700 dark:text-slate-300">URL Slug</label>
-              <div class="flex group">
-                <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-500 text-xs font-medium">
-                  incalake.com/{{ store.currentLanguage }}/tours/
-                </span>
-                <input
-                  v-model="currentLangData.slug"
-                  class="flex-1 px-4 py-3 rounded-r-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-white"
-                  type="text"
-                  @input="sanitizeSlug"
-                />
-              </div>
-              <div v-if="fullMultilangUrl" class="mt-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                <p class="text-[10px] font-black uppercase tracking-widest text-primary mb-1.5">Vista Previa URL Multilang</p>
-                <a :href="fullMultilangUrl" target="_blank" class="text-sm font-mono text-slate-700 dark:text-slate-300 hover:text-primary transition-colors break-all">
-                  {{ fullMultilangUrl }}
-                </a>
-              </div>
-            </div>
-          </div>
+          <UAlert
+            v-if="fullMultilangUrl"
+            color="primary"
+            variant="subtle"
+            icon="i-lucide-link"
+            title="Vista previa URL"
+          >
+            <template #description>
+              <a :href="fullMultilangUrl" target="_blank" class="text-xs font-mono break-all hover:underline">
+                {{ fullMultilangUrl }}
+              </a>
+            </template>
+          </UAlert>
         </section>
       </div>
-    </div>
+    </UCard>
   </div>
 </template>
 

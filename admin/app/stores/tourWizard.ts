@@ -249,7 +249,9 @@ export interface TourStep8Availability {
 export const useTourWizardStore = defineStore('tourWizard', {
   state: () => ({
     currentStep: 1,
-    totalSteps: 8,
+    // 9 steps: Info, SEO, Detalle, Precios, Multimedia, Reservas, Categorías, Calendario, Revisión final
+
+    totalSteps: 9,
     isDirty: false,
     loading: false,
     autosaveEnabled: true,

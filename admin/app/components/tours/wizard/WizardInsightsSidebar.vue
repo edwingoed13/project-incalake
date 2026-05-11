@@ -1,128 +1,171 @@
 <template>
-  <aside class="w-80 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 hidden xl:flex flex-col gap-8 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar">
+  <aside class="w-72 border-l border-default bg-default p-4 hidden xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
     <!-- Wizard Actions -->
-    <div class="flex flex-col gap-3 pb-6 border-b border-slate-100 dark:border-slate-800">
-      <button
-        @click="store.nextStep"
+    <div class="flex flex-col gap-2 pb-4 border-b border-default">
+      <UButton
         v-if="store.currentStep < store.totalSteps"
-        class="w-full py-3 text-xs font-black text-white bg-primary rounded-xl shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+        icon="i-lucide-arrow-right"
+        trailing-icon="i-lucide-arrow-right"
+        color="primary"
+        size="md"
+        block
+        @click="store.nextStep"
       >
         Siguiente paso
-        <span class="material-symbols-outlined text-sm">arrow_forward</span>
-      </button>
-      <button
+      </UButton>
+      <UButton
         v-else
+        icon="i-lucide-rocket"
+        color="success"
+        size="md"
+        block
+        :loading="store.loading || store.autosaving"
         @click="publishTour"
-        :disabled="store.loading"
-        class="w-full py-3 text-xs font-black text-white bg-green-600 rounded-xl shadow-lg shadow-green-600/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        <span v-if="!store.loading" class="material-symbols-outlined text-sm">rocket_launch</span>
-        <span v-else class="animate-spin text-sm">sync</span>
-        {{ store.basicInfo.status === 'published' ? 'Actualizar tour publicado' : 'Publicar tour' }}
-      </button>
+        {{ store.basicInfo.status === 'published' ? 'Actualizar publicado' : 'Publicar tour' }}
+      </UButton>
 
-      <div class="space-y-1.5">
-        <button
-          @click="previewTour"
-          :disabled="!previewUrl"
-          :title="previewUrl || 'Guarda el tour para generar el slug y poder previsualizar'"
-          class="w-full flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all border border-primary/20"
-        >
-          <span class="material-symbols-outlined text-base">visibility</span>
-          Previsualizar tour
-          <span class="material-symbols-outlined text-sm">open_in_new</span>
-        </button>
-        <div v-if="previewUrl" class="px-2 py-1 text-[9px] font-mono text-slate-400 break-all leading-tight">
-          {{ previewUrl }}
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          @click="store.saveCurrentProgress"
-          :disabled="store.loading"
-          class="flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all disabled:opacity-50"
-        >
-          <span v-if="!store.loading" class="material-symbols-outlined text-base">save</span>
-          <span v-else class="animate-spin text-base">sync</span>
-          Guardar
-        </button>
-        <button
-          @click="cancel"
-          class="flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
-        >
-          <span class="material-symbols-outlined text-base">close</span>
-          Cancelar
-        </button>
-      </div>
-
-      <p v-if="store.basicInfo.status" class="text-center text-[10px] font-bold uppercase tracking-widest" :class="{
-        'text-emerald-500': store.basicInfo.status === 'published',
-        'text-amber-500': store.basicInfo.status === 'draft',
-        'text-slate-400': store.basicInfo.status === 'archived',
-      }">
-        Status: {{ store.basicInfo.status }}
+      <UButton
+        icon="i-lucide-eye"
+        trailing-icon="i-lucide-external-link"
+        color="primary"
+        variant="soft"
+        size="sm"
+        block
+        :disabled="!previewUrl"
+        :title="previewUrl || 'Guarda el tour para generar el slug'"
+        @click="previewTour"
+      >
+        Previsualizar tour
+      </UButton>
+      <p v-if="previewUrl" class="text-[9px] font-mono text-muted break-all leading-tight px-1">
+        {{ previewUrl }}
       </p>
+
+      <div class="grid grid-cols-2 gap-2">
+        <UButton
+          icon="i-lucide-save"
+          color="neutral"
+          variant="subtle"
+          size="sm"
+          :loading="store.loading || store.autosaving"
+          @click="store.saveCurrentProgress"
+        >
+          Guardar
+        </UButton>
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          @click="cancel"
+        >
+          Cancelar
+        </UButton>
+      </div>
+
+      <UBadge
+        v-if="store.basicInfo.status"
+        :color="statusBadge.color"
+        variant="subtle"
+        size="sm"
+        :icon="statusBadge.icon"
+        class="self-center"
+      >
+        {{ statusBadge.label }}
+      </UBadge>
     </div>
 
-    <div class="space-y-4">
-      <div class="flex justify-between items-end">
-        <h4 class="text-sm font-bold text-slate-900 dark:text-white">Calidad del listado</h4>
-        <span class="text-lg font-black" :class="qualityColor.text">{{ qualityScore }}%</span>
-      </div>
-      <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-        <div class="h-full rounded-full transition-all duration-700" :class="qualityColor.bg" :style="{ width: qualityScore + '%' }"></div>
-      </div>
-      <div class="p-3 rounded-xl border space-y-2" :class="qualityColor.banner">
-        <p v-if="qualityHint" class="text-[11px] font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
-          <span class="font-bold" :class="qualityColor.text">{{ qualityHintLabel }}:</span>
-          {{ qualityHint }}
+    <!-- Listing Quality -->
+    <UCard :ui="{ body: 'p-3 space-y-3' }">
+      <div class="flex items-center justify-between">
+        <p class="text-xs font-bold flex items-center gap-1.5">
+          <UIcon name="i-lucide-gauge" class="size-4 text-primary" />
+          Calidad del listado
         </p>
-        <p v-else class="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 leading-relaxed">
-          <span class="font-bold">Excelente:</span> Tu tour está completo y listo para publicar.
-        </p>
+        <span class="text-base font-black tabular-nums" :class="qualityColor.text">{{ qualityScore }}%</span>
       </div>
-      <details class="text-[11px] text-slate-500">
-        <summary class="cursor-pointer font-bold hover:text-primary">Ver desglose</summary>
-        <ul class="mt-2 space-y-1">
-          <li v-for="b in qualityBreakdown" :key="b.label" class="flex items-center justify-between gap-2">
-            <span class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm" :class="b.score >= b.max ? 'text-emerald-500' : (b.score > 0 ? 'text-amber-500' : 'text-slate-300')">
-                {{ b.score >= b.max ? 'check_circle' : (b.score > 0 ? 'pending' : 'radio_button_unchecked') }}
-              </span>
-              {{ b.label }}
+
+      <div class="w-full bg-elevated h-2 rounded-full overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all duration-500"
+          :class="qualityColor.bg"
+          :style="{ width: qualityScore + '%' }"
+        />
+      </div>
+
+      <UAlert
+        :color="qualityScore >= 80 ? 'success' : qualityScore >= 40 ? 'warning' : 'error'"
+        variant="subtle"
+        :icon="qualityScore >= 80 ? 'i-lucide-circle-check' : qualityScore >= 40 ? 'i-lucide-info' : 'i-lucide-triangle-alert'"
+        :title="qualityHintLabel"
+        :description="qualityHint || 'Tu tour está completo y listo para publicar.'"
+        :ui="{ title: 'text-[11px]', description: 'text-[10px] leading-relaxed' }"
+      />
+
+      <details class="text-[11px] text-muted">
+        <summary class="cursor-pointer font-bold hover:text-primary flex items-center gap-1 select-none">
+          <UIcon name="i-lucide-chevron-right" class="size-3 transition-transform [details[open]_&]:rotate-90" />
+          Ver desglose ({{ qualityBreakdown.length }} criterios)
+        </summary>
+        <ul class="mt-2 space-y-1 pl-4">
+          <li
+            v-for="b in qualityBreakdown"
+            :key="b.label"
+            class="flex items-center justify-between gap-2 py-0.5"
+            :title="b.tip"
+          >
+            <span class="flex items-center gap-1.5 min-w-0">
+              <UIcon
+                :name="b.score >= b.max ? 'i-lucide-circle-check' : b.score > 0 ? 'i-lucide-circle-dashed' : 'i-lucide-circle'"
+                class="size-3.5 shrink-0"
+                :class="b.score >= b.max ? 'text-success' : b.score > 0 ? 'text-warning' : 'text-muted/50'"
+              />
+              <span class="truncate">{{ b.label }}</span>
             </span>
-            <span class="font-mono">{{ b.score }}/{{ b.max }}</span>
+            <span class="font-mono text-[10px] shrink-0" :class="b.score >= b.max ? 'text-success font-bold' : ''">
+              {{ b.score }}/{{ b.max }}
+            </span>
           </li>
         </ul>
       </details>
-    </div>
+    </UCard>
 
-    <div class="space-y-4">
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Ubicación</h4>
-      <div class="relative rounded-2xl overflow-hidden aspect-video border border-slate-200 dark:border-slate-800 group bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-         <!-- Simulación de mapa -->
-         <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">map</span>
-         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
-         <div class="absolute bottom-3 left-3 flex items-center gap-2">
-            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-2 py-1 rounded-md shadow-sm">
-               <p class="text-[10px] font-bold text-slate-800 dark:text-white">{{ store.basicInfo.nearestCity || 'Sin ubicación' }}</p>
-            </div>
-         </div>
-      </div>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Tu tour está anclado a {{ store.basicInfo.nearestCity || 'ubicación por defecto' }}. Puedes ajustar el punto de encuentro después.</p>
-    </div>
-
-    <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-6">
-      <h4 class="text-sm font-bold text-slate-900 dark:text-white">Estado</h4>
-      <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border" :class="autosaveStyle.box">
-        <span class="material-symbols-outlined text-lg" :class="['shrink-0', autosaveStyle.icon, autosaveStyle.spin ? 'animate-spin' : '']">{{ autosaveStyle.iconName }}</span>
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{{ autosaveStyle.subtitle }}</p>
+    <!-- Location -->
+    <UCard :ui="{ body: 'p-3 space-y-2' }">
+      <p class="text-xs font-bold flex items-center gap-1.5">
+        <UIcon name="i-lucide-map-pin" class="size-4 text-primary" />
+        Ubicación
+      </p>
+      <div class="relative rounded-lg overflow-hidden aspect-video border border-default bg-elevated flex items-center justify-center">
+        <UIcon name="i-lucide-map" class="size-10 text-muted/40" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div class="absolute bottom-2 left-2">
+          <UBadge color="neutral" variant="solid" size="xs" icon="i-lucide-map-pin" class="bg-black/70 text-white backdrop-blur">
+            {{ store.basicInfo.nearestCity || 'Sin ubicación' }}
+          </UBadge>
         </div>
       </div>
-    </div>
+      <p class="text-[10px] text-muted leading-relaxed">
+        Tour anclado a <span class="font-bold text-default">{{ store.basicInfo.nearestCity || 'ubicación por defecto' }}</span>.
+        Ajusta el punto de encuentro en el paso 3.
+      </p>
+    </UCard>
+
+    <!-- Autosave Status -->
+    <UCard :ui="{ body: 'p-3 space-y-2' }">
+      <p class="text-xs font-bold flex items-center gap-1.5">
+        <UIcon name="i-lucide-activity" class="size-4 text-primary" />
+        Estado de guardado
+      </p>
+      <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg border" :class="autosaveStyle.box">
+        <UIcon :name="autosaveStyle.icon" :class="['size-4 shrink-0', autosaveStyle.iconColor, autosaveStyle.spin ? 'animate-spin' : '']" />
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
+          <p class="text-[10px] text-muted leading-tight">{{ autosaveStyle.subtitle }}</p>
+        </div>
+      </div>
+    </UCard>
   </aside>
 </template>
 
@@ -134,6 +177,8 @@ import { useRouter } from 'vue-router'
 const store = useTourWizardStore()
 const router = useRouter()
 const config = useRuntimeConfig()
+const toast = useToast()
+const { confirm } = useConfirm()
 
 // Tick every second so "hace X s" updates without the user moving the mouse.
 const now = ref(Date.now())
@@ -154,70 +199,92 @@ const formatRelative = (ts: number) => {
 const autosaveStyle = computed(() => {
   if (store.autosaving || store.loading) {
     return {
-      box: 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700',
-      icon: 'text-slate-500',
-      iconName: 'sync',
+      box: 'border-info/30 bg-info/5',
+      icon: 'i-lucide-loader-circle',
+      iconColor: 'text-info',
       spin: true,
-      text: 'text-slate-700 dark:text-slate-300',
+      text: 'text-info',
       title: 'Guardando…',
       subtitle: 'Sincronizando cambios',
     }
   }
   if (store.autosaveError) {
     return {
-      box: 'bg-rose-50 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800/40',
-      icon: 'text-rose-500',
-      iconName: 'error',
+      box: 'border-error/30 bg-error/5',
+      icon: 'i-lucide-circle-x',
+      iconColor: 'text-error',
       spin: false,
-      text: 'text-rose-700 dark:text-rose-300',
+      text: 'text-error',
       title: 'Error al autoguardar',
       subtitle: store.autosaveError,
     }
   }
   if (store.isDirty) {
     return {
-      box: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40',
-      icon: 'text-amber-500',
-      iconName: 'edit',
+      box: 'border-warning/30 bg-warning/5',
+      icon: 'i-lucide-pencil',
+      iconColor: 'text-warning',
       spin: false,
-      text: 'text-amber-700 dark:text-amber-300',
+      text: 'text-warning',
       title: 'Cambios sin guardar',
       subtitle: 'Se guardará automáticamente en 2s',
     }
   }
   if (store.lastSavedAt) {
     return {
-      box: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/40',
-      icon: 'text-emerald-500',
-      iconName: 'check_circle',
+      box: 'border-success/30 bg-success/5',
+      icon: 'i-lucide-circle-check',
+      iconColor: 'text-success',
       spin: false,
-      text: 'text-emerald-700 dark:text-emerald-300',
+      text: 'text-success',
       title: 'Guardado',
       subtitle: formatRelative(store.lastSavedAt),
     }
   }
   return {
-    box: 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700',
-    icon: 'text-slate-400',
-    iconName: 'cloud',
+    box: 'border-default bg-elevated/40',
+    icon: 'i-lucide-cloud',
+    iconColor: 'text-muted',
     spin: false,
-    text: 'text-slate-700 dark:text-slate-300',
+    text: 'text-default',
     title: 'Sin cambios',
     subtitle: 'Edita para autoguardar',
   }
 })
 
-const cancel = () => {
-  if (confirm('Se perderán los cambios no guardados. ¿Deseas salir?')) {
-    router.push('/admin/tours')
+const statusBadge = computed(() => {
+  const s = store.basicInfo.status || 'draft'
+  if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
+  if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
+  return { label: 'Borrador', color: 'warning' as const, icon: 'i-lucide-file-text' }
+})
+
+const cancel = async () => {
+  if (store.isDirty) {
+    const ok = await confirm({
+      title: 'Salir sin guardar',
+      description: 'Tienes cambios sin guardar. Si sales ahora, se perderán.',
+      confirmLabel: 'Salir igual',
+      cancelLabel: 'Volver al editor',
+      confirmColor: 'error',
+      icon: 'i-lucide-triangle-alert',
+      iconColor: 'warning',
+    })
+    if (!ok) return
   }
+  router.push('/admin/tours')
 }
 
 const publishTour = async () => {
   store.basicInfo.status = 'published'
   await store.saveCurrentProgress()
   if (!store.isDirty) {
-    alert('Tour publicado correctamente.')
+    toast.add({
+      title: 'Tour publicado',
+      description: 'Ya es visible en el sitio público.',
+      icon: 'i-lucide-rocket',
+      color: 'success',
+    })
   }
 }
 
@@ -259,14 +326,23 @@ const previewUrl = computed(() => {
 
 const previewTour = () => {
   if (!store.tourId || store.tourId === 'new') {
-    alert('Guarda el tour primero — no hay slug todavía.')
+    toast.add({
+      title: 'Guarda el tour primero',
+      description: 'No se puede previsualizar hasta que el tour exista en la BD.',
+      icon: 'i-lucide-info',
+      color: 'warning',
+    })
     return
   }
   if (!previewSlug.value) {
-    alert('Ningún idioma tiene slug guardado.\nVe al paso 2 (Descripción y SEO), genera/guarda el slug y vuelve a intentar.')
+    toast.add({
+      title: 'Falta el slug',
+      description: 'Ningún idioma tiene slug guardado. Ve al paso 2 (SEO), genera el slug y guarda.',
+      icon: 'i-lucide-triangle-alert',
+      color: 'warning',
+    })
     return
   }
-  console.log('[Preview] Opening:', previewUrl.value)
   window.open(previewUrl.value, '_blank', 'noopener,noreferrer')
 }
 
@@ -328,13 +404,34 @@ const qualityBreakdown = computed(() => {
   if (filledLangs >= 6) trans += 3
 
   return [
-    { key: 'basics', label: 'Información básica', score: basics, max: 20 },
-    { key: 'descSeo', label: 'Descripción y SEO', score: descSeo, max: 15 },
-    { key: 'media', label: 'Galería de fotos', score: media, max: 25 },
-    { key: 'itin', label: 'Itinerario', score: itin, max: 15 },
-    { key: 'inc', label: 'Incluye / no incluye', score: inc, max: 10 },
-    { key: 'pricing', label: 'Precios y reservas', score: pricing, max: 15 },
-    { key: 'trans', label: 'Traducciones', score: trans, max: 10 },
+    {
+      key: 'basics', label: 'Información básica', score: basics, max: 20,
+      tip: 'Título (5) + Código (5) + Ciudad (5) + Duración (5)',
+    },
+    {
+      key: 'descSeo', label: 'Descripción y SEO', score: descSeo, max: 15,
+      tip: 'Descripción corta (5) + Meta title (5) + Meta description (5) — del idioma actual',
+    },
+    {
+      key: 'media', label: 'Galería de fotos', score: media, max: 25,
+      tip: '1+ foto (5) + 5+ fotos (10) + 10+ fotos (5) + Imagen principal marcada (5)',
+    },
+    {
+      key: 'itin', label: 'Itinerario', score: itin, max: 15,
+      tip: 'Descripción detallada (8) + Itinerario o lista de paradas (7)',
+    },
+    {
+      key: 'inc', label: 'Incluye / no incluye', score: inc, max: 10,
+      tip: 'Qué incluye (5) + Qué NO incluye (5)',
+    },
+    {
+      key: 'pricing', label: 'Precios y reservas', score: pricing, max: 15,
+      tip: 'Al menos un rango con precio > 0 (10) + Porcentaje de impuestos configurado (5)',
+    },
+    {
+      key: 'trans', label: 'Traducciones', score: trans, max: 10,
+      tip: '1 idioma con título (4) + 3 idiomas (3) + 6 idiomas (3)',
+    },
   ]
 })
 

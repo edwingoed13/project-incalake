@@ -1,65 +1,95 @@
 <template>
-  <div class="flex flex-col gap-8 pb-20">
-    <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-      <div class="px-8 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span class="material-symbols-outlined text-primary text-lg font-bold">translate</span>
-          </div>
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Editando contenido detallado en</p>
-            <div class="flex items-center gap-2 mt-1">
-              <button
-                v-for="lang in tourLanguages"
-                :key="lang"
-                @click="store.currentLanguage = lang"
-                class="px-2 py-0.5 rounded text-[10px] font-black uppercase transition-all"
-                :class="store.currentLanguage === lang ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 hover:bg-slate-300 dark:hover:bg-slate-700'"
-              >
-                {{ lang }}
-              </button>
-            </div>
+  <div class="flex flex-col gap-3 pb-20">
+    <!-- Language selector -->
+    <UCard :ui="{ body: 'p-3 sm:p-3' }">
+      <div class="flex items-center gap-3">
+        <div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <UIcon name="i-lucide-languages" class="size-4 text-primary" />
+        </div>
+        <div class="flex-1">
+          <p class="text-[10px] font-black uppercase tracking-widest text-muted">Editando contenido detallado en</p>
+          <div class="flex items-center gap-1 mt-1">
+            <UButton
+              v-for="lang in tourLanguages"
+              :key="lang"
+              size="xs"
+              :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
+              :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
+              class="uppercase font-black tracking-wider"
+              @click="store.currentLanguage = lang"
+            >
+              {{ lang }}
+            </UButton>
           </div>
         </div>
       </div>
+    </UCard>
 
-      <!-- Content per Language -->
-      <div v-if="currentLangData" class="p-8 space-y-12">
-        
-        <!-- Section: Long Description -->
-        <section class="space-y-4">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">article</span>
-            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Descripción detallada del tour</h3>
-          </div>
+    <!-- Sections (collapsibles) -->
+    <template v-if="currentLangData">
+
+      <!-- Section: Long Description -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('description') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('description')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('description') }" />
+            <UIcon name="i-lucide-file-text" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Descripción detallada del tour</h3>
+            <UBadge v-if="hasContent(currentLangData.detailedDescription)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('description')">
           <TiptapEditor
             v-model="currentLangData.detailedDescription"
             placeholder="Escribe una descripción larga y atractiva de la experiencia..."
           />
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Itinerary Text (Tiptap) -->
-        <section class="space-y-4 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">route</span>
-            <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Itinerario del tour</h3>
-          </div>
+      <!-- Section: Itinerary Text (Tiptap) -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('itinerary') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('itinerary')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('itinerary') }" />
+            <UIcon name="i-lucide-route" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Itinerario del tour</h3>
+            <UBadge v-if="hasContent(currentLangData.itineraryText)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('itinerary')">
           <TiptapEditor
             v-model="currentLangData.itineraryText"
             placeholder="Describe el itinerario con listas, títulos y texto en negrita..."
           />
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Daily Schedule & Map -->
-        <section class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary">calendar_today</span>
-              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Construye la ruta del tour</h3>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Section: Daily Schedule & Map -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('map') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('map')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('map') }" />
+            <UIcon name="i-lucide-map" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Construye la ruta del tour</h3>
+            <UBadge v-if="(currentLangData.mapPoints?.length || 0) > 0" color="success" variant="subtle" size="xs" icon="i-lucide-map-pin">
+              {{ currentLangData.mapPoints?.length }} puntos
+            </UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('map')">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <!-- Left: Map Preview -->
             <div class="space-y-6">
               <div class="flex items-center justify-between">
@@ -98,10 +128,10 @@
                     rows="2"
                   ></textarea>
 
-                  <div class="flex gap-2">
+                  <div class="grid grid-cols-2 gap-2">
                     <select
                       v-model="newPoint.type"
-                      class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      class="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     >
                       <option value="">Seleccionar tipo...</option>
                       <option value="punto_reunion">Punto de encuentro</option>
@@ -117,20 +147,22 @@
 
                     <input
                       v-model="newPoint.coordinates"
-                      class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                      class="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary font-mono text-xs"
                       placeholder="Lat,Lng (auto-llenado)"
                       readonly
                     />
-
-                    <button
-                      @click="addMapPoint"
-                      :disabled="!newPoint.name || !newPoint.type || !newPoint.coordinates"
-                      class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1"
-                    >
-                      <span class="material-symbols-outlined text-sm">add</span>
-                      Agregar
-                    </button>
                   </div>
+
+                  <UButton
+                    block
+                    icon="i-lucide-plus"
+                    color="primary"
+                    size="md"
+                    :disabled="!newPoint.name || !newPoint.type || !newPoint.coordinates"
+                    @click="addMapPoint"
+                  >
+                    Agregar punto
+                  </UButton>
                 </div>
               </div>
 
@@ -141,63 +173,59 @@
                   <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Puntos de la ruta ({{ currentLangData.mapPoints?.length || 0 }})</h5>
                 </div>
 
-                <div v-if="currentLangData.mapPoints && currentLangData.mapPoints.length > 0" class="space-y-2">
+                <div v-if="currentLangData.mapPoints && currentLangData.mapPoints.length > 0" class="space-y-1.5">
                   <div
                     v-for="(point, index) in currentLangData.mapPoints"
                     :key="point.id || index"
-                    class="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 hover:shadow-md transition-shadow"
+                    class="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-2 hover:border-primary/40 transition-all"
                   >
-                    <div v-if="editingPointIndex !== index" class="flex items-start justify-between">
-                      <div class="flex items-start gap-3 flex-1">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-xs font-bold flex-shrink-0">
-                          {{ index + 1 }}
-                        </div>
-                        <div class="flex-1">
-                          <h6 class="font-bold text-sm text-slate-900 dark:text-white">{{ point.name }}</h6>
-                          <p v-if="point.description" class="text-xs text-slate-600 dark:text-slate-400 mt-1">{{ point.description }}</p>
-                          <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-500">
-                            <span class="flex items-center gap-1">
-                              <span class="material-symbols-outlined text-xs">category</span>
-                              {{ getPointTypeLabel(point.type) }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                              <span class="material-symbols-outlined text-xs">location_on</span>
-                              {{ point.coordinates }}
-                            </span>
-                          </div>
-                        </div>
+                    <div v-if="editingPointIndex !== index" class="flex items-center gap-2.5">
+                      <div class="flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-[10px] font-black shrink-0">
+                        {{ index + 1 }}
                       </div>
-                      <div class="flex items-center gap-1 ml-2">
-                        <button
-                          @click="movePointUp(index)"
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h6 class="font-bold text-xs text-slate-900 dark:text-white truncate">{{ point.name }}</h6>
+                          <UBadge color="neutral" variant="subtle" size="xs">{{ getPointTypeLabel(point.type) }}</UBadge>
+                        </div>
+                        <p v-if="point.description" class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ point.description }}</p>
+                        <p class="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{{ point.coordinates }}</p>
+                      </div>
+                      <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <UButton
+                          icon="i-lucide-arrow-up"
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
                           :disabled="index === 0"
-                          class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Mover arriba"
-                        >
-                          <span class="material-symbols-outlined text-sm">arrow_upward</span>
-                        </button>
-                        <button
-                          @click="movePointDown(index)"
+                          @click="movePointUp(index)"
+                        />
+                        <UButton
+                          icon="i-lucide-arrow-down"
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
                           :disabled="index === currentLangData.mapPoints.length - 1"
-                          class="p-1 text-slate-400 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Mover abajo"
-                        >
-                          <span class="material-symbols-outlined text-sm">arrow_downward</span>
-                        </button>
-                        <button
-                          @click="editPoint(index)"
-                          class="p-1 text-slate-400 hover:text-blue-500"
+                          @click="movePointDown(index)"
+                        />
+                        <UButton
+                          icon="i-lucide-pencil"
+                          color="info"
+                          variant="ghost"
+                          size="xs"
                           title="Editar"
-                        >
-                          <span class="material-symbols-outlined text-sm">edit</span>
-                        </button>
-                        <button
-                          @click="removePoint(index)"
-                          class="p-1 text-slate-400 hover:text-red-500"
+                          @click="editPoint(index)"
+                        />
+                        <UButton
+                          icon="i-lucide-trash-2"
+                          color="error"
+                          variant="ghost"
+                          size="xs"
                           title="Eliminar"
-                        >
-                          <span class="material-symbols-outlined text-sm">delete</span>
-                        </button>
+                          @click="removePoint(index)"
+                        />
                       </div>
                     </div>
 
@@ -262,131 +290,199 @@
 
             </div>
           </div>
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Inclusions & Exclusions -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="space-y-4">
+      <!-- Section: Inclusions & Exclusions -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('inclusions') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('inclusions')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('inclusions') }" />
+            <UIcon name="i-lucide-list-checks" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Qué incluye / Qué NO incluye</h3>
+            <UBadge v-if="hasContent(currentLangData.inclusions) || hasContent(currentLangData.exclusions)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
+              {{ [hasContent(currentLangData.inclusions), hasContent(currentLangData.exclusions)].filter(Boolean).length }} / 2
+            </UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('inclusions')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-emerald-500">check_circle</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué incluye</h4>
+              <UIcon name="i-lucide-circle-check" class="size-4 text-success" />
+              <h4 class="text-sm font-bold">Qué incluye</h4>
             </div>
             <TiptapEditor v-model="currentLangData.inclusions" placeholder="¿Qué incluye el precio? Usa lista con viñetas." />
           </div>
-          <div class="space-y-4">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-rose-500">cancel</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué NO incluye</h4>
+              <UIcon name="i-lucide-circle-x" class="size-4 text-error" />
+              <h4 class="text-sm font-bold">Qué NO incluye</h4>
             </div>
             <TiptapEditor v-model="currentLangData.exclusions" placeholder="¿Qué NO está incluido? Sé claro para evitar reclamos." />
           </div>
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Recommendations & What to Bring -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 text-primary">
-              <span class="material-symbols-outlined">lightbulb</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Recomendaciones</h4>
+      <!-- Section: Recommendations & What to Bring -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('recommendations') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('recommendations')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('recommendations') }" />
+            <UIcon name="i-lucide-lightbulb" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Recomendaciones y qué llevar</h3>
+            <UBadge v-if="hasContent(currentLangData.recommendations) || hasContent(currentLangData.thingsToBring)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
+              {{ [hasContent(currentLangData.recommendations), hasContent(currentLangData.thingsToBring)].filter(Boolean).length }} / 2
+            </UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('recommendations')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-lightbulb" class="size-4 text-primary" />
+              <h4 class="text-sm font-bold">Recomendaciones</h4>
             </div>
             <TiptapEditor v-model="currentLangData.recommendations" placeholder="Consejos para viajeros, mejor época para visitar, etc." />
           </div>
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 text-primary">
-              <span class="material-symbols-outlined">backpack</span>
-              <h4 class="text-xl font-bold text-slate-900 dark:text-white">Qué llevar</h4>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-backpack" class="size-4 text-primary" />
+              <h4 class="text-sm font-bold">Qué llevar</h4>
             </div>
             <TiptapEditor v-model="currentLangData.thingsToBring" placeholder="Ropa, equipo, documentos requeridos..." />
           </div>
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Policies -->
-        <section class="space-y-8 pt-10 border-t border-slate-100 dark:border-slate-800/50 text-slate-900 dark:text-white">
-          <div class="space-y-4">
+      <!-- Section: Policies -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('policies') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('policies')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('policies') }" />
+            <UIcon name="i-lucide-gavel" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Políticas y cancelación</h3>
+            <UBadge v-if="hasContent(currentLangData.generalPolicies) || hasContent(currentLangData.cancellationPolicy)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
+              {{ [hasContent(currentLangData.generalPolicies), hasContent(currentLangData.cancellationPolicy)].filter(Boolean).length }} / 2
+            </UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('policies')" class="space-y-4">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary">gavel</span>
-              <h4 class="text-xl font-bold">Políticas generales</h4>
+              <UIcon name="i-lucide-gavel" class="size-4 text-primary" />
+              <h4 class="text-sm font-bold">Políticas generales</h4>
             </div>
             <TiptapEditor v-model="currentLangData.generalPolicies" placeholder="Reglas generales, restricciones de edad, requisitos de salud..." />
           </div>
-          <div class="space-y-4">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-rose-500">priority_high</span>
-              <h4 class="text-xl font-bold">Política de cancelación *</h4>
+              <UIcon name="i-lucide-triangle-alert" class="size-4 text-error" />
+              <h4 class="text-sm font-bold">Política de cancelación <span class="text-primary">*</span></h4>
             </div>
             <TiptapEditor v-model="currentLangData.cancellationPolicy" placeholder="Define claramente cuándo procede un reembolso y cuándo no." />
           </div>
-        </section>
+        </div>
+      </UCard>
 
-        <!-- Section: Custom additional sections -->
-        <section class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-violet-500">add_circle</span>
-              <div>
-                <h4 class="text-xl font-bold text-slate-900 dark:text-white">Secciones adicionales</h4>
-                <p class="text-xs text-slate-500 mt-0.5">Agrega bloques con título y contenido para información específica del tour (ej. requisitos especiales, equipos, contactos).</p>
-              </div>
-            </div>
-            <button
-              type="button"
+      <!-- Section: Custom additional sections -->
+      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('custom') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+        <template #header>
+          <button
+            type="button"
+            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
+            @click="toggleSection('custom')"
+          >
+            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('custom') }" />
+            <UIcon name="i-lucide-plus-circle" class="size-5 text-primary" />
+            <h3 class="text-base font-bold flex-1">Secciones adicionales</h3>
+            <UBadge v-if="(currentLangData.customSections?.length || 0) > 0" color="success" variant="subtle" size="xs">
+              {{ currentLangData.customSections?.length }}
+            </UBadge>
+          </button>
+        </template>
+        <div v-show="isSectionExpanded('custom')" class="space-y-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <p class="text-xs text-muted">
+              Agrega bloques con título y contenido para información específica del tour (ej. requisitos especiales, equipos, contactos).
+            </p>
+            <UButton
+              icon="i-lucide-plus"
+              color="primary"
+              size="sm"
               @click="addCustomSection"
-              class="px-4 py-2 bg-violet-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-violet-600 active:scale-95 transition-all flex items-center gap-2 shrink-0"
             >
-              <span class="material-symbols-outlined text-sm">add</span>
-              Agregar
-            </button>
+              Agregar sección
+            </UButton>
           </div>
 
-          <div v-if="!currentLangData.customSections?.length" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-            Sin secciones adicionales. Click en "Agregar" para crear una.
-          </div>
+          <UAlert
+            v-if="!currentLangData.customSections?.length"
+            color="neutral"
+            variant="subtle"
+            icon="i-lucide-info"
+            description="Sin secciones adicionales. Click en 'Agregar sección' para crear una."
+          />
 
-          <div v-else class="space-y-4">
-            <div
+          <div v-else class="space-y-3">
+            <UCard
               v-for="(section, idx) in currentLangData.customSections"
               :key="section.id"
-              class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 space-y-3 shadow-sm"
+              :ui="{ body: 'p-3 space-y-2' }"
             >
-              <div class="flex items-center gap-3">
-                <span class="size-7 rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400 flex items-center justify-center text-xs font-black">{{ idx + 1 }}</span>
-                <input
+              <div class="flex items-center gap-2">
+                <span class="size-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shrink-0">{{ idx + 1 }}</span>
+                <UInput
                   v-model="section.title"
-                  type="text"
                   placeholder="Título de la sección (ej. Requisitos especiales)"
-                  class="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-sm font-bold focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition-all dark:text-white"
+                  class="flex-1"
+                  size="sm"
                 />
-                <button
-                  type="button"
-                  @click="removeCustomSection(idx)"
-                  class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                <UButton
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  size="sm"
                   title="Eliminar sección"
-                >
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
+                  @click="removeCustomSection(idx)"
+                />
               </div>
               <TiptapEditor
                 v-model="section.content"
                 placeholder="Contenido de la sección (texto, listas, imágenes, tablas)..."
                 :key="'cs-' + section.id + '-' + store.currentLanguage"
               />
-            </div>
+            </UCard>
           </div>
-        </section>
+        </div>
+      </UCard>
 
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import TiptapEditor from '~/components/common/TiptapEditor.vue'
+import TiptapEditor from '~/components/v2/TiptapEditorV2.vue'
 import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
 const { initCityAutocomplete, initPlaceAutocomplete } = useGooglePlaces()
+
+// Collapsible sections — state persisted in localStorage so F5 keeps each open/closed.
+const { toggleSection, isSectionExpanded } = useCollapsibles('wizard:step3')
+const hasContent = (html?: string) => !!(html && html.replace(/<[^>]*>/g, '').trim().length > 0)
 
 const tourLanguages = computed(() => {
   return Object.keys(store.contentSEO).filter(code => {

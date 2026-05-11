@@ -1,258 +1,331 @@
 <template>
-  <div class="flex flex-col gap-10 pb-20">
+  <div class="flex flex-col gap-5 pb-20">
     <!-- Header Section -->
-    <section class="glass-card p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 relative overflow-hidden group">
-      <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-        <span class="material-symbols-outlined text-[120px] fill-1 text-primary">verified</span>
-      </div>
-      
-      <div class="relative z-10 max-w-2xl">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-            <span class="material-symbols-outlined filled">verified</span>
-          </div>
-          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Clasificación de Actividad</h3>
-        </div>
-        <p class="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-          Selecciona las categorías que mejor definan esta experiencia. Esto ayuda a los viajeros a encontrar tu tour mediante filtros de búsqueda inteligentes.
-        </p>
-      </div>
-    </section>
+    <UAlert
+      icon="i-lucide-shield-check"
+      color="primary"
+      variant="subtle"
+      title="Clasificación de actividad"
+      description="Selecciona las categorías que mejor definan esta experiencia. Ayuda a los viajeros a encontrar tu tour vía filtros de búsqueda."
+    />
 
     <!-- Categories -->
-    <section class="space-y-5">
-      <div class="flex flex-wrap items-center justify-between gap-3 px-2">
-        <h4 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Categorías Disponibles</h4>
+    <UCard :ui="{ body: 'p-4 sm:p-4 space-y-4' }">
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <button
-            v-if="store.selectedCategories.length > 0"
-            type="button"
-            @click="store.selectedCategories = []"
-            class="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors"
-          >
-            Limpiar
-          </button>
-          <div class="text-[10px] font-bold text-primary bg-primary/5 px-3 py-1 rounded-full">
-            {{ store.selectedCategories.length }} / {{ categories.length }}
+          <UIcon name="i-lucide-tags" class="size-5 text-primary" />
+          <div>
+            <h4 class="text-base font-bold">Categorías del tour</h4>
+            <p class="text-xs text-muted">Define cómo aparece el tour en filtros de búsqueda. Recomendado: 1-3 categorías.</p>
           </div>
         </div>
+        <UBadge :color="store.selectedCategories.length > 0 ? 'primary' : 'neutral'" variant="subtle" size="md">
+          {{ store.selectedCategories.length }} de {{ categories.length }}
+        </UBadge>
       </div>
 
-      <!-- Search input -->
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">search</span>
-        <input
-          v-model="categorySearch"
-          type="search"
-          placeholder="Buscar categoría (ej. aventura, naturaleza, cultural)"
-          class="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none"
-        />
-      </div>
-
-      <!-- Selected chips (pinned) -->
-      <div v-if="selectedCategoriesList.length > 0" class="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
-        <div class="text-[10px] font-black uppercase tracking-widest text-primary/70">Seleccionadas</div>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cat in selectedCategoriesList"
-            :key="'sel-' + cat.id"
-            type="button"
+      <!-- Selected categories as chips -->
+      <div v-if="selectedCategoriesList.length > 0" class="flex flex-wrap gap-2">
+        <div
+          v-for="cat in selectedCategoriesList"
+          :key="'sel-' + cat.id"
+          class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full bg-primary text-white text-xs font-bold shadow-sm"
+        >
+          <span class="material-symbols-outlined text-sm">{{ cat.icon }}</span>
+          <span>{{ cat.name }}</span>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            class="!text-white hover:!bg-white/20"
+            :title="`Quitar ${cat.name}`"
             @click="toggleCategory(cat.id)"
-            class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-primary text-white text-xs font-bold shadow-sm hover:bg-primary/90 transition-all"
-          >
-            <span class="material-symbols-outlined text-sm filled">{{ cat.icon }}</span>
-            <span>{{ cat.name }}</span>
-            <span class="material-symbols-outlined text-sm hover:scale-110 transition-transform">close</span>
-          </button>
+          />
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="loadingCategories" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        <span class="material-symbols-outlined animate-spin text-lg align-middle mr-2">progress_activity</span>
+      <!-- Add via dropdown -->
+      <div v-if="loadingCategories" class="p-3 text-center text-sm text-muted border-2 border-dashed border-default rounded-lg flex items-center justify-center gap-2">
+        <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" />
         Cargando categorías...
       </div>
-
-      <!-- All categories as chips (wraps naturally, no truncation) -->
-      <div v-else-if="filteredCategories.length > 0" class="flex flex-wrap gap-2">
-        <button
-          v-for="cat in filteredCategories"
-          :key="cat.id"
-          type="button"
-          @click="toggleCategory(cat.id)"
-          :title="cat.description"
-          class="inline-flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-bold transition-all select-none"
-          :class="store.selectedCategories.includes(cat.id)
-            ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary/40 hover:text-primary'"
+      <UPopover
+        v-else-if="availableCategories.length > 0"
+        :ui="{ content: 'w-80 max-w-[90vw]' }"
+      >
+        <UButton
+          icon="i-lucide-plus"
+          color="primary"
+          variant="outline"
+          size="md"
+          trailing-icon="i-lucide-chevron-down"
         >
-          <span class="material-symbols-outlined text-base" :class="store.selectedCategories.includes(cat.id) ? 'filled' : ''">{{ cat.icon }}</span>
-          <span>{{ cat.name }}</span>
-        </button>
-      </div>
+          {{ selectedCategoriesList.length === 0 ? 'Seleccionar categorías' : 'Agregar más categorías' }}
+        </UButton>
 
-      <!-- No results -->
-      <div v-else class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        <template v-if="categorySearch">No se encontraron categorías para «{{ categorySearch }}»</template>
-        <template v-else>No hay categorías disponibles</template>
+        <template #content>
+          <div class="p-2 space-y-2">
+            <UInput
+              v-model="categorySearch"
+              placeholder="Buscar categoría..."
+              icon="i-lucide-search"
+              size="sm"
+              class="w-full"
+              autofocus
+            />
+            <div class="max-h-72 overflow-y-auto space-y-0.5">
+              <button
+                v-for="cat in filteredAvailableCategories"
+                :key="cat.id"
+                type="button"
+                class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left text-sm hover:bg-elevated transition-colors"
+                @click="toggleCategory(cat.id)"
+              >
+                <span class="material-symbols-outlined text-base text-muted">{{ cat.icon }}</span>
+                <span class="flex-1 truncate">{{ cat.name }}</span>
+                <UIcon name="i-lucide-plus" class="size-3.5 text-muted" />
+              </button>
+              <div
+                v-if="filteredAvailableCategories.length === 0"
+                class="px-2 py-4 text-center text-xs text-muted italic"
+              >
+                <template v-if="categorySearch">Sin coincidencias para «{{ categorySearch }}»</template>
+                <template v-else>Todas las categorías ya están seleccionadas</template>
+              </div>
+            </div>
+          </div>
+        </template>
+      </UPopover>
+
+      <!-- All taken -->
+      <UAlert
+        v-else
+        color="success"
+        variant="subtle"
+        icon="i-lucide-circle-check"
+        title="Todas las categorías están seleccionadas"
+        description="Has incluido las 39 categorías disponibles. Considera quitar las que no apliquen para mejorar la relevancia en filtros."
+      />
+
+      <!-- Action: clear all -->
+      <div v-if="store.selectedCategories.length > 0" class="flex justify-end">
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          @click="store.selectedCategories = []"
+        >
+          Quitar todas
+        </UButton>
       </div>
-    </section>
+    </UCard>
 
     <!-- Empty State Warning -->
-    <Transition name="fade">
-      <div v-if="store.selectedCategories.length === 0" class="p-8 bg-amber-500/5 rounded-3xl border border-dashed border-amber-500/20 text-center space-y-4">
-        <div class="size-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2 animate-bounce">
-          <span class="material-symbols-outlined text-3xl filled">warning</span>
-        </div>
-        <div class="space-y-1">
-          <h4 class="text-lg font-bold text-amber-700 dark:text-amber-400">Sin Categorías Seleccionadas</h4>
-          <p class="text-sm text-slate-500 max-w-md mx-auto italic">Se recomienda seleccionar al menos una categoría para mejorar la visibilidad del tour en los resultados de búsqueda.</p>
-        </div>
-      </div>
-    </Transition>
+    <UAlert
+      v-if="store.selectedCategories.length === 0"
+      icon="i-lucide-triangle-alert"
+      color="warning"
+      variant="subtle"
+      title="Sin categorías seleccionadas"
+      description="Se recomienda seleccionar al menos una categoría para mejorar la visibilidad del tour en los resultados de búsqueda."
+    />
 
     <!-- Tags catalog (CRUD + per-tour selection) -->
-    <section class="glass-card p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 space-y-6">
+    <UCard :ui="{ body: 'p-4 sm:p-4 space-y-4' }">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <div class="size-10 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center">
-            <span class="material-symbols-outlined filled">label</span>
+          <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <UIcon name="i-lucide-tag" class="size-5" />
           </div>
           <div>
-            <h4 class="text-xl font-bold dark:text-white">Etiquetas</h4>
-            <p class="text-xs text-slate-500">Marca las que apliquen a este tour. Crea nuevas si no existen.</p>
+            <h4 class="text-base font-bold">Etiquetas <span class="text-muted font-normal text-xs">(opcional)</span></h4>
+            <p class="text-xs text-muted">Las etiquetas refinan la búsqueda del cliente más allá de las categorías. Actívalas si tu tour tiene un perfil particular.</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="text-[10px] font-bold text-violet-500 bg-violet-500/5 px-3 py-1 rounded-full">
-            {{ store.selectedTags.length }} seleccionadas
-          </div>
-          <button
-            type="button"
-            @click="openTagModal()"
-            class="px-3 py-2 bg-violet-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-violet-600 transition-all flex items-center gap-1.5"
-          >
-            <span class="material-symbols-outlined text-sm">add</span>
-            Nueva etiqueta
-          </button>
-        </div>
-      </div>
-
-      <!-- Search -->
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">search</span>
-        <input
-          v-model="tagSearch"
-          type="search"
-          placeholder="Buscar etiqueta..."
-          class="w-full pl-12 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 transition-all outline-none"
+        <USwitch
+          v-model="tagsEnabled"
+          color="primary"
+          size="md"
+          :label="tagsEnabled ? 'Activadas' : 'Desactivadas'"
         />
       </div>
 
-      <!-- Loading -->
-      <div v-if="loadingTags" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        <span class="material-symbols-outlined animate-spin text-lg align-middle mr-2">progress_activity</span>
-        Cargando etiquetas...
-      </div>
-
-      <!-- Empty -->
-      <div v-else-if="filteredTags.length === 0" class="p-6 text-center text-sm text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        <template v-if="tagSearch">No hay coincidencias para «{{ tagSearch }}». Click en "Nueva etiqueta" para crearla.</template>
-        <template v-else>No hay etiquetas todavía. Click en "Nueva etiqueta" para crear la primera.</template>
-      </div>
-
-      <!-- Chips -->
-      <div v-else class="flex flex-wrap gap-2">
-        <div
-          v-for="tag in filteredTags"
-          :key="tag.id"
-          class="group inline-flex items-center gap-1 rounded-full border transition-all"
-          :class="store.selectedTags.includes(tag.id)
-            ? 'bg-violet-500 border-violet-500 text-white shadow-sm shadow-violet-500/20'
-            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'"
-        >
-          <button
-            type="button"
-            @click="toggleTag(tag.id)"
-            class="pl-3 pr-1.5 py-2 text-xs font-bold"
+      <!-- Contenido del bloque de tags — solo si el toggle está ON -->
+      <div v-if="tagsEnabled" class="space-y-4 pt-2 border-t border-default">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-check">
+            {{ store.selectedTags.length }} seleccionada{{ store.selectedTags.length === 1 ? '' : 's' }}
+          </UBadge>
+          <UButton
+            icon="i-lucide-plus"
+            color="primary"
+            size="sm"
+            @click="openTagModal()"
           >
-            {{ tag.name }}
-          </button>
-          <button
-            type="button"
-            @click="openTagModal(tag)"
-            :title="`Editar ${tag.name}`"
-            class="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-black/10"
-          >
-            <span class="material-symbols-outlined text-[14px]">edit</span>
-          </button>
-          <button
-            type="button"
-            @click="deleteTag(tag)"
-            :title="`Eliminar ${tag.name}`"
-            class="p-1.5 mr-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-rose-500/20"
-          >
-            <span class="material-symbols-outlined text-[14px]" :class="store.selectedTags.includes(tag.id) ? 'text-white' : 'text-rose-500'">delete</span>
-          </button>
+            Nueva etiqueta
+          </UButton>
         </div>
-      </div>
-    </section>
 
-    <!-- Tag editor modal -->
-    <div v-if="tagModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" @click.self="closeTagModal">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 class="text-lg font-bold dark:text-white">{{ editingTag?.id ? 'Editar etiqueta' : 'Nueva etiqueta' }}</h3>
-          <button type="button" @click="closeTagModal" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-            <span class="material-symbols-outlined">close</span>
-          </button>
+        <UInput
+          v-model="tagSearch"
+          placeholder="Buscar etiqueta..."
+          icon="i-lucide-search"
+          size="md"
+          class="w-full"
+        />
+
+        <!-- Loading -->
+        <div v-if="loadingTags" class="p-6 text-center text-sm text-muted border-2 border-dashed border-default rounded-xl flex items-center justify-center gap-2">
+          <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" />
+          Cargando etiquetas...
         </div>
-        <div class="p-6 space-y-4">
-          <p class="text-xs text-slate-500">Ingresa el nombre por idioma. Si dejas un idioma vacío usará el español como fallback.</p>
-          <div v-for="lang in tagLanguages" :key="lang.code" class="space-y-1">
-            <label class="text-[10px] font-black uppercase tracking-widest text-slate-500">{{ lang.label }} ({{ lang.code }})</label>
-            <input
-              v-model="tagForm.translations[lang.code]"
-              type="text"
-              :placeholder="lang.code === 'ES' ? 'Ej. Uros, Sillustani, Foto Tour' : ''"
-              class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 outline-none dark:text-white"
+
+        <!-- Empty -->
+        <UAlert
+          v-else-if="filteredTags.length === 0"
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-tag"
+          :title="tagSearch ? 'Sin coincidencias' : 'Sin etiquetas'"
+          :description="tagSearch ? `No hay etiquetas que coincidan con «${tagSearch}». Click en \'Nueva etiqueta\' para crearla.` : 'No hay etiquetas todavía. Click en \'Nueva etiqueta\' para crear la primera.'"
+        />
+
+        <!-- Chips -->
+        <div v-else class="flex flex-wrap gap-2">
+          <div
+            v-for="tag in filteredTags"
+            :key="tag.id"
+            class="group inline-flex items-center rounded-full border transition-all overflow-hidden"
+            :class="store.selectedTags.includes(tag.id)
+              ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
+              : 'bg-default border-default text-default hover:border-primary/40'"
+          >
+            <button
+              type="button"
+              class="pl-3 pr-2 py-1.5 text-xs font-bold"
+              @click="toggleTag(tag.id)"
+            >
+              {{ tag.name }}
+            </button>
+            <UButton
+              icon="i-lucide-pencil"
+              :color="store.selectedTags.includes(tag.id) ? 'neutral' : 'primary'"
+              variant="ghost"
+              size="xs"
+              class="opacity-0 group-hover:opacity-100 transition-opacity"
+              :title="`Editar ${tag.name}`"
+              @click="openTagModal(tag)"
+            />
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="ghost"
+              size="xs"
+              class="opacity-0 group-hover:opacity-100 transition-opacity mr-1"
+              :title="`Eliminar ${tag.name}`"
+              @click="deleteTag(tag)"
             />
           </div>
-          <label class="flex items-center gap-2 pt-2">
-            <input v-model="tagForm.active" type="checkbox" class="size-4 text-violet-500 rounded focus:ring-violet-500" />
-            <span class="text-sm text-slate-600 dark:text-slate-400">Activa (visible en el sitio)</span>
-          </label>
-        </div>
-        <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
-          <button type="button" @click="closeTagModal" class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancelar</button>
-          <button
-            type="button"
-            @click="submitTag"
-            :disabled="!tagForm.translations.ES || tagSaving"
-            class="px-5 py-2 bg-violet-500 text-white rounded-xl text-sm font-bold hover:bg-violet-600 disabled:opacity-50 transition-all flex items-center gap-2"
-          >
-            <span v-if="tagSaving" class="material-symbols-outlined animate-spin text-sm">sync</span>
-            {{ editingTag?.id ? 'Guardar cambios' : 'Crear etiqueta' }}
-          </button>
         </div>
       </div>
-    </div>
+
+      <!-- Hint when toggle off -->
+      <UAlert
+        v-else
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-info"
+        title="Etiquetas desactivadas"
+        description="La mayoría de tours funcionan bien solo con categorías. Activa este bloque solo si tu tour tiene un perfil particular (fotográfico, místico, premium, etc.)."
+      />
+    </UCard>
+
+    <!-- Tag editor modal -->
+    <UModal
+      :open="tagModalOpen"
+      :ui="{ content: 'max-w-md' }"
+      :dismissible="!tagSaving"
+      @update:open="(v) => !v && closeTagModal()"
+    >
+      <template #content>
+        <div class="bg-default rounded-lg flex flex-col max-h-[90vh]">
+          <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <UIcon :name="editingTag?.id ? 'i-lucide-pencil' : 'i-lucide-tag'" class="size-5 text-primary" />
+              </div>
+              <h3 class="text-lg font-bold">{{ editingTag?.id ? 'Editar etiqueta' : 'Nueva etiqueta' }}</h3>
+            </div>
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" :disabled="tagSaving" @click="closeTagModal" />
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6 space-y-3">
+            <p class="text-xs text-muted">
+              Ingresa el nombre por idioma. Si dejas un idioma vacío usará el español como fallback.
+            </p>
+
+            <UFormField
+              v-for="lang in tagLanguages"
+              :key="lang.code"
+              :label="`${lang.label} (${lang.code})`"
+              :required="lang.code === 'ES'"
+            >
+              <UInput
+                v-model="tagForm.translations[lang.code]"
+                :placeholder="lang.code === 'ES' ? 'Ej. Uros, Sillustani, Foto Tour' : ''"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UFormField class="pt-2">
+              <USwitch v-model="tagForm.active" color="primary" label="Activa (visible en el sitio)" />
+            </UFormField>
+          </div>
+
+          <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2 shrink-0">
+            <UButton color="neutral" variant="ghost" :disabled="tagSaving" @click="closeTagModal">Cancelar</UButton>
+            <UButton
+              color="primary"
+              :icon="editingTag?.id ? 'i-lucide-save' : 'i-lucide-plus'"
+              :loading="tagSaving"
+              :disabled="!tagForm.translations.ES"
+              @click="submitTag"
+            >
+              {{ editingTag?.id ? 'Guardar cambios' : 'Crear etiqueta' }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { useAuthStore } from '~/stores/auth'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 
 const store = useTourWizardStore()
 const config = useRuntimeConfig()
+const toast = useToast()
+const { confirm } = useConfirm()
 
 type Category = { id: number; name: string; description: string; icon: string; code?: string }
 
 const categorySearch = ref('')
 const categories = ref<Category[]>([])
 const loadingCategories = ref(false)
+
+// Tags toggle — OFF por default. Si el tour ya tiene tags asignados al cargar,
+// auto-activar para no esconder la selección existente.
+const tagsEnabled = ref(false)
+watch(
+  () => store.selectedTags.length,
+  (count) => { if (count > 0) tagsEnabled.value = true },
+  { immediate: true },
+)
 
 const normalize = (s: string) => (s || '')
   .toLowerCase()
@@ -281,6 +354,19 @@ const filteredCategories = computed(() => {
 const selectedCategoriesList = computed(() =>
   categories.value.filter(c => store.selectedCategories.includes(c.id))
 )
+
+// Categorías NO seleccionadas (las que aparecen en el dropdown)
+const availableCategories = computed(() =>
+  categories.value.filter(c => !store.selectedCategories.includes(c.id))
+)
+
+const filteredAvailableCategories = computed(() => {
+  const q = normalize(categorySearch.value.trim())
+  if (!q) return availableCategories.value
+  return availableCategories.value.filter(c =>
+    normalize(c.name).includes(q) || normalize(c.description).includes(q)
+  )
+})
 
 const toggleCategory = (id: number) => {
   const idx = store.selectedCategories.indexOf(id)
@@ -483,7 +569,12 @@ const closeTagModal = () => {
 const submitTag = async () => {
   const auth = useAuthStore()
   if (!auth.token) {
-    alert('Sesión expirada.')
+    toast.add({
+      title: 'Sesión expirada',
+      description: 'Vuelve a iniciar sesión para continuar.',
+      icon: 'i-lucide-log-out',
+      color: 'error',
+    })
     return
   }
   // Trim values
@@ -492,7 +583,12 @@ const submitTag = async () => {
     if ((name || '').trim()) translations[code] = name.trim()
   }
   if (!translations.ES) {
-    alert('El nombre en español es obligatorio.')
+    toast.add({
+      title: 'Falta el nombre en español',
+      description: 'El idioma principal es obligatorio.',
+      icon: 'i-lucide-info',
+      color: 'warning',
+    })
     return
   }
 
@@ -529,14 +625,28 @@ const submitTag = async () => {
     }
   } catch (err: any) {
     console.error('[Step7] Tag save failed:', err)
-    alert('Error al guardar etiqueta: ' + (err?.data?.message || err?.message || 'desconocido'))
+    toast.add({
+      title: 'Error al guardar etiqueta',
+      description: err?.data?.message || err?.message || 'Error desconocido',
+      icon: 'i-lucide-triangle-alert',
+      color: 'error',
+    })
   } finally {
     tagSaving.value = false
   }
 }
 
 const deleteTag = async (tag: Tag) => {
-  if (!confirm(`¿Eliminar la etiqueta "${tag.name}"? Se quitará de todos los tours que la usen.`)) return
+  const ok = await confirm({
+    title: 'Eliminar etiqueta',
+    description: `Vas a eliminar "${tag.name}". Se quitará de todos los tours que la usen.`,
+    confirmLabel: 'Eliminar',
+    confirmColor: 'error',
+    confirmIcon: 'i-lucide-trash-2',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
   const auth = useAuthStore()
   try {
     await $fetch(`${config.public.apiUrl}/admin/tags/${tag.id}/delete`, {
@@ -545,9 +655,19 @@ const deleteTag = async (tag: Tag) => {
     })
     tags.value = tags.value.filter(t => t.id !== tag.id)
     store.selectedTags = store.selectedTags.filter(id => id !== tag.id)
+    toast.add({
+      title: 'Etiqueta eliminada',
+      icon: 'i-lucide-circle-check',
+      color: 'success',
+    })
   } catch (err: any) {
     console.error('[Step7] Tag delete failed:', err)
-    alert('Error al eliminar etiqueta: ' + (err?.data?.message || err?.message || 'desconocido'))
+    toast.add({
+      title: 'Error al eliminar',
+      description: err?.data?.message || err?.message || 'Error desconocido',
+      icon: 'i-lucide-triangle-alert',
+      color: 'error',
+    })
   }
 }
 </script>

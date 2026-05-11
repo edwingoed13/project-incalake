@@ -48,6 +48,7 @@ const steps = [
   { id: 5, label: 'Galería y video', icon: 'image' },
   { id: 6, label: 'Opciones de reserva', icon: 'settings' },
   { id: 7, label: 'Categorías', icon: 'verified' },
-  { id: 8, label: 'Revisión final', icon: 'check_circle' },
+  { id: 8, label: 'Disponibilidad', icon: 'calendar_month' },
+  { id: 9, label: 'Revisión final', icon: 'check_circle' },
 ]
 </script>

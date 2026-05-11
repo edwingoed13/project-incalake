@@ -1,127 +1,162 @@
 <template>
-  <div class="flex flex-col gap-12 pb-20">
+  <div class="flex flex-col gap-6 pb-20">
     <!-- Video Section (per language) -->
-    <section class="space-y-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary">play_circle</span>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Video destacado</h3>
-        </div>
-        <!-- Language tabs for video -->
-        <div class="flex gap-1.5">
-          <button
-            v-for="lang in videoLanguages"
-            :key="lang"
-            @click="store.currentLanguage = lang"
-            :class="store.currentLanguage === lang
-              ? 'bg-primary text-white shadow-md shadow-primary/20'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'"
-            class="px-3 py-1.5 text-[10px] font-black rounded-lg transition-all uppercase flex items-center gap-1"
-          >
-            {{ lang }}
-            <span v-if="currentLangSeo?.youtubeUrl" class="size-1.5 rounded-full bg-green-400"></span>
-          </button>
-        </div>
-      </div>
+    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('video') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+      <template #header>
+        <button
+          type="button"
+          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
+          @click="toggleSection('video')"
+        >
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="size-4 text-muted transition-transform"
+              :class="{ 'rotate-180': isSectionExpanded('video') }"
+            />
+            <UIcon name="i-lucide-play-circle" class="size-5 text-primary" />
+            Video destacado
+            <UBadge
+              v-if="currentLangSeo?.youtubeUrl"
+              color="success"
+              variant="subtle"
+              size="xs"
+              icon="i-lucide-circle-check"
+            >
+              {{ store.currentLanguage.toUpperCase() }}
+            </UBadge>
+          </h3>
+          <div class="flex gap-1" @click.stop>
+            <UButton
+              v-for="lang in videoLanguages"
+              :key="lang"
+              size="xs"
+              :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
+              :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
+              class="uppercase font-black tracking-wider"
+              :trailing-icon="store.contentSEO?.[lang]?.youtubeUrl ? 'i-lucide-circle-check-big' : undefined"
+              @click="store.currentLanguage = lang"
+            >
+              {{ lang }}
+            </UButton>
+          </div>
+        </button>
+      </template>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div v-show="isSectionExpanded('video')" class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <!-- Input Card -->
-        <div class="glass-card p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
-          <div>
-             <h4 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-1">YouTube Video URL</h4>
-             <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-4">{{ store.currentLanguage.toUpperCase() }} — {{ currentLangLabel }}</p>
-             <div class="flex gap-3">
-               <div class="flex-1 relative group">
-                  <input
-                    :value="currentLangSeo?.youtubeUrl || ''"
-                    @input="updateVideoUrl(($event.target as HTMLInputElement).value)"
-                    type="text"
-                    placeholder="https://www.youtube.com/watch?v="
-                    class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-4 px-12 focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-slate-700 dark:text-slate-200 transition-all font-medium text-sm"
-                  />
-                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">link</span>
-               </div>
-               <button class="px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all">
-                 Agregar
-               </button>
-             </div>
-             <!-- Saved URL preview chip — shows the full URL at a glance even on tablet -->
-             <div v-if="currentLangSeo?.youtubeUrl" class="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-               <span class="material-symbols-outlined text-sm text-slate-400 shrink-0">link</span>
-               <a :href="currentLangSeo.youtubeUrl" target="_blank" rel="noopener noreferrer"
-                  :title="currentLangSeo.youtubeUrl"
-                  class="flex-1 text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate hover:text-primary transition-colors">
-                 {{ currentLangSeo.youtubeUrl }}
-               </a>
-               <button
-                 type="button"
-                 @click="copyVideoUrl"
-                 :title="urlCopied ? 'Copiado' : 'Copiar URL'"
-                 class="text-slate-400 hover:text-primary transition-colors shrink-0"
-               >
-                 <span class="material-symbols-outlined text-base">{{ urlCopied ? 'check' : 'content_copy' }}</span>
-               </button>
-               <a :href="currentLangSeo.youtubeUrl" target="_blank" rel="noopener noreferrer"
-                  title="Abrir en nueva pestaña"
-                  class="text-slate-400 hover:text-primary transition-colors shrink-0">
-                 <span class="material-symbols-outlined text-base">open_in_new</span>
-               </a>
-             </div>
-             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4">Cada idioma tiene su propio video. Soportados: YouTube, Vimeo.</p>
+        <div class="space-y-4">
+          <UFormField
+            :label="`URL del video — ${store.currentLanguage.toUpperCase()} (${currentLangLabel})`"
+            hint="Soportados: YouTube, Vimeo. Cada idioma tiene su propio video."
+          >
+            <UInput
+              :model-value="currentLangSeo?.youtubeUrl || ''"
+              icon="i-lucide-link"
+              placeholder="https://www.youtube.com/watch?v=..."
+              class="w-full"
+              @update:model-value="(v: string | number) => updateVideoUrl(String(v))"
+            />
+          </UFormField>
+
+          <!-- Saved URL preview chip -->
+          <div v-if="currentLangSeo?.youtubeUrl" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-elevated border border-default">
+            <UIcon name="i-lucide-link" class="size-4 text-muted shrink-0" />
+            <a :href="currentLangSeo.youtubeUrl" target="_blank" rel="noopener noreferrer"
+               :title="currentLangSeo.youtubeUrl"
+               class="flex-1 text-[11px] font-mono text-muted truncate hover:text-primary transition-colors">
+              {{ currentLangSeo.youtubeUrl }}
+            </a>
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              :icon="urlCopied ? 'i-lucide-check' : 'i-lucide-copy'"
+              :title="urlCopied ? 'Copiado' : 'Copiar URL'"
+              @click="copyVideoUrl"
+            />
+            <UButton
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-external-link"
+              :to="currentLangSeo.youtubeUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Abrir en nueva pestaña"
+            />
           </div>
         </div>
 
         <!-- Preview Card -->
-        <div class="relative group aspect-video rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-sm transition-all duration-500 hover:shadow-2xl">
+        <div class="relative group aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-sm transition-all duration-500 hover:shadow-2xl">
            <img
             v-if="youtubeId"
             :src="`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`"
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 brightness-75 group-hover:brightness-50"
             alt="Video Thumbnail"
            />
-           <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-400">
-              <span class="material-symbols-outlined text-4xl mb-2 opacity-50">smart_display</span>
-              <p class="text-xs font-bold uppercase tracking-widest opacity-50 text-center">Vista previa del video ({{ store.currentLanguage.toUpperCase() }})<br/><span class="text-[9px] font-medium">Ingresa una URL para ver aquí</span></p>
+           <div v-else class="w-full h-full flex flex-col items-center justify-center text-muted gap-2">
+              <UIcon name="i-lucide-youtube" class="size-10 opacity-50" />
+              <p class="text-xs font-bold uppercase tracking-widest opacity-60 text-center">
+                Vista previa del video ({{ store.currentLanguage.toUpperCase() }})<br/>
+                <span class="text-[9px] font-medium normal-case tracking-normal">Ingresa una URL para ver aquí</span>
+              </p>
            </div>
 
            <!-- Preview Overlay -->
-           <div v-if="youtubeId" class="absolute inset-0 flex flex-col items-center justify-center gap-4 transition-all duration-500">
-              <div class="size-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-2xl">
-                 <span class="material-symbols-outlined text-3xl filled">play_arrow</span>
+           <div v-if="youtubeId" class="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all duration-500">
+              <div class="size-14 rounded-full bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-2xl">
+                 <UIcon name="i-lucide-play" class="size-7 fill-current" />
               </div>
-              <div class="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-white/10 flex items-center gap-2">
-                 <span class="text-[10px] font-black text-white uppercase tracking-[0.2em]">{{ store.currentLanguage.toUpperCase() }}</span>
-              </div>
+              <UBadge color="neutral" variant="solid" size="xs" class="bg-slate-900/80 backdrop-blur-xl border border-white/10 uppercase tracking-widest">
+                {{ store.currentLanguage.toUpperCase() }}
+              </UBadge>
            </div>
 
            <!-- Delete Button -->
-           <button
+           <UButton
             v-if="youtubeId"
+            icon="i-lucide-trash-2"
+            color="error"
+            size="sm"
+            class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
             @click="updateVideoUrl('')"
-            class="absolute top-4 right-4 size-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100"
-           >
-              <span class="material-symbols-outlined text-sm">delete</span>
-           </button>
+           />
         </div>
       </div>
-    </section>
+    </UCard>
 
     <!-- Gallery Layout Detection Section -->
-    <section class="glass-card p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 space-y-8 bg-white dark:bg-slate-950/50 shadow-sm">
-      <div class="flex items-center gap-3">
-        <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-          <span class="material-symbols-outlined filled">grid_view</span>
-        </div>
-        <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Detección de layout de galería</h3>
-      </div>
+    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('layout') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+      <template #header>
+        <button
+          type="button"
+          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
+          @click="toggleSection('layout')"
+        >
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="size-4 text-muted transition-transform"
+              :class="{ 'rotate-180': isSectionExpanded('layout') }"
+            />
+            <UIcon name="i-lucide-layout-grid" class="size-5 text-primary" />
+            Detección de layout de galería
+            <UBadge color="primary" variant="subtle" size="xs" class="capitalize">
+              {{ store.multimedia.galleryLayout }}
+            </UBadge>
+          </h3>
+        </button>
+      </template>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-show="isSectionExpanded('layout')" class="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Layout Options -->
         <button 
           v-for="layout in layouts" 
           :key="layout.id"
           @click="store.multimedia.galleryLayout = layout.id"
-          class="flex flex-col items-center gap-4 p-4 rounded-3xl border-2 transition-all group"
+          class="flex flex-col items-center gap-4 p-4 rounded-2xl border-2 transition-all group"
           :class="[
             store.multimedia.galleryLayout === layout.id
               ? 'border-primary bg-primary/5 shadow-xl shadow-primary/5'
@@ -174,203 +209,251 @@
         </button>
       </div>
 
-      <div class="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-4 animate-pulse">
-         <span class="material-symbols-outlined text-primary text-xl">auto_fix_high</span>
-         <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">
-            AI Detection: The layout will be auto-adjusted based on the presence of <strong>YouTube Shorts</strong> or <strong>Horizontal Cinema</strong> video.
-         </p>
-      </div>
-    </section>
+      <UAlert
+        v-show="isSectionExpanded('layout')"
+        color="primary"
+        variant="subtle"
+        icon="i-lucide-wand-sparkles"
+        title="Detección automática"
+        description="El layout se ajusta automáticamente según si el video es YouTube Shorts (vertical) u horizontal."
+        class="mt-4"
+      />
+    </UCard>
 
     <!-- Image Gallery Section -->
-    <section class="space-y-6 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary">photo_library</span>
-          <h3 class="text-xl font-bold text-slate-900 dark:text-white">Galería de imágenes</h3>
-        </div>
-        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          {{ store.multimedia.images.length }} / 20 images
-        </span>
-      </div>
+    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('gallery') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
+      <template #header>
+        <button
+          type="button"
+          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
+          @click="toggleSection('gallery')"
+        >
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="size-4 text-muted transition-transform"
+              :class="{ 'rotate-180': isSectionExpanded('gallery') }"
+            />
+            <UIcon name="i-lucide-images" class="size-5 text-primary" />
+            Galería de imágenes
+          </h3>
+          <UBadge color="neutral" variant="subtle" size="sm">
+            {{ store.multimedia.images.length }} / 20 imágenes
+          </UBadge>
+        </button>
+      </template>
 
+      <div v-show="isSectionExpanded('gallery')">
       <!-- Drag & Drop Upload Area -->
-      <div 
+      <div
+        :class="[
+          'border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative overflow-hidden',
+          isDragging
+            ? 'border-primary bg-primary/5 scale-[0.99]'
+            : 'border-default hover:border-primary/40 hover:bg-elevated/40 bg-elevated/20',
+        ]"
         @dragover.prevent="isDragging = true"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
-        class="border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-[2.5rem] p-16 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer group relative overflow-hidden"
-        :class="isDragging ? 'border-primary bg-primary/5 scale-[0.98]' : ''"
       >
         <input type="file" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileChange" />
-        <div class="size-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
-          <span class="material-symbols-outlined text-5xl">cloud_upload</span>
+        <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
+          <UIcon name="i-lucide-cloud-upload" class="size-6" />
         </div>
-        <p class="text-2xl font-black text-slate-900 dark:text-white mb-2">Arrastra y suelta fotos aquí</p>
-        <p class="text-xs text-slate-500 mb-8 uppercase tracking-[0.2em] font-bold">Support JPEG, PNG, or WebP • Recommended 1920x1080px</p>
-        <button class="bg-slate-900 dark:bg-primary text-white px-10 py-4 rounded-2xl font-black text-sm hover:shadow-2xl hover:shadow-primary/30 transition-all group-hover:scale-105 active:scale-95">
-          Browse Files
-        </button>
+        <p class="text-sm font-bold mb-1">Arrastra y suelta fotos aquí</p>
+        <p class="text-[11px] text-muted mb-4">JPEG, PNG o WebP · Recomendado 1920×1080px</p>
+        <UButton icon="i-lucide-folder-open" color="primary" size="sm">
+          Seleccionar archivos
+        </UButton>
       </div>
 
-      <!-- Image Reordering Grid -->
-      <div v-if="store.multimedia.images.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-12 animate-in fade-in slide-in-from-bottom-5">
-        <div 
-          v-for="(image, index) in store.multimedia.images" 
+      <!-- Image Grid -->
+      <div v-if="store.multimedia.images.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+        <div
+          v-for="(image, index) in store.multimedia.images"
           :key="image.id"
-          class="group relative aspect-square rounded-3xl overflow-hidden border-2 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1"
-          :class="image.isPrimary ? 'border-primary shadow-2xl shadow-primary/20' : 'border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark'"
+          :class="[
+            'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg',
+            image.isPrimary ? 'border-primary ring-2 ring-primary/20' : 'border-default',
+          ]"
         >
-          <img :src="getImageUrl(image.url)" :alt="image.altText" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-          
-          <!-- Overlay -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-5">
-            <div class="flex justify-between items-center">
-              <div class="flex gap-2">
-                <button @click="setPrimary(index)" class="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-xl text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-colors">
-                  {{ image.isPrimary ? 'Primary' : 'Set Primary' }}
-                </button>
-                <button @click="openEditModal(index)" class="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-xl text-white text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-colors">
-                  Edit Info
-                </button>
-              </div>
-              <button @click="removeImage(index)" class="size-8 rounded-lg bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 shadow-xl">
-                <span class="material-symbols-outlined text-sm">delete</span>
-              </button>
-            </div>
+          <img :src="getImageUrl(image.url)" :alt="image.altText" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
+          <!-- Top badges -->
+          <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-2 z-10">
+            <UBadge
+              v-if="image.isPrimary"
+              color="primary"
+              variant="solid"
+              size="xs"
+              icon="i-lucide-star"
+              class="shadow-md"
+            >
+              Principal
+            </UBadge>
+            <span v-else class="size-6 bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-[10px] font-bold text-white">
+              #{{ index + 1 }}
+            </span>
+            <span v-if="image.isPrimary" class="size-6 bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-[10px] font-bold text-white">
+              #{{ index + 1 }}
+            </span>
           </div>
 
-          <!-- Primary Badge -->
-          <div v-if="image.isPrimary" class="absolute top-4 left-4 px-3 py-1 bg-primary text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg ring-4 ring-white/10">
-            Primary Photo
-          </div>
-          <div class="absolute top-4 right-4 size-6 bg-black/40 backdrop-blur-md rounded-lg flex items-center justify-center text-[10px] font-bold text-white/70">
-            #{{ index + 1 }}
+          <!-- Hover overlay with actions -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+            <div class="flex items-center justify-between w-full gap-2">
+              <div class="flex gap-1.5 flex-wrap">
+                <UButton
+                  size="xs"
+                  :color="image.isPrimary ? 'primary' : 'neutral'"
+                  :variant="image.isPrimary ? 'solid' : 'subtle'"
+                  :icon="image.isPrimary ? 'i-lucide-star' : 'i-lucide-star-off'"
+                  class="backdrop-blur-md"
+                  @click="setPrimary(index)"
+                >
+                  {{ image.isPrimary ? 'Principal' : 'Marcar' }}
+                </UButton>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="subtle"
+                  icon="i-lucide-pencil"
+                  class="backdrop-blur-md"
+                  @click="openEditModal(index)"
+                >
+                  Editar
+                </UButton>
+              </div>
+              <UButton
+                size="xs"
+                color="error"
+                variant="solid"
+                icon="i-lucide-trash-2"
+                title="Eliminar imagen"
+                @click="removeImage(index)"
+              />
+            </div>
           </div>
         </div>
       </div>
-      <!-- Image Editor Modal -->
-      <div v-if="editingIndex !== null && store.multimedia.images[editingIndex]" class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
-        <!-- Backdrop -->
-        <div @click="editingIndex = null" class="absolute inset-0 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300"></div>
+      </div>
+    </UCard>
 
-        <!-- Modal Content -->
-        <div class="relative w-full max-w-5xl glass-card p-8 rounded-[2.5rem] border border-white/20 bg-white/90 dark:bg-slate-900/90 shadow-2xl animate-in fade-in zoom-in-95 duration-300 overflow-hidden max-h-[90vh] flex flex-col">
-          <div class="flex items-center justify-between mb-8">
+    <!-- Image Editor Modal -->
+    <UModal
+      :open="editingIndex !== null"
+      :ui="{ content: 'max-w-4xl' }"
+      @update:open="(v) => !v && (editingIndex = null)"
+    >
+      <template #content>
+        <div v-if="editingIndex !== null && store.multimedia.images[editingIndex]" class="flex flex-col max-h-[90vh] bg-default rounded-lg overflow-hidden">
+          <!-- Header -->
+          <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-3">
-              <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span class="material-symbols-outlined filled">edit_note</span>
+              <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <UIcon name="i-lucide-image-plus" class="size-5 text-primary" />
               </div>
-              <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Editar Información de Imagen <span class="text-primary">({{ store.currentLanguage.toUpperCase() }})</span></h3>
+              <div>
+                <h3 class="text-lg font-bold">Editar imagen</h3>
+                <p class="text-xs text-muted mt-0.5">
+                  Imagen #{{ editingIndex + 1 }} · Idioma: <span class="font-bold text-primary">{{ store.currentLanguage.toUpperCase() }}</span>
+                </p>
+              </div>
             </div>
-            <button @click="editingIndex = null" class="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center">
-              <span class="material-symbols-outlined">close</span>
-            </button>
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="editingIndex = null" />
           </div>
 
-          <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <div class="flex flex-col lg:flex-row gap-10">
-              <!-- Image Preview -->
-              <div class="w-full lg:w-2/5 space-y-4">
-                <div class="aspect-video rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 relative group shadow-2xl ring-1 ring-black/5">
-                   <img :src="getImageUrl(store.multimedia.images[editingIndex]?.url || '')" class="w-full h-full object-cover" />
-                  
-                  <!-- Badges on Preview -->
-                  <div class="absolute top-4 left-4 flex gap-2">
-                    <div class="px-3 py-1.5 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black rounded-xl">
-                      #{{ editingIndex + 1 }}
-                    </div>
-                     <div v-if="store.multimedia.images[editingIndex]?.isPrimary" class="px-3 py-1.5 bg-primary text-white text-[10px] font-black rounded-xl flex items-center gap-1.5 shadow-lg">
-                      <span class="material-symbols-outlined text-[12px] filled">star</span>
-                      Principal
-                    </div>
-                  </div>
+          <!-- Body -->
+          <div class="flex-1 overflow-y-auto p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-5">
+              <!-- Preview column -->
+              <div class="space-y-3">
+                <div class="aspect-video rounded-xl overflow-hidden border border-default relative">
+                  <img :src="getImageUrl(store.multimedia.images[editingIndex]?.url || '')" class="w-full h-full object-cover" />
+                  <UBadge
+                    v-if="store.multimedia.images[editingIndex]?.isPrimary"
+                    color="primary"
+                    variant="solid"
+                    size="sm"
+                    icon="i-lucide-star"
+                    class="absolute top-3 left-3 shadow-md"
+                  >
+                    Principal
+                  </UBadge>
                 </div>
 
-                <!-- Image Info Card -->
-                <div class="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
-                  <div class="flex flex-col gap-1">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nombre del archivo</span>
-                     <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{{ store.multimedia.images[editingIndex]?.filename || 'tour-image-' + ((editingIndex || 0) + 1) + '.webp' }}</p>
+                <UCard :ui="{ body: 'p-4' }">
+                  <div class="space-y-2 text-xs">
+                    <div>
+                      <p class="text-[10px] font-black uppercase tracking-widest text-muted mb-1">Archivo</p>
+                      <p class="font-mono font-bold truncate">
+                        {{ store.multimedia.images[editingIndex]?.filename || `tour-image-${(editingIndex || 0) + 1}.webp` }}
+                      </p>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-default">
+                      <span class="text-[10px] font-black uppercase tracking-widest text-muted">Tamaño</span>
+                      <UBadge color="primary" variant="subtle" size="xs" class="font-mono">
+                        {{ ((store.multimedia.images[editingIndex]?.size || 0) / 1024).toFixed(1) }} KB
+                      </UBadge>
+                    </div>
                   </div>
-                  <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tamaño</span>
-                    <p class="text-[10px] font-black text-primary">{{ ((store.multimedia.images[editingIndex]?.size || 0) / 1024).toFixed(1) }} KB</p>
-                  </div>
-                </div>
+                </UCard>
               </div>
 
-              <!-- Edit Fields -->
-              <div class="flex-1 space-y-8">
-                <div class="grid grid-cols-1 gap-8">
-                  <div class="space-y-3">
-                    <label class="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Texto Alternativo (ALT) <span class="text-rose-500">*</span></label>
-                    <div class="relative group">
-                      <input 
-                        v-model="editForm.altText"
-                        type="text" 
-                        maxlength="125"
-                        placeholder="Ej: Tour Lago Titicaca Puno con vista panorámica"
-                        class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-5 focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-medium pr-16"
-                      />
-                      <span class="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">
-                        {{ editForm.altText.length }}/125
-                      </span>
-                    </div>
-                    <p class="text-[10px] text-slate-400 font-medium italic px-1 flex items-center gap-1">
-                      <span class="material-symbols-outlined text-xs">info</span>
-                      Describe la imagen para personas con discapacidad visual y motores de búsqueda.
-                    </p>
-                  </div>
+              <!-- Form column -->
+              <div class="space-y-4">
+                <UFormField
+                  label="Texto alternativo (ALT)"
+                  required
+                  :hint="`${editForm.altText.length}/125`"
+                  help="Describe la imagen para lectores de pantalla y motores de búsqueda."
+                >
+                  <UInput
+                    v-model="editForm.altText"
+                    maxlength="125"
+                    placeholder="Ej: Tour Lago Titicaca Puno con vista panorámica"
+                    class="w-full"
+                  />
+                </UFormField>
 
-                  <div class="space-y-3">
-                    <label class="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Título de la Imagen</label>
-                    <div class="relative group">
-                      <input 
-                        v-model="editForm.titleText"
-                        type="text" 
-                        maxlength="100"
-                        placeholder="Ej: Vista del Lago Titicaca desde Puno"
-                        class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-5 focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-medium pr-16"
-                      />
-                      <span class="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">
-                        {{ editForm.titleText.length }}/100
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <UFormField
+                  label="Título de la imagen"
+                  :hint="`${editForm.titleText.length}/100`"
+                >
+                  <UInput
+                    v-model="editForm.titleText"
+                    maxlength="100"
+                    placeholder="Ej: Vista del Lago Titicaca desde Puno"
+                    class="w-full"
+                  />
+                </UFormField>
 
-                <div class="space-y-3">
-                  <label class="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Descripción Detallada</label>
-                  <div class="relative group">
-                    <textarea 
-                      v-model="editForm.description"
-                      rows="4"
-                      maxlength="250"
-                      placeholder="Describe con más detalle lo que se ve en la imagen para el visor de la galería..."
-                      class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 px-5 focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-medium resize-none"
-                    ></textarea>
-                    <span class="absolute right-5 bottom-4 text-[10px] font-black text-slate-400">
-                      {{ editForm.description.length }}/250
-                    </span>
-                  </div>
-                </div>
+                <UFormField
+                  label="Descripción detallada"
+                  :hint="`${editForm.description.length}/250`"
+                >
+                  <UTextarea
+                    v-model="editForm.description"
+                    :rows="4"
+                    maxlength="250"
+                    placeholder="Describe con más detalle lo que se ve en la imagen para el visor de la galería..."
+                    class="w-full"
+                  />
+                </UFormField>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-4 pt-8 mt-8 border-t border-slate-100 dark:border-slate-800">
-             <button @click="editingIndex = null" class="px-8 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                Cancelar
-             </button>
-             <button @click="saveChanges" class="px-12 py-3.5 bg-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">check_circle</span>
-                Guardar Cambios
-             </button>
+          <!-- Footer -->
+          <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2 shrink-0">
+            <UButton color="neutral" variant="ghost" @click="editingIndex = null">Cancelar</UButton>
+            <UButton color="primary" icon="i-lucide-save" @click="saveChanges">
+              Guardar cambios
+            </UButton>
           </div>
         </div>
-      </div>
-    </section>
+      </template>
+    </UModal>
   </div>
 </template>
 
@@ -380,6 +463,7 @@ import { useAuthStore } from '~/stores/auth'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
+const { confirm } = useConfirm()
 const isDragging = ref(false)
 const editingIndex = ref<number | null>(null)
 const editForm = ref({
@@ -387,6 +471,9 @@ const editForm = ref({
   titleText: '',
   description: ''
 })
+
+// Collapsible sections — state persisted in localStorage so F5 keeps each open/closed.
+const { toggleSection, isSectionExpanded } = useCollapsibles('wizard:step5')
 
 // Per-language video helpers
 const langLabels: Record<string, string> = {
@@ -577,17 +664,38 @@ const addFiles = async (files: File[]) => {
         }
       } catch (error) {
         console.error('Error uploading image:', error)
-        alert('Error al subir la imagen: ' + file.name)
+        toast.add({
+          title: 'Error al subir',
+          description: file.name,
+          icon: 'i-lucide-triangle-alert',
+          color: 'error',
+        })
       }
     }
     reader.readAsDataURL(file)
   }
 }
 
-const removeImage = (index: number) => {
+const removeImage = async (index: number) => {
+  const image = store.multimedia.images[index]
+  if (!image) return
+
+  const ok = await confirm({
+    title: 'Eliminar imagen',
+    description: image.isPrimary
+      ? `Vas a eliminar la imagen principal (#${index + 1}). Otra imagen será marcada como principal automáticamente.`
+      : `Vas a eliminar la imagen #${index + 1} de la galería. Esta acción no se puede deshacer.`,
+    confirmLabel: 'Eliminar',
+    confirmColor: 'error',
+    confirmIcon: 'i-lucide-trash-2',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
+
   const removed = store.multimedia.images.splice(index, 1)[0]
   if (!removed) return
-  
+
   // Also remove from tempImages if it was a new upload
   const tempIndex = store.tempImages.findIndex(img => img.filename === removed.filename)
   if (tempIndex !== -1) {
