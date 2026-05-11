@@ -115,6 +115,7 @@ Route::post('/ai-translation-test', [AITranslationSettingsController::class, 'te
 // Dashboard stats
 Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
 Route::get('/dashboard/recent-bookings', [App\Http\Controllers\Api\DashboardController::class, 'recentBookings']);
+Route::get('/dashboard/sales-chart', [App\Http\Controllers\Api\DashboardController::class, 'salesChart']);
 
 // Tags — public listing (used by both admin wizard and public tour filter)
 Route::get('/tags', [App\Http\Controllers\Api\TagController::class, 'index'])->name('api.tags.index');
@@ -175,10 +176,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // NOTE: cPanel/mod_security blocks PUT/DELETE on some shared hosts, so
     // update/destroy also accept POST as a fallback (admin sends POST).
     Route::middleware(['throttle:30,1'])->prefix('admin/tours')->group(function () {
+        // Static routes MUST come before /{id} otherwise Laravel matches them
+        // as if 'upload-image' / etc were a tour ID and returns "Tour no encontrado".
+        Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
         Route::post('/', [TourController::class, 'store'])->name('api.admin.tours.store');
         Route::match(['put', 'post'], '/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
         Route::match(['delete', 'post'], '/{id}/delete', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
-        Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
     });
 
     // Admin routes - Upload

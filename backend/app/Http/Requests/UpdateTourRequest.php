@@ -55,7 +55,7 @@ class UpdateTourRequest extends FormRequest
             'policy_description' => 'nullable|string',
             'policy_description_custom' => 'nullable|string',
             'booking_anticipation_quantity' => 'nullable|integer',
-            'booking_anticipation_unit' => 'nullable|in:hours,days,weeks,months',
+            'booking_anticipation_unit' => 'nullable|in:minutes,hours,days,weeks,months',
             'operational_info_required' => 'nullable|array',
             'personal_info_required' => 'nullable|array',
             'enable_meeting_point' => 'nullable|boolean',

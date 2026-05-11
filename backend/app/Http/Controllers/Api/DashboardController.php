@@ -97,4 +97,48 @@ class DashboardController extends Controller
 
         return response()->json($bookings);
     }
+
+    public function salesChart(): JsonResponse
+    {
+        $end = Carbon::now()->endOfMonth();
+        $start = Carbon::now()->subMonths(11)->startOfMonth();
+
+        $rows = Booking::where('payment_status', 'paid')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, SUM(total) as revenue, COUNT(*) as bookings")
+            ->groupBy('ym')
+            ->get()
+            ->keyBy('ym');
+
+        $monthLabels = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+        $series = [];
+        $cursor = $start->copy();
+
+        while ($cursor->lte($end)) {
+            $ym = $cursor->format('Y-m');
+            $row = $rows->get($ym);
+
+            $series[] = [
+                'ym' => $ym,
+                'label' => $monthLabels[$cursor->month - 1],
+                'year' => $cursor->year,
+                'revenue' => $row ? (float) $row->revenue : 0,
+                'bookings' => $row ? (int) $row->bookings : 0,
+            ];
+            $cursor->addMonth();
+        }
+
+        $totalRevenue = array_sum(array_column($series, 'revenue'));
+        $totalBookings = array_sum(array_column($series, 'bookings'));
+        $maxRevenue = max(array_column($series, 'revenue')) ?: 0;
+
+        return response()->json([
+            'series' => $series,
+            'totals' => [
+                'revenue' => $totalRevenue,
+                'bookings' => $totalBookings,
+                'max_revenue' => $maxRevenue,
+            ],
+        ]);
+    }
 }

@@ -169,30 +169,90 @@ class TourWizard extends Component
 
     protected function setDefaultPolicyDescription()
     {
-        if ($this->policy_type === 'standard' && empty($this->policy_description)) {
-            $this->policy_description = '<h3>Políticas de Cancelación</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Periodo de Anticipación para Anulación</th>
-      <th>Penalidad</th>
-      <th>Detalles</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Hasta 48 horas antes del inicio del tour</td>
-      <td>20% del total</td>
-      <td>Gastos administrativos, comisiones de tarjeta de crédito/débito y otros relacionados.</td>
-    </tr>
-    <tr>
-      <td>Dentro de las 48 horas antes del inicio del tour</td>
-      <td>100% del total</td>
-      <td>Monto total acordado del servicio.</td>
-    </tr>
-  </tbody>
-</table>';
+        if ($this->policy_type !== 'standard') {
+            return;
         }
+
+        $tables = $this->standardPolicyTables();
+
+        if (empty($this->policy_description)) {
+            $this->policy_description = $tables['ES'];
+        }
+
+        foreach ($this->languages as $language) {
+            if (!isset($this->translations[$language->id])) {
+                continue;
+            }
+            if (empty($this->translations[$language->id]['cancellation_policy'])) {
+                $this->translations[$language->id]['cancellation_policy'] = $tables[$language->code] ?? $tables['EN'];
+            }
+        }
+    }
+
+    protected function standardPolicyTables(): array
+    {
+        return [
+            'ES' => $this->renderPolicyTable(
+                ['Periodo de Anticipación para Anulación', 'Penalidad', 'Detalles'],
+                [
+                    ['Hasta 48 horas antes del inicio del tour', '20% del total', 'Gastos administrativos, comisiones de tarjeta de crédito/débito y otros relacionados.'],
+                    ['Dentro de las 48 horas antes del inicio del tour', '100% del total', 'Monto total acordado del servicio.'],
+                ]
+            ),
+            'EN' => $this->renderPolicyTable(
+                ['Cancellation Notice Period', 'Penalty', 'Details'],
+                [
+                    ['Up to 48 hours before the tour start', '20% of total', 'Administrative fees, credit/debit card commissions and other related expenses.'],
+                    ['Within 48 hours before the tour start', '100% of total', 'Total agreed service amount.'],
+                ]
+            ),
+            'FR' => $this->renderPolicyTable(
+                ["Délai de préavis d'annulation", 'Pénalité', 'Détails'],
+                [
+                    ["Jusqu'à 48 heures avant le début du tour", '20% du total', 'Frais administratifs, commissions de carte de crédit/débit et autres frais associés.'],
+                    ['Moins de 48 heures avant le début du tour', '100% du total', 'Montant total convenu du service.'],
+                ]
+            ),
+            'DE' => $this->renderPolicyTable(
+                ['Stornierungsvorlauf', 'Strafgebühr', 'Details'],
+                [
+                    ['Bis zu 48 Stunden vor Tour-Beginn', '20% der Gesamtsumme', 'Verwaltungsgebühren, Kreditkarten-/EC-Karten-Provisionen und andere damit verbundene Kosten.'],
+                    ['Innerhalb von 48 Stunden vor Tour-Beginn', '100% der Gesamtsumme', 'Vollständiger vereinbarter Servicebetrag.'],
+                ]
+            ),
+            'BR' => $this->renderPolicyTable(
+                ['Período de Antecedência para Cancelamento', 'Penalidade', 'Detalhes'],
+                [
+                    ['Até 48 horas antes do início do tour', '20% do total', 'Despesas administrativas, comissões de cartão de crédito/débito e outras relacionadas.'],
+                    ['Dentro de 48 horas antes do início do tour', '100% do total', 'Valor total acordado do serviço.'],
+                ]
+            ),
+            'IT' => $this->renderPolicyTable(
+                ['Periodo di preavviso per la cancellazione', 'Penale', 'Dettagli'],
+                [
+                    ["Fino a 48 ore prima dell'inizio del tour", '20% del totale', 'Spese amministrative, commissioni di carta di credito/debito e altre correlate.'],
+                    ["Entro 48 ore dall'inizio del tour", '100% del totale', "Importo totale concordato del servizio."],
+                ]
+            ),
+        ];
+    }
+
+    protected function renderPolicyTable(array $headers, array $rows): string
+    {
+        $html = "<table>\n  <thead>\n    <tr>\n";
+        foreach ($headers as $h) {
+            $html .= '      <th>' . e($h) . "</th>\n";
+        }
+        $html .= "    </tr>\n  </thead>\n  <tbody>\n";
+        foreach ($rows as $row) {
+            $html .= "    <tr>\n";
+            foreach ($row as $cell) {
+                $html .= '      <td>' . e($cell) . "</td>\n";
+            }
+            $html .= "    </tr>\n";
+        }
+        $html .= "  </tbody>\n</table>";
+        return $html;
     }
 
     protected function loadTour()

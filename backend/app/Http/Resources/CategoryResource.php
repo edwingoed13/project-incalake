@@ -16,16 +16,20 @@ class CategoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'code' => $this->code,
             'name' => $this->name,
+            'slug' => $this->slug,
             'description' => $this->description,
-            
+            'active' => (bool) $this->active,
+            'tours_count' => $this->whenLoaded('tours', fn () => $this->tours->count()),
+
             // Relationships
             'language' => new LanguageResource($this->whenLoaded('language')),
             'category_code' => $this->whenLoaded('categoryCode'),
             'user' => new UserResource($this->whenLoaded('user')),
             'products_count' => $this->when(isset($this->products_count), $this->products_count),
             'products' => ProductResource::collection($this->whenLoaded('products')),
-            
+
             // Timestamps
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
