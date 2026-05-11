@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
+    "@iconify-json/lucide": "^1.2.78",
+    "@iconify-json/simple-icons": "^1.2.51",
+    "@nuxt/ui": "^4.6.1",
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/nuxt": "^0.11.3",
     "@tiptap/extension-highlight": "^3.20.2",

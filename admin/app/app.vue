@@ -1,10 +1,12 @@
 <template>
-  <div class="relative min-h-screen">
-    <div class="mesh-gradient"></div>
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
-  </div>
+  <UApp>
+    <div class="relative min-h-screen">
+      <div class="mesh-gradient"></div>
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </div>
+  </UApp>
 </template>
 
 <script setup lang="ts">
