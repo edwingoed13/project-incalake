@@ -184,6 +184,9 @@ function getImageUrl(path: string) {
             <img
               :src="image.url"
               :alt="image.alt"
+              :fetchpriority="index === 0 ? 'high' : undefined"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              decoding="async"
               class="w-full h-full object-cover"
               @click="openLightbox(index)"
             />
@@ -220,6 +223,8 @@ function getImageUrl(path: string) {
         <img
           :src="images[0].url"
           :alt="images[0].alt"
+          fetchpriority="high"
+          decoding="async"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>
@@ -235,6 +240,8 @@ function getImageUrl(path: string) {
           <img
             :src="image.url"
             :alt="image.alt"
+            loading="lazy"
+            decoding="async"
             class="w-full h-full object-cover"
           />
           <div class="absolute inset-0 bg-black/60 group-hover:bg-black/70 flex items-center justify-center transition-colors">
@@ -251,6 +258,8 @@ function getImageUrl(path: string) {
           <img
             :src="image.url"
             :alt="image.alt"
+            loading="lazy"
+            decoding="async"
             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>
@@ -282,14 +291,14 @@ function getImageUrl(path: string) {
             class="relative cursor-pointer hover:opacity-90 transition-opacity flex-1"
             @click="openLightbox(0)"
           >
-            <img :src="displayImages[0].url" :alt="displayImages[0].alt" class="w-full h-full object-cover rounded" />
+            <img :src="displayImages[0].url" :alt="displayImages[0].alt" fetchpriority="high" decoding="async" class="w-full h-full object-cover rounded" />
           </div>
           <div class="grid grid-cols-2 gap-2 h-[182px]">
             <div v-if="displayImages[1]" class="relative cursor-pointer hover:opacity-90 transition-opacity" @click="openLightbox(1)">
-              <img :src="displayImages[1].url" :alt="displayImages[1].alt" class="w-full h-full object-cover rounded" />
+              <img :src="displayImages[1].url" :alt="displayImages[1].alt" loading="lazy" decoding="async" class="w-full h-full object-cover rounded" />
             </div>
             <div v-if="displayImages[2]" class="relative cursor-pointer group overflow-hidden rounded" @click="openLightbox(2)">
-              <img :src="displayImages[2].url" :alt="displayImages[2].alt" class="w-full h-full object-cover" />
+              <img :src="displayImages[2].url" :alt="displayImages[2].alt" loading="lazy" decoding="async" class="w-full h-full object-cover" />
               <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors">
                 <div class="flex flex-col items-center">
                   <span class="material-symbols-outlined text-white text-3xl mb-2">photo_library</span>
@@ -328,6 +337,8 @@ function getImageUrl(path: string) {
             v-if="displayImages[0]"
             :src="displayImages[0].url"
             :alt="displayImages[0].alt"
+            fetchpriority="high"
+            decoding="async"
             class="w-full h-full object-cover rounded-r-xl"
           />
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-r-xl">

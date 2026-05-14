@@ -241,7 +241,7 @@
       </template>
 
       <div v-show="isSectionExpanded('pickup')" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <!-- Meeting Point -->
+        <!-- Meeting Points (multi) -->
         <div
           :class="[
             'rounded-lg border-2 transition-all',
@@ -251,36 +251,120 @@
           <label class="flex items-center gap-3 px-3 py-2.5 cursor-pointer">
             <UCheckbox v-model="store.bookingOptions.enableMeetingPoint" color="primary" />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold">Punto de encuentro</p>
-              <p class="text-[11px] text-muted">El cliente llega a un lugar específico</p>
+              <p class="text-sm font-bold">
+                Puntos de encuentro
+                <UBadge
+                  v-if="store.bookingOptions.meetingPoints.length > 0"
+                  color="primary"
+                  variant="subtle"
+                  size="xs"
+                  class="ml-1"
+                >
+                  {{ store.bookingOptions.meetingPoints.length }}
+                </UBadge>
+              </p>
+              <p class="text-[11px] text-muted">El cliente puede elegir entre uno o varios lugares de encuentro</p>
             </div>
           </label>
 
           <Transition name="fade">
             <div v-if="store.bookingOptions.enableMeetingPoint" class="px-3 pb-3 pt-2 border-t border-default space-y-2">
-              <UTextarea
-                v-model="currentBookingTexts.meetingPointDescription"
-                placeholder="Ej: Plaza de Armas de Puno, frente a la Catedral..."
-                :rows="2"
-                class="w-full"
-              />
-              <UButton
-                block
-                icon="i-lucide-map-pin"
-                color="neutral"
-                variant="solid"
-                size="sm"
-                @click="openPickupModal('meeting_point')"
+              <!-- Empty state -->
+              <div
+                v-if="store.bookingOptions.meetingPoints.length === 0"
+                class="rounded-lg border-2 border-dashed border-default p-4 text-center"
               >
-                Configurar en el mapa
+                <UIcon name="i-lucide-map-pin-off" class="size-6 text-muted mx-auto mb-1.5" />
+                <p class="text-xs text-muted mb-2">Aún no hay puntos de encuentro</p>
+                <UButton icon="i-lucide-plus" color="primary" size="xs" @click="addMeetingPoint">
+                  Agregar primer punto
+                </UButton>
+              </div>
+
+              <!-- Points list -->
+              <div
+                v-for="(point, idx) in store.bookingOptions.meetingPoints"
+                :key="point.id"
+                class="rounded-lg border border-default bg-default p-2.5 space-y-2"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <UBadge color="primary" variant="solid" size="xs" class="font-mono shrink-0">#{{ idx + 1 }}</UBadge>
+                    <p v-if="point.lat != null && point.lng != null" class="text-[10px] font-mono text-muted truncate">
+                      {{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}
+                    </p>
+                    <p v-else class="text-[10px] italic text-muted">Sin coordenadas</p>
+                  </div>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <UButton
+                      icon="i-lucide-arrow-up"
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      :disabled="idx === 0"
+                      title="Subir"
+                      @click="moveMeetingPoint(idx, -1)"
+                    />
+                    <UButton
+                      icon="i-lucide-arrow-down"
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      :disabled="idx === store.bookingOptions.meetingPoints.length - 1"
+                      title="Bajar"
+                      @click="moveMeetingPoint(idx, 1)"
+                    />
+                    <UButton
+                      icon="i-lucide-trash-2"
+                      color="error"
+                      variant="ghost"
+                      size="xs"
+                      title="Eliminar este punto"
+                      @click="removeMeetingPoint(idx)"
+                    />
+                  </div>
+                </div>
+
+                <UTextarea
+                  :model-value="point.descriptions[store.currentLanguage] || ''"
+                  :placeholder="`Descripción en ${store.currentLanguage.toUpperCase()} (ej: Plaza de Armas de Puno)...`"
+                  :rows="2"
+                  class="w-full"
+                  @update:model-value="(v: string) => updatePointDescription(idx, v)"
+                />
+
+                <div class="flex items-center gap-2">
+                  <UButton
+                    icon="i-lucide-map-pin"
+                    color="neutral"
+                    variant="solid"
+                    size="xs"
+                    class="flex-1"
+                    @click="openMeetingPointModal(idx)"
+                  >
+                    {{ point.lat != null ? 'Editar en el mapa' : 'Marcar en el mapa' }}
+                  </UButton>
+                  <UIcon
+                    v-if="point.lat != null && point.lng != null"
+                    name="i-lucide-circle-check"
+                    class="size-4 text-success"
+                    :title="`Lat ${point.lat.toFixed(5)}, Lng ${point.lng.toFixed(5)}`"
+                  />
+                </div>
+              </div>
+
+              <!-- Add another -->
+              <UButton
+                v-if="store.bookingOptions.meetingPoints.length > 0"
+                icon="i-lucide-plus"
+                color="primary"
+                variant="soft"
+                size="sm"
+                block
+                @click="addMeetingPoint"
+              >
+                Agregar otro punto de encuentro
               </UButton>
-              <UAlert
-                v-if="store.bookingOptions.meetingPointLat && store.bookingOptions.meetingPointLng"
-                color="success"
-                variant="subtle"
-                icon="i-lucide-circle-check"
-                description="Ubicación marcada correctamente"
-              />
             </div>
           </Transition>
         </div>
@@ -507,13 +591,16 @@ const currentBookingTexts = computed(() => {
 // Map Modal Logic
 const isMapModalOpen = ref(false)
 const pickupModalType = ref<'meeting_point' | 'hotel_pickup'>('meeting_point')
+// Index of the meeting point being edited (when modal is in 'meeting_point' mode).
+const editingMeetingPointIdx = ref<number>(-1)
 
 const pickupModalData = computed(() => {
   if (pickupModalType.value === 'meeting_point') {
+    const point = store.bookingOptions.meetingPoints[editingMeetingPointIdx.value]
     return {
-      lat: store.bookingOptions.meetingPointLat,
-      lng: store.bookingOptions.meetingPointLng,
-      description: currentBookingTexts.value.meetingPointDescription || '',
+      lat: point?.lat ?? null,
+      lng: point?.lng ?? null,
+      description: point?.descriptions?.[store.currentLanguage] || '',
     }
   } else {
     return {
@@ -530,16 +617,68 @@ const openPickupModal = (type: 'meeting_point' | 'hotel_pickup') => {
   isMapModalOpen.value = true
 }
 
+const openMeetingPointModal = (idx: number) => {
+  editingMeetingPointIdx.value = idx
+  pickupModalType.value = 'meeting_point'
+  isMapModalOpen.value = true
+}
+
+const newMeetingPointId = () => `mp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+
+const addMeetingPoint = () => {
+  store.bookingOptions.meetingPoints.push({
+    id: newMeetingPointId(),
+    lat: null,
+    lng: null,
+    descriptions: {},
+  })
+  store.isDirty = true
+}
+
+const removeMeetingPoint = (idx: number) => {
+  store.bookingOptions.meetingPoints.splice(idx, 1)
+  store.isDirty = true
+}
+
+const moveMeetingPoint = (idx: number, delta: number) => {
+  const target = idx + delta
+  const arr = store.bookingOptions.meetingPoints
+  if (target < 0 || target >= arr.length) return
+  const [item] = arr.splice(idx, 1)
+  arr.splice(target, 0, item)
+  store.isDirty = true
+}
+
+const updatePointDescription = (idx: number, value: string) => {
+  const point = store.bookingOptions.meetingPoints[idx]
+  if (!point) return
+  if (!point.descriptions) point.descriptions = {}
+  point.descriptions[store.currentLanguage] = value
+  store.isDirty = true
+}
+
 const handlePickupSave = (data: any) => {
   if (pickupModalType.value === 'meeting_point') {
-    store.bookingOptions.meetingPointLat = data.lat
-    store.bookingOptions.meetingPointLng = data.lng
-    currentBookingTexts.value.meetingPointDescription = data.description
+    const point = store.bookingOptions.meetingPoints[editingMeetingPointIdx.value]
+    if (point) {
+      point.lat = data.lat
+      point.lng = data.lng
+      if (!point.descriptions) point.descriptions = {}
+      if (data.description) point.descriptions[store.currentLanguage] = data.description
+      // Keep legacy single-point fields in sync with the first entry so anything
+      // still reading meetingPointLat/Lng keeps working until callers migrate.
+      if (editingMeetingPointIdx.value === 0) {
+        store.bookingOptions.meetingPointLat = data.lat
+        store.bookingOptions.meetingPointLng = data.lng
+      }
+      store.isDirty = true
+    }
   } else {
     store.bookingOptions.pickupCenterLat = data.lat
     store.bookingOptions.pickupCenterLng = data.lng
     store.bookingOptions.pickupRadiusKm = data.radius
     currentBookingTexts.value.pickupLocationDescription = data.description
+    store.isDirty = true
   }
   isMapModalOpen.value = false
 }

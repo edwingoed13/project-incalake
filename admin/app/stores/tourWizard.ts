@@ -182,6 +182,13 @@ export interface TourStep5Multimedia {
   images: TourImage[]
 }
 
+export interface MeetingPoint {
+  id: string
+  lat: number | null
+  lng: number | null
+  descriptions: Record<string, string>
+}
+
 export interface TourStep6 {
   policyType: 'standard' | 'custom'
   policyDescription: string
@@ -195,6 +202,7 @@ export interface TourStep6 {
   meetingPointDescription: string
   meetingPointLat: number | null
   meetingPointLng: number | null
+  meetingPoints: MeetingPoint[]
   enableHotelPickup: boolean
   pickupLocationDescription: string
   pickupRadiusKm: number
@@ -370,6 +378,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       meetingPointDescription: '',
       meetingPointLat: null,
       meetingPointLng: null,
+      meetingPoints: [] as MeetingPoint[],
       enableHotelPickup: false,
       pickupLocationDescription: '',
       pickupRadiusKm: 5,
@@ -421,6 +430,65 @@ export const useTourWizardStore = defineStore('tourWizard', {
     updateBasicInfo(data: Partial<TourStep1>) {
       this.basicInfo = { ...this.basicInfo, ...data }
       this.isDirty = true
+    },
+
+    // Read meeting_points from the API payload. Falls back to the legacy single
+    // meeting_point_lat/lng + per-language description so tours saved before this
+    // feature existed still surface as a single-item list. Must run AFTER
+    // this.contentSEO is populated, since per-language descriptions live in
+    // contentSEO[code].bookingTexts.meetingPointDescription.
+    normalizeMeetingPoints(data: any): MeetingPoint[] {
+      // Backend can send the JSON column as an array OR as a JSON-encoded string
+      // (depends on whether the Eloquent cast fired). Handle both.
+      let raw: any[] = []
+      if (Array.isArray(data?.meeting_points)) {
+        raw = data.meeting_points
+      } else if (typeof data?.meeting_points === 'string' && data.meeting_points.trim()) {
+        try { raw = JSON.parse(data.meeting_points) } catch { raw = [] }
+        if (!Array.isArray(raw)) raw = []
+      }
+
+      if (raw.length > 0) {
+        return raw.map((p: any, i: number) => ({
+          id: String(p.id ?? `mp-${Date.now()}-${i}`),
+          lat: p.lat != null && p.lat !== '' ? Number(p.lat) : null,
+          lng: p.lng != null && p.lng !== '' ? Number(p.lng) : null,
+          descriptions: (p.descriptions && typeof p.descriptions === 'object') ? { ...p.descriptions } : {},
+        }))
+      }
+
+      // Legacy fallback — collect everything we know about the single point.
+      const lat = data?.meeting_point_lat != null && data.meeting_point_lat !== ''
+        ? Number(data.meeting_point_lat) : null
+      const lng = data?.meeting_point_lng != null && data.meeting_point_lng !== ''
+        ? Number(data.meeting_point_lng) : null
+
+      // Pull per-language descriptions from contentSEO (already populated by the
+      // translations loop earlier in fetchTourData).
+      const descriptions: Record<string, string> = {}
+      for (const code of Object.keys(this.contentSEO)) {
+        const text = (this.contentSEO[code]?.bookingTexts?.meetingPointDescription || '').trim()
+        if (text) descriptions[code] = text
+      }
+      // Spanish-only legacy field, in case nothing made it into translations.
+      if (Object.keys(descriptions).length === 0 && data?.meeting_point_description) {
+        descriptions.es = data.meeting_point_description
+      }
+
+      const hasCoords = lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng)
+      const hasDescription = Object.keys(descriptions).length > 0
+      const wasEnabled = data?.enable_meeting_point === true || data?.enable_meeting_point === 1
+
+      // Surface a point if ANY signal exists — coords, description, or the legacy
+      // "enabled" flag. Otherwise return an empty list so the user starts clean.
+      if (!hasCoords && !hasDescription && !wasEnabled) return []
+
+      return [{
+        id: `mp-${Date.now()}-0`,
+        lat: hasCoords ? lat : null,
+        lng: hasCoords ? lng : null,
+        descriptions,
+      }]
     },
 
     async fetchTourData(id: string) {
@@ -650,7 +718,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
             pickupRadiusKm: data.pickup_radius_km ? Number(data.pickup_radius_km) : 5,
             dropoffLocationDescription: data.dropoff_location_description || '',
             guideType: data.guide_type || 'live_guide',
-            guideLanguages: (data.guide_languages || [1, 2]).map((id: any) => Number(id))
+            guideLanguages: (data.guide_languages || [1, 2]).map((id: any) => Number(id)),
+            meetingPoints: this.normalizeMeetingPoints(data),
           }
 
           // Map Step 7 Categories
@@ -827,8 +896,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
         enable_meeting_point: this.bookingOptions.enableMeetingPoint,
         enable_hotel_pickup: this.bookingOptions.enableHotelPickup,
         meeting_point_description: this.bookingOptions.meetingPointDescription,
-        meeting_point_lat: this.bookingOptions.meetingPointLat,
-        meeting_point_lng: this.bookingOptions.meetingPointLng,
+        // Keep legacy lat/lng synced with the first multi-point entry so older
+        // consumers (frontend page, emails) still get a valid coordinate.
+        meeting_point_lat: this.bookingOptions.meetingPoints[0]?.lat ?? this.bookingOptions.meetingPointLat,
+        meeting_point_lng: this.bookingOptions.meetingPoints[0]?.lng ?? this.bookingOptions.meetingPointLng,
+        meeting_points: this.bookingOptions.meetingPoints,
         pickup_location_description: this.bookingOptions.pickupLocationDescription,
         pickup_center_lat: this.bookingOptions.pickupCenterLat,
         pickup_center_lng: this.bookingOptions.pickupCenterLng,
@@ -876,6 +948,21 @@ export const useTourWizardStore = defineStore('tourWizard', {
         h1_title: this.basicInfo.title,
         short_description: this.basicInfo.subtitle,
         slug: primarySlug
+      }
+
+      // Keep legacy bookingTexts.meetingPointDescription in sync with the first
+      // multi-point entry, so the public frontend & booking emails (which still
+      // read the legacy single field) keep working.
+      const firstPoint = this.bookingOptions.meetingPoints[0]
+      if (firstPoint) {
+        for (const code of Object.keys(this.contentSEO)) {
+          const seo = this.contentSEO[code]
+          if (!seo) continue
+          if (!seo.bookingTexts) {
+            seo.bookingTexts = { policyDescription: '', policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' }
+          }
+          seo.bookingTexts.meetingPointDescription = firstPoint.descriptions[code] || ''
+        }
       }
 
       // 2. Then, override/add with Step 2 data (Content & SEO)

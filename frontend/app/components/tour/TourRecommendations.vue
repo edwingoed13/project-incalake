@@ -1,25 +1,25 @@
 <template>
-  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary text-3xl">lightbulb</span>
+  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+    <h2 class="text-xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 md:mb-6 flex items-center gap-2">
+      <LightBulbIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       {{ t('important_info') }}
     </h2>
 
-    <div v-if="sanitizedRecommendations || sanitizedWhatToBring" class="prose prose-lg max-w-none text-slate-600 dark:text-slate-400">
+    <div v-if="sanitizedRecommendations || sanitizedWhatToBring" class="prose md:prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-if="sanitizedRecommendations" v-html="sanitizedRecommendations" class="mb-6"></div>
       <div v-if="sanitizedWhatToBring" v-html="sanitizedWhatToBring"></div>
     </div>
 
     <div v-else class="grid md:grid-cols-2 gap-4">
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-        <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">badge</span>
+        <IdentificationIcon class="size-6 text-amber-600 dark:text-amber-400 mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Documentation</h4>
           <p class="text-sm text-slate-600 dark:text-slate-400">Valid passport required with at least 6 months validity</p>
         </div>
       </div>
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-        <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">hiking</span>
+        <ArrowTrendingUpIcon class="size-6 text-amber-600 dark:text-amber-400 mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Difficulty Level</h4>
           <p class="text-sm text-slate-600 dark:text-slate-400">
@@ -28,14 +28,14 @@
         </div>
       </div>
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-        <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">medical_services</span>
+        <HeartIcon class="size-6 text-amber-600 dark:text-amber-400 mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">Restrictions</h4>
           <p class="text-sm text-slate-600 dark:text-slate-400">Consult your doctor before booking if you have medical conditions</p>
         </div>
       </div>
       <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-100 dark:border-amber-800">
-        <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-2xl mt-1">backpack</span>
+        <BriefcaseIcon class="size-6 text-amber-600 dark:text-amber-400 mt-1 shrink-0" aria-hidden="true" />
         <div>
           <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-1">What to Bring</h4>
           <p class="text-sm text-slate-600 dark:text-slate-400">Sunscreen, insect repellent, hat, water, comfortable clothes</p>
@@ -47,6 +47,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import {
+  LightBulbIcon,
+  IdentificationIcon,
+  ArrowTrendingUpIcon,
+  HeartIcon,
+  BriefcaseIcon,
+} from '@heroicons/vue/24/outline'
 const { t, te } = useI18n()
 
 interface Props {

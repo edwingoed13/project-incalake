@@ -1,7 +1,7 @@
 <template>
-  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-6 flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary text-3xl">checklist</span>
+  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+    <h2 class="text-xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center gap-2">
+      <ClipboardDocumentCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       {{ t('whats_included') }}
     </h2>
 
@@ -14,15 +14,14 @@
           class="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-green-500 text-xl">check_circle</span>
+            <CheckCircleIcon class="size-5 text-green-500" aria-hidden="true" />
             <span class="font-bold text-primary-light dark:text-primary-dark">{{ t('included') }}</span>
           </div>
-          <span
-            class="material-symbols-outlined text-slate-400 transition-transform"
+          <ChevronDownIcon
+            class="size-5 text-slate-400 transition-transform"
             :class="{ 'rotate-180': includedOpen }"
-          >
-            expand_more
-          </span>
+            aria-hidden="true"
+          />
         </button>
         <div
           v-show="includedOpen"
@@ -30,7 +29,7 @@
         >
           <ul class="space-y-2 text-secondary-light dark:text-secondary-dark">
             <li v-for="(item, index) in includesList" :key="index" class="flex items-start gap-2">
-              <span class="material-symbols-outlined text-green-500 text-base mt-0.5 flex-shrink-0">done</span>
+              <CheckIcon class="size-4 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
               <span>{{ item }}</span>
             </li>
           </ul>
@@ -45,15 +44,14 @@
           class="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-red-500 text-xl">cancel</span>
+            <XCircleIcon class="size-5 text-red-500" aria-hidden="true" />
             <span class="font-bold text-primary-light dark:text-primary-dark">{{ t('not_included') }}</span>
           </div>
-          <span
-            class="material-symbols-outlined text-slate-400 transition-transform"
+          <ChevronDownIcon
+            class="size-5 text-slate-400 transition-transform"
             :class="{ 'rotate-180': notIncludedOpen }"
-          >
-            expand_more
-          </span>
+            aria-hidden="true"
+          />
         </button>
         <div
           v-show="notIncludedOpen"
@@ -61,7 +59,7 @@
         >
           <ul class="space-y-2 text-secondary-light dark:text-secondary-dark">
             <li v-for="(item, index) in excludesList" :key="index" class="flex items-start gap-2">
-              <span class="material-symbols-outlined text-red-500 text-base mt-0.5 flex-shrink-0">close</span>
+              <XMarkIcon class="size-4 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
               <span>{{ item }}</span>
             </li>
           </ul>
@@ -73,6 +71,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import {
+  ClipboardDocumentCheckIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  CheckIcon,
+  XCircleIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline'
 const { t } = useI18n()
 
 interface Props {

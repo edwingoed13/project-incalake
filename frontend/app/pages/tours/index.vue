@@ -414,47 +414,43 @@ const desktopFilters = computed(() => [
   },
 ])
 
-// Cities
+// Cities — single cheap call with server-side `withCount`. No more pulling all
+// 500 tours just to count badges. useAsyncData transfers the SSR payload to the
+// client (no re-fetch on hydrate) and caches by key, so navigating between
+// filters on the same language is instant.
 const featuredSlugs = ['puno','cusco','arequipa','la-paz','uyuni','copacabana']
-const cities = ref<any[]>([])
-const allToursForCount = ref<any[]>([])
 
-async function fetchCitiesWithCounts() {
-  try {
-    const cityRes = await api('/cities')
-    const allCities = ((cityRes as any)?.data || []).filter((c: any) => featuredSlugs.includes(c.slug))
-    const toursRes = await api(`/tours?per_page=500&active=1&language=${langCode.value}`)
-    const data = (toursRes as any)?.data
-    allToursForCount.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
-    cities.value = allCities.map((c: any) => {
-      const count = allToursForCount.value.filter((t: any) => (t.city?.id || t.city_id) === c.id).length
-      return { ...c, count }
-    }).filter((c: any) => c.count > 0)
-  } catch (e) { cities.value = [] }
-}
-await fetchCitiesWithCounts()
+const { data: citiesData } = await useAsyncData(
+  () => `cities-with-counts-${langCode.value}`,
+  () => api(`/cities?with_tour_counts=1&language=${langCode.value}`) as Promise<any>,
+  { watch: [langCode] }
+)
 
-// Fetch tours
-const tours = ref<any[]>([])
-const pending = ref(false)
-const error = ref<any>(null)
+const cities = computed<any[]>(() => {
+  const list = (citiesData.value as any)?.data || []
+  return list
+    .filter((c: any) => featuredSlugs.includes(c.slug))
+    .map((c: any) => ({ ...c, count: c.tours_count ?? 0 }))
+    .filter((c: any) => c.count > 0)
+})
 
-async function fetchTours() {
-  pending.value = true; error.value = null
-  try {
+// Tours listing — keyed by filter so navigating to a new city is a fresh fetch
+// but coming back hits the cache. SSR-rendered, payload transferred to client.
+const { data: toursData, pending, error, refresh } = await useAsyncData(
+  () => `tours-${langCode.value}-${selectedCitySlug.value || 'all'}-${selectedTagSlug.value || 'all'}`,
+  () => {
     let url = `/tours?per_page=500&active=1&language=${langCode.value}`
     if (selectedCitySlug.value) url += `&city_slug=${selectedCitySlug.value}`
     if (selectedTagSlug.value) url += `&tag=${encodeURIComponent(selectedTagSlug.value)}`
-    const res = await api(url)
-    const data = (res as any)?.data
-    tours.value = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
-  } catch (e: any) { error.value = e; tours.value = [] }
-  finally { pending.value = false }
-}
+    return api(url) as Promise<any>
+  },
+  { watch: [langCode, selectedCitySlug, selectedTagSlug] }
+)
 
-await fetchTours()
-watch([langCode, selectedCitySlug, selectedTagSlug], () => { fetchTours(); fetchCitiesWithCounts() })
-function refresh() { fetchTours() }
+const tours = computed<any[]>(() => {
+  const d = (toursData.value as any)?.data
+  return Array.isArray(d?.data) ? d.data : (Array.isArray(d) ? d : [])
+})
 
 // Client-side filters
 const filteredTours = computed(() => {

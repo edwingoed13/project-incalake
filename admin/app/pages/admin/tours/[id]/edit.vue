@@ -105,6 +105,8 @@ const currentStepLabel = computed(() => {
   return stepLabels.find(s => s.id === store.currentStep) || stepLabels[0]
 })
 
+const lastStepKey = computed(() => `wizard:lastStep:${route.params.id}`)
+
 onMounted(async () => {
   // Set the language FIRST, before fetching data, so Step1 respects it
   const langParam = (route.query.lang as string)?.toLowerCase()
@@ -112,10 +114,16 @@ onMounted(async () => {
     store.currentLanguage = langParam
   }
 
-  // Restore step from ?step=N query param (so F5 keeps the user where they were)
+  // Restore step: ?step=N wins over localStorage (so direct links still work),
+  // otherwise fall back to the last step the user was on for this tour.
   const stepParam = parseInt(String(route.query.step || ''), 10)
   if (Number.isFinite(stepParam) && stepParam >= 1 && stepParam <= store.totalSteps) {
     store.currentStep = stepParam
+  } else if (route.params.id && route.params.id !== 'new') {
+    const remembered = parseInt(String(localStorage.getItem(lastStepKey.value) || ''), 10)
+    if (Number.isFinite(remembered) && remembered >= 1 && remembered <= store.totalSteps) {
+      store.currentStep = remembered
+    }
   }
 
   if (route.params.id && route.params.id !== 'new') {
@@ -132,27 +140,80 @@ onMounted(async () => {
   hasFetched.value = true
 })
 
-// Sync current step → URL query param. Uses router.replace so it doesn't pollute browser history.
+// Sync current step → URL query param + localStorage. Uses router.replace so it doesn't pollute browser history.
 watch(() => store.currentStep, (newStep) => {
+  if (route.params.id && route.params.id !== 'new') {
+    try { localStorage.setItem(lastStepKey.value, String(newStep)) } catch { /* quota or disabled */ }
+  }
   const current = parseInt(String(route.query.step || ''), 10)
   if (current === newStep) return
   router.replace({ query: { ...route.query, step: String(newStep) } })
 })
 
-// Autosave — debounce 2s after the last change. Skips while a save is already
-// running (the store guards against concurrent saves) and on brand-new tours.
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null
+let firstSaveInFlight = false
+
 watch(() => store.isDirty, (dirty) => {
   if (autosaveTimer) {
     clearTimeout(autosaveTimer)
     autosaveTimer = null
   }
   if (!dirty) return
-  if (!store.tourId || store.tourId === 'new') return
+
+  // New tour: first dirty change triggers a debounced "create draft" save.
+  // After it succeeds, the store has a real tourId and we update the URL so
+  // F5 / direct link can resume editing.
+  const isNew = !store.tourId || store.tourId === 'new'
+  if (isNew) {
+    if (firstSaveInFlight) return
+    autosaveTimer = setTimeout(async () => {
+      autosaveTimer = null
+      firstSaveInFlight = true
+      try {
+        await store.saveCurrentProgress({ silent: true })
+        const newId = store.tourId
+        if (newId && newId !== 'new') {
+          await router.replace({
+            path: `/admin/tours/${newId}/edit`,
+            query: route.query,
+          })
+        }
+      } finally {
+        firstSaveInFlight = false
+      }
+    }, 1500)
+    return
+  }
+
+  // Existing tour: regular debounced autosave
   autosaveTimer = setTimeout(() => {
     store.autosave()
     autosaveTimer = null
   }, 2000)
+})
+
+// Warn before leaving with unsaved changes (only fires on actual close/refresh,
+// not on internal Vue route changes).
+const onBeforeUnload = (e: BeforeUnloadEvent) => {
+  if (store.isDirty || firstSaveInFlight) {
+    e.preventDefault()
+    e.returnValue = ''
+  }
+}
+
+// Ctrl+S / Cmd+S manual save
+const onKeydown = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault()
+    if (store.tourId && store.tourId !== 'new') {
+      store.saveCurrentProgress()
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', onBeforeUnload)
+  window.addEventListener('keydown', onKeydown)
 })
 
 onBeforeUnmount(() => {
@@ -160,6 +221,8 @@ onBeforeUnmount(() => {
     clearTimeout(autosaveTimer)
     autosaveTimer = null
   }
+  window.removeEventListener('beforeunload', onBeforeUnload)
+  window.removeEventListener('keydown', onKeydown)
 })
 </script>
 

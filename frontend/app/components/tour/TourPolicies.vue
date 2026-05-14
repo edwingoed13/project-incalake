@@ -1,10 +1,10 @@
 <template>
-  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary text-3xl">shield</span>
+  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+    <h2 class="text-xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 md:mb-6 flex items-center gap-2">
+      <ShieldCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       Cancellation Policies
     </h2>
-    <div class="prose prose-lg max-w-none text-slate-600 dark:text-slate-400">
+    <div class="prose md:prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-html="sanitizedPolicies"></div>
     </div>
   </section>
@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ShieldCheckIcon } from '@heroicons/vue/24/outline'
 // sanitizeHtml is auto-imported
 
 interface Props {
@@ -24,6 +25,8 @@ const sanitizedPolicies = computed(() => sanitizeHtml(props.tour.cancellation_po
 </script>
 
 <style scoped>
+@reference "~/assets/css/main.css";
+
 .prose {
   @apply text-slate-600 dark:text-slate-400 leading-relaxed;
 }

@@ -361,40 +361,6 @@
         </div>
       </UCard>
 
-      <!-- Section: Policies -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('policies') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('policies')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('policies') }" />
-            <UIcon name="i-lucide-gavel" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Políticas y cancelación</h3>
-            <UBadge v-if="hasContent(currentLangData.generalPolicies) || hasContent(currentLangData.cancellationPolicy)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
-              {{ [hasContent(currentLangData.generalPolicies), hasContent(currentLangData.cancellationPolicy)].filter(Boolean).length }} / 2
-            </UBadge>
-          </button>
-        </template>
-        <div v-show="isSectionExpanded('policies')" class="space-y-4">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-gavel" class="size-4 text-primary" />
-              <h4 class="text-sm font-bold">Políticas generales</h4>
-            </div>
-            <TiptapEditor v-model="currentLangData.generalPolicies" placeholder="Reglas generales, restricciones de edad, requisitos de salud..." />
-          </div>
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-triangle-alert" class="size-4 text-error" />
-              <h4 class="text-sm font-bold">Política de cancelación <span class="text-primary">*</span></h4>
-            </div>
-            <TiptapEditor v-model="currentLangData.cancellationPolicy" placeholder="Define claramente cuándo procede un reembolso y cuándo no." />
-          </div>
-        </div>
-      </UCard>
-
       <!-- Section: Custom additional sections -->
       <UCard :ui="{ header: 'p-0', body: isSectionExpanded('custom') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
         <template #header>

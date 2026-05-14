@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MapPinIcon, MapIcon, ArrowRightIcon } from '@heroicons/vue/24/outline'
+
 interface Props {
   tour: any
 }
@@ -61,13 +63,14 @@ const displayMapPoint = computed(() => {
   return null
 })
 
-function initMap() {
+async function initMap() {
   if (!mapContainer.value || !hasMap.value || !mapLat.value || !mapLng.value) return
 
-  // Check if Google Maps is loaded
-  if (typeof google === 'undefined' || !google.maps) {
-    console.warn('⚠️ Google Maps not loaded yet, retrying...')
-    setTimeout(() => initMap(), 500)
+  // Lazy-load the Google Maps JS API on first use.
+  try {
+    await useGoogleMaps()
+  } catch (e) {
+    console.error('Google Maps failed to load', e)
     return
   }
 
@@ -230,9 +233,9 @@ watch(() => props.tour, () => {
 </script>
 
 <template>
-  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 md:p-8">
-    <h2 class="text-2xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-6 flex items-center">
-      <span class="material-symbols-outlined text-primary mr-3" style="font-size: 32px;">location_on</span>
+  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+    <h2 class="text-xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center">
+      <MapPinIcon class="size-6 md:size-8 text-primary mr-2 md:mr-3" aria-hidden="true" />
       Ubicación
     </h2>
 
@@ -242,7 +245,7 @@ watch(() => props.tour, () => {
     <!-- Placeholder when no map data -->
     <div v-else-if="!hasMap" class="bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
       <div class="text-center">
-        <span class="material-symbols-outlined text-slate-400 dark:text-slate-600 mb-4 block" style="font-size: 96px;">map</span>
+        <MapIcon class="size-24 text-slate-400 dark:text-slate-600 mb-4 mx-auto" aria-hidden="true" />
         <p class="text-slate-500 dark:text-slate-400 text-lg font-bold">Mapa no disponible</p>
         <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">{{ cityName }}, Perú</p>
       </div>
@@ -251,7 +254,7 @@ watch(() => props.tour, () => {
     <!-- Meeting Point Info -->
     <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
       <div class="flex items-start space-x-3">
-        <span class="material-symbols-outlined text-blue-500 mt-0.5 flex-shrink-0" style="font-size: 20px;">location_on</span>
+        <MapPinIcon class="size-5 text-blue-500 mt-0.5 shrink-0" aria-hidden="true" />
         <div class="text-sm text-slate-700 dark:text-slate-300">
           <strong>Punto de encuentro:</strong> {{ pickupDescription }}
         </div>
@@ -265,7 +268,7 @@ watch(() => props.tour, () => {
         <div class="lg:col-span-1">
           <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
             <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
-              <span class="material-symbols-outlined text-primary mr-2" style="font-size: 20px;">route</span>
+              <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Itinerario
             </h3>
             <!-- Timeline Items -->
@@ -328,7 +331,7 @@ watch(() => props.tour, () => {
         <div class="lg:col-span-2">
           <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
             <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
-              <span class="material-symbols-outlined text-primary mr-2" style="font-size: 20px;">map</span>
+              <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Mapa
             </h3>
             <div ref="mapContainer" class="rounded-xl overflow-hidden h-[450px] border border-slate-200 dark:border-slate-700"></div>
@@ -340,7 +343,7 @@ watch(() => props.tour, () => {
     <!-- Dropoff Location (if exists) -->
     <div v-if="tour?.dropoff_location_description" class="mt-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
       <div class="flex items-start space-x-3">
-        <span class="material-symbols-outlined text-green-500 mt-0.5 flex-shrink-0" style="font-size: 20px;">arrow_forward</span>
+        <ArrowRightIcon class="size-5 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
         <div class="text-sm text-slate-700 dark:text-slate-300">
           <strong>Punto de retorno:</strong> {{ tour.dropoff_location_description }}
         </div>

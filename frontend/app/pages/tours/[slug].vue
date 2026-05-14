@@ -319,6 +319,8 @@
               <img
                 :src="getImageUrl(relatedTour.featured_image)"
                 :alt="relatedTour.title"
+                loading="lazy"
+                decoding="async"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">

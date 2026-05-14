@@ -51,6 +51,7 @@ class Tour extends Model
         'meeting_point_description',
         'meeting_point_lat',
         'meeting_point_lng',
+        'meeting_points',
         'pickup_location_description',
         'pickup_center_lat',
         'pickup_center_lng',
@@ -94,6 +95,7 @@ class Tour extends Model
         'personal_info_required' => 'array',
         'guide_languages' => 'array',
         'departure_times' => 'array',
+        'meeting_points' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

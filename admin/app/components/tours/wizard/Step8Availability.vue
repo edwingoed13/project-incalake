@@ -16,8 +16,10 @@
       </div>
     </UCard>
 
+    <!-- 2-column layout: forms (left) + live calendar (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
     <!-- Tabs -->
-    <UCard :ui="{ body: '!p-0' }">
+    <UCard class="lg:col-span-2" :ui="{ body: '!p-0' }">
       <div class="flex border-b border-default">
         <button
           v-for="tab in tabs"
@@ -66,26 +68,30 @@
             </UFormField>
           </div>
 
-          <!-- Active Days -->
+          <!-- Active Days — compact pills -->
           <UFormField label="Días de la semana disponibles">
-            <div class="grid grid-cols-7 gap-1.5">
+            <div class="flex flex-wrap gap-1">
               <button
                 v-for="day in weekDays"
                 :key="day.value"
                 type="button"
                 :class="[
-                  'py-2 px-1 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5',
+                  'px-2.5 py-1 rounded-md border text-[11px] font-bold uppercase tracking-wider transition-colors',
                   store.availability.activeDays.includes(day.value)
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-default text-muted hover:border-muted',
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-default text-muted hover:border-muted hover:text-default',
                 ]"
                 @click="toggleDay(day.value)"
               >
-                <span class="text-[11px] font-black uppercase tracking-wider">{{ day.label }}</span>
-                <UIcon
-                  :name="store.availability.activeDays.includes(day.value) ? 'i-lucide-circle-check' : 'i-lucide-circle'"
-                  class="size-3.5"
-                />
+                {{ day.label }}
+              </button>
+              <button
+                type="button"
+                class="ml-auto px-2 py-1 rounded-md text-[10px] font-bold text-muted hover:text-primary transition-colors"
+                :title="store.availability.activeDays.length === 7 ? 'Desmarcar todos' : 'Marcar todos los días'"
+                @click="toggleAllDays"
+              >
+                {{ store.availability.activeDays.length === 7 ? 'Ninguno' : 'Todos' }}
               </button>
             </div>
           </UFormField>
@@ -120,13 +126,6 @@
             </div>
           </UFormField>
 
-          <UAlert
-            v-if="store.availability.start && store.availability.end"
-            color="primary"
-            variant="subtle"
-            icon="i-lucide-info"
-            :description="`Disponible del ${formatDate(store.availability.start)} al ${formatDate(store.availability.end)} · ${store.availability.activeDays.length} días/semana${store.availability.specialDays.length ? ` · ${store.availability.specialDays.length} feriados bloqueados` : ''}.`"
-          />
         </div>
 
         <!-- Blocks Tab -->
@@ -289,6 +288,92 @@
       </div>
     </UCard>
 
+    <!-- Live Calendar (right column) -->
+    <UCard class="lg:col-span-1 lg:sticky lg:top-4" :ui="{ body: 'p-3 space-y-3' }">
+      <!-- Header with month navigation -->
+      <div class="flex items-center justify-between gap-2">
+        <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" size="xs" @click="shiftMonth(-1)" />
+        <button
+          type="button"
+          class="text-xs font-black uppercase tracking-wider hover:text-primary transition-colors"
+          :title="'Volver al mes actual'"
+          @click="goToToday"
+        >
+          {{ visibleMonthLabel }}
+        </button>
+        <UButton icon="i-lucide-chevron-right" color="neutral" variant="ghost" size="xs" @click="shiftMonth(1)" />
+      </div>
+
+      <!-- Week-day headers -->
+      <div class="grid grid-cols-7 gap-0.5 text-center">
+        <div
+          v-for="d in weekdayHeaders"
+          :key="d"
+          class="text-[9px] font-black uppercase tracking-wider text-muted py-1"
+        >
+          {{ d }}
+        </div>
+      </div>
+
+      <!-- Day grid -->
+      <div class="grid grid-cols-7 gap-0.5">
+        <div
+          v-for="cell in calendarCells"
+          :key="cell.key"
+          :class="[
+            'relative aspect-square rounded-md flex items-center justify-center text-[11px] font-bold border transition-colors',
+            cell.outOfMonth ? 'border-transparent text-muted/40' : 'border-default',
+            cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth ? 'bg-primary/10 border-primary/30 text-primary' : '',
+            cell.blocked && !cell.outOfMonth ? 'bg-error/10 border-error/40 text-error line-through' : '',
+            cell.isHoliday && !cell.outOfMonth ? 'ring-2 ring-error/40 ring-inset' : '',
+            cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
+            !cell.inAvailability && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
+          ]"
+          :title="cell.tooltip"
+        >
+          <span>{{ cell.day }}</span>
+          <!-- Offer dot -->
+          <span
+            v-if="cell.offerColor && !cell.outOfMonth"
+            class="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-1.5 rounded-full"
+            :style="{ backgroundColor: cell.offerColor }"
+          />
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="space-y-1 pt-2 border-t border-default text-[10px]">
+        <div class="flex items-center gap-1.5">
+          <span class="size-2.5 rounded-sm bg-primary/20 border border-primary/40" />
+          <span class="text-muted">Disponible</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="size-2.5 rounded-sm bg-error/10 border border-error/40" />
+          <span class="text-muted">Bloqueado</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="size-2.5 rounded-full bg-success" />
+          <span class="text-muted">Con oferta</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="size-2.5 rounded-sm ring-2 ring-primary ring-inset" />
+          <span class="text-muted">Hoy</span>
+        </div>
+      </div>
+
+      <!-- Compact summary -->
+      <div
+        v-if="store.availability.start && store.availability.end"
+        class="rounded-lg bg-primary/5 border border-primary/20 px-2.5 py-2 text-[10px] leading-snug"
+      >
+        Disponible <span class="font-bold">{{ formatDate(store.availability.start) }} → {{ formatDate(store.availability.end) }}</span>
+        · <span class="font-bold">{{ store.availability.activeDays.length }} días/semana</span>
+        <span v-if="(store.availability.blocks || []).length"> · <span class="text-error font-bold">{{ store.availability.blocks.length }} bloqueos</span></span>
+        <span v-if="(store.availability.offers || []).length"> · <span class="text-success font-bold">{{ store.availability.offers.length }} ofertas</span></span>
+      </div>
+    </UCard>
+    </div>
+
     <!-- Save button -->
     <div class="flex items-center justify-end gap-3">
       <UBadge :color="hasAnyAvailability ? 'success' : 'warning'" variant="subtle" size="sm" :icon="hasAnyAvailability ? 'i-lucide-circle-check' : 'i-lucide-circle-dashed'">
@@ -411,6 +496,133 @@ const toggleDay = (day: number) => {
   if (idx === -1) store.availability.activeDays.push(day)
   else store.availability.activeDays.splice(idx, 1)
 }
+
+const toggleAllDays = () => {
+  if (store.availability.activeDays.length === 7) {
+    store.availability.activeDays.splice(0, store.availability.activeDays.length)
+  } else {
+    store.availability.activeDays.splice(0, store.availability.activeDays.length, 0, 1, 2, 3, 4, 5, 6)
+  }
+}
+
+// === Live Calendar ===
+const weekdayHeaders = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do']
+
+const today = new Date()
+today.setHours(0, 0, 0, 0)
+
+// Visible month — anchor to today at first; user can navigate freely.
+const visibleMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
+
+const visibleMonthLabel = computed(() => {
+  return visibleMonth.value.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+})
+
+const shiftMonth = (delta: number) => {
+  const d = new Date(visibleMonth.value)
+  d.setMonth(d.getMonth() + delta)
+  visibleMonth.value = d
+}
+
+const goToToday = () => {
+  visibleMonth.value = new Date(today.getFullYear(), today.getMonth(), 1)
+}
+
+const isoDate = (d: Date) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const parseISO = (s: string) => {
+  if (!s) return null
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+const calendarCells = computed(() => {
+  const first = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth(), 1)
+  const last = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth() + 1, 0)
+
+  // Find the Monday on or before the 1st (Mon=0 grid).
+  const startOffset = (first.getDay() + 6) % 7
+  const gridStart = new Date(first)
+  gridStart.setDate(first.getDate() - startOffset)
+
+  // 6 rows × 7 cols = 42 cells covers any month.
+  const cells: any[] = []
+  const availStart = parseISO(store.availability.start)
+  const availEnd = parseISO(store.availability.end)
+  const activeDays: number[] = store.availability.activeDays || []
+  const specialDays: string[] = store.availability.specialDays || []
+  const blocks = store.availability.blocks || []
+  const offers = store.availability.offers || []
+
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart)
+    d.setDate(gridStart.getDate() + i)
+    d.setHours(0, 0, 0, 0)
+
+    const outOfMonth = d.getMonth() !== visibleMonth.value.getMonth()
+    const iso = isoDate(d)
+    const dow = d.getDay() // 0=Sun..6=Sat
+    const mmdd = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+    const inAvailability = !!(availStart && availEnd && d >= availStart && d <= availEnd)
+    const activeWeekday = activeDays.includes(dow)
+    const isHoliday = specialDays.includes(mmdd)
+
+    let blocked = false
+    let blockReason = ''
+    for (const b of blocks) {
+      const bs = parseISO(b.startDate)
+      const be = parseISO(b.endDate)
+      if (bs && be && d >= bs && d <= be) {
+        blocked = true
+        blockReason = b.reason || 'Bloqueado'
+        break
+      }
+    }
+
+    let offerColor = ''
+    let offerLabel = ''
+    for (const o of offers) {
+      const os = parseISO(o.startDate)
+      const oe = parseISO(o.endDate)
+      if (os && oe && d >= os && d <= oe) {
+        offerColor = o.color || '#449d44'
+        offerLabel = `${o.discount}${o.discountType === 'percentage' ? '%' : ' USD'} off`
+        break
+      }
+    }
+
+    const isToday = d.getTime() === today.getTime()
+
+    const tooltipParts: string[] = []
+    tooltipParts.push(d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }))
+    if (blocked) tooltipParts.push(`Bloqueo: ${blockReason}`)
+    else if (!inAvailability) tooltipParts.push('Fuera del rango')
+    else if (!activeWeekday) tooltipParts.push('Día semanal no activo')
+    else tooltipParts.push('Disponible')
+    if (isHoliday) tooltipParts.push('Feriado bloqueado')
+    if (offerLabel) tooltipParts.push(`Oferta: ${offerLabel}`)
+
+    cells.push({
+      key: iso,
+      day: d.getDate(),
+      outOfMonth,
+      inAvailability,
+      activeWeekday,
+      blocked: blocked || (isHoliday && inAvailability),
+      isHoliday,
+      offerColor,
+      isToday,
+      tooltip: tooltipParts.join(' · '),
+    })
+  }
+  return cells
+})
 
 const toggleSpecialDay = (value: string) => {
   const idx = store.availability.specialDays.indexOf(value)

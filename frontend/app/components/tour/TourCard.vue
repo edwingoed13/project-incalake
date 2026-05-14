@@ -31,7 +31,7 @@
           @click.prevent="() => {}"
           aria-label="Add to favorites"
         >
-          <span class="material-symbols-outlined text-slate-600 dark:text-slate-300 text-xl">favorite</span>
+          <HeartIcon class="size-5 text-slate-600 dark:text-slate-300" aria-hidden="true" />
         </button>
       </div>
 
@@ -51,19 +51,19 @@
         <div class="flex flex-wrap gap-3 mb-4 text-sm text-secondary-light dark:text-secondary-dark">
           <!-- Duration -->
           <div class="flex items-center gap-1">
-            <span class="material-symbols-outlined text-base">schedule</span>
+            <ClockIcon class="size-4" aria-hidden="true" />
             <span>{{ duration }}</span>
           </div>
 
           <!-- City -->
           <div v-if="tour.city" class="flex items-center gap-1">
-            <span class="material-symbols-outlined text-base">location_on</span>
+            <MapPinIcon class="size-4" aria-hidden="true" />
             <span>{{ tour.city.name }}</span>
           </div>
 
           <!-- Capacity -->
           <div v-if="tour.capacity" class="flex items-center gap-1">
-            <span class="material-symbols-outlined text-base">groups</span>
+            <UsersIcon class="size-4" aria-hidden="true" />
             <span>Max {{ tour.capacity }}</span>
           </div>
         </div>
@@ -125,11 +125,11 @@
           <!-- Metadata -->
           <div class="flex flex-wrap gap-4 text-sm text-secondary-light dark:text-secondary-dark mb-4">
             <div class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-lg">schedule</span>
+              <ClockIcon class="size-5" aria-hidden="true" />
               <span>{{ duration }}</span>
             </div>
             <div v-if="tour.city" class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-lg">location_on</span>
+              <MapPinIcon class="size-5" aria-hidden="true" />
               <span>{{ tour.city.name }}</span>
             </div>
             <div v-if="tour.service_type" class="flex items-center gap-1.5">
@@ -158,6 +158,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { HeartIcon, ClockIcon, MapPinIcon, UsersIcon } from '@heroicons/vue/24/outline'
 
 interface Props {
   tour: any

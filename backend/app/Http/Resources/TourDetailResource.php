@@ -55,6 +55,7 @@ class TourDetailResource extends JsonResource
             'meeting_point_description' => $this->meeting_point_description,
             'meeting_point_lat' => $this->meeting_point_lat,
             'meeting_point_lng' => $this->meeting_point_lng,
+            'meeting_points' => $this->meeting_points ?? [],
             'pickup_location_description' => $this->pickup_location_description,
             'pickup_center_lat' => $this->pickup_center_lat,
             'pickup_center_lng' => $this->pickup_center_lng,

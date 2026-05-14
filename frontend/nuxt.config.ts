@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: true,
@@ -6,6 +8,9 @@ export default defineNuxtConfig({
     server: {
       allowedHosts: true,
     },
+    plugins: [
+      tailwindcss(),
+    ],
   },
 
   srcDir: 'app',
@@ -15,14 +20,11 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
-    '@nuxtjs/tailwindcss',
     '@nuxtjs/seo',
     '@nuxtjs/sitemap',
   ],
 
   css: ['~/assets/css/main.css'],
-
-  /* Removed manual PostCSS config because it was incorrectly nested and Tailwind module covers it */
 
   runtimeConfig: {
     // Private keys (solo servidor)
@@ -66,15 +68,8 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'canonical', href: 'https://incalake.com' },
-        { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' }
       ],
-      script: [
-        {
-          src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCC2CAVXwufsdT5TX3UPk7hZ3HHw3NZl_c&libraries=places&loading=async',
-          defer: true,
-          async: true
-        }
-      ]
+      // Google Maps now lazy-loaded by useGoogleMaps() in the components that actually need it.
     }
   },
 

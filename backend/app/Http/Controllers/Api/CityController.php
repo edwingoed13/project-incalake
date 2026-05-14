@@ -27,6 +27,16 @@ class CityController extends Controller
                 $query->where('name', 'like', '%' . $request->search . '%');
             }
 
+            // Frontend listing page asks for tour counts so it can show "Puno (12)" etc.
+            // Doing this server-side via withCount is a single GROUP BY query — way
+            // cheaper than the previous client-side approach of fetching all 500 tours
+            // just to count them.
+            if ($request->boolean('with_tour_counts')) {
+                $query->withCount(['tours as tours_count' => function ($q) {
+                    $q->where('active', true)->where('status', 'published');
+                }]);
+            }
+
             $cities = $query->orderBy('name')->limit(20)->get();
 
             return response()->json([

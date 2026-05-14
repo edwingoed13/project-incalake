@@ -204,8 +204,14 @@ async function loadPickupDetails() {
   }
 }
 
-function initMeetingPointMap() {
-  if (!meetingMapContainer.value || !window.google) return
+async function initMeetingPointMap() {
+  if (!meetingMapContainer.value) return
+  try {
+    await useGoogleMaps()
+  } catch (e) {
+    console.error('Google Maps failed to load', e)
+    return
+  }
   const lat = parseFloat(tourConfig.value.meeting_point_lat) || -15.8402
   const lng = parseFloat(tourConfig.value.meeting_point_lng) || -70.0219
   const map = new google.maps.Map(meetingMapContainer.value, {

@@ -23,11 +23,14 @@ interface Tour {
   thumbnail: string | null
   service_type: string
   active: boolean
+  status?: 'draft' | 'published' | 'archived' | null
   city?: { id: number; name: string; slug?: string }
   available_languages?: { id: number; code: string; country: string }[]
   translations_summary?: Translation[]
   primary_language?: { id: number; code: string }
 }
+
+type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
 
 interface Meta {
   current_page: number
@@ -72,8 +75,22 @@ const tours = ref<Tour[]>([])
 const meta = ref<Meta | null>(null)
 const loading = ref(false)
 const searchQuery = ref('')
+const statusFilter = ref<StatusFilter>('all')
 const currentPage = ref(1)
 const expandedTours = ref<Set<number>>(new Set())
+
+const statusBadge = (s?: Tour['status']) => {
+  if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
+  if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
+  return { label: 'Borrador', color: 'warning' as const, icon: 'i-lucide-file-text' }
+}
+
+const statusTabs: { id: StatusFilter; label: string; icon: string }[] = [
+  { id: 'all', label: 'Todos', icon: 'i-lucide-list' },
+  { id: 'draft', label: 'Borradores', icon: 'i-lucide-file-text' },
+  { id: 'published', label: 'Publicados', icon: 'i-lucide-circle-check' },
+  { id: 'archived', label: 'Archivados', icon: 'i-lucide-archive' },
+]
 
 const showCloneModal = ref(false)
 const selectedTour = ref<Tour | null>(null)
@@ -116,6 +133,7 @@ const fetchTours = async (page = 1, search = '') => {
   loading.value = true
   try {
     const params = new URLSearchParams({ page: String(page), per_page: '10', search })
+    if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
     const response: any = await $fetch(`${API_BASE_URL}/tours?${params}`)
     if (response?.success) {
       tours.value = response.data
@@ -127,6 +145,13 @@ const fetchTours = async (page = 1, search = '') => {
   } finally {
     loading.value = false
   }
+}
+
+const setStatusFilter = (id: StatusFilter) => {
+  if (statusFilter.value === id) return
+  statusFilter.value = id
+  currentPage.value = 1
+  fetchTours(1, searchQuery.value)
 }
 
 let debounceTimer: any = null
@@ -362,6 +387,23 @@ onMounted(() => {
           </UInput>
         </div>
 
+        <!-- Status filter tabs -->
+        <div class="flex gap-1 border-b border-default -mb-px overflow-x-auto">
+          <button
+            v-for="tab in statusTabs"
+            :key="tab.id"
+            type="button"
+            class="px-3 py-2 text-xs font-bold flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap"
+            :class="statusFilter === tab.id
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted hover:text-default'"
+            @click="setStatusFilter(tab.id)"
+          >
+            <UIcon :name="tab.icon" class="size-3.5" />
+            {{ tab.label }}
+          </button>
+        </div>
+
         <!-- Tours list -->
         <UCard :ui="{ body: 'p-0' }">
           <!-- Loading state -->
@@ -416,13 +458,27 @@ onMounted(() => {
                 </div>
 
                 <UBadge
-                  :color="tour.active ? 'success' : 'neutral'"
+                  :color="statusBadge(tour.status).color"
                   variant="subtle"
                   size="sm"
-                  :icon="tour.active ? 'i-lucide-circle-check' : 'i-lucide-circle-pause'"
+                  :icon="statusBadge(tour.status).icon"
                 >
-                  {{ tour.active ? 'Activo' : 'Inactivo' }}
+                  {{ statusBadge(tour.status).label }}
                 </UBadge>
+
+                <UButton
+                  v-if="tour.status === 'draft'"
+                  :to="`/admin/v2/tours/${tour.id}/edit`"
+                  icon="i-lucide-pencil-line"
+                  color="warning"
+                  variant="soft"
+                  size="xs"
+                  class="hidden lg:inline-flex"
+                  title="Continuar editando este borrador"
+                  @click.stop
+                >
+                  Continuar
+                </UButton>
 
                 <div class="hidden md:flex gap-1 max-w-[200px] flex-wrap">
                   <UBadge

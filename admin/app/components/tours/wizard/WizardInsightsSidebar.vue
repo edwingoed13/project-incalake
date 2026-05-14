@@ -13,16 +13,18 @@
       >
         Siguiente paso
       </UButton>
+
+      <!-- Publicar / Actualizar — disponible siempre, no solo en el último paso -->
       <UButton
-        v-else
         icon="i-lucide-rocket"
         color="success"
         size="md"
         block
-        :loading="store.loading || store.autosaving"
+        :loading="publishing"
+        :disabled="store.loading || store.autosaving"
         @click="publishTour"
       >
-        {{ store.basicInfo.status === 'published' ? 'Actualizar publicado' : 'Publicar tour' }}
+        {{ store.basicInfo.status === 'published' ? 'Actualizar publicación' : 'Publicar tour' }}
       </UButton>
 
       <UButton
@@ -49,9 +51,11 @@
           variant="subtle"
           size="sm"
           :loading="store.loading || store.autosaving"
-          @click="store.saveCurrentProgress"
+          :disabled="!store.isDirty"
+          :title="store.isDirty ? 'Guardar borrador (Ctrl+S)' : 'Todo guardado'"
+          @click="saveDraft"
         >
-          Guardar
+          {{ store.isDirty ? 'Guardar borrador' : 'Guardado' }}
         </UButton>
         <UButton
           icon="i-lucide-x"
@@ -63,6 +67,12 @@
           Cancelar
         </UButton>
       </div>
+      <p class="text-[9px] text-muted text-center -mt-1">
+        <kbd class="px-1 py-0.5 rounded bg-elevated border border-default font-mono">Ctrl</kbd>
+        +
+        <kbd class="px-1 py-0.5 rounded bg-elevated border border-default font-mono">S</kbd>
+        guarda en cualquier momento
+      </p>
 
       <UBadge
         v-if="store.basicInfo.status"
@@ -75,6 +85,21 @@
         {{ statusBadge.label }}
       </UBadge>
     </div>
+
+    <!-- Autosave Status -->
+    <UCard :ui="{ body: 'p-3 space-y-2' }">
+      <p class="text-xs font-bold flex items-center gap-1.5">
+        <UIcon name="i-lucide-activity" class="size-4 text-primary" />
+        Estado de guardado
+      </p>
+      <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg border" :class="autosaveStyle.box">
+        <UIcon :name="autosaveStyle.icon" :class="['size-4 shrink-0', autosaveStyle.iconColor, autosaveStyle.spin ? 'animate-spin' : '']" />
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
+          <p class="text-[10px] text-muted leading-tight">{{ autosaveStyle.subtitle }}</p>
+        </div>
+      </div>
+    </UCard>
 
     <!-- Listing Quality -->
     <UCard :ui="{ body: 'p-3 space-y-3' }">
@@ -152,20 +177,6 @@
       </p>
     </UCard>
 
-    <!-- Autosave Status -->
-    <UCard :ui="{ body: 'p-3 space-y-2' }">
-      <p class="text-xs font-bold flex items-center gap-1.5">
-        <UIcon name="i-lucide-activity" class="size-4 text-primary" />
-        Estado de guardado
-      </p>
-      <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg border" :class="autosaveStyle.box">
-        <UIcon :name="autosaveStyle.icon" :class="['size-4 shrink-0', autosaveStyle.iconColor, autosaveStyle.spin ? 'animate-spin' : '']" />
-        <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
-          <p class="text-[10px] text-muted leading-tight">{{ autosaveStyle.subtitle }}</p>
-        </div>
-      </div>
-    </UCard>
   </aside>
 </template>
 
@@ -275,14 +286,52 @@ const cancel = async () => {
   router.push('/admin/tours')
 }
 
+const publishing = ref(false)
+
 const publishTour = async () => {
-  store.basicInfo.status = 'published'
+  const wasPublished = store.basicInfo.status === 'published'
+  const ok = await confirm({
+    title: wasPublished ? 'Actualizar publicación' : 'Publicar tour',
+    description: wasPublished
+      ? '¿Confirmas la actualización? Los cambios serán visibles en el sitio público inmediatamente.'
+      : '¿Confirmas publicar este tour? Será visible en el sitio público inmediatamente.',
+    confirmLabel: wasPublished ? 'Actualizar' : 'Publicar',
+    cancelLabel: 'Cancelar',
+    confirmColor: 'success',
+    icon: 'i-lucide-rocket',
+    iconColor: 'success',
+  })
+  if (!ok) return
+
+  publishing.value = true
+  try {
+    store.basicInfo.status = 'published'
+    await store.saveCurrentProgress()
+    if (!store.isDirty) {
+      toast.add({
+        title: wasPublished ? 'Tour actualizado' : 'Tour publicado',
+        description: 'Ya es visible en el sitio público.',
+        icon: 'i-lucide-rocket',
+        color: 'success',
+      })
+    }
+  } finally {
+    publishing.value = false
+  }
+}
+
+const saveDraft = async () => {
+  // Keep status as draft if not yet published. Published tours stay published —
+  // "Guardar borrador" on a published tour just persists pending edits without changing status.
+  if (!store.basicInfo.status || store.basicInfo.status === '') {
+    store.basicInfo.status = 'draft'
+  }
   await store.saveCurrentProgress()
   if (!store.isDirty) {
     toast.add({
-      title: 'Tour publicado',
-      description: 'Ya es visible en el sitio público.',
-      icon: 'i-lucide-rocket',
+      title: 'Borrador guardado',
+      description: 'Tus cambios se han guardado. Puedes continuar luego.',
+      icon: 'i-lucide-save',
       color: 'success',
     })
   }

@@ -268,19 +268,83 @@
       </div>
 
       <!-- Image Grid -->
-      <div v-if="store.multimedia.images.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+      <div v-if="store.multimedia.images.length > 0" class="space-y-2 mt-6">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <p class="text-[11px] text-muted flex items-center gap-1.5">
+            <UIcon name="i-lucide-move" class="size-3.5" />
+            Arrastra para reordenar · La <span class="font-bold text-primary">primera</span> posición es la principal
+          </p>
+          <div v-if="selectedImageIds.size > 0" class="flex items-center gap-2">
+            <UBadge color="primary" variant="subtle" size="sm" icon="i-lucide-check-square">
+              {{ selectedImageIds.size }} seleccionada{{ selectedImageIds.size === 1 ? '' : 's' }}
+            </UBadge>
+            <UButton
+              v-if="selectedImageIds.size < store.multimedia.images.length"
+              icon="i-lucide-check-check"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              @click="selectAllImages"
+            >
+              Todas
+            </UButton>
+            <UButton
+              icon="i-lucide-x"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              @click="clearImageSelection"
+            >
+              Cancelar
+            </UButton>
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              size="xs"
+              @click="deleteSelectedImages"
+            >
+              Eliminar {{ selectedImageIds.size }}
+            </UButton>
+          </div>
+        </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div
           v-for="(image, index) in store.multimedia.images"
           :key="image.id"
+          draggable="true"
           :class="[
-            'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg',
+            'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg cursor-grab active:cursor-grabbing',
             image.isPrimary ? 'border-primary ring-2 ring-primary/20' : 'border-default',
+            isImageSelected(image.id) && 'ring-4 ring-primary/60',
+            dragFromIndex === index && 'opacity-40 scale-95',
+            dragOverIndex === index && dragFromIndex !== index && 'ring-4 ring-primary/40 scale-105',
           ]"
+          @dragstart="onDragStart(index, $event)"
+          @dragover="onDragOver(index, $event)"
+          @dragleave="onDragLeave(index)"
+          @drop="onDrop(index, $event)"
+          @dragend="onDragEnd"
         >
-          <img :src="getImageUrl(image.url)" :alt="image.altText" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img :src="getImageUrl(image.url)" :alt="image.altText" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none" />
 
-          <!-- Top badges -->
-          <div class="absolute top-2 left-2 right-2 flex items-start justify-between gap-2 z-10">
+          <!-- Selection checkbox (top-left) -->
+          <button
+            type="button"
+            :class="[
+              'absolute top-2 left-2 z-20 size-6 rounded-md border-2 flex items-center justify-center transition-all',
+              isImageSelected(image.id)
+                ? 'bg-primary border-primary text-white'
+                : 'bg-black/40 backdrop-blur-md border-white/40 text-transparent opacity-0 group-hover:opacity-100',
+            ]"
+            :title="isImageSelected(image.id) ? 'Deseleccionar' : 'Seleccionar'"
+            @click.stop.prevent="toggleImageSelection(image.id)"
+            @mousedown.stop
+          >
+            <UIcon name="i-lucide-check" class="size-4" />
+          </button>
+
+          <!-- Top-right: position + primary indicator -->
+          <div class="absolute top-2 right-2 z-10 flex items-center gap-1">
             <UBadge
               v-if="image.isPrimary"
               color="primary"
@@ -291,50 +355,36 @@
             >
               Principal
             </UBadge>
-            <span v-else class="size-6 bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-[10px] font-bold text-white">
-              #{{ index + 1 }}
-            </span>
-            <span v-if="image.isPrimary" class="size-6 bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-[10px] font-bold text-white">
+            <span class="size-6 bg-black/40 backdrop-blur-md rounded-md flex items-center justify-center text-[10px] font-bold text-white">
               #{{ index + 1 }}
             </span>
           </div>
 
           <!-- Hover overlay with actions -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-            <div class="flex items-center justify-between w-full gap-2">
-              <div class="flex gap-1.5 flex-wrap">
-                <UButton
-                  size="xs"
-                  :color="image.isPrimary ? 'primary' : 'neutral'"
-                  :variant="image.isPrimary ? 'solid' : 'subtle'"
-                  :icon="image.isPrimary ? 'i-lucide-star' : 'i-lucide-star-off'"
-                  class="backdrop-blur-md"
-                  @click="setPrimary(index)"
-                >
-                  {{ image.isPrimary ? 'Principal' : 'Marcar' }}
-                </UButton>
-                <UButton
-                  size="xs"
-                  color="neutral"
-                  variant="subtle"
-                  icon="i-lucide-pencil"
-                  class="backdrop-blur-md"
-                  @click="openEditModal(index)"
-                >
-                  Editar
-                </UButton>
-              </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
+            <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
+              <UButton
+                size="xs"
+                color="neutral"
+                variant="subtle"
+                icon="i-lucide-pencil"
+                class="backdrop-blur-md"
+                @click.stop="openEditModal(index)"
+              >
+                Editar
+              </UButton>
               <UButton
                 size="xs"
                 color="error"
                 variant="solid"
                 icon="i-lucide-trash-2"
                 title="Eliminar imagen"
-                @click="removeImage(index)"
+                @click.stop="removeImage(index)"
               />
             </div>
           </div>
         </div>
+      </div>
       </div>
       </div>
     </UCard>
@@ -656,11 +706,13 @@ const addFiles = async (files: File[]) => {
             isPrimary: store.multimedia.images.length === 0,
             order: store.multimedia.images.length
           })
-          
+
           store.tempImages.push({
             filename: response.filename,
             path: response.path
           })
+
+          store.isDirty = true
         }
       } catch (error) {
         console.error('Error uploading image:', error)
@@ -702,15 +754,114 @@ const removeImage = async (index: number) => {
     store.tempImages.splice(tempIndex, 1)
   }
 
-  if (removed.isPrimary && store.multimedia.images.length > 0 && store.multimedia.images[0]) {
-    store.multimedia.images[0].isPrimary = true
+  // Re-sync primary (first in order = primary) + mark dirty
+  syncPrimaryByOrder()
+}
+
+// Ensure the first image in the array is always marked as primary, the rest aren't.
+// This keeps the data model consistent with the new "order-based primary" rule
+// (first position = primary). The store only auto-marks isDirty on basicInfo changes,
+// so we flag it manually for multimedia mutations.
+const syncPrimaryByOrder = () => {
+  store.multimedia.images.forEach((img: any, i: number) => {
+    img.isPrimary = i === 0
+  })
+  store.isDirty = true
+}
+
+// === Bulk selection for delete ===
+const selectedImageIds = ref<Set<string>>(new Set())
+
+const isImageSelected = (id: string) => selectedImageIds.value.has(id)
+
+const toggleImageSelection = (id: string) => {
+  const next = new Set(selectedImageIds.value)
+  next.has(id) ? next.delete(id) : next.add(id)
+  selectedImageIds.value = next
+}
+
+const selectAllImages = () => {
+  selectedImageIds.value = new Set(store.multimedia.images.map((i: any) => i.id))
+}
+
+const clearImageSelection = () => {
+  selectedImageIds.value = new Set()
+}
+
+const deleteSelectedImages = async () => {
+  if (selectedImageIds.value.size === 0) return
+  const count = selectedImageIds.value.size
+  const ok = await confirm({
+    title: `Eliminar ${count} imagen${count === 1 ? '' : 'es'}`,
+    description: `Vas a eliminar ${count} imagen${count === 1 ? '' : 'es'} de la galería. Esta acción no se puede deshacer.`,
+    confirmLabel: `Eliminar ${count}`,
+    confirmColor: 'error',
+    confirmIcon: 'i-lucide-trash-2',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
+
+  const idsToDelete = new Set(selectedImageIds.value)
+  store.multimedia.images = store.multimedia.images.filter((img: any) => {
+    if (idsToDelete.has(img.id)) {
+      // Also remove from tempImages so backend doesn't try to attach a deleted file
+      const tempIdx = store.tempImages.findIndex((t: any) => t.filename === img.filename)
+      if (tempIdx !== -1) store.tempImages.splice(tempIdx, 1)
+      return false
+    }
+    return true
+  })
+
+  syncPrimaryByOrder()
+  clearImageSelection()
+}
+
+// Drag-and-drop reordering of gallery images.
+const dragFromIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const onDragStart = (index: number, e: DragEvent) => {
+  dragFromIndex.value = index
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
   }
 }
 
-const setPrimary = (index: number) => {
-  store.multimedia.images.forEach((img, i) => {
-    img.isPrimary = i === index
-  })
+const onDragOver = (index: number, e: DragEvent) => {
+  e.preventDefault()
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+  if (dragFromIndex.value !== null && dragFromIndex.value !== index) {
+    dragOverIndex.value = index
+  }
+}
+
+const onDragLeave = (index: number) => {
+  if (dragOverIndex.value === index) dragOverIndex.value = null
+}
+
+const onDrop = (targetIndex: number, e: DragEvent) => {
+  e.preventDefault()
+  const from = dragFromIndex.value
+  dragFromIndex.value = null
+  dragOverIndex.value = null
+  if (from === null || from === targetIndex) return
+
+  const images = store.multimedia.images
+  const [moved] = images.splice(from, 1)
+  images.splice(targetIndex, 0, moved)
+
+  // Refresh order field (1-based) so the backend keeps the sequence
+  images.forEach((img: any, i: number) => { img.order = i + 1 })
+
+  // The first image in the new order becomes the primary
+  syncPrimaryByOrder()
+}
+
+const onDragEnd = () => {
+  dragFromIndex.value = null
+  dragOverIndex.value = null
 }
 </script>
 

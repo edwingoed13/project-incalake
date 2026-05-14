@@ -16,8 +16,13 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
   let meetingPointMarker: any = null
   let autocomplete: any = null
 
-  const initializeHotelSearch = (inputElement: HTMLInputElement, mapElement: HTMLElement) => {
-    if (!window.google) return
+  const initializeHotelSearch = async (inputElement: HTMLInputElement, mapElement: HTMLElement) => {
+    try {
+      await useGoogleMaps()
+    } catch (e) {
+      console.error('Google Maps failed to load', e)
+      return
+    }
 
     autocomplete = new google.maps.places.Autocomplete(inputElement, {
       types: ['lodging'],

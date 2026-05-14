@@ -9,20 +9,20 @@
           <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
             <!-- Rating -->
             <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
+              <StarSolidIcon class="size-4 text-yellow-500" aria-hidden="true" />
               <span>{{ tour.rating || '4.5' }}</span>
               <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} reviews)</span>
             </div>
             <span class="text-slate-300">•</span>
             <!-- Location -->
             <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-slate-500 text-base">location_on</span>
+              <MapPinIcon class="size-4 text-slate-500" aria-hidden="true" />
               <span>{{ tour.city?.name || cityName }}, Peru</span>
             </div>
             <span class="text-slate-300">•</span>
             <!-- Duration -->
             <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-slate-500 text-base">schedule</span>
+              <ClockIcon class="size-4 text-slate-500" aria-hidden="true" />
               <span>{{ formatDuration(tour) }}</span>
             </div>
           </div>
@@ -32,14 +32,14 @@
             class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
             aria-label="Share tour"
           >
-            <span class="material-symbols-outlined text-lg">share</span>
+            <ShareIcon class="size-5" aria-hidden="true" />
             <span class="hidden sm:inline">Share</span>
           </button>
           <button
             class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
             aria-label="Save to favorites"
           >
-            <span class="material-symbols-outlined text-lg">favorite</span>
+            <HeartIcon class="size-5" aria-hidden="true" />
             <span class="hidden sm:inline">Save</span>
           </button>
         </div>
@@ -62,6 +62,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRuntimeConfig } from '#app'
+import { MapPinIcon, ClockIcon, ShareIcon, HeartIcon } from '@heroicons/vue/24/outline'
+import { StarIcon as StarSolidIcon } from '@heroicons/vue/24/solid'
 
 const route = useRoute()
 const config = useRuntimeConfig()
