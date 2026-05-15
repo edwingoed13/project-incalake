@@ -1,10 +1,10 @@
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="heading-section flex items-center gap-sm text-slate-800 dark:text-slate-100">
+    <h2 class="text-xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 md:mb-6 flex items-center gap-2">
       <ShieldCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       Cancellation Policies
     </h2>
-    <div class="prose md:prose-lg max-w-none text-prose">
+    <div class="prose md:prose-lg max-w-none text-slate-600 dark:text-slate-400">
       <div v-html="sanitizedPolicies"></div>
     </div>
   </section>
@@ -38,15 +38,15 @@ const sanitizedPolicies = computed(() => sanitizeHtml(props.tour.cancellation_po
 }
 
 .prose :deep(h1) {
-  @apply text-h2 mb-md mt-lg;
+  @apply text-2xl md:text-3xl mb-4 mt-6;
 }
 
 .prose :deep(h2) {
-  @apply text-h3 mb-md mt-md;
+  @apply text-xl md:text-2xl mb-3 mt-5;
 }
 
 .prose :deep(h3) {
-  @apply text-body font-bold mb-sm mt-md;
+  @apply text-lg md:text-xl mb-2 mt-4;
 }
 
 .prose :deep(p) {
@@ -91,11 +91,11 @@ const sanitizedPolicies = computed(() => sanitizeHtml(props.tour.cancellation_po
 }
 
 .prose :deep(th) {
-  @apply px-4 py-3 text-left text-meta font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700;
+  @apply px-4 py-3 text-left text-sm font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700;
 }
 
 .prose :deep(td) {
-  @apply px-4 py-3 text-meta text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700;
+  @apply px-4 py-3 text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700;
 }
 
 .prose :deep(tbody tr:nth-child(even)) {

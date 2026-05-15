@@ -15,12 +15,12 @@
         <div class="absolute top-3 right-3 flex flex-col gap-2">
           <span
             v-if="tour.difficulty"
-            class="px-3 py-1 text-caption font-bold rounded-full shadow-md"
+            class="px-3 py-1 text-xs font-bold rounded-full shadow-md"
             :class="difficultyClass"
           >
             {{ difficultyLabel }}
           </span>
-          <span v-if="tour.service_type" class="px-3 py-1 bg-primary text-white text-caption font-bold rounded-full shadow-md">
+          <span v-if="tour.service_type" class="px-3 py-1 bg-primary text-white text-xs font-bold rounded-full shadow-md">
             {{ tour.service_type }}
           </span>
         </div>
@@ -38,17 +38,17 @@
       <!-- Content -->
       <div class="p-5">
         <!-- Title -->
-        <h3 class="heading-card font-bold mb-sm group-hover:text-primary transition-colors line-clamp-2 text-primary-light dark:text-primary-dark">
+        <h3 class="text-lg md:text-xl font-black mb-2 group-hover:text-primary transition-colors line-clamp-2 text-primary-light dark:text-primary-dark">
           {{ tour.title }}
         </h3>
 
         <!-- Short Description -->
-        <p class="text-meta text-secondary-light dark:text-secondary-dark mb-4 line-clamp-2">
+        <p class="text-sm text-secondary-light dark:text-secondary-dark mb-4 line-clamp-2">
           {{ tour.short_description }}
         </p>
 
         <!-- Metadata -->
-        <div class="flex flex-wrap gap-3 mb-4 text-meta text-secondary-light dark:text-secondary-dark">
+        <div class="flex flex-wrap gap-3 mb-4 text-sm text-secondary-light dark:text-secondary-dark">
           <!-- Duration -->
           <div class="flex items-center gap-1">
             <ClockIcon class="size-4" aria-hidden="true" />
@@ -71,13 +71,13 @@
         <!-- Price and CTA -->
         <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
           <div>
-            <span class="text-caption text-secondary-light dark:text-secondary-dark block">From</span>
-            <span class="text-h2 font-bold text-primary">
+            <span class="text-xs text-secondary-light dark:text-secondary-dark block">From</span>
+            <span class="text-2xl font-black text-primary">
               ${{ (tour.min_price || 0).toFixed(2) }}
             </span>
-            <span class="text-caption text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
+            <span class="text-xs text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
           </div>
-          <button class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg transition-colors text-meta">
+          <button class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
             View Details
           </button>
         </div>
@@ -101,7 +101,7 @@
         <div class="absolute top-3 right-3 flex flex-col gap-2">
           <span
             v-if="tour.difficulty"
-            class="px-3 py-1 text-caption font-bold rounded-full shadow-md"
+            class="px-3 py-1 text-xs font-bold rounded-full shadow-md"
             :class="difficultyClass"
           >
             {{ difficultyLabel }}
@@ -113,7 +113,7 @@
       <div class="p-5 flex-1 flex flex-col">
         <div class="flex-1">
           <!-- Title -->
-          <h3 class="text-h2 font-bold mb-sm group-hover:text-primary transition-colors text-primary-light dark:text-primary-dark">
+          <h3 class="text-xl md:text-2xl font-black mb-2 group-hover:text-primary transition-colors text-primary-light dark:text-primary-dark">
             {{ tour.title }}
           </h3>
 
@@ -123,7 +123,7 @@
           </p>
 
           <!-- Metadata -->
-          <div class="flex flex-wrap gap-4 text-meta text-secondary-light dark:text-secondary-dark mb-4">
+          <div class="flex flex-wrap gap-4 text-sm text-secondary-light dark:text-secondary-dark mb-4">
             <div class="flex items-center gap-1.5">
               <ClockIcon class="size-5" aria-hidden="true" />
               <span>{{ duration }}</span>
@@ -133,7 +133,7 @@
               <span>{{ tour.city.name }}</span>
             </div>
             <div v-if="tour.service_type" class="flex items-center gap-1.5">
-              <span class="px-2 py-1 bg-primary text-white text-caption font-bold rounded-full">{{ tour.service_type }}</span>
+              <span class="px-2 py-1 bg-primary text-white text-xs font-bold rounded-full">{{ tour.service_type }}</span>
             </div>
           </div>
         </div>
@@ -141,11 +141,11 @@
         <!-- Price and CTA -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div>
-            <span class="text-caption text-secondary-light dark:text-secondary-dark block">From</span>
-            <span class="text-display text-primary">
+            <span class="text-xs text-secondary-light dark:text-secondary-dark block">From</span>
+            <span class="text-3xl font-black text-primary">
               ${{ (tour.min_price || 0).toFixed(2) }}
             </span>
-            <span class="text-meta text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
+            <span class="text-sm text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
           </div>
           <button class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors w-full sm:w-auto">
             View Details →

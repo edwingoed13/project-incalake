@@ -13,63 +13,10 @@
   --font-display: "Inter", sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
-  /* ── Type scale (mobile-first; bumps below in :root media queries) ─── */
-  --text-display: 1.75rem;            /* 28px */
-  --text-display--line-height: 1.1;
-  --text-display--letter-spacing: -0.025em;
-  --text-display--font-weight: 700;
-
-  --text-h2: 1.25rem;                 /* 20px */
-  --text-h2--line-height: 1.25;
-  --text-h2--letter-spacing: -0.012em;
-  --text-h2--font-weight: 600;
-
-  --text-h3: 1rem;                    /* 16px */
-  --text-h3--line-height: 1.35;
-  --text-h3--letter-spacing: -0.005em;
-  --text-h3--font-weight: 600;
-
-  --text-body: 1rem;                  /* 16px — fixed all viewports */
-  --text-body--line-height: 1.6;
-  --text-body--font-weight: 400;
-
-  --text-meta: 0.875rem;              /* 14px — UI secondary, fixed */
-  --text-meta--line-height: 1.5;
-  --text-meta--font-weight: 400;
-
-  --text-caption: 0.75rem;            /* 12px — floor, fixed */
-  --text-caption--line-height: 1.4;
-  --text-caption--letter-spacing: 0.04em;
-  --text-caption--font-weight: 500;
-
-  /* ── Spacing scale (semantic) ────────────────────────────────────── */
-  --spacing-xs: 0.25rem;              /*  4px */
-  --spacing-sm: 0.5rem;               /*  8px */
-  --spacing-md: 1rem;                 /* 16px */
-  --spacing-lg: 1.5rem;               /* 24px */
-  --spacing-xl: 2.5rem;               /* 40px */
-  --spacing-2xl: 4rem;                /* 64px */
-
-  /* Legacy spacing values kept for any existing references */
   --spacing-128: 32rem;
   --spacing-144: 36rem;
 
   --breakpoint-xs: 475px;
-}
-
-/* Responsive bumps — only display + headings scale.
-   Body / meta / caption stay fixed for legibility. */
-@media (min-width: 768px) {
-  :root {
-    --text-display: 2.5rem;           /* 40px */
-    --text-h2: 1.5rem;                /* 24px */
-    --text-h3: 1.125rem;              /* 18px */
-  }
-}
-@media (min-width: 1024px) {
-  :root {
-    --text-display: 3rem;             /* 48px */
-  }
 }
 
 @layer base {
@@ -79,35 +26,6 @@
 }
 
 @layer components {
-  /* ── Typography composers ────────────────────────────────────────────
-     Use these in components for places that repeat (section headings,
-     prose, labels). Composers carry their own spacing so callers don't
-     need to add mb-X — one source of truth per element type. */
-
-  .heading-page {
-    @apply text-display font-display;
-  }
-
-  .heading-section {
-    @apply text-h2 mb-md;
-  }
-
-  .heading-card {
-    @apply text-h3;
-  }
-
-  .text-prose {
-    @apply text-body text-slate-700;
-  }
-
-  .text-ui {
-    @apply text-meta text-slate-600;
-  }
-
-  .text-label {
-    @apply text-caption uppercase text-slate-500;
-  }
-
   /* Mobile-first button styles */
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
