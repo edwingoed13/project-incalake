@@ -7,6 +7,15 @@
   --color-primary: #0077cc;
   --color-primary-dark: #005fa3;
 
+  /* Commercial palette — OTA-style trust/urgency/rating signals.
+     Tailwind 4 generates utilities: bg-trust, text-urgency, etc. */
+  --color-trust: #16a34a;          /* "Free cancellation", included icons */
+  --color-trust-soft: #dcfce7;     /* trust banner backgrounds */
+  --color-urgency: #dc2626;        /* "Few spots left", "Selling fast" */
+  --color-urgency-soft: #fee2e2;
+  --color-rating: #fbbf24;         /* Stars (amber-400) */
+  --color-bestseller: #f59e0b;     /* "Bestseller" badge (amber-500) */
+
   --color-background-light: #f5f7f8;
   --color-background-dark: #0f1b23;
 

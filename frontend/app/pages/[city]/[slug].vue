@@ -23,45 +23,70 @@
         </ol>
       </nav>
 
-      <!-- Title & Basic Info -->
+      <!-- Trust badges row (OTA-style — visible immediately above title) -->
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span
+          v-if="(tourReviews.length || 0) >= 20"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-bestseller/10 text-bestseller text-xs font-bold uppercase tracking-wide"
+        >
+          <BookmarkSolidIcon class="size-3.5" aria-hidden="true" />
+          Más vendido
+        </span>
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
+          <CheckCircleSolidIcon class="size-3.5" aria-hidden="true" />
+          Cancelación gratuita
+        </span>
+        <span
+          v-if="tour.capacity && tour.cupos != null && tour.cupos / Math.max(tour.capacity, 1) < 0.3"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-urgency-soft text-urgency text-xs font-bold"
+        >
+          <FireSolidIcon class="size-3.5" aria-hidden="true" />
+          Pocos cupos
+        </span>
+      </div>
+
+      <!-- Title & Basic Info — OTA-style: title huge & bold, meta dense -->
       <div class="flex flex-col lg:flex-row justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
         <div class="flex-1 min-w-0">
-          <h1 class="text-xl sm:text-2xl md:text-3xl font-black mb-3 leading-tight">{{ tour.title }}</h1>
-          <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
+          <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900 dark:text-white">
+            {{ tour.title }}
+          </h1>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
             <!-- Rating -->
-            <div class="flex items-center gap-1">
-              <StarSolidIcon class="size-4 text-yellow-500" aria-hidden="true" />
-              <span>{{ tourReviews.length > 0 ? avgRating : '—' }}</span>
-              <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tourReviews.length }} {{ t('reviews') }})</span>
-            </div>
-            <span class="text-slate-300">•</span>
-            <!-- Location -->
-            <div class="flex items-center gap-1">
-              <MapPinIcon class="size-4 text-slate-500" aria-hidden="true" />
-              <span>{{ tour.city?.name || 'Puno' }}, Peru</span>
-            </div>
-            <span class="text-slate-300">•</span>
-            <!-- Duration -->
-            <div class="flex items-center gap-1">
-              <ClockIcon class="size-4 text-slate-500" aria-hidden="true" />
-              <span>{{ formatDuration(tour) }}</span>
-            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
+            >
+              <StarSolidIcon class="size-4 text-rating" aria-hidden="true" />
+              <span class="tabular-nums">{{ tourReviews.length > 0 ? avgRating : '—' }}</span>
+              <span class="text-slate-500 underline-offset-2 hover:underline">({{ tourReviews.length }} opiniones)</span>
+            </button>
+            <span class="text-slate-300" aria-hidden="true">•</span>
+            <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+              <MapPinIcon class="size-4" aria-hidden="true" />
+              {{ tour.city?.name || 'Puno' }}, Perú
+            </span>
+            <span class="text-slate-300" aria-hidden="true">•</span>
+            <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+              <ClockIcon class="size-4" aria-hidden="true" />
+              {{ formatDuration(tour) }}
+            </span>
           </div>
         </div>
-        <div class="flex gap-2 items-start">
+        <div class="flex gap-2 items-start shrink-0">
           <button
-            class="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Share tour"
+            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
+            aria-label="Compartir tour"
           >
             <ShareIcon class="size-5" aria-hidden="true" />
-            <span class="hidden sm:inline">Share</span>
+            <span class="hidden sm:inline">Compartir</span>
           </button>
           <button
-            class="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
-            aria-label="Save to favorites"
+            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
+            aria-label="Guardar tour"
           >
             <HeartIcon class="size-5" aria-hidden="true" />
-            <span class="hidden sm:inline">Save</span>
+            <span class="hidden sm:inline">Guardar</span>
           </button>
         </div>
       </div>
@@ -76,80 +101,117 @@
           <!-- Inline Mobile Booking Panel — appears after gallery so price/date are
                visible without scrolling to the bottom. Hidden on lg+ where the
                sticky right-column widget takes over. -->
-          <section ref="mobileBookingRef" class="lg:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
-            <!-- Price + offer header -->
-            <div class="flex items-baseline justify-between gap-3 flex-wrap">
-              <div class="flex items-baseline gap-2">
-                <span class="text-2xl sm:text-3xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
-                <span class="text-sm text-slate-500">{{ currency }} / person</span>
-              </div>
-              <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12', color: activeOffer.color || '#f59e0b' }">
-                <TagIcon class="size-3.5" aria-hidden="true" />
-                {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-              </span>
-            </div>
-
-            <!-- Calendar -->
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Date</label>
-              <TourCalendar
-                v-model="selectedDate"
-                :min-date="minDate"
-                :offers="tour?.offers_data || []"
-                :blocks="tour?.blocks_data || []"
-                :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                :availability-start="tour?.availability_data?.start || ''"
-                :availability-end="tour?.availability_data?.end || ''"
-              />
-            </div>
-
-            <!-- Time -->
-            <div>
-              <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
-                <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                  <GlobeAltIcon class="size-3" aria-hidden="true" />
-                  {{ tzInfo.code }} · {{ tzInfo.gmt }}
+          <section ref="mobileBookingRef" class="lg:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden">
+            <!-- Price header (OTA dominant) -->
+            <div class="px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div class="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Desde</p>
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                      {{ currencyStore.formatConverted(basePrice || 0) }}
+                    </span>
+                    <span class="text-xs font-semibold text-slate-500">{{ currency }} / persona</span>
+                  </div>
+                </div>
+                <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
+                  <TagIcon class="size-3.5" aria-hidden="true" />
+                  {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
                 </span>
               </div>
-              <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Select time" />
             </div>
 
-            <!-- Travelers -->
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
-              <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-slate-50">
-                <button @click="decrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                  <MinusIcon class="size-4" aria-hidden="true" />
-                </button>
-                <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
-                <button @click="incrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                  <PlusIcon class="size-4" aria-hidden="true" />
-                </button>
+            <div class="p-4 sm:p-5 space-y-4">
+              <!-- Calendar -->
+              <div>
+                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                  <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
+                  Fecha
+                </label>
+                <TourCalendar
+                  v-model="selectedDate"
+                  :min-date="minDate"
+                  :offers="tour?.offers_data || []"
+                  :blocks="tour?.blocks_data || []"
+                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                  :availability-start="tour?.availability_data?.start || ''"
+                  :availability-end="tour?.availability_data?.end || ''"
+                />
+              </div>
+
+              <!-- Time -->
+              <div>
+                <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
+                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <ClockIcon class="size-4 text-primary" aria-hidden="true" />
+                    Horario
+                  </label>
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                    <GlobeAltIcon class="size-3" aria-hidden="true" />
+                    {{ tzInfo.code }} {{ tzInfo.gmt }}
+                  </span>
+                </div>
+                <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
+              </div>
+
+              <!-- Travelers -->
+              <div>
+                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                  <UsersIcon class="size-4 text-primary" aria-hidden="true" />
+                  Viajeros
+                </label>
+                <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
+                  <button @click="decrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="adults <= 1" aria-label="Quitar viajero">
+                    <MinusIcon class="size-4" aria-hidden="true" />
+                  </button>
+                  <span class="font-bold text-sm tabular-nums">{{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
+                  <button @click="incrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200" aria-label="Agregar viajero">
+                    <PlusIcon class="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Total bar -->
+              <div class="flex justify-between items-baseline pt-3 border-t border-slate-100">
+                <span class="text-sm font-bold text-slate-800">Total</span>
+                <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
+                  {{ currencyStore.formatConverted(total || 0) }}
+                  <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
+                </span>
+              </div>
+
+              <!-- Validation error -->
+              <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+                <ExclamationCircleIcon class="size-4 text-red-500" aria-hidden="true" />
+                <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
+              </div>
+
+              <!-- CTA — OTA-style big and prominent -->
+              <button
+                @click="mobileHandleBooking"
+                class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+              >
+                RESERVAR AHORA
+                <ArrowRightIcon class="size-5" aria-hidden="true" />
+              </button>
+
+              <!-- Trust signals (compact 3-row stack) -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                <div class="flex items-center gap-1.5 text-xs">
+                  <CheckCircleSolidIcon class="size-4 text-trust shrink-0" aria-hidden="true" />
+                  <span class="text-slate-600 font-medium">Cancelación gratuita</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-xs">
+                  <ClockIcon class="size-4 text-primary shrink-0" aria-hidden="true" />
+                  <span class="text-slate-600 font-medium">Confirmación instantánea</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-xs">
+                  <ShieldCheckIcon class="size-4 text-primary shrink-0" aria-hidden="true" />
+                  <span class="text-slate-600 font-medium">Mejor precio</span>
+                </div>
               </div>
             </div>
-
-            <!-- Total -->
-            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
-              <span class="font-bold text-slate-800">Total</span>
-              <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
-            </div>
-
-            <!-- Validation error -->
-            <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
-              <ExclamationCircleIcon class="size-4 text-red-500" aria-hidden="true" />
-              <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
-            </div>
-
-            <!-- Book button -->
-            <button
-              @click="mobileHandleBooking"
-              class="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <CheckCircleSolidIcon class="size-6" aria-hidden="true" />
-              Book Now
-            </button>
           </section>
 
           <!-- Content Sections -->
@@ -251,113 +313,150 @@
           </section>
         </div>
 
-        <!-- Right Column: Booking Widget - Sticky -->
+        <!-- Right Column: Booking Widget - Sticky (OTA-style) -->
         <div class="hidden lg:block">
-          <div class="sticky top-24">
+          <div class="sticky top-24 space-y-3">
             <!-- Booking Widget Card -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-              <!-- Price Header -->
-              <div class="mb-5">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden">
+              <!-- Price Header — dominant, OTA pattern -->
+              <div class="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Desde</p>
                 <div class="flex items-baseline gap-2">
-                  <span class="text-3xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
-                  <span class="text-sm text-slate-500">{{ currency }}</span>
-                </div>
-                <p class="text-sm text-slate-500 mt-1">per person</p>
-              </div>
-
-              <!-- Date Selector (Calendar) -->
-              <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tour Date</label>
-                <TourCalendar
-                  v-model="selectedDate"
-                  :min-date="minDate"
-                  :offers="tour?.offers_data || []"
-                  :blocks="tour?.blocks_data || []"
-                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                  :availability-start="tour?.availability_data?.start || ''"
-                  :availability-end="tour?.availability_data?.end || ''"
-                />
-                <!-- Active offer indicator -->
-                <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12' }">
-                  <TagIcon class="size-4" :style="{ color: activeOffer.color || '#f59e0b' }" aria-hidden="true" />
-                  <span class="text-xs font-bold" :style="{ color: activeOffer.color || '#f59e0b' }">
-                    {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                  <span class="text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                    {{ currencyStore.formatConverted(basePrice || 0) }}
                   </span>
+                  <span class="text-sm font-semibold text-slate-500">{{ currency }}</span>
                 </div>
+                <p class="text-xs text-slate-500 mt-0.5">por persona · impuestos incluidos</p>
               </div>
 
-              <!-- Time Selector -->
-              <div class="mb-4">
-                <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-                  <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
-                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                    <GlobeAltIcon class="size-3" aria-hidden="true" />
-                    <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
-                    <span class="sm:hidden">{{ tzInfo.code }} ·</span>
-                    {{ tzInfo.gmt }}
-                  </span>
-                </div>
-                <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Select time" />
-                <div v-if="tour.duration_hours || tour.duration_days" class="mt-1.5 flex items-center gap-1 text-xs text-primary font-semibold px-1">
-                  <ClockIcon class="size-3" aria-hidden="true" />
-                  Duration: {{ formatDuration(tour) }}
-                </div>
-              </div>
-
-              <!-- Travelers Selector -->
-              <div class="mb-5">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
-                <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 bg-slate-50 dark:bg-slate-800">
-                  <button
-                    @click="decrementAdults"
-                    type="button"
-                    class="w-11 h-11 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
-                  >
-                    <MinusIcon class="size-4" aria-hidden="true" />
-                  </button>
-                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
-                  <button
-                    @click="incrementAdults"
-                    type="button"
-                    class="w-11 h-11 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
-                  >
-                    <PlusIcon class="size-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Price Breakdown -->
-              <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <div class="flex justify-between text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">{{ currencyStore.formatConverted(basePrice || 0) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
-                  <span class="font-semibold">{{ currencyStore.formatConverted(subtotal || 0) }}</span>
-                </div>
-                <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
-                  <span class="text-green-600 dark:text-green-400 flex items-center gap-1">
+              <div class="p-5 space-y-4">
+                <!-- Date Selector -->
+                <div>
+                  <label class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    <span class="inline-flex items-center gap-1.5">
+                      <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
+                      Fecha
+                    </span>
+                  </label>
+                  <TourCalendar
+                    v-model="selectedDate"
+                    :min-date="minDate"
+                    :offers="tour?.offers_data || []"
+                    :blocks="tour?.blocks_data || []"
+                    :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                    :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                    :availability-start="tour?.availability_data?.start || ''"
+                    :availability-end="tour?.availability_data?.end || ''"
+                  />
+                  <div v-if="activeOffer" class="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-trust-soft text-trust">
                     <TagIcon class="size-3.5" aria-hidden="true" />
-                    {{ activeOffer?.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : 'Discount' }}
-                  </span>
-                  <span class="font-semibold text-green-600">-{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
+                    <span class="text-xs font-bold">
+                      {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                    </span>
+                  </div>
                 </div>
-                <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
-                  <span>Total</span>
-                  <span class="text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
+
+                <!-- Time Selector -->
+                <div>
+                  <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
+                    <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      <ClockIcon class="size-4 text-primary" aria-hidden="true" />
+                      Horario
+                    </label>
+                    <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                      <GlobeAltIcon class="size-3" aria-hidden="true" />
+                      {{ tzInfo.code }} {{ tzInfo.gmt }}
+                    </span>
+                  </div>
+                  <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
                 </div>
+
+                <!-- Travelers -->
+                <div>
+                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    <UsersIcon class="size-4 text-primary" aria-hidden="true" />
+                    Viajeros
+                  </label>
+                  <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                    <button
+                      @click="decrementAdults"
+                      type="button"
+                      class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
+                      :disabled="adults <= 1"
+                      aria-label="Quitar viajero"
+                    >
+                      <MinusIcon class="size-4" aria-hidden="true" />
+                    </button>
+                    <span class="font-bold text-sm tabular-nums">{{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
+                    <button
+                      @click="incrementAdults"
+                      type="button"
+                      class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition"
+                      aria-label="Agregar viajero"
+                    >
+                      <PlusIcon class="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Compact total -->
+                <div v-if="adults" class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5">
+                  <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                    <span>{{ currencyStore.formatConverted(basePrice || 0) }} × {{ adults }}</span>
+                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(subtotal || 0) }}</span>
+                  </div>
+                  <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
+                    <span class="text-trust font-bold inline-flex items-center gap-1">
+                      <TagIcon class="size-3" aria-hidden="true" />
+                      Descuento
+                    </span>
+                    <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
+                  </div>
+                  <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-slate-700">
+                    <span class="text-sm font-bold">Total</span>
+                    <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
+                      {{ currencyStore.formatConverted(total || 0) }}
+                      <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- CTA — bigger, bolder, shadow -->
+                <button
+                  @click="handleBooking"
+                  class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+                >
+                  RESERVAR AHORA
+                  <ArrowRightIcon class="size-5" aria-hidden="true" />
+                </button>
               </div>
-
-              <!-- CTA Buttons -->
-              <button
-                @click="handleBooking"
-                class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-3 flex items-center justify-center gap-2"
-              >
-                <CheckCircleSolidIcon class="size-6" aria-hidden="true" />
-                Book Now
-              </button>
-
-
             </div>
 
+            <!-- Trust signals card — OTA pattern: stacks below booking widget -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2.5">
+              <div class="flex items-start gap-2.5">
+                <CheckCircleSolidIcon class="size-5 text-trust shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">Cancelación gratuita</p>
+                  <p class="text-xs text-slate-500">Hasta 24h antes del tour</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <ClockIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">Confirmación inmediata</p>
+                  <p class="text-xs text-slate-500">Recibe tu reserva al instante</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <ShieldCheckIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">Mejor precio garantizado</p>
+                  <p class="text-xs text-slate-500">Operador oficial autorizado</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -397,17 +496,22 @@
       </section>
     </main>
 
-    <!-- Mobile Fixed Bottom CTA -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md z-40">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex flex-col leading-tight">
-          <span class="text-xs text-slate-500">From</span>
-          <span class="text-xl sm:text-2xl font-black text-primary">${{ (basePrice || 0).toFixed(0) }}</span>
-          <span class="text-[11px] text-slate-500">per person</span>
+    <!-- Mobile Fixed Bottom CTA (OTA-style sticky bar) -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
+      <div class="flex items-center justify-between gap-3">
+        <div class="leading-tight shrink-0">
+          <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
+          <div class="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">
+            ${{ (basePrice || 0).toFixed(0) }}
+          </div>
+          <span class="text-[11px] text-slate-500">por persona</span>
         </div>
-        <button @click="onMobileBottomCta" class="flex-1 min-h-[48px] bg-primary hover:bg-primary/90 text-white font-black py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2">
-          <CalendarDaysIcon class="size-5" aria-hidden="true" />
-          {{ selectedDate && selectedTime ? 'Book Now' : 'Choose date' }}
+        <button
+          @click="onMobileBottomCta"
+          class="flex-1 min-h-[52px] bg-primary hover:bg-primary-dark text-white font-extrabold py-3 px-5 rounded-xl shadow-md shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wide text-sm"
+        >
+          {{ selectedDate && selectedTime ? 'RESERVAR' : 'VER FECHAS' }}
+          <ArrowRightIcon class="size-4" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -449,10 +553,15 @@ import {
   ChatBubbleLeftRightIcon,
   ExclamationCircleIcon,
   MagnifyingGlassIcon,
+  UsersIcon,
+  ArrowRightIcon,
+  ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
 import {
   StarIcon as StarSolidIcon,
   CheckCircleIcon as CheckCircleSolidIcon,
+  BookmarkIcon as BookmarkSolidIcon,
+  FireIcon as FireSolidIcon,
 } from '@heroicons/vue/24/solid'
 
 // Stores and utils like useCartStore and getImageUrl are auto-imported in Nuxt 4
