@@ -3,8 +3,8 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-24 pb-24 lg:pb-8">
 
       <!-- Breadcrumb -->
-      <nav aria-label="Breadcrumb" class="mb-3 lg:mb-4">
-        <ol class="flex items-center gap-1 text-xs text-slate-500 overflow-x-auto whitespace-nowrap">
+      <nav aria-label="Breadcrumb" class="mb-md">
+        <ol class="text-label flex items-center gap-sm overflow-x-auto whitespace-nowrap">
           <li>
             <NuxtLink :to="localePath('/')" class="hover:text-primary transition-colors">
               {{ t('home') || 'Home' }}
@@ -17,7 +17,7 @@
             </NuxtLink>
           </li>
           <li class="text-slate-300" aria-hidden="true">/</li>
-          <li class="text-slate-700 dark:text-slate-200 font-medium truncate" aria-current="page">
+          <li class="text-slate-700 dark:text-slate-200 truncate" aria-current="page">
             {{ tour.title }}
           </li>
         </ol>
@@ -26,8 +26,8 @@
       <!-- Title & Basic Info -->
       <div class="flex flex-col lg:flex-row justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
         <div class="flex-1 min-w-0">
-          <h1 class="text-xl sm:text-2xl md:text-3xl font-black mb-3 leading-tight">{{ tour.title }}</h1>
-          <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
+          <h1 class="heading-page mb-md leading-tight">{{ tour.title }}</h1>
+          <div class="flex flex-wrap items-center gap-md text-meta font-medium">
             <!-- Rating -->
             <div class="flex items-center gap-1">
               <StarSolidIcon class="size-4 text-yellow-500" aria-hidden="true" />
@@ -50,14 +50,14 @@
         </div>
         <div class="flex gap-2 items-start">
           <button
-            class="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
+            class="flex items-center justify-center gap-1.5 min-h-[48px] min-w-[48px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-metahover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
             aria-label="Share tour"
           >
             <ShareIcon class="size-5" aria-hidden="true" />
             <span class="hidden sm:inline">Share</span>
           </button>
           <button
-            class="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
+            class="flex items-center justify-center gap-1.5 min-h-[48px] min-w-[48px] px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-metahover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
             aria-label="Save to favorites"
           >
             <HeartIcon class="size-5" aria-hidden="true" />
@@ -80,10 +80,10 @@
             <!-- Price + offer header -->
             <div class="flex items-baseline justify-between gap-3 flex-wrap">
               <div class="flex items-baseline gap-2">
-                <span class="text-2xl sm:text-3xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
-                <span class="text-sm text-slate-500">{{ currency }} / person</span>
+                <span class="text-display text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
+                <span class="text-meta text-slate-500">{{ currency }} / person</span>
               </div>
-              <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12', color: activeOffer.color || '#f59e0b' }">
+              <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-caption font-bold" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12', color: activeOffer.color || '#f59e0b' }">
                 <TagIcon class="size-3.5" aria-hidden="true" />
                 {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
               </span>
@@ -91,7 +91,7 @@
 
             <!-- Calendar -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Select Date</label>
+              <label class="block text-label font-bold mb-2">Select Date</label>
               <TourCalendar
                 v-model="selectedDate"
                 :min-date="minDate"
@@ -107,8 +107,8 @@
             <!-- Time -->
             <div>
               <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
-                <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                <label class="block text-label font-bold">Departure Time</label>
+                <span v-if="tzInfo" class="inline-flex items-center gap-1 text-caption font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
                   <GlobeAltIcon class="size-3" aria-hidden="true" />
                   {{ tzInfo.code }} · {{ tzInfo.gmt }}
                 </span>
@@ -118,13 +118,13 @@
 
             <!-- Travelers -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
+              <label class="block text-label font-bold mb-2">Travelers</label>
               <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-slate-50">
-                <button @click="decrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                <button @click="decrementAdults" type="button" class="w-12 h-12 flex items-center justify-center bg-white rounded-full border border-slate-200">
                   <MinusIcon class="size-4" aria-hidden="true" />
                 </button>
-                <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
-                <button @click="incrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-white rounded-full border border-slate-200">
+                <span class="font-bold text-meta">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
+                <button @click="incrementAdults" type="button" class="w-12 h-12 flex items-center justify-center bg-white rounded-full border border-slate-200">
                   <PlusIcon class="size-4" aria-hidden="true" />
                 </button>
               </div>
@@ -133,13 +133,13 @@
             <!-- Total -->
             <div class="flex justify-between items-center pt-3 border-t border-slate-100">
               <span class="font-bold text-slate-800">Total</span>
-              <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
+              <span class="text-h3 font-bold text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
             </div>
 
             <!-- Validation error -->
             <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
               <ExclamationCircleIcon class="size-4 text-red-500" aria-hidden="true" />
-              <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
+              <span class="text-caption font-semibold text-red-700">{{ mobileError }}</span>
             </div>
 
             <!-- Book button -->
@@ -171,20 +171,20 @@
           <!-- Custom additional sections (admin Step 3) -->
           <section v-if="customSections.length" class="space-y-6">
             <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
-              <h3 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white">{{ section.title }}</h3>
+              <h3 class="heading-section text-slate-900 dark:text-white">{{ section.title }}</h3>
               <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="section.content"></div>
             </div>
           </section>
 
           <!-- Tags chips -->
           <section v-if="tour.tags && tour.tags.length" class="space-y-3">
-            <h3 class="text-sm font-black uppercase tracking-widest text-slate-500">{{ t('tags') || 'Etiquetas' }}</h3>
+            <h3 class="text-meta font-black uppercase tracking-widest text-slate-500">{{ t('tags') || 'Etiquetas' }}</h3>
             <div class="flex flex-wrap gap-2">
               <NuxtLink
                 v-for="tag in tour.tags"
                 :key="tag.id"
                 :to="localePath(`/tours?tag=${tag.slug}`)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 text-violet-700 dark:text-violet-300 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 text-violet-700 dark:text-violet-300 text-caption font-bold hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
               >
                 <TagIcon class="size-3.5" aria-hidden="true" />
                 {{ tag.name }}
@@ -200,13 +200,13 @@
           <!-- Reviews Section -->
           <section>
             <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold">Customer Reviews</h3>
+              <h3 class="heading-section mb-0">Customer Reviews</h3>
               <div v-if="tourReviews.length > 0" class="flex items-center gap-2">
-                <span class="font-bold text-2xl">{{ avgRating }}</span>
+                <span class="font-bold text-h2">{{ avgRating }}</span>
                 <div class="flex">
                   <StarSolidIcon v-for="i in 5" :key="i" class="size-5" :class="i <= Math.round(avgRating) ? 'text-yellow-500' : 'text-slate-300'" aria-hidden="true" />
                 </div>
-                <span class="text-sm text-slate-500">({{ tourReviews.length }})</span>
+                <span class="text-meta text-slate-500">({{ tourReviews.length }})</span>
               </div>
             </div>
 
@@ -217,27 +217,27 @@
                 class="border-b border-slate-100 dark:border-slate-800 pb-6"
               >
                 <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-meta">
                     {{ getInitials(review.name) }}
                   </div>
                   <div class="flex-1">
                     <div class="flex items-center gap-2">
-                      <h4 class="text-sm font-bold">{{ review.name }}</h4>
-                      <span class="text-[11px] text-slate-400">{{ review.review_date }}</span>
+                      <h4 class="text-meta font-bold">{{ review.name }}</h4>
+                      <span class="text-meta text-slate-400">{{ review.review_date }}</span>
                     </div>
                     <div class="flex items-center gap-0.5 mt-0.5">
                       <StarSolidIcon v-for="i in review.rating" :key="i" class="size-3 text-yellow-400" aria-hidden="true" />
                     </div>
                   </div>
                 </div>
-                <p v-if="review.title" class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
+                <p v-if="review.title" class="text-meta font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
+                <p class="text-meta text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
               </div>
 
               <button
                 v-if="tourReviews.length > 3"
                 @click="showAllReviews = !showAllReviews"
-                class="font-bold text-primary hover:underline text-sm flex items-center gap-1"
+                class="font-bold text-primary hover:underline text-metaflex items-center gap-1"
               >
                 {{ showAllReviews ? 'Show less' : `View all ${tourReviews.length} reviews` }}
                 <ChevronDownIcon class="size-4 transition-transform" :class="{ 'rotate-180': showAllReviews }" aria-hidden="true" />
@@ -246,7 +246,7 @@
 
             <div v-else class="py-8 text-center text-slate-400">
               <ChatBubbleLeftRightIcon class="size-8 mb-2 mx-auto" aria-hidden="true" />
-              <p class="text-sm font-medium">No reviews yet for this tour.</p>
+              <p class="text-meta font-medium">No reviews yet for this tour.</p>
             </div>
           </section>
         </div>
@@ -259,15 +259,15 @@
               <!-- Price Header -->
               <div class="mb-5">
                 <div class="flex items-baseline gap-2">
-                  <span class="text-3xl font-black text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
-                  <span class="text-sm text-slate-500">{{ currency }}</span>
+                  <span class="text-display text-primary">{{ currencyStore.formatConverted(basePrice || 0) }}</span>
+                  <span class="text-meta text-slate-500">{{ currency }}</span>
                 </div>
-                <p class="text-sm text-slate-500 mt-1">per person</p>
+                <p class="text-meta text-slate-500 mt-1">per person</p>
               </div>
 
               <!-- Date Selector (Calendar) -->
               <div class="mb-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tour Date</label>
+                <label class="block text-label font-bold mb-2">Tour Date</label>
                 <TourCalendar
                   v-model="selectedDate"
                   :min-date="minDate"
@@ -281,7 +281,7 @@
                 <!-- Active offer indicator -->
                 <div v-if="activeOffer" class="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl" :style="{ backgroundColor: (activeOffer.color || '#f59e0b') + '12' }">
                   <TagIcon class="size-4" :style="{ color: activeOffer.color || '#f59e0b' }" aria-hidden="true" />
-                  <span class="text-xs font-bold" :style="{ color: activeOffer.color || '#f59e0b' }">
+                  <span class="text-caption font-bold" :style="{ color: activeOffer.color || '#f59e0b' }">
                     {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
                   </span>
                 </div>
@@ -290,8 +290,8 @@
               <!-- Time Selector -->
               <div class="mb-4">
                 <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-                  <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Departure Time</label>
-                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                  <label class="text-label font-bold">Departure Time</label>
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-caption font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
                     <GlobeAltIcon class="size-3" aria-hidden="true" />
                     <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
                     <span class="sm:hidden">{{ tzInfo.code }} ·</span>
@@ -299,7 +299,7 @@
                   </span>
                 </div>
                 <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Select time" />
-                <div v-if="tour.duration_hours || tour.duration_days" class="mt-1.5 flex items-center gap-1 text-xs text-primary font-semibold px-1">
+                <div v-if="tour.duration_hours || tour.duration_days" class="mt-1.5 flex items-center gap-1 text-caption text-primary font-semibold px-1">
                   <ClockIcon class="size-3" aria-hidden="true" />
                   Duration: {{ formatDuration(tour) }}
                 </div>
@@ -307,20 +307,20 @@
 
               <!-- Travelers Selector -->
               <div class="mb-5">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Travelers</label>
+                <label class="block text-label font-bold mb-2">Travelers</label>
                 <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 bg-slate-50 dark:bg-slate-800">
                   <button
                     @click="decrementAdults"
                     type="button"
-                    class="w-11 h-11 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
+                    class="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
                   >
                     <MinusIcon class="size-4" aria-hidden="true" />
                   </button>
-                  <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
+                  <span class="font-bold text-meta">{{ adults }} {{ adults === 1 ? 'Adult' : 'Adults' }}</span>
                   <button
                     @click="incrementAdults"
                     type="button"
-                    class="w-11 h-11 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
+                    class="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
                   >
                     <PlusIcon class="size-4" aria-hidden="true" />
                   </button>
@@ -329,18 +329,18 @@
 
               <!-- Price Breakdown -->
               <div class="space-y-2 mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <div class="flex justify-between text-sm">
+                <div class="flex justify-between text-meta">
                   <span class="text-slate-600 dark:text-slate-400">{{ currencyStore.formatConverted(basePrice || 0) }} x {{ adults }} {{ adults === 1 ? 'adult' : 'adults' }}</span>
                   <span class="font-semibold">{{ currencyStore.formatConverted(subtotal || 0) }}</span>
                 </div>
-                <div v-if="groupDiscount > 0" class="flex justify-between text-sm">
+                <div v-if="groupDiscount > 0" class="flex justify-between text-meta">
                   <span class="text-green-600 dark:text-green-400 flex items-center gap-1">
                     <TagIcon class="size-3.5" aria-hidden="true" />
                     {{ activeOffer?.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : 'Discount' }}
                   </span>
                   <span class="font-semibold text-green-600">-{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
                 </div>
-                <div class="flex justify-between text-base font-black border-t border-slate-200 dark:border-slate-700 pt-2">
+                <div class="flex justify-between text-body font-bold border-t border-slate-200 dark:border-slate-700 pt-2">
                   <span>Total</span>
                   <span class="text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
                 </div>
@@ -364,7 +364,7 @@
 
       <!-- Related Tours (Full Width) -->
       <section class="mt-20" v-if="relatedTours.length > 0">
-        <h2 class="text-2xl font-black mb-8">You might also like</h2>
+        <h2 class="heading-section mb-xl">You might also like</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
@@ -384,12 +384,12 @@
                 <HeartIcon class="size-5" aria-hidden="true" />
               </button>
             </div>
-            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
+            <p class="text-caption text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
             <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
             <div class="flex items-center gap-1 mt-1">
               <StarSolidIcon class="size-3 text-yellow-500" aria-hidden="true" />
-              <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
-              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
+              <span class="text-meta font-bold">{{ relatedTour.rating || '4.5' }}</span>
+              <span class="text-caption text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
             </div>
             <p class="mt-2 font-black text-slate-900 dark:text-white">From ${{ relatedTour.min_price || 0 }}</p>
           </NuxtLink>
@@ -401,9 +401,9 @@
     <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-md z-40">
       <div class="flex items-center justify-between gap-4">
         <div class="flex flex-col leading-tight">
-          <span class="text-xs text-slate-500">From</span>
-          <span class="text-xl sm:text-2xl font-black text-primary">${{ (basePrice || 0).toFixed(0) }}</span>
-          <span class="text-[11px] text-slate-500">per person</span>
+          <span class="text-caption text-slate-500">From</span>
+          <span class="text-h3 font-bold text-primary">${{ (basePrice || 0).toFixed(0) }}</span>
+          <span class="text-meta text-slate-500">per person</span>
         </div>
         <button @click="onMobileBottomCta" class="flex-1 min-h-[48px] bg-primary hover:bg-primary/90 text-white font-black py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2">
           <CalendarDaysIcon class="size-5" aria-hidden="true" />
@@ -426,7 +426,7 @@
   <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
       <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
-      <p class="text-red-600 text-lg mb-4">Tour not found</p>
+      <p class="text-red-600 text-h3 mb-4">Tour not found</p>
       <NuxtLink to="/tours" class="text-primary hover:underline font-bold">
         View all tours
       </NuxtLink>

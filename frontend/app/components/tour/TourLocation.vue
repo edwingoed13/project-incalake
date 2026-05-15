@@ -234,7 +234,7 @@ watch(() => props.tour, () => {
 
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center">
+    <h2 class="heading-section flex items-center text-primary-light dark:text-primary-dark">
       <MapPinIcon class="size-6 md:size-8 text-primary mr-2 md:mr-3" aria-hidden="true" />
       Ubicación
     </h2>
@@ -246,8 +246,8 @@ watch(() => props.tour, () => {
     <div v-else-if="!hasMap" class="bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
       <div class="text-center">
         <MapIcon class="size-24 text-slate-400 dark:text-slate-600 mb-4 mx-auto" aria-hidden="true" />
-        <p class="text-slate-500 dark:text-slate-400 text-lg font-bold">Mapa no disponible</p>
-        <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">{{ cityName }}, Perú</p>
+        <p class="text-slate-500 dark:text-slate-400 text-h3 font-bold">Mapa no disponible</p>
+        <p class="text-meta text-slate-400 dark:text-slate-500 mt-2">{{ cityName }}, Perú</p>
       </div>
     </div>
 
@@ -255,7 +255,7 @@ watch(() => props.tour, () => {
     <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
       <div class="flex items-start space-x-3">
         <MapPinIcon class="size-5 text-blue-500 mt-0.5 shrink-0" aria-hidden="true" />
-        <div class="text-sm text-slate-700 dark:text-slate-300">
+        <div class="text-meta text-slate-700 dark:text-slate-300">
           <strong>Punto de encuentro:</strong> {{ pickupDescription }}
         </div>
       </div>
@@ -267,7 +267,7 @@ watch(() => props.tour, () => {
         <!-- Timeline - Left Side (1/3) -->
         <div class="lg:col-span-1">
           <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
+            <h3 class="text-h3 font-bold text-primary-light dark:text-primary-dark mb-md flex items-center">
               <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Itinerario
             </h3>
@@ -292,7 +292,7 @@ watch(() => props.tour, () => {
 
                   <!-- Icon/Number -->
                   <div
-                    class="absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md z-10"
+                    class="absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-meta shadow-md z-10"
                     :class="index === 0 ? 'bg-red-500 text-white' : 'bg-primary text-white'"
                   >
                     {{ index + 1 }}
@@ -300,11 +300,11 @@ watch(() => props.tour, () => {
 
                   <!-- Content -->
                   <div>
-                    <h4 class="font-bold text-primary-light dark:text-primary-dark text-sm">{{ point.name }}</h4>
-                    <p v-if="point.description" class="text-xs text-secondary-light dark:text-secondary-dark mt-1 line-clamp-2">
+                    <h4 class="font-bold text-primary-light dark:text-primary-dark text-meta">{{ point.name }}</h4>
+                    <p v-if="point.description" class="text-caption text-secondary-light dark:text-secondary-dark mt-1 line-clamp-2">
                       {{ point.description }}
                     </p>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    <p class="text-caption text-slate-400 dark:text-slate-500 mt-1">
                       {{ point.type_label }}
                     </p>
                   </div>
@@ -319,7 +319,7 @@ watch(() => props.tour, () => {
             >
               <button
                 @click="isExpanded = !isExpanded"
-                class="text-sm font-bold text-primary hover:text-primary-dark underline"
+                class="text-meta font-bold text-primary hover:text-primary-dark underline"
               >
                 {{ isExpanded ? 'Ver menos' : 'Ver itinerario completo' }}
               </button>
@@ -330,7 +330,7 @@ watch(() => props.tour, () => {
         <!-- Map - Right Side (2/3) -->
         <div class="lg:col-span-2">
           <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
+            <h3 class="text-h3 font-bold text-primary-light dark:text-primary-dark mb-md flex items-center">
               <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Mapa
             </h3>
@@ -344,7 +344,7 @@ watch(() => props.tour, () => {
     <div v-if="tour?.dropoff_location_description" class="mt-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
       <div class="flex items-start space-x-3">
         <ArrowRightIcon class="size-5 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
-        <div class="text-sm text-slate-700 dark:text-slate-300">
+        <div class="text-meta text-slate-700 dark:text-slate-300">
           <strong>Punto de retorno:</strong> {{ tour.dropoff_location_description }}
         </div>
       </div>

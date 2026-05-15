@@ -1,6 +1,6 @@
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center gap-2">
+    <h2 class="heading-section flex items-center gap-sm text-primary-light dark:text-primary-dark">
       <ClipboardDocumentCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       {{ t('whats_included') }}
     </h2>
