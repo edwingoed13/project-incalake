@@ -120,6 +120,11 @@ Route::get('/dashboard/sales-chart', [App\Http\Controllers\Api\DashboardControll
 // Tags — public listing (used by both admin wizard and public tour filter)
 Route::get('/tags', [App\Http\Controllers\Api\TagController::class, 'index'])->name('api.tags.index');
 
+// CI deploy hook — secret-gated (NOT sanctum). Called by the GitHub Action
+// after the FTP deploy to clear the stale compiled Blade/config caches.
+Route::match(['get', 'post'], '/deploy/clear-caches', [\App\Http\Controllers\Api\MaintenanceController::class, 'deployClearCaches'])
+    ->name('api.deploy.clear-caches');
+
 // Protected routes - Require authentication with Sanctum
 Route::middleware('auth:sanctum')->group(function () {
 

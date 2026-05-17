@@ -88,3 +88,15 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy-public/
           server-dir: ./public_html/api.incalake.com/
+
+      # FTP upload does NOT run artisan, so the server keeps serving the old
+      # compiled Blade/config caches (this is why email fixes "didn't apply").
+      # Hit the secret-gated deploy hook to clear them automatically.
+      - name: Clear server caches (view/config/route/app)
+        run: |
+          echo "Clearing caches on api.incalake.com ..."
+          code=$(curl -sS -o /tmp/clear.json -w "%{http_code}" \
+            --max-time 60 --retry 3 --retry-delay 10 \
+            "https://api.incalake.com/api/deploy/clear-caches?key=${{ secrets.DEPLOY_HOOK_KEY }}")
+          echo "HTTP $code"; cat /tmp/clear.json; echo
+          test "$code" = "200"

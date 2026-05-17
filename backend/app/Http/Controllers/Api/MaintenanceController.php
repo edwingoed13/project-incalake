@@ -166,6 +166,26 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Secret-gated deploy hook (NOT behind auth:sanctum) so the GitHub Action
+     * can clear caches automatically after the FTP deploy. Requires
+     * ?key=<DEPLOY_HOOK_KEY> matching config('app.deploy_hook_key').
+     */
+    public function deployClearCaches(Request $request): JsonResponse
+    {
+        $expected = (string) config('app.deploy_hook_key', '');
+        $given = (string) ($request->query('key') ?? $request->input('key') ?? '');
+
+        if ($expected === '' || !hash_equals($expected, $given)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: invalid or missing deploy key.',
+            ], 403);
+        }
+
+        return $this->clearCaches();
+    }
+
+    /**
      * Clear compiled views + config/route/app caches.
      * cPanel + GitHub-FTP deploys never run artisan, so a deployed Blade fix
      * (e.g. an email template) stays broken until the cached compiled view is

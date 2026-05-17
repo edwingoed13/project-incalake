@@ -15,6 +15,11 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Shared secret for the CI deploy hook (POST /api/deploy/clear-caches).
+    // Set the same value in cPanel .env and in the GitHub repo secret
+    // DEPLOY_HOOK_KEY. Empty = hook disabled (returns 403).
+    'deploy_hook_key' => env('DEPLOY_HOOK_KEY', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
