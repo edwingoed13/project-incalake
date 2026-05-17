@@ -717,22 +717,27 @@ class BookingController extends Controller
             return [];
         }
 
-        return Booking::with('tour')
+        return Booking::with(['tour', 'pickupDetail'])
             ->whereIn('id', $ids)
             ->orderBy('tour_date')
             ->orderBy('booking_code')
             ->get()
             ->map(fn ($b) => [
-                'booking_code' => $b->booking_code,
-                'tour_title'   => $b->tour_title,
-                'tour_slug'    => $b->tour?->slug,
-                'tour_image'   => $b->tour?->featured_image_path ?? $b->tour?->featured_image,
-                'tour_date'    => $b->tour_date,
-                'tour_time'    => $b->tour_time,
-                'adults'       => $b->adults,
-                'children'     => $b->children,
-                'currency'     => $b->currency,
-                'total'        => (float) $b->total,
+                'id'                => $b->id,
+                'booking_code'      => $b->booking_code,
+                'tour_title'        => $b->tour_title,
+                'tour_slug'         => $b->tour?->slug,
+                'tour_image'        => $b->tour?->featured_image_path ?? $b->tour?->featured_image,
+                'tour_date'         => $b->tour_date,
+                'tour_time'         => $b->tour_time,
+                'adults'            => $b->adults,
+                'children'          => $b->children,
+                'currency'          => $b->currency,
+                'total'             => (float) $b->total,
+                // Pickup status for the per-tour pickup UI on the confirmation page
+                'pickup_configured' => (bool) $b->pickupDetail,
+                'pickup_type'       => $b->pickupDetail?->pickup_type,
+                'pickup_hotel'      => $b->pickupDetail?->hotel_name,
             ])
             ->values();
     }

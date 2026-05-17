@@ -168,25 +168,90 @@
 
         <!-- Step 1: Pickup Configuration -->
         <div v-else-if="currentStep === 1">
-          <!-- Multi-tour: pickup here only covers the first tour; the rest is
-               coordinated by the team so the customer doesn't assume it's done. -->
-          <div v-if="isMultiTour" class="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <span class="material-symbols-outlined text-amber-600 text-lg shrink-0">info</span>
-            <p class="text-xs text-amber-800 leading-relaxed">
-              Tu compra incluye <strong>{{ purchaseTours.length }} tours</strong>. Aquí configuras el punto de recojo del
-              <strong>primer tour</strong>. Para los demás, nuestro equipo coordinará el recojo contigo por
-              WhatsApp/correo antes de cada fecha.
-            </p>
-          </div>
-          <BookingPickupConfiguration
-            :booking-id="booking.id"
-            @completed="onPickupCompleted"
-            @error="(msg: string) => console.error(msg)"
-          />
-          <div class="flex gap-2 mt-3">
-            <button @click="currentStep = 0" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
-            <button @click="skipStep(1)" class="flex-1 py-2.5 bg-slate-100 rounded-xl text-sm font-semibold text-slate-500 active:bg-slate-200">{{ t('skip_for_now') }}</button>
-          </div>
+          <!-- MULTI-TOUR: one pickup per tour (list + modal) -->
+          <template v-if="isMultiTour">
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+              <div class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary text-base">directions_bus</span>
+                <span class="text-xs font-bold text-slate-700">Punto de recojo por tour ({{ configuredCount }}/{{ purchaseTours.length }})</span>
+              </div>
+              <div
+                v-for="(tr, i) in purchaseTours"
+                :key="tr.booking_code + i"
+                class="flex items-center gap-3 p-3 md:p-4"
+                :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : ''"
+              >
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-800 truncate">{{ tr.tour_title }}</p>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    {{ formatDate(tr.tour_date) }}<span v-if="formatTime(tr.tour_time)"> · {{ formatTime(tr.tour_time) }}</span>
+                  </p>
+                  <p v-if="isTourPickupDone(tr)" class="text-[11px] text-green-600 font-semibold mt-0.5 inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    {{ tr.pickup_type === 'hotel_pickup' ? `Recojo en hotel${tr.pickup_hotel ? ': ' + tr.pickup_hotel : ''}` : 'Punto de encuentro confirmado' }}
+                  </p>
+                  <p v-else class="text-[11px] text-amber-600 font-semibold mt-0.5">Pendiente de configurar</p>
+                </div>
+                <button
+                  @click="openPickupModal(tr)"
+                  class="shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-colors"
+                  :class="isTourPickupDone(tr) ? 'bg-slate-100 text-slate-600 active:bg-slate-200' : 'bg-primary text-white active:bg-primary/80'"
+                >
+                  {{ isTourPickupDone(tr) ? 'Editar' : 'Configurar' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="flex gap-2 mt-3">
+              <button @click="currentStep = 0" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
+              <button
+                @click="onPickupCompleted({})"
+                :disabled="configuredCount < purchaseTours.length"
+                class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 active:bg-primary/80 transition-colors"
+              >
+                {{ configuredCount < purchaseTours.length ? `Faltan ${purchaseTours.length - configuredCount}` : t('save_continue') }}
+              </button>
+            </div>
+
+            <!-- Per-tour pickup modal -->
+            <Teleport to="body">
+              <div v-if="activePickupTour" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+                <div class="absolute inset-0 bg-black/50" @click="activePickupTour = null"></div>
+                <div class="relative bg-slate-50 w-full sm:max-w-lg sm:rounded-2xl rounded-t-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                  <div class="sticky top-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between z-10">
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-slate-800 truncate">{{ activePickupTour.tour_title }}</p>
+                      <p class="text-[11px] text-slate-500">{{ formatDate(activePickupTour.tour_date) }}</p>
+                    </div>
+                    <button @click="activePickupTour = null" class="p-1.5 text-slate-400 active:text-slate-700">
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                  <div class="p-4">
+                    <BookingPickupConfiguration
+                      :key="activePickupTour.id"
+                      :booking-id="activePickupTour.id"
+                      @completed="onTourPickupSaved"
+                      @error="(msg: string) => console.error(msg)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Teleport>
+          </template>
+
+          <!-- SINGLE TOUR: unchanged inline flow -->
+          <template v-else>
+            <BookingPickupConfiguration
+              :booking-id="booking.id"
+              @completed="onPickupCompleted"
+              @error="(msg: string) => console.error(msg)"
+            />
+            <div class="flex gap-2 mt-3">
+              <button @click="currentStep = 0" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
+              <button @click="skipStep(1)" class="flex-1 py-2.5 bg-slate-100 rounded-xl text-sm font-semibold text-slate-500 active:bg-slate-200">{{ t('skip_for_now') }}</button>
+            </div>
+          </template>
         </div>
 
         <!-- Step 2: Traveler Details -->
@@ -354,6 +419,37 @@ const purchaseTours = computed(() => {
   }]
 })
 const isMultiTour = computed(() => purchaseTours.value.length > 1)
+
+// Per-tour pickup (multi-tour). Seed from backend `pickup_configured` flags;
+// add ids as the customer saves each one via the modal.
+const configuredPickupIds = ref<Set<number>>(new Set())
+const activePickupTour = ref<any | null>(null)
+
+watch(purchaseTours, (tours) => {
+  for (const tr of tours) {
+    if (tr?.id && tr.pickup_configured) configuredPickupIds.value.add(tr.id)
+  }
+}, { immediate: true })
+
+const isTourPickupDone = (tr: any) =>
+  !!tr && (tr.pickup_configured || configuredPickupIds.value.has(tr.id))
+
+const configuredCount = computed(() =>
+  purchaseTours.value.filter((tr: any) => isTourPickupDone(tr)).length
+)
+
+function openPickupModal(tr: any) {
+  activePickupTour.value = tr
+}
+
+function onTourPickupSaved() {
+  if (activePickupTour.value?.id) {
+    configuredPickupIds.value.add(activePickupTour.value.id)
+    // keep the row's status label in sync without a refetch
+    activePickupTour.value.pickup_configured = true
+  }
+  activePickupTour.value = null
+}
 
 // Travelers form
 const travelers = ref<any[]>([])
