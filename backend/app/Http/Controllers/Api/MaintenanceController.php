@@ -101,6 +101,39 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Clear compiled views + config/route/app caches.
+     * cPanel + GitHub-FTP deploys never run artisan, so a deployed Blade fix
+     * (e.g. an email template) stays broken until the cached compiled view is
+     * dropped. Call this once after deploy from the browser address bar.
+     */
+    public function clearCaches(): JsonResponse
+    {
+        try {
+            $out = [];
+            foreach (['view:clear', 'config:clear', 'route:clear', 'cache:clear'] as $cmd) {
+                try {
+                    Artisan::call($cmd);
+                    $out[$cmd] = trim(Artisan::output()) ?: 'ok';
+                } catch (\Throwable $inner) {
+                    $out[$cmd] = 'ERROR: ' . $inner->getMessage();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cachés limpiadas. Las vistas Blade se recompilan en la próxima petición.',
+                'output' => $out,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al limpiar cachés.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Seed the 15 standardized tourism tags. Idempotent — updateOrCreate by slug.
      * Returns the resulting tag count.
      */
