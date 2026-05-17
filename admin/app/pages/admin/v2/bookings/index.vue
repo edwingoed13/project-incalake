@@ -21,6 +21,9 @@ interface Booking {
   infants?: number
   total?: number | string
   total_amount?: number | string
+  group_count?: number
+  group_total?: number
+  is_group?: boolean
   status: string
   payment_status: string
   payment_method?: string
@@ -170,7 +173,7 @@ const loadBookings = async () => {
     stats.value.pending = bookings.value.filter(b => b.status === 'pending').length
     stats.value.revenue = bookings.value
       .filter(b => b.payment_status === 'paid')
-      .reduce((sum, b) => sum + parseFloat(String(b.total || b.total_amount || 0)), 0)
+      .reduce((sum, b) => sum + bookingTotal(b), 0)
       .toFixed(2)
   } catch (err) {
     console.error('Error loading bookings:', err)
@@ -213,6 +216,13 @@ const formatDate = (date: string) => {
 
 const totalPax = (booking: Booking) =>
   booking.total_participants || ((booking.adults || 0) + (booking.children || 0) + (booking.infants || 0))
+
+// For a multi-tour purchase the row represents the whole purchase, so show
+// the group total (what was actually charged), not the primary tour's total.
+const bookingTotal = (booking: Booking) =>
+  booking.is_group && booking.group_total != null
+    ? Number(booking.group_total)
+    : parseFloat(String(booking.total || booking.total_amount || 0))
 
 const viewBooking = (booking: Booking) => {
   selectedBooking.value = booking
@@ -421,7 +431,18 @@ onMounted(() => {
               <tbody class="divide-y divide-default">
                 <tr v-for="booking in bookings" :key="booking.id" class="hover:bg-elevated/30 transition-colors">
                   <td class="px-4 py-3 whitespace-nowrap">
-                    <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">{{ booking.booking_code }}</UBadge>
+                    <div class="flex items-center gap-1.5">
+                      <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">{{ booking.booking_code }}</UBadge>
+                      <UBadge
+                        v-if="booking.is_group"
+                        color="primary"
+                        variant="subtle"
+                        size="sm"
+                        icon="i-heroicons-squares-2x2"
+                      >
+                        {{ booking.group_count }} tours
+                      </UBadge>
+                    </div>
                   </td>
                   <td class="px-4 py-3 min-w-0">
                     <p class="font-semibold truncate max-w-[200px]">{{ booking.customer_name }}</p>
@@ -429,11 +450,14 @@ onMounted(() => {
                   </td>
                   <td class="px-4 py-3">
                     <p class="truncate max-w-[260px]">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
+                    <p v-if="booking.is_group" class="text-xs text-muted">
+                      + {{ (booking.group_count || 1) - 1 }} tour(s) más · ver detalle
+                    </p>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(booking.tour_date) }}</td>
                   <td class="px-4 py-3 text-center tabular-nums">{{ totalPax(booking) || '-' }}</td>
                   <td class="px-4 py-3 text-right whitespace-nowrap font-bold tabular-nums">
-                    ${{ parseFloat(String(booking.total || booking.total_amount || 0)).toFixed(2) }}
+                    ${{ bookingTotal(booking).toFixed(2) }}
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap">
                     <UBadge

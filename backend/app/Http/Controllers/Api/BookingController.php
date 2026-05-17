@@ -914,12 +914,44 @@ class BookingController extends Controller
                 $query->whereDate('tour_date', $request->date);
             }
 
+            // Collapse multi-tour purchases to ONE row (the purchase, not each
+            // tour). Every booking of a group stores the SAME ordered
+            // payment_data.group_booking_ids array, so its first element is a
+            // stable group key and the "primary" row is the one whose id equals
+            // it. Keep only that primary; singles have no group key -> kept as
+            // themselves. This makes pagination count purchases, not tours.
+            $query->whereRaw(
+                "(JSON_LENGTH(payment_data, '$.group_booking_ids') IS NULL"
+                . " OR JSON_LENGTH(payment_data, '$.group_booking_ids') < 2"
+                . " OR id = CAST(JSON_EXTRACT(payment_data, '$.group_booking_ids[0]') AS UNSIGNED))"
+            );
+
             // Order by created_at desc
             $query->orderBy('created_at', 'desc');
 
             // Pagination
             $perPage = $request->get('per_page', 15);
             $bookings = $query->paginate($perPage);
+
+            // Enrich each multi-tour primary row with the purchase totals so the
+            // admin list shows the real amount charged and a "N tours" badge.
+            $bookings->getCollection()->transform(function ($b) {
+                $ids = is_array($b->payment_data ?? null)
+                    ? ($b->payment_data['group_booking_ids'] ?? null)
+                    : null;
+
+                if (is_array($ids) && count($ids) >= 2) {
+                    $siblings = Booking::whereIn('id', $ids)->get(['total', 'tour_date']);
+                    $b->group_count = $siblings->count();
+                    $b->group_total = (float) $siblings->sum('total');
+                    $b->is_group     = true;
+                } else {
+                    $b->group_count = 1;
+                    $b->is_group    = false;
+                }
+
+                return $b;
+            });
 
             return response()->json($bookings);
 
