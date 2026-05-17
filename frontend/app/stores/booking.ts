@@ -132,7 +132,7 @@ export const useBookingStore = defineStore('booking', {
       }
     },
 
-    async confirmPayPalPayment(bookingId: number, orderId: string, paymentData: any) {
+    async confirmPayPalPayment(bookingId: number, orderId: string, paymentData: any, bookingIds?: number[]) {
       this.loading = true
       this.error = null
 
@@ -142,7 +142,9 @@ export const useBookingStore = defineStore('booking', {
           method: 'POST',
           body: {
             order_id: orderId,
-            payment_data: paymentData
+            payment_data: paymentData,
+            // Multi-tour cart: one PayPal capture covers the whole group.
+            ...(bookingIds && bookingIds.length > 1 ? { booking_ids: bookingIds } : {})
           }
         })
 

@@ -102,7 +102,10 @@
               <div class="flex justify-between items-center">
                 <span class="text-lg font-bold text-primary-light dark:text-primary-dark">Total</span>
                 <span class="text-2xl font-black text-primary">
-                  ${{ booking.pricing?.total?.toFixed(2) || '0.00' }} {{ booking.pricing?.currency || 'USD' }}
+                  ${{ grandTotal.toFixed(2) }} {{ booking.pricing?.currency || 'USD' }}
+                  <span v-if="allBookings.length > 1" class="block text-xs font-semibold text-slate-500 mt-1">
+                    {{ allBookings.length }} tours
+                  </span>
                 </span>
               </div>
             </div>
@@ -128,9 +131,9 @@
             <template v-if="paymentConfig?.paypal_client_id">
               <PaymentPayPalCheckout
                 :client-id="paymentConfig.paypal_client_id"
-                :amount="booking.pricing?.amount_to_pay || booking.pricing?.total || 0"
+                :amount="grandTotal"
                 :currency="'USD'"
-                :description="`Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
+                :description="allBookings.length > 1 ? `Incalake - ${allBookings.length} tours` : `Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
                 :customer-email="booking.customer?.email || ''"
                 :customer-first-name="booking.customer?.first_name || ''"
                 :customer-last-name="booking.customer?.last_name || ''"
@@ -182,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 // Store useBookingStore and useCartStore are auto-imported
 
@@ -211,27 +214,42 @@ const error = ref<string | null>(null)
 const paymentError = ref<string | null>(null)
 const processingPayment = ref(false)
 const booking = ref<any>(null)
+const allBookings = ref<any[]>([])
 const paymentConfig = ref<any>(null)
+
+// Multi-tour cart: one PayPal capture for the SUM of every booking.
+const grandTotal = computed(() =>
+  allBookings.value.reduce(
+    (sum, b) => sum + (b.pricing?.amount_to_pay || b.pricing?.total || 0),
+    0
+  )
+)
 
 onMounted(async () => {
   try {
-    // Get booking code from query params
-    const bookingCode = route.query.booking as string
+    // Query param may be a single code or "BK-1,BK-2" for a multi-tour cart.
+    const bookingParam = route.query.booking as string
     const email = route.query.email as string
 
-    if (!bookingCode) {
+    if (!bookingParam) {
       throw new Error('Booking code is required')
     }
 
-    // Load booking details (pass email to satisfy backend auth)
-    const response: any = await bookingStore.getBooking(bookingCode, email)
-    const bookingData = response?.booking || response?.data || response
+    const codes = bookingParam.split(',').map(c => c.trim()).filter(Boolean)
+    for (const code of codes) {
+      const response: any = await bookingStore.getBooking(code, email)
+      const bookingData = response?.booking || response?.data || response
+      if (bookingData && bookingData.booking_code) {
+        allBookings.value.push(bookingData)
+      }
+    }
 
-    if (!bookingData || !bookingData.booking_code) {
+    if (allBookings.value.length === 0) {
       throw new Error('Booking not found')
     }
 
-    booking.value = bookingData
+    // Primary booking drives display + customer fields (same as Culqi page).
+    booking.value = allBookings.value[0]
 
     // Get payment configuration
     const { api } = useApi()
@@ -269,11 +287,14 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
   try {
     processingPayment.value = true
 
-    // Confirm payment with backend
+    // One PayPal order/capture for the whole group; backend marks all paid
+    // and sends ONE consolidated confirmation email.
+    const groupIds = allBookings.value.map(b => b.id)
     const result = await bookingStore.confirmPayPalPayment(
-      booking.value.id,
+      allBookings.value[0].id,
       orderId,
-      paymentData
+      paymentData,
+      groupIds
     )
 
     if (!result) {

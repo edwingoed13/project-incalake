@@ -534,6 +534,9 @@ class BookingController extends Controller
         $validator = Validator::make($request->all(), [
             'order_id' => 'required|string',
             'payment_data' => 'nullable|array',
+            // Multi-tour cart: sibling bookings captured in the same order.
+            'booking_ids' => 'nullable|array',
+            'booking_ids.*' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -546,10 +549,32 @@ class BookingController extends Controller
         try {
             $booking = Booking::findOrFail($id);
 
-            if ($booking->payment_status === 'paid') {
+            // Group = primary + sibling bookings from the same multi-tour cart.
+            // A PayPal order can only be captured once, so one capture covers
+            // the whole group.
+            $groupIds = collect([$booking->id])
+                ->merge($request->input('booking_ids', []))
+                ->map(fn ($v) => (int) $v)
+                ->unique()
+                ->values();
+            $bookings = Booking::whereIn('id', $groupIds)->get();
+
+            if ($bookings->isEmpty()) {
+                $bookings = collect([$booking]);
+            }
+
+            if ($bookings->firstWhere('payment_status', 'paid')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Esta reserva ya ha sido pagada'
+                    'message' => 'Una o más reservas de este grupo ya fueron pagadas'
+                ], 400);
+            }
+
+            if ($bookings->pluck('customer_email')->unique()->count() > 1
+                || $bookings->pluck('currency')->unique()->count() > 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Las reservas del grupo no son consistentes'
                 ], 400);
             }
 
@@ -572,13 +597,16 @@ class BookingController extends Controller
                 ], 400);
             }
 
-            // 2. Validate amount matches what we expected
+            // 2. Validate captured amount == SUM of the whole group's expected
             $capturedAmount = $paypal->getCapturedAmount($captureResponse);
-            $expectedAmount = $this->calculateExpectedPaymentAmount($booking);
+            $expectedAmount = round(
+                $bookings->sum(fn ($b) => $this->calculateExpectedPaymentAmount($b)),
+                2
+            );
 
             if ($capturedAmount === null || abs($capturedAmount - $expectedAmount) > 0.01) {
                 \Log::error('PayPal amount mismatch', [
-                    'booking_id' => $booking->id,
+                    'booking_ids' => $bookings->pluck('id')->all(),
                     'order_id' => $orderId,
                     'expected' => $expectedAmount,
                     'captured' => $capturedAmount
@@ -592,56 +620,72 @@ class BookingController extends Controller
             // 3. Get transaction ID for reconciliation
             $transactionId = $paypal->getTransactionId($captureResponse) ?? $orderId;
 
-            // 4. Mark booking as paid with real PayPal data
-            $booking->markAsPaid($transactionId, [
-                'order_id' => $orderId,
-                'transaction_id' => $transactionId,
-                'gateway' => 'paypal',
-                'captured_amount' => $capturedAmount,
-                'payer' => $captureResponse['payer'] ?? null,
-                'capture_response' => $captureResponse,
-            ]);
-
-            // Send confirmation emails (only on successful payment, non-blocking)
-            try {
-                Mail::to($booking->customer_email)->send(new BookingConfirmationEmail($booking, false));
-                Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($booking, true));
-                \Log::info('Booking confirmation emails sent (PayPal)', ['booking_id' => $booking->id]);
-            } catch (\Exception $mailException) {
-                \Log::error('Failed to send booking confirmation email (PayPal)', [
-                    'booking_id' => $booking->id,
-                    'error' => $mailException->getMessage()
+            // 4. One capture covers the whole group — mark every booking paid
+            // and add a SEPARATE Google Calendar event per tour/date.
+            foreach ($bookings as $b) {
+                $b->markAsPaid($transactionId, [
+                    'order_id' => $orderId,
+                    'transaction_id' => $transactionId,
+                    'gateway' => 'paypal',
+                    'captured_amount' => $capturedAmount,
+                    'payer' => $captureResponse['payer'] ?? null,
+                    'capture_response' => $captureResponse,
+                    'group_total_captured' => $capturedAmount,
+                    'group_booking_ids' => $bookings->pluck('id')->all(),
                 ]);
+
+                try {
+                    $calendarService = new GoogleCalendarService();
+                    $calendarService->createBookingEvent([
+                        'booking_code'    => $b->booking_code,
+                        'tour_title'      => $b->tour_title,
+                        'tour_date'       => \Carbon\Carbon::parse($b->tour_date)->format('Y-m-d'),
+                        'tour_time'       => \Carbon\Carbon::parse($b->tour_time)->format('H:i:s'),
+                        'adults'          => $b->adults,
+                        'children'        => $b->children,
+                        'customer_name'   => $b->customer_name,
+                        'customer_email'  => $b->customer_email,
+                        'customer_phone'  => $b->customer_phone,
+                        'total'           => $b->total,
+                        'currency'        => $b->currency,
+                        'payment_method'  => 'paypal',
+                    ]);
+                } catch (\Exception $calException) {
+                    \Log::error('Failed to create Google Calendar event (PayPal)', [
+                        'booking_id' => $b->id,
+                        'error' => $calException->getMessage()
+                    ]);
+                }
             }
 
-            // Add event to admin Google Calendar (non-blocking)
+            // ONE confirmation email for the whole purchase (non-blocking).
+            // Single tour -> existing template; multi-tour -> consolidated.
             try {
-                $calendarService = new GoogleCalendarService();
-                $calendarService->createBookingEvent([
-                    'booking_code'    => $booking->booking_code,
-                    'tour_title'      => $booking->tour_title,
-                    'tour_date'       => \Carbon\Carbon::parse($booking->tour_date)->format('Y-m-d'),
-                    'tour_time'       => \Carbon\Carbon::parse($booking->tour_time)->format('H:i:s'),
-                    'adults'          => $booking->adults,
-                    'children'        => $booking->children,
-                    'customer_name'   => $booking->customer_name,
-                    'customer_email'  => $booking->customer_email,
-                    'customer_phone'  => $booking->customer_phone,
-                    'total'           => $booking->total,
-                    'currency'        => $booking->currency,
-                    'payment_method'  => 'paypal',
+                $freshGroup = $bookings->map(fn ($b) => $b->fresh());
+                if ($freshGroup->count() === 1) {
+                    $single = $freshGroup->first();
+                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false));
+                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true));
+                } else {
+                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false));
+                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true));
+                }
+                \Log::info('Confirmation email sent (PayPal)', [
+                    'group_size' => $freshGroup->count(),
+                    'booking_ids' => $freshGroup->pluck('id')->all(),
                 ]);
-            } catch (\Exception $calException) {
-                \Log::error('Failed to create Google Calendar event (PayPal)', [
-                    'booking_id' => $booking->id,
-                    'error' => $calException->getMessage()
+            } catch (\Exception $mailException) {
+                \Log::error('Failed to send confirmation email (PayPal)', [
+                    'booking_ids' => $bookings->pluck('id')->all(),
+                    'error' => $mailException->getMessage()
                 ]);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Pago confirmado exitosamente',
-                'booking' => new BookingResource($booking->fresh())
+                'booking' => new BookingResource($booking->fresh()),
+                'group_booking_ids' => $bookings->pluck('id')->all(),
             ]);
 
         } catch (\Exception $e) {
