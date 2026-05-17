@@ -51,7 +51,7 @@
           <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900 dark:text-white">
             {{ tour.title }}
           </h1>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[15px]">
             <!-- Rating -->
             <button
               type="button"
@@ -262,7 +262,7 @@
           <!-- Reviews Section -->
           <section>
             <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold">Customer Reviews</h3>
+              <h3 class="text-xl font-bold">{{ t('customer_reviews') }}</h3>
               <div v-if="tourReviews.length > 0" class="flex items-center gap-2">
                 <span class="font-bold text-2xl">{{ avgRating }}</span>
                 <div class="flex">
@@ -284,16 +284,16 @@
                   </div>
                   <div class="flex-1">
                     <div class="flex items-center gap-2">
-                      <h4 class="text-sm font-bold">{{ review.name }}</h4>
-                      <span class="text-[11px] text-slate-400">{{ review.review_date }}</span>
+                      <h4 class="text-[15px] font-bold">{{ review.name }}</h4>
+                      <span class="text-xs text-slate-400">{{ review.review_date }}</span>
                     </div>
                     <div class="flex items-center gap-0.5 mt-0.5">
                       <StarSolidIcon v-for="i in review.rating" :key="i" class="size-3 text-yellow-400" aria-hidden="true" />
                     </div>
                   </div>
                 </div>
-                <p v-if="review.title" class="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
+                <p v-if="review.title" class="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
+                <p class="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
               </div>
 
               <button
@@ -301,14 +301,14 @@
                 @click="showAllReviews = !showAllReviews"
                 class="font-bold text-primary hover:underline text-sm flex items-center gap-1"
               >
-                {{ showAllReviews ? 'Show less' : `View all ${tourReviews.length} reviews` }}
+                {{ showAllReviews ? t('show_less') : t('view_all_reviews', { count: tourReviews.length }) }}
                 <ChevronDownIcon class="size-4 transition-transform" :class="{ 'rotate-180': showAllReviews }" aria-hidden="true" />
               </button>
             </div>
 
             <div v-else class="py-8 text-center text-slate-400">
               <ChatBubbleLeftRightIcon class="size-8 mb-2 mx-auto" aria-hidden="true" />
-              <p class="text-sm font-medium">No reviews yet for this tour.</p>
+              <p class="text-sm font-medium">{{ t('no_reviews') }}</p>
             </div>
           </section>
         </div>
@@ -463,7 +463,7 @@
 
       <!-- Related Tours (Full Width) -->
       <section class="mt-20" v-if="relatedTours.length > 0">
-        <h2 class="text-2xl font-black mb-8">You might also like</h2>
+        <h2 class="text-2xl font-black mb-8">{{ t('you_might_like') }}</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
@@ -490,7 +490,7 @@
               <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
             </div>
-            <p class="mt-2 font-black text-slate-900 dark:text-white">From ${{ relatedTour.min_price || 0 }}</p>
+            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} ${{ relatedTour.min_price || 0 }}</p>
           </NuxtLink>
         </div>
       </section>
@@ -522,7 +522,7 @@
   <div v-else-if="pending" class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      <p class="mt-4 text-slate-600">Loading tour...</p>
+      <p class="mt-4 text-slate-600">{{ t('loading_tour') }}</p>
     </div>
   </div>
 
@@ -530,9 +530,9 @@
   <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
       <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
-      <p class="text-red-600 text-lg mb-4">Tour not found</p>
-      <NuxtLink to="/tours" class="text-primary hover:underline font-bold">
-        View all tours
+      <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
+      <NuxtLink :to="localePath('/tours')" class="text-primary hover:underline font-bold">
+        {{ t('view_all_tours') }}
       </NuxtLink>
     </div>
   </div>
@@ -981,7 +981,10 @@ watchEffect(() => {
               priceCurrency: 'USD',
               availability: 'https://schema.org/InStock',
               url: canonicalUrl,
-              priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              // Deterministic (year-based) so SSR and client hydration produce
+              // the same JSON-LD string — Date.now() here would differ between
+              // server and client renders.
+              priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
               seller: {
                 '@type': 'Organization',
                 name: 'Voyager Marketplace'

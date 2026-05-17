@@ -234,7 +234,7 @@ watch(() => props.tour, () => {
 
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-3xl font-black text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center">
+    <h2 class="text-xl md:text-2xl font-bold text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center">
       <MapPinIcon class="size-6 md:size-8 text-primary mr-2 md:mr-3" aria-hidden="true" />
       Ubicación
     </h2>

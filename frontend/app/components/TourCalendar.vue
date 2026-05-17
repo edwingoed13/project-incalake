@@ -94,7 +94,19 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// Map the active i18n locale to a proper Intl/BCP-47 locale so month names
+// and weekday headers render in the user's language (was hardcoded en-US).
+const intlLocale = computed(() => {
+  const map: Record<string, string> = {
+    es: 'es-ES', en: 'en-US', pt: 'pt-BR',
+    fr: 'fr-FR', de: 'de-DE', it: 'it-IT',
+  }
+  return map[String(locale.value)] || 'es-ES'
+})
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 interface Props {
   modelValue: string
@@ -132,17 +144,24 @@ const currentYear = ref(today.getFullYear())
 const nextMonth = computed(() => currentMonth.value === 11 ? 0 : currentMonth.value + 1)
 const nextYear = computed(() => currentMonth.value === 11 ? currentYear.value + 1 : currentYear.value)
 
-const dayHeaders = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+// Weekday short labels, localized, Monday-first (matches the Mon-Sun grid).
+const dayHeaders = computed(() => {
+  // 2024-01-01 is a Monday — walk 7 days from it.
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2024, 0, 1 + i)
+    return cap(d.toLocaleDateString(intlLocale.value, { weekday: 'short' }).replace('.', ''))
+  })
+})
 
 const formatSelected = computed(() => {
   if (!props.modelValue) return ''
   const [y, m, d] = props.modelValue.split('-').map(Number)
   const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  return cap(date.toLocaleDateString(intlLocale.value, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))
 })
 
 function monthName(month: number, year: number) {
-  return new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return cap(new Date(year, month, 1).toLocaleDateString(intlLocale.value, { month: 'long', year: 'numeric' }))
 }
 
 function prevMonth() {

@@ -74,13 +74,15 @@ const initializeCulqi = () => {
       amount: amountInCents,
     }
 
+    // Culqi Checkout v4 `client` schema only accepts `email`. Passing
+    // firstName/lastName/phoneNumber/countryCode triggers a Joi
+    // "X is not allowed" ValidationError (the validator aborts on the first
+    // unknown key). The cardholder name is collected by Culqi's own card form,
+    // and the full customer data already lives in our booking + is sent to the
+    // backend when the charge is created — so nothing is lost here.
     const client: Record<string, string> = {
       email: props.customerEmail || '',
     }
-    if (props.customerFirstName) client.firstName = props.customerFirstName
-    if (props.customerLastName) client.lastName = props.customerLastName
-    if (props.customerPhone) client.phoneNumber = props.customerPhone
-    if (props.customerCountry) client.countryCode = props.customerCountry
 
     const paymentMethods = {
       tarjeta: true,
