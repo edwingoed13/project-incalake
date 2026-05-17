@@ -1,8 +1,15 @@
+// Production env vars (cPanel/Vercel) are frequently pasted with a trailing
+// newline or stray whitespace, e.g. "https://api.incalake.com/api\n". That
+// produced URLs like ".../api\n/bookings/113/payment/culqi" -> 400. Strip all
+// surrounding whitespace and any trailing slash so concatenation is always clean.
+export const sanitizeBaseUrl = (raw: unknown): string =>
+  String(raw ?? '').trim().replace(/\s+/g, '').replace(/\/+$/, '')
+
 export const useApi = () => {
   const config = useRuntimeConfig()
 
   const api = $fetch.create({
-    baseURL: config.public.apiBase as string,
+    baseURL: sanitizeBaseUrl(config.public.apiBase),
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
