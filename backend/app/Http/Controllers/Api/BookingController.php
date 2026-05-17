@@ -268,6 +268,9 @@ class BookingController extends Controller
         $validator = Validator::make($request->all(), [
             'token' => 'required|string',
             'payment_data' => 'nullable|array',
+            // Multi-tour cart: sibling bookings paid in the same Culqi charge.
+            'booking_ids' => 'nullable|array',
+            'booking_ids.*' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -280,10 +283,33 @@ class BookingController extends Controller
         try {
             $booking = Booking::findOrFail($id);
 
-            if ($booking->payment_status === 'paid') {
+            // Group = primary booking + any sibling bookings from the same
+            // multi-tour cart. A Culqi token is single-use, so we make ONE
+            // charge for the SUM of the group and mark them all paid.
+            $groupIds = collect([$booking->id])
+                ->merge($request->input('booking_ids', []))
+                ->map(fn ($v) => (int) $v)
+                ->unique()
+                ->values();
+            $bookings = Booking::whereIn('id', $groupIds)->get();
+
+            if ($bookings->isEmpty()) {
+                $bookings = collect([$booking]);
+            }
+
+            if ($bookings->firstWhere('payment_status', 'paid')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Esta reserva ya ha sido pagada'
+                    'message' => 'Una o más reservas de este grupo ya fueron pagadas'
+                ], 400);
+            }
+
+            // Safety: the whole group must be the same customer + currency.
+            if ($bookings->pluck('customer_email')->unique()->count() > 1
+                || $bookings->pluck('currency')->unique()->count() > 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Las reservas del grupo no son consistentes'
                 ], 400);
             }
 
@@ -291,12 +317,14 @@ class BookingController extends Controller
             $culqiToken = $request->token;
             $secretKey = config('services.culqi.secret_key');
 
-            // Convert amount to cents (Culqi requires integer in cents)
-            $amountInCents = (int) ($booking->total * 100);
+            // Single charge for the SUM of every booking in the group.
+            $amountInCents = (int) round($bookings->sum('total') * 100);
 
             // Prepare description (Culqi requires 5-80 characters)
             $description = "Reserva {$booking->booking_code}";
-            if ($booking->tour_title) {
+            if ($bookings->count() > 1) {
+                $description .= " +" . ($bookings->count() - 1) . " tour(s)";
+            } elseif ($booking->tour_title) {
                 $description .= " - {$booking->tour_title}";
             }
             // Ensure description is between 5 and 80 characters
@@ -388,60 +416,68 @@ class BookingController extends Controller
                 throw new \Exception('No se recibió ID de cargo de Culqi');
             }
 
-            // Mark booking as paid
-            $booking->markAsPaid($chargeId, [
-                'token' => $culqiToken,
-                'gateway' => 'culqi',
-                'charge_data' => $chargeResponse,
-                'payment_data' => $request->payment_data
-            ]);
-
-            \Log::info('Booking marked as paid', [
-                'booking_id' => $booking->id,
-                'charge_id' => $chargeId
-            ]);
-
-            // Send confirmation emails (only on successful payment, non-blocking)
-            try {
-                Mail::to($booking->customer_email)->send(new BookingConfirmationEmail($booking, false));
-                Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($booking, true));
-                \Log::info('Booking confirmation emails sent', ['booking_id' => $booking->id]);
-            } catch (\Exception $mailException) {
-                \Log::error('Failed to send booking confirmation email', [
-                    'booking_id' => $booking->id,
-                    'error' => $mailException->getMessage()
+            // One successful charge covers the whole group — mark every
+            // booking paid against the same charge, and fire per-booking
+            // confirmation email + calendar event.
+            foreach ($bookings as $b) {
+                $b->markAsPaid($chargeId, [
+                    'token' => $culqiToken,
+                    'gateway' => 'culqi',
+                    'charge_data' => $chargeResponse,
+                    'payment_data' => $request->payment_data,
+                    'group_total_charged' => $amountInCents,
+                    'group_booking_ids' => $bookings->pluck('id')->all(),
                 ]);
-            }
 
-            // Add event to admin Google Calendar (non-blocking)
-            try {
-                $calendarService = new GoogleCalendarService();
-                $calendarService->createBookingEvent([
-                    'booking_code'    => $booking->booking_code,
-                    'tour_title'      => $booking->tour_title,
-                    'tour_date'       => \Carbon\Carbon::parse($booking->tour_date)->format('Y-m-d'),
-                    'tour_time'       => \Carbon\Carbon::parse($booking->tour_time)->format('H:i:s'),
-                    'adults'          => $booking->adults,
-                    'children'        => $booking->children,
-                    'customer_name'   => $booking->customer_name,
-                    'customer_email'  => $booking->customer_email,
-                    'customer_phone'  => $booking->customer_phone,
-                    'total'           => $booking->total,
-                    'currency'        => $booking->currency,
-                    'payment_method'  => $booking->payment_method ?? 'culqi',
+                \Log::info('Booking marked as paid', [
+                    'booking_id' => $b->id,
+                    'charge_id' => $chargeId,
+                    'group_size' => $bookings->count(),
                 ]);
-            } catch (\Exception $calException) {
-                \Log::error('Failed to create Google Calendar event', [
-                    'booking_id' => $booking->id,
-                    'error' => $calException->getMessage()
-                ]);
+
+                // Confirmation emails (non-blocking)
+                try {
+                    Mail::to($b->customer_email)->send(new BookingConfirmationEmail($b, false));
+                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($b, true));
+                    \Log::info('Booking confirmation emails sent', ['booking_id' => $b->id]);
+                } catch (\Exception $mailException) {
+                    \Log::error('Failed to send booking confirmation email', [
+                        'booking_id' => $b->id,
+                        'error' => $mailException->getMessage()
+                    ]);
+                }
+
+                // Admin Google Calendar event (non-blocking)
+                try {
+                    $calendarService = new GoogleCalendarService();
+                    $calendarService->createBookingEvent([
+                        'booking_code'    => $b->booking_code,
+                        'tour_title'      => $b->tour_title,
+                        'tour_date'       => \Carbon\Carbon::parse($b->tour_date)->format('Y-m-d'),
+                        'tour_time'       => \Carbon\Carbon::parse($b->tour_time)->format('H:i:s'),
+                        'adults'          => $b->adults,
+                        'children'        => $b->children,
+                        'customer_name'   => $b->customer_name,
+                        'customer_email'  => $b->customer_email,
+                        'customer_phone'  => $b->customer_phone,
+                        'total'           => $b->total,
+                        'currency'        => $b->currency,
+                        'payment_method'  => $b->payment_method ?? 'culqi',
+                    ]);
+                } catch (\Exception $calException) {
+                    \Log::error('Failed to create Google Calendar event', [
+                        'booking_id' => $b->id,
+                        'error' => $calException->getMessage()
+                    ]);
+                }
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Pago confirmado exitosamente',
                 'booking' => new BookingResource($booking->fresh()),
-                'charge_id' => $chargeId
+                'charge_id' => $chargeId,
+                'group_booking_ids' => $bookings->pluck('id')->all(),
             ]);
 
         } catch (\Exception $e) {

@@ -266,10 +266,10 @@ const handlePaymentSuccess = async (token: string, paymentData: any) => {
   try {
     processingPayment.value = true
 
-    // Confirm payment for all bookings
-    for (const booking of allBookings.value) {
-      await bookingStore.confirmCulqiPayment(booking.id, token, paymentData)
-    }
+    // A Culqi token is single-use, so we make ONE charge for the whole group
+    // (grandTotal). The backend marks every booking in the group as paid.
+    const groupIds = allBookings.value.map(b => b.id)
+    await bookingStore.confirmCulqiPayment(allBookings.value[0].id, token, paymentData, groupIds)
 
     cartStore.clearCart()
 
