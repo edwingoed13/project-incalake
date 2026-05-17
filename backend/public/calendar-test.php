@@ -21,16 +21,24 @@ if (!$appBase || !is_dir($appBase)) {
     exit;
 }
 
-// --- Key gate: read DEPLOY_HOOK_KEY straight from .env (no Laravel) ---
+// --- Key gate: read DEPLOY_HOOK_KEY (tolerant): .env file, then process env ---
 $expected = '';
 $envFile = $appBase . '/.env';
-if (is_file($envFile)) {
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (strpos(ltrim($line), 'DEPLOY_HOOK_KEY=') === 0) {
-            $expected = trim(trim(substr(trim($line), strlen('DEPLOY_HOOK_KEY='))), "\"'");
-            break;
-        }
+$envExists = is_file($envFile);
+$keyLineFound = false;
+if ($envExists) {
+    $raw = (string) @file_get_contents($envFile);
+    if (preg_match('/^\s*(?:export\s+)?DEPLOY_HOOK_KEY\s*=\s*(.*)$/m', $raw, $mm)) {
+        $keyLineFound = true;
+        $expected = trim($mm[1]);
+        $expected = trim($expected, "\"'");
+        $expected = preg_replace('/\s+#.*$/', '', $expected);
+        $expected = trim($expected, "\r\n\t ");
     }
+}
+if ($expected === '') {
+    $envVal = getenv('DEPLOY_HOOK_KEY') ?: ($_SERVER['DEPLOY_HOOK_KEY'] ?? $_ENV['DEPLOY_HOOK_KEY'] ?? '');
+    if ($envVal !== '') { $expected = trim((string) $envVal); }
 }
 $given = isset($_GET['key']) ? (string) $_GET['key'] : (string) ($_POST['key'] ?? '');
 if ($expected === '' || !hash_equals($expected, $given)) {
@@ -38,8 +46,16 @@ if ($expected === '' || !hash_equals($expected, $given)) {
     echo json_encode([
         'success' => false,
         'message' => $expected === ''
-            ? 'DEPLOY_HOOK_KEY no está configurado en el .env del servidor.'
+            ? 'DEPLOY_HOOK_KEY no está configurado/legible en el servidor.'
             : 'Forbidden: clave inválida o ausente.',
+        'diag' => [
+            'app_base' => $appBase,
+            'env_file' => $envFile,
+            'env_file_exists' => $envExists,
+            'key_line_found_in_env' => $keyLineFound,
+            'key_configured' => $expected !== '',
+            'key_provided_in_url' => $given !== '',
+        ],
     ]);
     exit;
 }

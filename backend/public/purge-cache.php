@@ -26,17 +26,25 @@ if (!$appBase || !is_dir($appBase)) {
     exit;
 }
 
-// --- Read DEPLOY_HOOK_KEY directly from .env (no Laravel) ---
+// --- Read DEPLOY_HOOK_KEY (tolerant): .env file, then process env ---
 $expected = '';
 $envFile = $appBase . '/.env';
-if (is_file($envFile)) {
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (strpos(ltrim($line), 'DEPLOY_HOOK_KEY=') === 0) {
-            $expected = trim(substr(trim($line), strlen('DEPLOY_HOOK_KEY=')));
-            $expected = trim($expected, "\"'"); // strip optional quotes
-            break;
-        }
+$envExists = is_file($envFile);
+$keyLineFound = false;
+if ($envExists) {
+    $raw = (string) @file_get_contents($envFile);
+    // Tolerate: optional `export `, spaces around `=`, quotes, CRLF/BOM.
+    if (preg_match('/^\s*(?:export\s+)?DEPLOY_HOOK_KEY\s*=\s*(.*)$/m', $raw, $mm)) {
+        $keyLineFound = true;
+        $expected = trim($mm[1]);
+        $expected = trim($expected, "\"'");          // strip quotes
+        $expected = preg_replace('/\s+#.*$/', '', $expected); // strip inline comment
+        $expected = trim($expected, "\r\n\t ");
     }
+}
+if ($expected === '') { // fallback: real process env (SetEnv / cPanel env)
+    $envVal = getenv('DEPLOY_HOOK_KEY') ?: ($_SERVER['DEPLOY_HOOK_KEY'] ?? $_ENV['DEPLOY_HOOK_KEY'] ?? '');
+    if ($envVal !== '') { $expected = trim((string) $envVal); }
 }
 
 $given = isset($_GET['key']) ? (string) $_GET['key'] : (string) ($_POST['key'] ?? '');
@@ -46,8 +54,17 @@ if ($expected === '' || !hash_equals($expected, $given)) {
     echo json_encode([
         'success' => false,
         'message' => $expected === ''
-            ? 'DEPLOY_HOOK_KEY no está configurado en el .env del servidor.'
+            ? 'DEPLOY_HOOK_KEY no está configurado/legible en el servidor.'
             : 'Forbidden: clave inválida o ausente.',
+        // Non-sensitive diagnostics (no key value is exposed):
+        'diag' => [
+            'app_base' => $appBase,
+            'env_file' => $envFile,
+            'env_file_exists' => $envExists,
+            'key_line_found_in_env' => $keyLineFound,
+            'key_configured' => $expected !== '',
+            'key_provided_in_url' => $given !== '',
+        ],
     ]);
     exit;
 }
