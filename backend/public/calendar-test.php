@@ -14,10 +14,34 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-$appBase = realpath(__DIR__ . '/../incalake-api') ?: realpath(__DIR__ . '/..');
-if (!$appBase || !is_dir($appBase)) {
+// Locate Laravel root (realpath() unreliable on cPanel/open_basedir).
+$candidates = [
+    __DIR__ . '/../incalake-api',
+    __DIR__ . '/../../incalake-api',
+    __DIR__ . '/../../../incalake-api',
+    dirname(__DIR__, 2) . '/incalake-api',
+    dirname(__DIR__, 3) . '/incalake-api',
+    __DIR__ . '/..',
+    __DIR__,
+];
+$appBase = null;
+$triedBase = [];
+foreach ($candidates as $c) {
+    $triedBase[] = $c;
+    if (is_file($c . '/bootstrap/app.php')) { $appBase = $c; break; }
+}
+if (!$appBase) {
+    foreach ($candidates as $c) {
+        if (is_file($c . '/.env')) { $appBase = $c; break; }
+    }
+}
+if (!$appBase) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'App base not found']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'No se encontró la raíz de Laravel.',
+        'diag' => ['script_dir' => __DIR__, 'tried' => $triedBase],
+    ]);
     exit;
 }
 
@@ -49,7 +73,9 @@ if ($expected === '' || !hash_equals($expected, $given)) {
             ? 'DEPLOY_HOOK_KEY no está configurado/legible en el servidor.'
             : 'Forbidden: clave inválida o ausente.',
         'diag' => [
+            'script_dir' => __DIR__,
             'app_base' => $appBase,
+            'app_base_tried' => $triedBase,
             'env_file' => $envFile,
             'env_file_exists' => $envExists,
             'key_line_found_in_env' => $keyLineFound,

@@ -16,13 +16,37 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Public docroot is .../public_html/api.incalake.com/ ; the Laravel app lives
-// next to it at ../incalake-api/ (see deploy-backend.yml index.php bootstrap).
-$appBase = realpath(__DIR__ . '/../incalake-api') ?: realpath(__DIR__ . '/..');
+// Locate the Laravel root. realpath() is unreliable on cPanel (open_basedir
+// makes ../ paths return false), so probe string candidates with is_file()
+// and detect the root by bootstrap/app.php (always deployed).
+$candidates = [
+    __DIR__ . '/../incalake-api',
+    __DIR__ . '/../../incalake-api',
+    __DIR__ . '/../../../incalake-api',
+    dirname(__DIR__, 2) . '/incalake-api',
+    dirname(__DIR__, 3) . '/incalake-api',
+    __DIR__ . '/..',
+    __DIR__,
+];
+$appBase = null;
+$triedBase = [];
+foreach ($candidates as $c) {
+    $triedBase[] = $c;
+    if (is_file($c . '/bootstrap/app.php')) { $appBase = $c; break; }
+}
+if (!$appBase) { // fallback: first candidate that has a .env
+    foreach ($candidates as $c) {
+        if (is_file($c . '/.env')) { $appBase = $c; break; }
+    }
+}
 
-if (!$appBase || !is_dir($appBase)) {
+if (!$appBase) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'App base not found']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'No se encontró la raíz de Laravel.',
+        'diag' => ['script_dir' => __DIR__, 'tried' => $triedBase],
+    ]);
     exit;
 }
 
@@ -58,7 +82,9 @@ if ($expected === '' || !hash_equals($expected, $given)) {
             : 'Forbidden: clave inválida o ausente.',
         // Non-sensitive diagnostics (no key value is exposed):
         'diag' => [
+            'script_dir' => __DIR__,
             'app_base' => $appBase,
+            'app_base_tried' => $triedBase,
             'env_file' => $envFile,
             'env_file_exists' => $envExists,
             'key_line_found_in_env' => $keyLineFound,
