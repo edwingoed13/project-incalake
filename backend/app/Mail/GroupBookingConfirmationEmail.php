@@ -17,8 +17,11 @@ class GroupBookingConfirmationEmail extends Mailable
     /** @var Collection<int,\App\Models\Booking> */
     public Collection $bookings;
     public bool $isAdminCopy;
+    /** Real amount charged/captured by the gateway for the whole group.
+     *  Null = treat as fully paid (= group total). */
+    public ?float $amountPaid;
 
-    public function __construct(Collection $bookings, bool $isAdminCopy = false)
+    public function __construct(Collection $bookings, bool $isAdminCopy = false, ?float $amountPaid = null)
     {
         // Stable order: by tour date then code.
         $this->bookings = $bookings->sortBy([
@@ -26,6 +29,7 @@ class GroupBookingConfirmationEmail extends Mailable
             ['booking_code', 'asc'],
         ])->values();
         $this->isAdminCopy = $isAdminCopy;
+        $this->amountPaid = $amountPaid;
     }
 
     public function envelope(): Envelope
@@ -46,18 +50,23 @@ class GroupBookingConfirmationEmail extends Mailable
     public function content(): Content
     {
         $currency = $this->bookings->first()->currency;
+        $groupTotal = round($this->bookings->sum(fn ($b) => (float) $b->total), 2);
+        $groupPaid = round($this->amountPaid ?? $groupTotal, 2);
+        $groupRemaining = round(max(0, $groupTotal - $groupPaid), 2);
 
         return new Content(
             view: 'emails.booking-confirmation-group',
             with: [
-                'bookings'      => $this->bookings,
-                'primary'       => $this->bookings->first(),
-                'isAdminCopy'   => $this->isAdminCopy,
-                'currency'      => $currency,
-                'groupSubtotal' => $this->bookings->sum(fn ($b) => (float) $b->subtotal),
-                'groupTax'      => $this->bookings->sum(fn ($b) => (float) ($b->tax_amount ?? 0)),
-                'groupDiscount' => $this->bookings->sum(fn ($b) => (float) ($b->discount ?? 0)),
-                'groupTotal'    => $this->bookings->sum(fn ($b) => (float) $b->total),
+                'bookings'       => $this->bookings,
+                'primary'        => $this->bookings->first(),
+                'isAdminCopy'    => $this->isAdminCopy,
+                'currency'       => $currency,
+                'groupSubtotal'  => $this->bookings->sum(fn ($b) => (float) $b->subtotal),
+                'groupTax'       => $this->bookings->sum(fn ($b) => (float) ($b->tax_amount ?? 0)),
+                'groupDiscount'  => $this->bookings->sum(fn ($b) => (float) ($b->discount ?? 0)),
+                'groupTotal'     => $groupTotal,
+                'groupPaid'      => $groupPaid,
+                'groupRemaining' => $groupRemaining,
             ]
         );
     }

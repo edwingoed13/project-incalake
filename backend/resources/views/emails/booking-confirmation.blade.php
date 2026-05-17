@@ -143,14 +143,28 @@
                       </tr>
                       @endif
                     </table>
+                    @php
+                      $admPaid = round($amountPaid ?? (float)$booking->total, 2);
+                      $admRemaining = round(max(0, (float)$booking->total - $admPaid), 2);
+                    @endphp
                     <table width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #e2e8f0; margin-top:8px;">
                       <tr>
                         <td style="padding:10px 0 2px; font-size:17px; font-weight:800; color:#1e3a5f;">Total</td>
                         <td style="padding:10px 0 2px; font-size:17px; font-weight:800; color:#1e3a5f; text-align:right;">{{ $booking->currency }} {{ number_format($booking->total, 2) }}</td>
                       </tr>
+                      <tr>
+                        <td style="padding:4px 0; font-size:13px; color:#16a34a; font-weight:700;">Pagado ahora</td>
+                        <td style="padding:4px 0; font-size:13px; color:#16a34a; font-weight:700; text-align:right;">{{ $booking->currency }} {{ number_format($admPaid, 2) }}</td>
+                      </tr>
+                      @if($admRemaining > 0.009)
+                      <tr>
+                        <td style="padding:4px 0; font-size:13px; color:#b45309; font-weight:700;">Saldo pendiente</td>
+                        <td style="padding:4px 0; font-size:13px; color:#b45309; font-weight:700; text-align:right;">{{ $booking->currency }} {{ number_format($admRemaining, 2) }}</td>
+                      </tr>
+                      @endif
                     </table>
                     <p style="margin:6px 0 0; font-size:11px; color:#94a3b8;">
-                      {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; {{ $booking->transaction_id }}@endif
+                      {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; {{ $booking->transaction_id }}@endif@if($admRemaining > 0.009) &middot; Saldo a pagar el dia del tour @endif
                     </p>
                   </td>
                 </tr>
@@ -266,15 +280,34 @@
                       </tr>
                       @endif
                     </table>
+                    @php
+                      $cliPaid = round($amountPaid ?? (float)$booking->total, 2);
+                      $cliRemaining = round(max(0, (float)$booking->total - $cliPaid), 2);
+                    @endphp
                     <table width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #e2e8f0; margin-top:10px;">
                       <tr>
-                        <td style="padding:12px 0 4px; font-size:18px; font-weight:800; color:#1e3a5f;">Total pagado</td>
-                        <td style="padding:12px 0 4px; font-size:18px; font-weight:800; color:#1e3a5f; text-align:right;">{{ $booking->currency }} {{ number_format($booking->total, 2) }}</td>
+                        <td style="padding:12px 0 2px; font-size:15px; font-weight:700; color:#64748b;">Total</td>
+                        <td style="padding:12px 0 2px; font-size:15px; font-weight:700; color:#64748b; text-align:right;">{{ $booking->currency }} {{ number_format($booking->total, 2) }}</td>
                       </tr>
+                      <tr>
+                        <td style="padding:4px 0; font-size:18px; font-weight:800; color:#16a34a;">{{ $cliRemaining > 0.009 ? 'Pagado ahora' : 'Total pagado' }}</td>
+                        <td style="padding:4px 0; font-size:18px; font-weight:800; color:#16a34a; text-align:right;">{{ $booking->currency }} {{ number_format($cliPaid, 2) }}</td>
+                      </tr>
+                      @if($cliRemaining > 0.009)
+                      <tr>
+                        <td style="padding:4px 0; font-size:15px; font-weight:800; color:#b45309;">Saldo pendiente</td>
+                        <td style="padding:4px 0; font-size:15px; font-weight:800; color:#b45309; text-align:right;">{{ $booking->currency }} {{ number_format($cliRemaining, 2) }}</td>
+                      </tr>
+                      @endif
                     </table>
                     <p style="margin:8px 0 0; font-size:11px; color:#94a3b8;">
                       Metodo: {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; ID: {{ $booking->transaction_id }}@endif
                     </p>
+                    @if($cliRemaining > 0.009)
+                    <p style="margin:6px 0 0; font-size:12px; color:#b45309; font-weight:600;">
+                      El saldo pendiente de {{ $booking->currency }} {{ number_format($cliRemaining, 2) }} se paga el dia del tour.
+                    </p>
+                    @endif
                   </td>
                 </tr>
               </table>

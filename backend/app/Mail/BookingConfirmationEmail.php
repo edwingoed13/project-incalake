@@ -12,11 +12,15 @@ class BookingConfirmationEmail extends Mailable
 {
     public Booking $booking;
     public bool $isAdminCopy;
+    /** Real amount actually charged/captured by the gateway. Null = treat as
+     *  fully paid (= total) for backward compatibility with old callers. */
+    public ?float $amountPaid;
 
-    public function __construct(Booking $booking, bool $isAdminCopy = false)
+    public function __construct(Booking $booking, bool $isAdminCopy = false, ?float $amountPaid = null)
     {
         $this->booking = $booking;
         $this->isAdminCopy = $isAdminCopy;
+        $this->amountPaid = $amountPaid;
     }
 
     public function envelope(): Envelope
@@ -38,6 +42,7 @@ class BookingConfirmationEmail extends Mailable
             with: [
                 'booking'     => $this->booking,
                 'isAdminCopy' => $this->isAdminCopy,
+                'amountPaid'  => $this->amountPaid,
             ]
         );
     }

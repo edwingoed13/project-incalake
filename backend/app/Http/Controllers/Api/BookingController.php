@@ -466,13 +466,15 @@ class BookingController extends Controller
             // Multi-tour -> one consolidated email listing every tour.
             try {
                 $freshGroup = $bookings->map(fn ($b) => $b->fresh());
+                // Culqi charges the FULL group total (no advance split).
+                $paidNow = round($amountInCents / 100, 2);
                 if ($freshGroup->count() === 1) {
                     $single = $freshGroup->first();
-                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false));
-                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true));
+                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $paidNow));
+                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $paidNow));
                 } else {
-                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false));
-                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true));
+                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false, $paidNow));
+                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true, $paidNow));
                 }
                 \Log::info('Confirmation email sent', [
                     'group_size' => $freshGroup->count(),
@@ -662,13 +664,16 @@ class BookingController extends Controller
             // Single tour -> existing template; multi-tour -> consolidated.
             try {
                 $freshGroup = $bookings->map(fn ($b) => $b->fresh());
+                // PayPal captured the real amount (may be an advance if the
+                // tour uses advance_payment_percentage < 100).
+                $paidNow = round((float) $capturedAmount, 2);
                 if ($freshGroup->count() === 1) {
                     $single = $freshGroup->first();
-                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false));
-                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true));
+                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $paidNow));
+                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $paidNow));
                 } else {
-                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false));
-                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true));
+                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false, $paidNow));
+                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true, $paidNow));
                 }
                 \Log::info('Confirmation email sent (PayPal)', [
                     'group_size' => $freshGroup->count(),
