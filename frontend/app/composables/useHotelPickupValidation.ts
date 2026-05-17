@@ -73,7 +73,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
   const handlePlaceSelection = async () => {
     const place = autocomplete.getPlace()
     if (!place.geometry) {
-      validationError.value = 'Hotel not found'
+      validationError.value = 'No encontramos ese hotel. Intenta con otro nombre.'
       return
     }
 
@@ -125,7 +125,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
         }
       }
     } catch (e: any) {
-      validationError.value = 'Error validating hotel location'
+      validationError.value = 'Error al validar la ubicación del hotel'
     } finally {
       isValidating.value = false
     }
@@ -133,7 +133,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
 
   const savePickupConfiguration = async (): Promise<boolean> => {
     if (!pickupChoice.value) {
-      saveError.value = 'Please select a pickup option'
+      saveError.value = 'Selecciona una opción de recojo'
       return false
     }
     isSaving.value = true
@@ -152,7 +152,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
       await api(`/bookings/${bookingId.value}/save-pickup`, { method: 'POST', body: payload })
       return true
     } catch (e: any) {
-      saveError.value = 'Error saving pickup configuration'
+      saveError.value = 'Error al guardar la configuración de recojo'
       return false
     } finally {
       isSaving.value = false
