@@ -273,9 +273,11 @@ const handlePaymentSuccess = async (token: string, paymentData: any) => {
 
     cartStore.clearCart()
 
-    // Redirect to first booking confirmation
+    // Redirect to the first booking; pass every code so the confirmation
+    // page can show/link all reservations of a multi-tour purchase.
     const email = allBookings.value[0]?.customer?.email || route.query.email
-    router.push(`/booking-confirmation/${allBookings.value[0].booking_code}?email=${encodeURIComponent(email as string)}`)
+    const groupParam = encodeURIComponent(allBookings.value.map(b => b.booking_code).join(','))
+    router.push(`/booking-confirmation/${allBookings.value[0].booking_code}?email=${encodeURIComponent(email as string)}&group=${groupParam}`)
   } catch (err: any) {
     error.value = err.message || 'Payment confirmation failed'
     processingPayment.value = false

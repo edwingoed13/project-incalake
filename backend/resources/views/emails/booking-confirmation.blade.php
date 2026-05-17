@@ -164,7 +164,7 @@
                       @endif
                     </table>
                     <p style="margin:6px 0 0; font-size:11px; color:#94a3b8;">
-                      {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; {{ $booking->transaction_id }}@endif@if($admRemaining > 0.009) &middot; Saldo a pagar el dia del tour @endif
+                      {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; {{ $booking->transaction_id }}@endif{{ $admRemaining > 0.009 ? ' · Saldo a pagar el dia del tour' : '' }}
                     </p>
                   </td>
                 </tr>

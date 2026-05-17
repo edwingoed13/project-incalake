@@ -139,7 +139,7 @@
                     @endif
                   </table>
                   <p style="margin:6px 0 0; font-size:11px; color:#94a3b8;">
-                    {{ strtoupper($primary->payment_method ?? '-') }}@if($primary->transaction_id) &middot; {{ $primary->transaction_id }}@endif@if($groupRemaining > 0.009) &middot; Saldo a pagar el dia del tour @endif
+                    {{ strtoupper($primary->payment_method ?? '-') }}@if($primary->transaction_id) &middot; {{ $primary->transaction_id }}@endif{{ $groupRemaining > 0.009 ? ' · Saldo a pagar el dia del tour' : '' }}
                   </p>
                 </td></tr>
               </table>

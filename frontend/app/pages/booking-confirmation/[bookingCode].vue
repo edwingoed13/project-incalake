@@ -25,6 +25,29 @@
           <p class="text-xs text-slate-500 mt-0.5">{{ t('code') }}: <span class="font-mono font-bold text-primary">{{ booking.booking_code }}</span></p>
         </div>
 
+        <!-- Multi-tour purchase: links to the sibling reservations -->
+        <div v-if="siblingCodes.length" class="bg-white rounded-2xl border border-primary/20 shadow-sm p-4 mb-5">
+          <p class="text-sm font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-primary text-lg">confirmation_number</span>
+            Esta compra incluye {{ groupCodes.length }} reservas
+          </p>
+          <p class="text-xs text-slate-500 mb-3">Se enviaron todas en un solo correo de confirmación. Puedes ver cada una aquí:</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold font-mono">
+              {{ booking.booking_code }} <span class="text-[10px] font-sans font-semibold">(ésta)</span>
+            </span>
+            <NuxtLink
+              v-for="code in siblingCodes"
+              :key="code"
+              :to="`/booking-confirmation/${code}?email=${encodeURIComponent(email || '')}&group=${encodeURIComponent(groupCodes.join(','))}`"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 text-slate-700 text-xs font-bold font-mono transition-colors"
+            >
+              {{ code }}
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </NuxtLink>
+          </div>
+        </div>
+
         <!-- Step Indicator -->
         <div class="flex items-center justify-between mb-5 md:mb-8 px-2">
           <template v-for="(s, idx) in steps" :key="idx">
@@ -273,6 +296,12 @@ const config = useRuntimeConfig()
 const bookingCode = route.params.bookingCode as string
 const email = route.query.email as string
 const token = route.query.token as string
+
+// Multi-tour purchase: all booking codes paid in the same charge are passed
+// as ?group=BK-1,BK-2,... so the customer can see/visit every reservation.
+const groupCodes = ((route.query.group as string) || '')
+  .split(',').map(c => c.trim()).filter(Boolean)
+const siblingCodes = computed(() => groupCodes.filter(c => c !== bookingCode))
 
 const currentStep = ref(0)
 const completedSteps = ref(new Set<number>())
