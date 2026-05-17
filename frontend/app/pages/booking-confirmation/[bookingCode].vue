@@ -168,6 +168,16 @@
 
         <!-- Step 1: Pickup Configuration -->
         <div v-else-if="currentStep === 1">
+          <!-- Multi-tour: pickup here only covers the first tour; the rest is
+               coordinated by the team so the customer doesn't assume it's done. -->
+          <div v-if="isMultiTour" class="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <span class="material-symbols-outlined text-amber-600 text-lg shrink-0">info</span>
+            <p class="text-xs text-amber-800 leading-relaxed">
+              Tu compra incluye <strong>{{ purchaseTours.length }} tours</strong>. Aquí configuras el punto de recojo del
+              <strong>primer tour</strong>. Para los demás, nuestro equipo coordinará el recojo contigo por
+              WhatsApp/correo antes de cada fecha.
+            </p>
+          </div>
           <BookingPickupConfiguration
             :booking-id="booking.id"
             @completed="onPickupCompleted"
