@@ -101,6 +101,71 @@ class MaintenanceController extends Controller
     }
 
     /**
+     * Diagnose the Google Calendar integration (admin calendar).
+     * cPanel + GitHub-FTP deploy does NOT carry the secret credentials file,
+     * so events silently fail. This reports exactly what's wrong and, if the
+     * creds are present, creates a real TEST event so it can be verified.
+     */
+    public function calendarTest(): JsonResponse
+    {
+        $path = storage_path('app/google-calendar-credentials.json');
+        $exists = file_exists($path);
+        $clientEmail = null;
+
+        if ($exists) {
+            $json = json_decode((string) @file_get_contents($path), true);
+            $clientEmail = $json['client_email'] ?? null;
+        }
+
+        if (!$exists || !$clientEmail) {
+            return response()->json([
+                'success' => false,
+                'credentials_file_present' => $exists,
+                'service_account_email' => $clientEmail,
+                'calendar_id' => config('services.google_calendar.calendar_id', 'reservas@incalake.com'),
+                'message' => !$exists
+                    ? 'Falta storage/app/google-calendar-credentials.json en el servidor (es secreto, no viaja por el deploy de GitHub). Súbelo por el File Manager de cPanel.'
+                    : 'El archivo de credenciales no tiene client_email válido.',
+            ], 422);
+        }
+
+        try {
+            $ok = (new \App\Services\GoogleCalendarService())->createBookingEvent([
+                'booking_code'   => 'TEST-' . now()->format('His'),
+                'tour_title'     => 'Evento de prueba (ignorar / borrar)',
+                'tour_date'      => now()->addDay()->format('Y-m-d'),
+                'tour_time'      => '09:00:00',
+                'adults'         => 1,
+                'children'       => 0,
+                'customer_name'  => 'Prueba Incalake',
+                'customer_email' => 'reservas@incalake.com',
+                'customer_phone' => '',
+                'total'          => 0,
+                'currency'       => 'USD',
+                'payment_method' => 'test',
+            ]);
+
+            return response()->json([
+                'success' => $ok,
+                'credentials_file_present' => true,
+                'service_account_email' => $clientEmail,
+                'calendar_id' => config('services.google_calendar.calendar_id', 'reservas@incalake.com'),
+                'message' => $ok
+                    ? 'Evento de prueba creado. Revisa el Google Calendar de reservas@incalake.com (borra el evento TEST).'
+                    : 'No se pudo crear el evento. Verifica que el calendario reservas@incalake.com esté compartido con ' . $clientEmail . ' con permiso "Hacer cambios en eventos". Revisa storage/logs/laravel.log para el detalle.',
+            ], $ok ? 200 : 502);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'credentials_file_present' => true,
+                'service_account_email' => $clientEmail,
+                'message' => 'Excepción al crear el evento de prueba.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Clear compiled views + config/route/app caches.
      * cPanel + GitHub-FTP deploys never run artisan, so a deployed Blade fix
      * (e.g. an email template) stays broken until the cached compiled view is

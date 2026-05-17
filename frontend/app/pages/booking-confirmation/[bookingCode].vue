@@ -25,29 +25,6 @@
           <p class="text-xs text-slate-500 mt-0.5">{{ t('code') }}: <span class="font-mono font-bold text-primary">{{ booking.booking_code }}</span></p>
         </div>
 
-        <!-- Multi-tour purchase: links to the sibling reservations -->
-        <div v-if="siblingCodes.length" class="bg-white rounded-2xl border border-primary/20 shadow-sm p-4 mb-5">
-          <p class="text-sm font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-primary text-lg">confirmation_number</span>
-            Esta compra incluye {{ groupCodes.length }} reservas
-          </p>
-          <p class="text-xs text-slate-500 mb-3">Se enviaron todas en un solo correo de confirmación. Puedes ver cada una aquí:</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold font-mono">
-              {{ booking.booking_code }} <span class="text-[10px] font-sans font-semibold">(ésta)</span>
-            </span>
-            <NuxtLink
-              v-for="code in siblingCodes"
-              :key="code"
-              :to="`/booking-confirmation/${code}?email=${encodeURIComponent(email || '')}&group=${encodeURIComponent(groupCodes.join(','))}`"
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 text-slate-700 text-xs font-bold font-mono transition-colors"
-            >
-              {{ code }}
-              <span class="material-symbols-outlined text-sm">arrow_forward</span>
-            </NuxtLink>
-          </div>
-        </div>
-
         <!-- Step Indicator -->
         <div class="flex items-center justify-between mb-5 md:mb-8 px-2">
           <template v-for="(s, idx) in steps" :key="idx">
@@ -82,35 +59,58 @@
 
         <!-- Step 0: Booking Summary -->
         <div v-if="currentStep === 0" class="space-y-3">
-          <!-- Tour card preview -->
+          <!-- Tour(s) of this purchase — one card per tour, single code -->
           <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="flex items-center gap-3 p-3 md:p-4 border-b border-slate-50">
+            <div v-if="isMultiTour" class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-primary text-base">confirmation_number</span>
+              <span class="text-xs font-bold text-slate-700">{{ purchaseTours.length }} tours en esta compra</span>
+            </div>
+
+            <div
+              v-for="(tr, i) in purchaseTours"
+              :key="tr.booking_code + i"
+              class="flex items-center gap-3 p-3 md:p-4"
+              :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : 'border-b border-slate-50'"
+            >
               <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                 <img
-                  v-if="booking.tour?.featured_image"
-                  :src="getImageUrl(booking.tour.featured_image)"
-                  :alt="booking.tour?.title"
+                  v-if="tr.tour_image"
+                  :src="getImageUrl(tr.tour_image)"
+                  :alt="tr.tour_title"
                   class="w-full h-full object-cover"
                 />
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ booking.tour?.title }}</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                  <span class="material-symbols-outlined text-xs">calendar_today</span>
-                  {{ formatDate(booking.tour_date) }}
+                <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ tr.tour_title }}</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">calendar_today</span>
+                    {{ formatDate(tr.tour_date) }}
+                  </span>
+                  <span v-if="formatTime(tr.tour_time)" class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    {{ formatTime(tr.tour_time) }}
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">group</span>
+                    {{ (tr.adults || 0) + (tr.children || 0) }}
+                  </span>
                 </p>
+              </div>
+              <div class="text-right shrink-0">
+                <p class="text-sm font-bold text-primary">{{ currencyStore.formatConverted(tr.total || 0) }}</p>
               </div>
             </div>
 
-            <!-- Details grid -->
+            <!-- Purchase totals -->
             <div class="grid grid-cols-3 divide-x divide-slate-100">
               <div class="p-3 text-center">
-                <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('travelers') }}</p>
-                <p class="text-sm font-bold text-slate-800 mt-0.5">{{ booking.participants?.adults || 0 }}</p>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ isMultiTour ? 'Tours' : t('travelers') }}</p>
+                <p class="text-sm font-bold text-slate-800 mt-0.5">{{ isMultiTour ? purchaseTours.length : (booking.participants?.adults || 0) }}</p>
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('total') }}</p>
-                <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(booking.pricing?.total || 0) }}</p>
+                <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(purchaseTours.reduce((s, x) => s + (x.total || 0), 0)) }}</p>
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">Status</p>
@@ -287,7 +287,7 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const currencyStore = useCurrencyStore()
 const route = useRoute()
 const { api } = useApi()
@@ -296,12 +296,6 @@ const config = useRuntimeConfig()
 const bookingCode = route.params.bookingCode as string
 const email = route.query.email as string
 const token = route.query.token as string
-
-// Multi-tour purchase: all booking codes paid in the same charge are passed
-// as ?group=BK-1,BK-2,... so the customer can see/visit every reservation.
-const groupCodes = ((route.query.group as string) || '')
-  .split(',').map(c => c.trim()).filter(Boolean)
-const siblingCodes = computed(() => groupCodes.filter(c => c !== bookingCode))
 
 const currentStep = ref(0)
 const completedSteps = ref(new Set<number>())
@@ -328,6 +322,28 @@ const { data: response, pending, error } = await useAsyncData(
 
 const booking = computed(() => (response.value as any)?.booking || null)
 const errorMessage = computed(() => (error.value as any)?.data?.message || 'Invalid or expired link')
+
+// Every tour of the purchase (multi-tour cart paid in one charge). The
+// backend resolves the group from the payment record, so this works from the
+// email link too — one code in the URL, all tours shown here.
+const purchaseTours = computed(() => {
+  const grp = (response.value as any)?.group
+  if (Array.isArray(grp) && grp.length > 1) return grp
+  const b = booking.value
+  if (!b) return []
+  return [{
+    booking_code: b.booking_code,
+    tour_title: b.tour?.title || b.tour_title,
+    tour_image: b.tour?.featured_image,
+    tour_date: b.tour_date,
+    tour_time: b.tour_time,
+    adults: b.participants?.adults ?? b.adults ?? 0,
+    children: b.participants?.children ?? b.children ?? 0,
+    currency: b.pricing?.currency || b.currency,
+    total: b.pricing?.total ?? b.total ?? 0,
+  }]
+})
+const isMultiTour = computed(() => purchaseTours.value.length > 1)
 
 // Travelers form
 const travelers = ref<any[]>([])
@@ -408,8 +424,23 @@ function getImageUrl(path: string) {
 
 function formatDate(dateString: string) {
   if (!dateString) return ''
-  const [y, m, d] = dateString.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  // Tolerate "YYYY-MM-DD", "YYYY-MM-DD HH:mm:ss" and ISO "....THH:mm:ssZ".
+  const datePart = String(dateString).split('T')[0].split(' ')[0]
+  const [y, m, d] = datePart.split('-').map(Number)
+  if (!y || !m || !d) return ''
+  const dt = new Date(y, m - 1, d)
+  if (isNaN(dt.getTime())) return ''
+  const lang = (locale?.value as string) || 'es'
+  return dt.toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+function formatTime(t?: string) {
+  if (!t) return ''
+  const [hh, mm] = String(t).split(':')
+  const h = parseInt(hh, 10)
+  if (isNaN(h)) return ''
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  return `${h % 12 || 12}:${mm ?? '00'} ${ampm}`
 }
 
 function onPickupCompleted(data: any) {

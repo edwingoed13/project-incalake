@@ -703,6 +703,41 @@ class BookingController extends Controller
     }
 
     /**
+     * Sibling bookings paid in the same charge (multi-tour cart). Returns a
+     * lightweight list so the confirmation page can show every tour of the
+     * purchase under a single code. Null/empty for single-tour purchases.
+     */
+    private function purchaseGroup(Booking $booking)
+    {
+        $ids = is_array($booking->payment_data ?? null)
+            ? ($booking->payment_data['group_booking_ids'] ?? null)
+            : null;
+
+        if (!is_array($ids) || count($ids) < 2) {
+            return [];
+        }
+
+        return Booking::with('tour')
+            ->whereIn('id', $ids)
+            ->orderBy('tour_date')
+            ->orderBy('booking_code')
+            ->get()
+            ->map(fn ($b) => [
+                'booking_code' => $b->booking_code,
+                'tour_title'   => $b->tour_title,
+                'tour_slug'    => $b->tour?->slug,
+                'tour_image'   => $b->tour?->featured_image_path ?? $b->tour?->featured_image,
+                'tour_date'    => $b->tour_date,
+                'tour_time'    => $b->tour_time,
+                'adults'       => $b->adults,
+                'children'     => $b->children,
+                'currency'     => $b->currency,
+                'total'        => (float) $b->total,
+            ])
+            ->values();
+    }
+
+    /**
      * Get booking by booking code (REQUIRES EMAIL VERIFICATION)
      *
      * @param Request $request
@@ -746,7 +781,8 @@ class BookingController extends Controller
 
             return response()->json([
                 'success' => true,
-                'booking' => new BookingResource($booking)
+                'booking' => new BookingResource($booking),
+                'group' => $this->purchaseGroup($booking),
             ]);
 
         } catch (\Exception $e) {
@@ -774,7 +810,8 @@ class BookingController extends Controller
 
             return response()->json([
                 'success' => true,
-                'booking' => new BookingResource($booking)
+                'booking' => new BookingResource($booking),
+                'group' => $this->purchaseGroup($booking),
             ]);
 
         } catch (\Exception $e) {

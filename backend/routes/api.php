@@ -197,6 +197,8 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.run-migrations');
         Route::match(['get', 'post'], '/clear-caches', [\App\Http\Controllers\Api\MaintenanceController::class, 'clearCaches'])
             ->name('api.admin.maintenance.clear-caches');
+        Route::match(['get', 'post'], '/calendar-test', [\App\Http\Controllers\Api\MaintenanceController::class, 'calendarTest'])
+            ->name('api.admin.maintenance.calendar-test');
         Route::match(['get', 'post'], '/seed-standard-tags', [\App\Http\Controllers\Api\MaintenanceController::class, 'seedStandardTags'])
             ->name('api.admin.maintenance.seed-standard-tags');
         Route::match(['get', 'post'], '/expand-anticipation-enum', [\App\Http\Controllers\Api\MaintenanceController::class, 'expandAnticipationEnum'])
