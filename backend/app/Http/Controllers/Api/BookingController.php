@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\BookingConfirmationEmail;
+use App\Mail\GroupBookingConfirmationEmail;
 use App\Services\GoogleCalendarService;
 
 class BookingController extends Controller
@@ -416,9 +417,9 @@ class BookingController extends Controller
                 throw new \Exception('No se recibió ID de cargo de Culqi');
             }
 
-            // One successful charge covers the whole group — mark every
-            // booking paid against the same charge, and fire per-booking
-            // confirmation email + calendar event.
+            // One successful charge covers the whole group. Mark every booking
+            // paid against the same charge and add a SEPARATE Google Calendar
+            // event per tour/date (per client request — calendar stays split).
             foreach ($bookings as $b) {
                 $b->markAsPaid($chargeId, [
                     'token' => $culqiToken,
@@ -435,19 +436,7 @@ class BookingController extends Controller
                     'group_size' => $bookings->count(),
                 ]);
 
-                // Confirmation emails (non-blocking)
-                try {
-                    Mail::to($b->customer_email)->send(new BookingConfirmationEmail($b, false));
-                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($b, true));
-                    \Log::info('Booking confirmation emails sent', ['booking_id' => $b->id]);
-                } catch (\Exception $mailException) {
-                    \Log::error('Failed to send booking confirmation email', [
-                        'booking_id' => $b->id,
-                        'error' => $mailException->getMessage()
-                    ]);
-                }
-
-                // Admin Google Calendar event (non-blocking)
+                // Admin Google Calendar event — one per tour (non-blocking).
                 try {
                     $calendarService = new GoogleCalendarService();
                     $calendarService->createBookingEvent([
@@ -470,6 +459,30 @@ class BookingController extends Controller
                         'error' => $calException->getMessage()
                     ]);
                 }
+            }
+
+            // ONE confirmation email for the whole purchase (non-blocking).
+            // Single tour -> existing per-booking template (unchanged).
+            // Multi-tour -> one consolidated email listing every tour.
+            try {
+                $freshGroup = $bookings->map(fn ($b) => $b->fresh());
+                if ($freshGroup->count() === 1) {
+                    $single = $freshGroup->first();
+                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false));
+                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true));
+                } else {
+                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false));
+                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true));
+                }
+                \Log::info('Confirmation email sent', [
+                    'group_size' => $freshGroup->count(),
+                    'booking_ids' => $freshGroup->pluck('id')->all(),
+                ]);
+            } catch (\Exception $mailException) {
+                \Log::error('Failed to send confirmation email', [
+                    'booking_ids' => $bookings->pluck('id')->all(),
+                    'error' => $mailException->getMessage()
+                ]);
             }
 
             return response()->json([
