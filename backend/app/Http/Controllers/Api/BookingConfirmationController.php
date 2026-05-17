@@ -301,12 +301,39 @@ class BookingConfirmationController extends Controller
     {
         $booking = Booking::with(['tour', 'pickupDetail', 'travelers'])->findOrFail($bookingId);
 
+        // Sibling bookings paid in the same charge (multi-tour cart) so the
+        // admin modal can show every tour of the purchase, not just one.
+        $group = [];
+        $ids = is_array($booking->payment_data ?? null)
+            ? ($booking->payment_data['group_booking_ids'] ?? null)
+            : null;
+        if (is_array($ids) && count($ids) > 1) {
+            $group = Booking::with('tour')
+                ->whereIn('id', $ids)
+                ->orderBy('tour_date')
+                ->orderBy('booking_code')
+                ->get()
+                ->map(fn ($b) => [
+                    'id'           => $b->id,
+                    'booking_code' => $b->booking_code,
+                    'tour_title'   => $b->tour_title,
+                    'tour_date'    => $b->tour_date,
+                    'tour_time'    => $b->tour_time,
+                    'adults'       => $b->adults,
+                    'children'     => $b->children,
+                    'currency'     => $b->currency,
+                    'total'        => (float) $b->total,
+                ])
+                ->values();
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
                 'booking' => $booking,
                 'pickup_detail' => $booking->pickupDetail,
                 'travelers' => $booking->travelers,
+                'group' => $group,
             ],
         ]);
     }

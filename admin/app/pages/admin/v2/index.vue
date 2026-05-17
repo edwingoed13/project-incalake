@@ -345,7 +345,7 @@ const greeting = computed(() => {
               <NuxtLink
                 v-for="b in recentBookings"
                 :key="b.id"
-                :to="`/admin/bookings/${b.id}`"
+                :to="`/admin/v2/bookings?code=${b.booking_code || ''}`"
                 class="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-elevated transition-colors group"
               >
                 <UAvatar

@@ -283,6 +283,10 @@ const rowActions = (booking: Booking) => {
 }
 
 onMounted(() => {
+  // Deep-link from the dashboard ("recent bookings"): ?code=BK-... pre-fills
+  // the search so the booking is shown immediately (no more /admin/bookings/:id 404).
+  const code = (useRoute().query.code as string) || ''
+  if (code) filters.value.search = code
   loadBookings()
 })
 </script>

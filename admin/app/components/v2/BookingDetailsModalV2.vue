@@ -53,6 +53,11 @@ const paymentStatusBadge: Record<string, { color: 'success' | 'warning' | 'error
   refunded: { color: 'neutral', label: 'Reembolsado' },
 }
 
+// Multi-tour purchase: every booking paid in the same charge (from
+// /full-details). Empty/1 -> single-tour layout.
+const groupTours = computed(() => (fullDetails.value as any)?.group || [])
+const isMultiTour = computed(() => groupTours.value.length > 1)
+
 const totalPax = computed(() => {
   const b = props.booking
   return b.total_participants || ((b.adults || 0) + (b.children || 0) + (b.infants || 0))
@@ -127,13 +132,36 @@ const close = () => {
 
           <USeparator />
 
-          <!-- Tour -->
+          <!-- Tour(s) -->
           <section>
             <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
               <UIcon name="i-lucide-map-pin" class="size-3.5" />
-              Información del tour
+              {{ isMultiTour ? `Tours de la compra (${groupTours.length})` : 'Información del tour' }}
             </h3>
-            <div class="grid grid-cols-2 gap-4">
+
+            <!-- Multi-tour purchase: one row per tour -->
+            <div v-if="isMultiTour" class="space-y-2">
+              <div
+                v-for="(tr, i) in groupTours"
+                :key="tr.booking_code + i"
+                class="rounded-lg border border-default p-3"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium truncate">{{ tr.tour_title || 'N/A' }}</p>
+                    <p class="text-xs text-muted mt-0.5">
+                      {{ formatDate(tr.tour_date) }}<span v-if="tr.tour_time"> · {{ String(tr.tour_time).substring(0,5) }}</span>
+                      · {{ (tr.adults || 0) + (tr.children || 0) }} pax
+                    </p>
+                    <p class="text-[10px] font-mono text-muted mt-0.5">{{ tr.booking_code }}</p>
+                  </div>
+                  <p class="text-sm font-bold tabular-nums shrink-0">{{ tr.currency || '' }} {{ Number(tr.total || 0).toFixed(2) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Single tour -->
+            <div v-else class="grid grid-cols-2 gap-4">
               <div class="col-span-2">
                 <p class="text-xs text-muted mb-1">Tour</p>
                 <p class="text-sm font-medium">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
