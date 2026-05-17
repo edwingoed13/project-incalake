@@ -8,8 +8,8 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return navigateTo('/login')
   }
 
-  // Si ya está autenticado e intenta ir al login, mandarlo al dashboard
+  // Si ya está autenticado e intenta ir al login, mandarlo al admin v2
   if (authStore.isAuthenticated && to.path === '/login') {
-    return navigateTo('/admin/dashboard')
+    return navigateTo('/admin/v2')
   }
 })

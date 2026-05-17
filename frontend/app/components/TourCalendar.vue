@@ -13,7 +13,7 @@
 
     <!-- Calendar dropdown -->
     <Transition name="cal">
-      <div v-if="open" class="mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden lg:absolute lg:z-50 lg:left-0 lg:w-[560px]">
+      <div v-if="open" class="mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden lg:absolute lg:z-50 lg:right-0 lg:w-[560px] lg:max-w-[calc(100vw-2rem)]">
         <!-- Header: navigation -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <button @click="prevMonth" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">

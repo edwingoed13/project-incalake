@@ -101,7 +101,7 @@
           <!-- Inline Mobile Booking Panel — appears after gallery so price/date are
                visible without scrolling to the bottom. Hidden on lg+ where the
                sticky right-column widget takes over. -->
-          <section ref="mobileBookingRef" class="lg:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden">
+          <section ref="mobileBookingRef" class="lg:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
             <!-- Price header (OTA dominant) -->
             <div class="px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div class="flex items-end justify-between gap-3 flex-wrap">
@@ -317,7 +317,7 @@
         <div class="hidden lg:block">
           <div class="sticky top-24 space-y-3">
             <!-- Booking Widget Card -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md overflow-hidden">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
               <!-- Price Header — dominant, OTA pattern -->
               <div class="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Desde</p>
@@ -739,15 +739,34 @@ const total = computed(() => subtotal.value - groupDiscount.value)
 
 const currency = computed(() => tour.value?.currency || 'USD')
 
-// Calculate minimum bookable date based on booking_anticipation_hours
+// Minimum bookable date from the booking-anticipation rule configured in
+// admin Step 6. The wizard writes `booking_anticipation_quantity` +
+// `booking_anticipation_unit` (Step 6 normalizes to minutes); the legacy
+// `booking_anticipation_hours` column is NOT updated by the new wizard, so we
+// only fall back to it when quantity/unit are absent (old tours).
+const anticipationMs = computed(() => {
+  const qty = Number(tour.value?.booking_anticipation_quantity)
+  const unit = tour.value?.booking_anticipation_unit
+
+  if (Number.isFinite(qty) && qty > 0 && unit) {
+    const perUnitMs =
+      unit === 'minutes' ? 60_000 :
+      unit === 'hours'   ? 3_600_000 :
+      unit === 'days'    ? 86_400_000 :
+      unit === 'weeks'   ? 604_800_000 :
+      3_600_000 // default treat unknown unit as hours
+    return qty * perUnitMs
+  }
+
+  // Legacy fallback
+  const hours = Number(tour.value?.booking_anticipation_hours)
+  if (Number.isFinite(hours) && hours > 0) return hours * 3_600_000
+
+  return 24 * 3_600_000 // sensible default: 24h
+})
+
 const minDate = computed(() => {
-  const anticipationHours = tour.value?.booking_anticipation_hours || 24
-  const now = new Date()
-
-  // Add anticipation hours to current time
-  const minDateTime = new Date(now.getTime() + (anticipationHours * 60 * 60 * 1000))
-
-  // Format as YYYY-MM-DD for input[type="date"]
+  const minDateTime = new Date(Date.now() + anticipationMs.value)
   return minDateTime.toISOString().split('T')[0]
 })
 

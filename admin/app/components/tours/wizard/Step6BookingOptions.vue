@@ -118,7 +118,7 @@
           <UInputNumber v-model="anticipationHours" :min="0" :max="23" class="w-full" />
         </UFormField>
         <UFormField label="Minutos" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
-          <UInputNumber v-model="anticipationMinutes" :min="0" :max="59" :step="5" class="w-full" />
+          <UInputNumber v-model="anticipationMinutes" :min="0" :max="59" :step="1" class="w-full" />
         </UFormField>
       </div>
 

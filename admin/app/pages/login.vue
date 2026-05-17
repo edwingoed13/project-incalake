@@ -162,7 +162,7 @@ const handleLogin = async () => {
 
   try {
      await login(email.value, password.value)
-     router.push('/admin/dashboard')
+     router.push('/admin/v2')
   } catch(e: any) {
      errorMsg.value = e.message || 'Error desconocido al validar.'
   } finally {
