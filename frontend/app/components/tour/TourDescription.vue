@@ -4,8 +4,8 @@
       <DocumentTextIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
       {{ t('description') }}
     </h2>
-    <div class="prose md:prose-lg max-w-2xl text-slate-600 dark:text-slate-400">
-      <div v-html="sanitizedDescription"></div>
+    <div class="prose md:prose-lg max-w-2xl min-w-0 text-slate-600 dark:text-slate-400">
+      <div class="min-w-0 max-w-full overflow-hidden" v-html="sanitizedDescription"></div>
     </div>
   </section>
 </template>
@@ -80,5 +80,29 @@ const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_descrip
 
 .prose :deep(blockquote) {
   @apply border-l-4 border-primary pl-4 italic text-slate-600 dark:text-slate-400 my-4 bg-slate-50 dark:bg-slate-800 py-2;
+}
+
+/* Tables: scroll horizontally inside their own block instead of forcing
+   the whole page wider on mobile. */
+.prose :deep(table) {
+  @apply block w-full max-w-full overflow-x-auto my-4 text-sm border-collapse;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose :deep(th),
+.prose :deep(td) {
+  @apply border border-slate-200 dark:border-slate-700 px-3 py-2 text-left align-top;
+}
+
+.prose :deep(th) {
+  @apply bg-slate-50 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-100;
+}
+
+.prose :deep(tbody tr:nth-child(even)) {
+  @apply bg-slate-50/60 dark:bg-slate-800/40;
+}
+
+.prose :deep(img) {
+  @apply max-w-full h-auto rounded-lg;
 }
 </style>
