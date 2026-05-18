@@ -496,8 +496,18 @@
       </section>
     </main>
 
-    <!-- Mobile Fixed Bottom CTA (OTA-style sticky bar) -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
+    <!-- Mobile Fixed Bottom CTA (OTA-style sticky bar) — only once the inline
+         booking panel has scrolled out of view, so the price isn't duplicated
+         at the top of the page. -->
+    <Transition
+      enter-active-class="transition-transform duration-300 ease-out"
+      enter-from-class="translate-y-full"
+      enter-to-class="translate-y-0"
+      leave-active-class="transition-transform duration-200 ease-in"
+      leave-from-class="translate-y-0"
+      leave-to-class="translate-y-full"
+    >
+    <div v-show="showStickyBar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
       <div class="flex items-center justify-between gap-3">
         <div class="leading-tight shrink-0">
           <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
@@ -515,6 +525,7 @@
         </button>
       </div>
     </div>
+    </Transition>
 
   </div>
 
@@ -668,6 +679,24 @@ function onMobileBottomCta() {
     mobileBookingRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
+
+// Sticky bottom bar should only appear once the inline mobile booking
+// panel (which already shows the price) has scrolled out of view —
+// otherwise the price is duplicated at the top of the page.
+const showStickyBar = ref(false)
+let stickyObserver: IntersectionObserver | null = null
+
+watch(mobileBookingRef, (el) => {
+  stickyObserver?.disconnect()
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  stickyObserver = new IntersectionObserver(
+    ([entry]) => { showStickyBar.value = !entry.isIntersecting },
+    { threshold: 0 }
+  )
+  stickyObserver.observe(el)
+}, { immediate: true })
+
+onBeforeUnmount(() => stickyObserver?.disconnect())
 
 // Clear mobile error when user selects
 watch(selectedDate, () => { if (mobileError.value) mobileError.value = '' })
