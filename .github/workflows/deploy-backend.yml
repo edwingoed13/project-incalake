@@ -94,12 +94,18 @@ jobs:
       # Hit the secret-gated deploy hook to clear them automatically.
       # Standalone script: deletes stale compiled views + cached config on
       # disk WITHOUT booting Laravel (immune to sanctum / cached config).
+      # Best-effort: the FTP upload already succeeded above. A transient
+      # hiccup on this cache-bust curl must NOT mark the whole deploy as
+      # failed (it was producing false red X's while the code shipped fine).
       - name: Purge server caches
+        continue-on-error: true
         run: |
           echo "Purging caches on api.incalake.com ..."
           sleep 8   # let FTP settle
           code=$(curl -sS -o /tmp/purge.json -w "%{http_code}" \
             --max-time 60 --retry 3 --retry-delay 10 \
-            "https://api.incalake.com/purge-cache.php?key=${{ secrets.DEPLOY_HOOK_KEY }}")
-          echo "HTTP $code"; cat /tmp/purge.json; echo
-          test "$code" = "200"
+            "https://api.incalake.com/purge-cache.php?key=${{ secrets.DEPLOY_HOOK_KEY }}" || true)
+          echo "HTTP $code"; cat /tmp/purge.json 2>/dev/null || true; echo
+          if [ "$code" != "200" ]; then
+            echo "::warning::Cache purge returned HTTP $code (non-fatal). Run purge-cache.php manually if needed."
+          fi
