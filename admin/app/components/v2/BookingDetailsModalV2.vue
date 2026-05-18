@@ -58,6 +58,23 @@ const paymentStatusBadge: Record<string, { color: 'success' | 'warning' | 'error
 const groupTours = computed(() => (fullDetails.value as any)?.group || [])
 const isMultiTour = computed(() => groupTours.value.length > 1)
 
+// For a multi-tour purchase the Payment section must show the WHOLE
+// purchase (what was charged), not just the primary booking's amount.
+const groupSubtotal = computed(() =>
+  groupTours.value.reduce((s: number, t: any) => s + Number(t.subtotal || 0), 0)
+)
+const groupTotal = computed(() =>
+  groupTours.value.reduce((s: number, t: any) => s + Number(t.total || 0), 0)
+)
+
+const pickupLabel = (tr: any) => {
+  if (!tr.pickup_configured) return null
+  if (tr.pickup_choice === 'hotel_pickup') {
+    return tr.pickup_hotel ? `Recojo en hotel: ${tr.pickup_hotel}` : 'Recojo en hotel'
+  }
+  return 'Punto de encuentro'
+}
+
 const totalPax = computed(() => {
   const b = props.booking
   return b.total_participants || ((b.adults || 0) + (b.children || 0) + (b.infants || 0))
@@ -157,6 +174,24 @@ const close = () => {
                   </div>
                   <p class="text-sm font-bold tabular-nums shrink-0">{{ tr.currency || '' }} {{ Number(tr.total || 0).toFixed(2) }}</p>
                 </div>
+                <div class="mt-2 pt-2 border-t border-default flex items-center gap-2 flex-wrap">
+                  <template v-if="pickupLabel(tr)">
+                    <UBadge
+                      :color="tr.pickup_choice === 'hotel_pickup' ? 'info' : 'success'"
+                      variant="subtle"
+                      size="xs"
+                      :icon="tr.pickup_choice === 'hotel_pickup' ? 'i-lucide-hotel' : 'i-lucide-flag'"
+                    >
+                      {{ pickupLabel(tr) }}
+                    </UBadge>
+                    <span v-if="tr.pickup_extra_cost > 0" class="text-[10px] font-bold text-warning">
+                      + ${{ Number(tr.pickup_extra_cost).toFixed(2) }}
+                    </span>
+                  </template>
+                  <UBadge v-else color="neutral" variant="subtle" size="xs" icon="i-lucide-clock">
+                    Pickup pendiente de configurar
+                  </UBadge>
+                </div>
               </div>
             </div>
 
@@ -211,12 +246,16 @@ const close = () => {
                 </UBadge>
               </div>
               <div>
-                <p class="text-xs text-muted mb-1">Subtotal</p>
-                <p class="text-sm font-medium tabular-nums">${{ parseFloat(String(booking.subtotal || booking.total || 0)).toFixed(2) }}</p>
+                <p class="text-xs text-muted mb-1">Subtotal{{ isMultiTour ? ` (${groupTours.length} tours)` : '' }}</p>
+                <p class="text-sm font-medium tabular-nums">
+                  ${{ isMultiTour ? groupSubtotal.toFixed(2) : parseFloat(String(booking.subtotal || booking.total || 0)).toFixed(2) }}
+                </p>
               </div>
               <div>
-                <p class="text-xs text-muted mb-1">Total</p>
-                <p class="text-xl font-bold tabular-nums text-primary">${{ parseFloat(String(booking.total || booking.total_amount || 0)).toFixed(2) }}</p>
+                <p class="text-xs text-muted mb-1">Total {{ isMultiTour ? 'de la compra' : '' }}</p>
+                <p class="text-xl font-bold tabular-nums text-primary">
+                  ${{ isMultiTour ? groupTotal.toFixed(2) : parseFloat(String(booking.total || booking.total_amount || 0)).toFixed(2) }}
+                </p>
               </div>
             </div>
           </section>
@@ -242,8 +281,8 @@ const close = () => {
             </div>
           </template>
 
-          <!-- Pickup -->
-          <template v-if="fullDetails?.pickup_detail">
+          <!-- Pickup (single-tour only; multi-tour shows pickup per tour above) -->
+          <template v-if="fullDetails?.pickup_detail && !isMultiTour">
             <USeparator />
             <section>
               <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">

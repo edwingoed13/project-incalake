@@ -308,21 +308,28 @@ class BookingConfirmationController extends Controller
             ? ($booking->payment_data['group_booking_ids'] ?? null)
             : null;
         if (is_array($ids) && count($ids) > 1) {
-            $group = Booking::with('tour')
+            $group = Booking::with(['tour', 'pickupDetail'])
                 ->whereIn('id', $ids)
                 ->orderBy('tour_date')
                 ->orderBy('booking_code')
                 ->get()
                 ->map(fn ($b) => [
-                    'id'           => $b->id,
-                    'booking_code' => $b->booking_code,
-                    'tour_title'   => $b->tour_title,
-                    'tour_date'    => $b->tour_date,
-                    'tour_time'    => $b->tour_time,
-                    'adults'       => $b->adults,
-                    'children'     => $b->children,
-                    'currency'     => $b->currency,
-                    'total'        => (float) $b->total,
+                    'id'                 => $b->id,
+                    'booking_code'       => $b->booking_code,
+                    'tour_title'         => $b->tour_title,
+                    'tour_date'          => $b->tour_date,
+                    'tour_time'          => $b->tour_time,
+                    'adults'             => $b->adults,
+                    'children'           => $b->children,
+                    'currency'           => $b->currency,
+                    'subtotal'           => (float) $b->subtotal,
+                    'total'              => (float) $b->total,
+                    // Per-tour pickup so the admin sees what each client chose
+                    'pickup_configured'  => (bool) $b->pickupDetail,
+                    'pickup_choice'      => $b->pickupDetail?->final_choice,
+                    'pickup_hotel'       => $b->pickupDetail?->hotel_name,
+                    'pickup_hotel_address' => $b->pickupDetail?->hotel_address,
+                    'pickup_extra_cost'  => $b->pickupDetail ? (float) $b->pickupDetail->extra_pickup_cost : 0,
                 ])
                 ->values();
         }
