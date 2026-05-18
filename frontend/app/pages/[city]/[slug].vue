@@ -1,6 +1,6 @@
 <template>
   <div v-if="tour" class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 md:pt-24 pb-24 lg:pb-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 pb-24 lg:pb-8">
 
       <!-- Breadcrumb -->
       <nav aria-label="Breadcrumb" class="mb-3 lg:mb-4">
@@ -490,7 +490,7 @@
               <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
             </div>
-            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} ${{ relatedTour.min_price || 0 }}</p>
+            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</p>
           </NuxtLink>
         </div>
       </section>
@@ -502,7 +502,7 @@
         <div class="leading-tight shrink-0">
           <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
           <div class="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">
-            ${{ (basePrice || 0).toFixed(0) }}
+            {{ currencyStore.formatConverted(basePrice || 0) }}
           </div>
           <span class="text-[11px] text-slate-500">por persona</span>
         </div>

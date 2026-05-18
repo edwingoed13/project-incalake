@@ -73,7 +73,7 @@
           <div>
             <span class="text-xs text-secondary-light dark:text-secondary-dark block">From</span>
             <span class="text-2xl font-black text-primary">
-              ${{ (tour.min_price || 0).toFixed(2) }}
+              {{ currencyStore.formatConverted(tour.min_price || 0) }}
             </span>
             <span class="text-xs text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
           </div>
@@ -143,7 +143,7 @@
           <div>
             <span class="text-xs text-secondary-light dark:text-secondary-dark block">From</span>
             <span class="text-3xl font-black text-primary">
-              ${{ (tour.min_price || 0).toFixed(2) }}
+              {{ currencyStore.formatConverted(tour.min_price || 0) }}
             </span>
             <span class="text-sm text-secondary-light dark:text-secondary-dark ml-1">/ person</span>
           </div>
@@ -164,6 +164,8 @@ interface Props {
   tour: any
   layout?: 'grid' | 'list'
 }
+
+const currencyStore = useCurrencyStore()
 
 const props = withDefaults(defineProps<Props>(), {
   layout: 'grid'
