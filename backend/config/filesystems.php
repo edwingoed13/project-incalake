@@ -40,7 +40,13 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // On cPanel the served docroot /storage is a REAL directory, not a
+            // symlink to storage/app/public (artisan storage:link never runs on
+            // FTP deploys). So uploads written to storage/app/public 404 in the
+            // browser. Point the disk root at the served directory via env so
+            // every upload is immediately web-accessible. Local dev falls back
+            // to the framework default.
+            'root' => env('PUBLIC_DISK_ROOT', storage_path('app/public')),
             'url' => rtrim(env('APP_URL'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,

@@ -83,8 +83,15 @@ const onImageSelected = async (event: Event) => {
       headers: { Authorization: `Bearer ${auth.token}` },
     })
 
-    if (response?.success && response.url) {
-      editor.value?.chain().focus().setImage({ src: response.url, alt: file.name }).run()
+    if (response?.success && (response.path || response.url)) {
+      // Build the src from the API host + returned path so it never depends on
+      // the server's APP_URL being correct (a relative/wrong-host url renders a
+      // broken <img>). The API host always serves /storage.
+      const apiBase = (config.public.apiUrl as string).replace(/\/api\/?$/, '')
+      const src = response.path
+        ? `${apiBase}/storage/${String(response.path).replace(/^\/?(storage\/)?/, '')}`
+        : response.url
+      editor.value?.chain().focus().setImage({ src, alt: file.name }).run()
       toast.add({ title: 'Imagen subida', icon: 'i-lucide-circle-check', color: 'success' })
     } else {
       toast.add({ title: 'Error al subir', color: 'error', icon: 'i-lucide-alert-triangle' })
