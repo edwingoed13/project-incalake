@@ -143,11 +143,11 @@
                 <UInput v-model="newBlock.endDate" type="date" icon="i-lucide-calendar" class="w-full" />
               </UFormField>
             </div>
-            <UFormField label="Motivo">
+            <UFormField label="Motivo" hint="Opcional">
               <UTextarea
                 v-model="newBlock.reason"
                 :rows="2"
-                placeholder="Mantenimiento, vacaciones, evento privado..."
+                placeholder="Mantenimiento, vacaciones, evento privado... (opcional)"
                 class="w-full"
               />
             </UFormField>
@@ -155,7 +155,7 @@
               icon="i-lucide-plus"
               color="error"
               size="sm"
-              :disabled="!newBlock.startDate || !newBlock.endDate || !newBlock.reason"
+              :disabled="!newBlock.startDate || !newBlock.endDate"
               @click="addBlock"
             >
               Agregar bloqueo
@@ -452,13 +452,13 @@ const hasAnyAvailability = computed(() =>
 )
 
 const addBlock = () => {
-  if (!newBlock.startDate || !newBlock.endDate || !newBlock.reason) return
+  if (!newBlock.startDate || !newBlock.endDate) return
   if (!store.availability.blocks) store.availability.blocks = []
   store.availability.blocks.push({
     id: crypto.randomUUID(),
     startDate: newBlock.startDate,
     endDate: newBlock.endDate,
-    reason: newBlock.reason,
+    reason: newBlock.reason.trim() || 'Bloqueado',
   })
   newBlock.startDate = ''
   newBlock.endDate = ''
