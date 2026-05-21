@@ -63,10 +63,24 @@ class TourMediaService
                 }
             }
 
-            // Optional: Delete images that are no longer in the gallery
-            // $tour->mediaGallery()->whereNotIn('id', $existingIds)->delete();
+            // Delete images removed in the editor (no longer present in the
+            // payload). The frontend always sends the full kept list, so any
+            // existing record whose id isn't in $existingIds was deleted by the
+            // user. Runs before processImages() adds new temp uploads, so it
+            // only targets the dropped existing records. Also remove the file.
+            $toDelete = $tour->mediaGallery()->whereNotIn('id', $existingIds)->get();
+            foreach ($toDelete as $media) {
+                if ($media->image_path && Storage::disk('public')->exists($media->image_path)) {
+                    Storage::disk('public')->delete($media->image_path);
+                }
+                $media->delete();
+            }
 
-            Log::info("Media gallery synced successfully", ['tour_id' => $tour->id]);
+            Log::info("Media gallery synced successfully", [
+                'tour_id' => $tour->id,
+                'kept' => count($existingIds),
+                'deleted' => $toDelete->count(),
+            ]);
         } catch (Exception $e) {
             Log::error("Error syncing media gallery", ['tour_id' => $tour->id, 'error' => $e->getMessage()]);
             throw $e;
