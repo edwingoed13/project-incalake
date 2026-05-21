@@ -49,6 +49,9 @@ if (is_file($envFile)) {
     if (preg_match('/^\s*(?:export\s+)?APP_URL\s*=\s*(.*)$/m', $raw, $au)) {
         $appUrl = trim(trim($au[1]), "\"'");
     }
+    if (preg_match('/^\s*(?:export\s+)?PUBLIC_DISK_ROOT\s*=\s*(.*)$/m', $raw, $pr)) {
+        $publicDiskRoot = trim(trim($pr[1]), "\"'");
+    }
 }
 if ($expected === '') {
     $expected = (string) (getenv('DEPLOY_HOOK_KEY') ?: ($_SERVER['DEPLOY_HOOK_KEY'] ?? $_ENV['DEPLOY_HOOK_KEY'] ?? ''));
@@ -82,11 +85,28 @@ $reachableViaDocroot = is_file($viaDocroot);
 
 $checkFile = isset($_GET['file']) ? preg_replace('#[^a-zA-Z0-9/_.\-]#', '', (string) $_GET['file']) : null;
 
+// Test writing into the DOCROOT served storage (where the fix points the disk).
+$docTestRel = 'tours/temp/_docdiag_' . time() . '.txt';
+$docTestAbs = $docrootLink . '/' . $docTestRel;
+@mkdir(dirname($docTestAbs), 0775, true);
+$docWrote = @file_put_contents($docTestAbs, 'docdiag ' . date('c'));
+$docTestUrl = ($appUrl ?? 'https://api.incalake.com') . '/storage/' . $docTestRel;
+
 echo json_encode([
     'success' => true,
     'app_base' => $appBase,
     'app_url_in_env' => $appUrl ?? null,
+    'public_disk_root_in_env' => $publicDiskRoot ?? '(NOT SET — add it to .env)',
     'script_dir_docroot' => __DIR__,
+
+    // Verifies the fix end-to-end: write into the served docroot dir and
+    // expose the URL so we can confirm it serves (200) over HTTP.
+    'docroot_write_test' => [
+        'rel' => $docTestRel,
+        'bytes_written' => $docWrote,
+        'exists_on_disk' => is_file($docTestAbs),
+        'public_url_to_try' => $docTestUrl,
+    ],
 
     'public_disk_root' => [
         'path' => $pubRoot,
