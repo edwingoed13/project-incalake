@@ -90,6 +90,17 @@
           <div v-if="currOpen" class="fixed inset-0 z-40" @click="currOpen = false" />
         </div>
 
+        <!-- Wishlist Icon -->
+        <NuxtLink :to="localePath('/saved')" class="relative p-2 text-slate-600 hover:text-red-500 transition-colors" aria-label="Mis guardados">
+          <span class="material-symbols-outlined text-xl" :class="{ 'text-red-500': wishlistStore.count > 0 }" :style="wishlistStore.count > 0 ? 'font-variation-settings: \'FILL\' 1' : ''">favorite</span>
+          <span
+            v-if="wishlistStore.count > 0"
+            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
+          >
+            {{ wishlistStore.count }}
+          </span>
+        </NuxtLink>
+
         <!-- Cart Icon -->
         <NuxtLink :to="localePath('/cart')" class="relative p-2 text-slate-600 hover:text-primary transition-colors">
           <span class="material-symbols-outlined text-xl">shopping_cart</span>
@@ -180,6 +191,7 @@ const { t, locale, locales } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const cartStore = useCartStore()
+const wishlistStore = useWishlistStore()
 const currencyStore = useCurrencyStore()
 
 const isScrolled = ref(false)

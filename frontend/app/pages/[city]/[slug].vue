@@ -75,6 +75,8 @@
         </div>
         <div class="flex gap-2 items-start shrink-0">
           <button
+            @click="openShare"
+            type="button"
             class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
             aria-label="Compartir tour"
           >
@@ -82,11 +84,16 @@
             <span class="hidden sm:inline">Compartir</span>
           </button>
           <button
-            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
-            aria-label="Guardar tour"
+            @click="toggleSave"
+            type="button"
+            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-all active:scale-95"
+            :class="isSaved ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'"
+            :aria-label="isSaved ? 'Quitar de guardados' : 'Guardar tour'"
+            :aria-pressed="isSaved"
           >
-            <HeartIcon class="size-5" aria-hidden="true" />
-            <span class="hidden sm:inline">Guardar</span>
+            <HeartSolidIcon v-if="isSaved" class="size-5" aria-hidden="true" />
+            <HeartIcon v-else class="size-5" aria-hidden="true" />
+            <span class="hidden sm:inline">{{ isSaved ? 'Guardado' : 'Guardar' }}</span>
           </button>
         </div>
       </div>
@@ -479,8 +486,16 @@
                 decoding="async"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
-                <HeartIcon class="size-5" aria-hidden="true" />
+              <button
+                @click.stop.prevent="toggleSaveRelated(relatedTour)"
+                type="button"
+                class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md transition-all active:scale-90"
+                :class="wishlistStore.has(relatedTour.id) ? 'text-red-500 bg-white/80' : 'text-white'"
+                :aria-label="wishlistStore.has(relatedTour.id) ? 'Quitar de guardados' : 'Guardar tour'"
+                :aria-pressed="wishlistStore.has(relatedTour.id)"
+              >
+                <HeartSolidIcon v-if="wishlistStore.has(relatedTour.id)" class="size-5" aria-hidden="true" />
+                <HeartIcon v-else class="size-5" aria-hidden="true" />
               </button>
             </div>
             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
@@ -526,6 +541,8 @@
       </div>
     </div>
     </Transition>
+
+    <ShareModal :open="shareOpen" :url="shareUrl" :title="tour?.title" @close="shareOpen = false" />
 
   </div>
 
@@ -573,15 +590,76 @@ import {
   CheckCircleIcon as CheckCircleSolidIcon,
   BookmarkIcon as BookmarkSolidIcon,
   FireIcon as FireSolidIcon,
+  HeartIcon as HeartSolidIcon,
 } from '@heroicons/vue/24/solid'
+import ShareModal from '~/components/tour/ShareModal.vue'
 
 // Stores and utils like useCartStore and getImageUrl are auto-imported in Nuxt 4
 const route = useRoute()
 const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
+const wishlistStore = useWishlistStore()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
+
+// --- Save / Share (wishlist + share modal) ---
+const shareOpen = ref(false)
+
+const shareUrl = computed(() => {
+  if (import.meta.client) return window.location.href
+  // SSR fallback so the modal can render with a sensible URL pre-hydration.
+  const base = (config.public.appUrl as string) || 'https://incalake.com'
+  return `${base.replace(/\/$/, '')}${route.fullPath}`
+})
+
+function wishlistPayload() {
+  const t = tour.value as any
+  // The tour API exposes `featured_image`; the gallery item is the second
+  // best source. `featured_image_path` was a guess that doesn't exist, which
+  // is why saved cards were rendering the placeholder icon.
+  const image = t?.featured_image
+    || (Array.isArray(t?.media_gallery) && t.media_gallery[0]?.url)
+    || ''
+  return {
+    id: Number(t?.id),
+    slug: t?.slug,
+    city_slug: t?.city?.slug || (route.params.city as string | undefined),
+    title: t?.title,
+    image,
+    min_price: t?.min_price,
+    currency: t?.currency || 'USD',
+  }
+}
+
+function toggleSave() {
+  if (!tour.value?.id) return
+  wishlistStore.toggle(wishlistPayload())
+}
+
+const isSaved = computed(() => wishlistStore.has((tour.value as any)?.id))
+
+async function openShare() {
+  const data = { title: (tour.value as any)?.title || 'Incalake', text: (tour.value as any)?.title || '', url: shareUrl.value }
+  // Prefer the native share sheet on devices that support it (mainly mobile).
+  if (import.meta.client && typeof navigator !== 'undefined' && (navigator as any).share) {
+    try { await (navigator as any).share(data); return } catch { /* user cancelled -> fall through to modal */ }
+  }
+  shareOpen.value = true
+}
+
+function toggleSaveRelated(relatedTour: any) {
+  if (!relatedTour?.id) return
+  wishlistStore.toggle({
+    id: Number(relatedTour.id),
+    slug: relatedTour.slug,
+    city_slug: relatedTour.city?.slug,
+    title: relatedTour.title,
+    image: relatedTour.featured_image || (Array.isArray(relatedTour.media_gallery) && relatedTour.media_gallery[0]?.url) || '',
+    min_price: relatedTour.min_price,
+    currency: relatedTour.currency || 'USD',
+  })
+}
 const currencyStore = useCurrencyStore()
 
 const slug = route.params.slug as string
