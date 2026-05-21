@@ -15,13 +15,28 @@ return [
     |
     */
 
-    'paths' => env('APP_ENV') === 'production' ? [] : ['api/*', 'sanctum/csrf-cookie'],
+    // CORS is now enabled in production too, so localhost dev (admin/frontend)
+    // can talk to api.incalake.com. With credentials=true we cannot use the
+    // wildcard origin -- every allowed origin must be enumerated.
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        // Local dev
+        'http://localhost:3000',  // admin
+        'http://localhost:3001',  // frontend
+        'http://localhost:8001',  // backend (Sanctum csrf-cookie)
+        // Production
+        'https://incalake.com',
+        'https://www.incalake.com',
+        'https://admin.incalake.com',
+    ],
 
-    'allowed_origins_patterns' => [],
+    // Vercel preview / branch deploys
+    'allowed_origins_patterns' => [
+        '#^https://.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
@@ -29,6 +44,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    // Required for Sanctum SPA auth (cookies must travel cross-origin).
+    'supports_credentials' => true,
 
 ];
