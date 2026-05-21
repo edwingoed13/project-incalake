@@ -54,7 +54,7 @@ const router = useRouter()
 
 const cancel = () => {
   if (confirm('Se perderán los cambios no guardados. ¿Deseas salir?')) {
-    router.push('/admin/tours')
+    router.push('/admin/v2/tours')
   }
 }
 </script>

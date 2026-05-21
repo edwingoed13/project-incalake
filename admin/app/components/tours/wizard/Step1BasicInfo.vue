@@ -3,31 +3,26 @@
     <!-- Section: Basic Information -->
     <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
       <template #header>
-        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <UIcon name="i-lucide-info" class="size-5 text-primary" />
-          Información básica del tour
-        </h3>
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 min-w-0">
+            <UIcon name="i-lucide-info" class="size-5 text-primary shrink-0" />
+            Información básica del tour
+          </h3>
+          <!-- Editing-language chip (edit mode) — replaces the old standalone banner -->
+          <div
+            v-if="isEditMode"
+            class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0"
+          >
+            <span class="text-base leading-none">{{ currentLangFlag }}</span>
+            <span>{{ currentLangName }}</span>
+            <span class="text-primary/60 font-mono">·</span>
+            <span class="font-mono">{{ store.basicInfo.code }}</span>
+          </div>
+        </div>
       </template>
 
-      <!-- Editing language banner (edit mode) -->
-      <UAlert
-        v-if="isEditMode"
-        color="primary"
-        variant="subtle"
-        class="mb-4"
-        :title="`Editando: ${currentLangName} (${store.currentLanguage.toUpperCase()})`"
-        :description="`Código: ${store.basicInfo.code}`"
-      >
-        <template #icon>
-          <span class="text-lg">{{ currentLangFlag }}</span>
-        </template>
-        <template #leading>
-          <span class="text-lg">{{ currentLangFlag }}</span>
-        </template>
-      </UAlert>
-
-      <!-- Other-language pills (under banner) -->
-      <div v-if="isEditMode && tourTranslationCodes.length > 1" class="flex gap-1 mb-4">
+      <!-- Translation pills + shared-fields hint (edit mode) -->
+      <div v-if="isEditMode && tourTranslationCodes.length > 1" class="flex items-center gap-1.5 mb-4">
         <UBadge
           v-for="lang in tourTranslationCodes"
           :key="lang"
@@ -38,6 +33,28 @@
         >
           {{ lang }}
         </UBadge>
+        <UPopover :ui="{ content: 'w-72 max-w-[90vw]' }">
+          <UButton
+            icon="i-lucide-info"
+            color="warning"
+            variant="ghost"
+            size="xs"
+            square
+            class="ml-1"
+            aria-label="Información de campos compartidos"
+          />
+          <template #content>
+            <div class="p-3 space-y-1.5">
+              <p class="text-xs font-bold text-warning flex items-center gap-1.5">
+                <UIcon name="i-lucide-info" class="size-3.5" />
+                Campos compartidos
+              </p>
+              <p class="text-xs text-default leading-snug">
+                Estos campos aplican a <strong>todos los idiomas</strong> del tour. Si cambias uno aquí, el cambio se refleja en cada traducción.
+              </p>
+            </div>
+          </template>
+        </UPopover>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
@@ -66,17 +83,6 @@
             </UInput>
           </UFormField>
         </template>
-
-        <!-- Shared fields info (edit mode) -->
-        <UAlert
-          v-if="isEditMode"
-          color="warning"
-          variant="subtle"
-          icon="i-lucide-info"
-          title="Campos compartidos"
-          description="Estos campos aplican a todos los idiomas del tour."
-          class="md:col-span-2"
-        />
 
         <!-- Ciudad de Salida -->
         <UFormField label="Ciudad de salida" hint="Escribe para buscar" required>

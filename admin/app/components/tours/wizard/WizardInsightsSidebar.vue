@@ -2,9 +2,9 @@
   <aside class="w-72 border-l border-default bg-default p-4 hidden xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
     <!-- Wizard Actions -->
     <div class="flex flex-col gap-2 pb-4 border-b border-default">
+      <!-- Primary flow CTA (hidden on the last step) -->
       <UButton
         v-if="store.currentStep < store.totalSteps"
-        icon="i-lucide-arrow-right"
         trailing-icon="i-lucide-arrow-right"
         color="primary"
         size="md"
@@ -27,63 +27,32 @@
         {{ store.basicInfo.status === 'published' ? 'Actualizar publicación' : 'Publicar tour' }}
       </UButton>
 
-      <UButton
-        icon="i-lucide-eye"
-        trailing-icon="i-lucide-external-link"
-        color="primary"
-        variant="soft"
-        size="sm"
-        block
-        :disabled="!previewUrl"
-        :title="previewUrl || 'Guarda el tour para generar el slug'"
-        @click="previewTour"
-      >
-        Previsualizar tour
-      </UButton>
-      <p v-if="previewUrl" class="text-[9px] font-mono text-muted break-all leading-tight px-1">
-        {{ previewUrl }}
-      </p>
-
+      <!-- Secondary row: preview + exit (the two least-critical actions share
+           a line to save vertical space without shrinking the main CTAs). -->
       <div class="grid grid-cols-2 gap-2">
         <UButton
-          icon="i-lucide-save"
-          color="neutral"
-          variant="subtle"
+          icon="i-lucide-eye"
+          color="primary"
+          variant="soft"
           size="sm"
-          :loading="store.loading || store.autosaving"
-          :disabled="!store.isDirty"
-          :title="store.isDirty ? 'Guardar borrador (Ctrl+S)' : 'Todo guardado'"
-          @click="saveDraft"
+          block
+          :disabled="!previewUrl"
+          :title="previewUrl || 'Guarda el tour para generar el slug'"
+          @click="previewTour"
         >
-          {{ store.isDirty ? 'Guardar borrador' : 'Guardado' }}
+          Vista previa
         </UButton>
         <UButton
-          icon="i-lucide-x"
+          icon="i-lucide-arrow-left"
           color="neutral"
           variant="ghost"
           size="sm"
+          block
           @click="cancel"
         >
-          Cancelar
+          Volver
         </UButton>
       </div>
-      <p class="text-[9px] text-muted text-center -mt-1">
-        <kbd class="px-1 py-0.5 rounded bg-elevated border border-default font-mono">Ctrl</kbd>
-        +
-        <kbd class="px-1 py-0.5 rounded bg-elevated border border-default font-mono">S</kbd>
-        guarda en cualquier momento
-      </p>
-
-      <UBadge
-        v-if="store.basicInfo.status"
-        :color="statusBadge.color"
-        variant="subtle"
-        size="sm"
-        :icon="statusBadge.icon"
-        class="self-center"
-      >
-        {{ statusBadge.label }}
-      </UBadge>
     </div>
 
     <!-- Autosave Status -->
@@ -263,13 +232,6 @@ const autosaveStyle = computed(() => {
   }
 })
 
-const statusBadge = computed(() => {
-  const s = store.basicInfo.status || 'draft'
-  if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
-  if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
-  return { label: 'Borrador', color: 'warning' as const, icon: 'i-lucide-file-text' }
-})
-
 const cancel = async () => {
   if (store.isDirty) {
     const ok = await confirm({
@@ -283,7 +245,7 @@ const cancel = async () => {
     })
     if (!ok) return
   }
-  router.push('/admin/tours')
+  router.push('/admin/v2/tours')
 }
 
 const publishing = ref(false)
@@ -317,23 +279,6 @@ const publishTour = async () => {
     }
   } finally {
     publishing.value = false
-  }
-}
-
-const saveDraft = async () => {
-  // Keep status as draft if not yet published. Published tours stay published —
-  // "Guardar borrador" on a published tour just persists pending edits without changing status.
-  if (!store.basicInfo.status || store.basicInfo.status === '') {
-    store.basicInfo.status = 'draft'
-  }
-  await store.saveCurrentProgress()
-  if (!store.isDirty) {
-    toast.add({
-      title: 'Borrador guardado',
-      description: 'Tus cambios se han guardado. Puedes continuar luego.',
-      icon: 'i-lucide-save',
-      color: 'success',
-    })
   }
 }
 

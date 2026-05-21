@@ -204,19 +204,13 @@
                     <!-- Nationality Header -->
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                       <div class="flex items-center gap-3 flex-wrap flex-1">
-                        <UFormField label="Nacionalidad" :ui="{ wrapper: 'min-w-[200px]' }">
-                          <USelectMenu
+                        <UFormField label="Nacionalidad" :ui="{ wrapper: 'min-w-[220px]' }" class="flex-1">
+                          <USelect
                             v-model="nat.nationalityId"
                             :items="nationalityOptions"
-                            value-key="value"
+                            placeholder="Seleccionar nacionalidad"
                             class="w-full"
                           />
-                        </UFormField>
-                        <UFormField label="Edad mín">
-                          <UInputNumber v-model="nat.ageMin" :min="0" :max="120" class="w-20" />
-                        </UFormField>
-                        <UFormField label="Edad máx">
-                          <UInputNumber v-model="nat.ageMax" :min="0" :max="120" class="w-20" />
                         </UFormField>
                       </div>
                       <UButton
@@ -428,7 +422,6 @@ const paymentMethodOptions = [
 ]
 
 const nationalityOptions = [
-  { value: '', label: '-- Seleccionar Nacionalidad --' },
   { value: 'general', label: 'General' },
   { value: 'peruano', label: 'Peruano' },
   { value: 'latino', label: 'Latinoamericano' },
