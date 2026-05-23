@@ -79,12 +79,13 @@ html.color-mode-init *::after {
     height: 100%;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.4;
-    filter: blur(80px);
-    background: 
-      radial-gradient(circle at 0% 0%, var(--color-primary-500) 0%, transparent 35%),
-      radial-gradient(circle at 100% 100%, #7c3aed 0%, transparent 35%),
-      radial-gradient(circle at 100% 0%, #3b82f6 0%, transparent 25%);
+    /* Subtle in light mode — 0.4 washed the whole admin in celeste/blue. */
+    opacity: 0.08;
+    filter: blur(90px);
+    background:
+      radial-gradient(circle at 0% 0%, var(--color-primary-500) 0%, transparent 30%),
+      radial-gradient(circle at 100% 100%, #7c3aed 0%, transparent 30%),
+      radial-gradient(circle at 100% 0%, #3b82f6 0%, transparent 20%);
   }
 
   .dark .mesh-gradient {

@@ -20,9 +20,13 @@ interface DashboardStats {
 
 interface RecentBooking {
   id: number | string
+  booking_code?: string
   customer_name: string
   tour_title?: string
   total?: number | string
+  currency?: string
+  payment_status?: string
+  status?: string
   created_at?: string
 }
 
@@ -53,7 +57,6 @@ const salesChart = ref<SalesChartResponse>({
   series: [],
   totals: { revenue: 0, bookings: 0, max_revenue: 0 },
 })
-const hoveredMonth = ref<SalesPoint | null>(null)
 
 const stats = computed(() => [
   {
@@ -175,7 +178,8 @@ const formatCurrency = (n: number) =>
 const barHeight = (revenue: number): number => {
   const max = salesChart.value.totals.max_revenue
   if (!max) return 4
-  return Math.max(4, Math.round((revenue / max) * 100))
+  // Cap at 85% so the hover tooltip above the tallest bar has headroom.
+  return Math.max(4, Math.round((revenue / max) * 85))
 }
 
 const greeting = computed(() => {
@@ -203,25 +207,13 @@ const greeting = computed(() => {
           >
             Actualizar
           </UButton>
-          <UButton icon="i-lucide-plus" to="/admin/tours">Nuevo tour</UButton>
+          <UButton icon="i-lucide-plus" to="/admin/v2/tours/new/edit">Nuevo tour</UButton>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
       <div class="p-6 space-y-6">
-        <!-- Banner preview -->
-        <UAlert
-          icon="i-lucide-sparkles"
-          color="primary"
-          variant="subtle"
-          title="Vista previa del nuevo diseño"
-          description="Datos en vivo desde el backend · Nuxt UI v4 + Lucide · El admin actual sigue intacto en /admin/dashboard"
-          :actions="[
-            { label: 'Volver al admin actual', icon: 'i-lucide-arrow-left', color: 'neutral', variant: 'outline', to: '/admin/dashboard' }
-          ]"
-        />
-
         <!-- Welcome -->
         <div class="flex items-end justify-between gap-4 flex-wrap">
           <div>
@@ -282,28 +274,31 @@ const greeting = computed(() => {
                 <USkeleton v-for="i in 12" :key="i" class="flex-1" :style="{ height: `${30 + (i * 7) % 60}%` }" />
               </div>
 
-              <div v-else class="flex-1 flex items-end justify-around gap-2 px-2 relative">
-                <div
-                  v-if="hoveredMonth"
-                  class="absolute -top-1 left-1/2 -translate-x-1/2 bg-default border border-default rounded-lg shadow-lg px-3 py-2 text-xs z-10 pointer-events-none"
-                >
-                  <p class="font-bold">{{ hoveredMonth.label }} {{ hoveredMonth.year }}</p>
-                  <p class="text-success tabular-nums">{{ formatCurrency(hoveredMonth.revenue) }}</p>
-                  <p class="text-muted tabular-nums">{{ hoveredMonth.bookings }} reservas</p>
-                </div>
-
+              <div v-else class="flex-1 flex items-end justify-around gap-2 px-2 border-b border-default">
                 <div
                   v-for="point in salesChart.series"
                   :key="point.ym"
-                  class="flex-1 group relative cursor-pointer"
-                  @mouseenter="hoveredMonth = point"
-                  @mouseleave="hoveredMonth = null"
+                  class="flex-1 h-full group relative cursor-pointer flex items-end"
                 >
+                  <!-- invisible hover catcher so the whole column is hoverable -->
+                  <div class="absolute inset-0" />
+                  <!-- bar (solid primary, no track behind it) -->
                   <div
-                    class="w-full rounded-t-lg transition-all"
-                    :class="point.revenue > 0 ? 'bg-primary/40 group-hover:bg-primary' : 'bg-elevated group-hover:bg-muted'"
+                    class="relative w-full rounded-t-md transition-all duration-300"
+                    :class="point.revenue > 0
+                      ? 'bg-primary group-hover:brightness-110 shadow-sm'
+                      : 'bg-muted/30 group-hover:bg-muted/50'"
                     :style="{ height: `${barHeight(point.revenue)}%` }"
-                  />
+                  >
+                    <!-- tooltip anchored to THIS bar's top edge -->
+                    <div
+                      class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-default border border-default rounded-lg shadow-lg px-2.5 py-1.5 text-xs z-20 pointer-events-none whitespace-nowrap"
+                    >
+                      <p class="font-bold">{{ point.label }} {{ point.year }}</p>
+                      <p class="text-success tabular-nums">{{ formatCurrency(point.revenue) }}</p>
+                      <p class="text-muted tabular-nums">{{ point.bookings }} reservas</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -320,7 +315,7 @@ const greeting = computed(() => {
                   <span class="size-2 bg-success rounded-full animate-pulse" />
                   Reservas recientes
                 </h3>
-                <UButton variant="link" size="xs" to="/admin/bookings" trailing-icon="i-lucide-arrow-right">
+                <UButton variant="link" size="xs" to="/admin/v2/bookings" trailing-icon="i-lucide-arrow-right">
                   Ver todas
                 </UButton>
               </div>
@@ -361,7 +356,7 @@ const greeting = computed(() => {
                   <p class="text-xs text-muted truncate">{{ b.tour_title || 'Tour' }}</p>
                 </div>
                 <div class="text-right shrink-0">
-                  <p class="text-sm font-bold tabular-nums">${{ parseFloat(String(b.total || 0)).toFixed(2) }}</p>
+                  <p class="text-sm font-bold tabular-nums">{{ b.currency || 'USD' }} {{ parseFloat(String(b.total || 0)).toFixed(2) }}</p>
                   <UBadge color="success" variant="subtle" size="sm">Pagado</UBadge>
                 </div>
               </NuxtLink>
@@ -375,17 +370,17 @@ const greeting = computed(() => {
             <h3 class="font-semibold">Accesos rápidos</h3>
           </template>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <UButton block color="neutral" variant="outline" icon="i-lucide-plus-circle" size="lg" to="/admin/tours">
+            <UButton block color="neutral" variant="outline" icon="i-lucide-plus-circle" size="lg" to="/admin/v2/tours/new/edit">
               Crear tour
             </UButton>
-            <UButton block color="neutral" variant="outline" icon="i-lucide-calendar" size="lg" to="/admin/bookings">
+            <UButton block color="neutral" variant="outline" icon="i-lucide-calendar" size="lg" to="/admin/v2/bookings">
               Reservas
             </UButton>
-            <UButton block color="neutral" variant="outline" icon="i-lucide-tags" size="lg" to="/admin/categories">
+            <UButton block color="neutral" variant="outline" icon="i-lucide-tags" size="lg" to="/admin/v2/categories">
               Categorías
             </UButton>
-            <UButton block color="neutral" variant="outline" icon="i-lucide-bar-chart-3" size="lg" to="/admin/reports">
-              Reportes
+            <UButton block color="neutral" variant="outline" icon="i-lucide-star" size="lg" to="/admin/v2/reviews">
+              Reseñas
             </UButton>
           </div>
         </UCard>
