@@ -110,12 +110,26 @@
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('total') }}</p>
-                <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(purchaseTours.reduce((s, x) => s + (x.total || 0), 0)) }}</p>
+                <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(grandTotal) }}</p>
               </div>
               <div class="p-3 text-center">
-                <p class="text-[10px] text-slate-400 font-semibold uppercase">Status</p>
-                <p class="text-sm font-bold text-green-600 mt-0.5">{{ t('status_paid') }}</p>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase">Estado</p>
+                <p class="text-sm font-bold mt-0.5" :class="paymentSummary?.is_partial ? 'text-amber-600' : 'text-green-600'">
+                  {{ paymentSummary?.is_partial ? 'Adelanto pagado' : t('status_paid') }}
+                </p>
               </div>
+            </div>
+
+            <!-- Partial payment breakdown -->
+            <div v-if="paymentSummary?.is_partial" class="border-t border-slate-100 px-3 py-2.5 bg-amber-50/60 flex items-center justify-between gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
+                <span class="material-symbols-outlined text-amber-600 text-sm">payments</span>
+                Pagaste <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
+              </span>
+              <span class="text-xs text-right">
+                <span class="text-slate-500">Saldo el día del tour:</span>
+                <span class="font-bold text-amber-700 ml-1">{{ currencyStore.formatConverted(paymentSummary.balance_due) }}</span>
+              </span>
             </div>
           </div>
 
@@ -419,6 +433,13 @@ const purchaseTours = computed(() => {
   }]
 })
 const isMultiTour = computed(() => purchaseTours.value.length > 1)
+
+// Payment summary from the API: how much was charged now vs the balance due
+// (for tours paid with a deposit/advance).
+const paymentSummary = computed(() => (response.value as any)?.payment_summary || null)
+const grandTotal = computed(() =>
+  paymentSummary.value?.grand_total ?? purchaseTours.value.reduce((s, x) => s + (x.total || 0), 0)
+)
 
 // Per-tour pickup (multi-tour). Seed from backend `pickup_configured` flags;
 // add ids as the customer saves each one via the modal.

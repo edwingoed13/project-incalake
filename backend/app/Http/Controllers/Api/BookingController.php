@@ -796,6 +796,7 @@ class BookingController extends Controller
                 'success' => true,
                 'booking' => new BookingResource($booking),
                 'group' => $this->purchaseGroup($booking),
+                'payment_summary' => $this->paymentSummary($booking),
             ]);
 
         } catch (\Exception $e) {
@@ -804,6 +805,43 @@ class BookingController extends Controller
                 'message' => 'Reserva no encontrada'
             ], 404);
         }
+    }
+
+    /**
+     * Payment summary for a purchase (group or single): how much was actually
+     * charged now vs the balance due, derived from payment_data (what was
+     * charged), not the tour's advance config.
+     */
+    private function paymentSummary(Booking $booking): array
+    {
+        $pd = is_array($booking->payment_data ?? null) ? $booking->payment_data : [];
+
+        $ids = $pd['group_booking_ids'] ?? null;
+        $grandTotal = (is_array($ids) && count($ids) >= 1)
+            ? (float) Booking::whereIn('id', $ids)->sum('total')
+            : (float) $booking->total;
+
+        $paid = null;
+        if (isset($pd['group_total_charged'])) {
+            $paid = round(((float) $pd['group_total_charged']) / 100, 2);
+        } elseif (isset($pd['group_total_captured'])) {
+            $paid = round((float) $pd['group_total_captured'], 2);
+        } elseif (isset($pd['charge_data']['amount'])) {
+            $paid = round(((float) $pd['charge_data']['amount']) / 100, 2);
+        }
+        if ($paid === null) {
+            $paid = $booking->payment_status === 'paid' ? $grandTotal : 0.0;
+        }
+
+        $balance = round(max(0, $grandTotal - $paid), 2);
+
+        return [
+            'grand_total' => round($grandTotal, 2),
+            'paid_now'    => round($paid, 2),
+            'balance_due' => $balance,
+            'is_partial'  => $balance > 0.5,
+            'currency'    => $booking->currency,
+        ];
     }
 
     /**
@@ -825,6 +863,7 @@ class BookingController extends Controller
                 'success' => true,
                 'booking' => new BookingResource($booking),
                 'group' => $this->purchaseGroup($booking),
+                'payment_summary' => $this->paymentSummary($booking),
             ]);
 
         } catch (\Exception $e) {
