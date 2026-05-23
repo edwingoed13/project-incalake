@@ -318,8 +318,15 @@ class BookingController extends Controller
             $culqiToken = $request->token;
             $secretKey = config('services.culqi.secret_key');
 
-            // Single charge for the SUM of every booking in the group.
-            $amountInCents = (int) round($bookings->sum('total') * 100);
+            // Single charge for the group. The customer can pay the full total
+            // or the advance (deposit) when the tour enables it; 'advance' uses
+            // each tour's advance_payment_percentage via calculateExpectedPaymentAmount().
+            $paymentMode = $request->input('payment_mode', 'full');
+            if ($paymentMode === 'advance') {
+                $amountInCents = (int) round($bookings->sum(fn ($b) => $this->calculateExpectedPaymentAmount($b)) * 100);
+            } else {
+                $amountInCents = (int) round($bookings->sum('total') * 100);
+            }
 
             // Prepare description (Culqi requires 5-80 characters)
             $description = "Reserva {$booking->booking_code}";
@@ -599,12 +606,13 @@ class BookingController extends Controller
                 ], 400);
             }
 
-            // 2. Validate captured amount == SUM of the whole group's expected
+            // 2. Validate captured amount == SUM of the whole group's expected.
+            // The customer may pay the full total or the advance (deposit).
             $capturedAmount = $paypal->getCapturedAmount($captureResponse);
-            $expectedAmount = round(
-                $bookings->sum(fn ($b) => $this->calculateExpectedPaymentAmount($b)),
-                2
-            );
+            $paymentMode = $request->input('payment_mode', 'full');
+            $expectedAmount = $paymentMode === 'advance'
+                ? round($bookings->sum(fn ($b) => $this->calculateExpectedPaymentAmount($b)), 2)
+                : round($bookings->sum('total'), 2);
 
             if ($capturedAmount === null || abs($capturedAmount - $expectedAmount) > 0.01) {
                 \Log::error('PayPal amount mismatch', [

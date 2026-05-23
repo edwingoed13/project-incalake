@@ -105,11 +105,15 @@
               </div>
             </div>
             <div class="flex justify-between items-center">
-              <p class="font-black">{{ t('total_to_pay') }}</p>
+              <p class="font-black">{{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay') }}</p>
               <p class="text-2xl font-black text-primary">
-                {{ currencyStore.formatConverted(grandTotal) }}
+                {{ currencyStore.formatConverted(payNowAmount) }}
                 <span v-if="!currencyStore.isForeignCurrency" class="text-sm font-semibold text-slate-400">USD</span>
               </p>
+            </div>
+            <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
+              <span>Saldo a pagar el día del tour</span>
+              <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
             </div>
             <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
               <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
@@ -124,12 +128,39 @@
         <!-- Right: Payment (2 cols) -->
         <div class="lg:col-span-2">
           <div class="sticky top-24 space-y-4">
+            <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
+            <div v-if="hasAdvanceOption" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-2">
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+              <label
+                class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+                :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
+              >
+                <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
+                <div class="flex-1">
+                  <p class="text-sm font-bold text-slate-800">Pagar adelanto</p>
+                  <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(grandTotal - advanceTotal) }} el día del tour</p>
+                </div>
+                <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+                :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
+              >
+                <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
+                <div class="flex-1">
+                  <p class="text-sm font-bold text-slate-800">Pagar todo ahora</p>
+                  <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+                </div>
+                <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(grandTotal) }}</span>
+              </label>
+            </div>
+
             <!-- Pay Button -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
               <ClientOnly>
                 <PaymentCulqiCheckoutFixed
                   :public-key="paymentConfig?.culqi_public_key || 'pk_test_J0V01cM2W5eNlHNz'"
-                  :amount="grandTotal"
+                  :amount="payNowAmount"
                   :currency="allBookings[0]?.pricing?.currency || 'USD'"
                   :description="`Incalake Tours - ${allBookings.length} booking(s)`"
                   :customer-email="customerInfo.email"
@@ -201,6 +232,19 @@ const taxAmount = computed(() =>
 
 const grandTotal = computed(() => subtotalAmount.value + taxAmount.value)
 
+// Advance (deposit) support: pricing.amount_to_pay = total * advance% (from
+// the API). When the deposit is less than the full total, let the customer
+// choose to pay the deposit now and the balance on the tour day.
+const advanceTotal = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.amount_to_pay ?? b.pricing?.total ?? 0), 0)
+)
+const hasAdvanceOption = computed(() => advanceTotal.value > 0 && advanceTotal.value < grandTotal.value - 0.01)
+const paymentMode = ref<'full' | 'advance'>('full')
+const payNowAmount = computed(() =>
+  paymentMode.value === 'advance' && hasAdvanceOption.value ? advanceTotal.value : grandTotal.value
+)
+const balanceAmount = computed(() => Math.max(0, grandTotal.value - payNowAmount.value))
+
 const customerInfo = computed(() => {
   const c = allBookings.value[0]?.customer || {}
   const fullName = (c.name || '').trim()
@@ -255,6 +299,9 @@ onMounted(async () => {
     const configResponse = await api('/payment/config')
     paymentConfig.value = configResponse.data || configResponse
 
+    // Default to the deposit when the tour offers it (customer can switch).
+    if (hasAdvanceOption.value) paymentMode.value = 'advance'
+
     loading.value = false
   } catch (err: any) {
     error.value = err.message || 'Failed to load payment'
@@ -269,7 +316,7 @@ const handlePaymentSuccess = async (token: string, paymentData: any) => {
     // A Culqi token is single-use, so we make ONE charge for the whole group
     // (grandTotal). The backend marks every booking in the group as paid.
     const groupIds = allBookings.value.map(b => b.id)
-    await bookingStore.confirmCulqiPayment(allBookings.value[0].id, token, paymentData, groupIds)
+    await bookingStore.confirmCulqiPayment(allBookings.value[0].id, token, paymentData, groupIds, paymentMode.value)
 
     cartStore.clearCart()
 

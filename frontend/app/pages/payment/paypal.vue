@@ -100,13 +100,19 @@
             <!-- Total -->
             <div class="pt-2">
               <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-primary-light dark:text-primary-dark">Total</span>
+                <span class="text-lg font-bold text-primary-light dark:text-primary-dark">
+                  {{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : 'Total' }}
+                </span>
                 <span class="text-2xl font-black text-primary">
-                  ${{ grandTotal.toFixed(2) }} {{ booking.pricing?.currency || 'USD' }}
+                  ${{ payNowAmount.toFixed(2) }} {{ booking.pricing?.currency || 'USD' }}
                   <span v-if="allBookings.length > 1" class="block text-xs font-semibold text-slate-500 mt-1">
                     {{ allBookings.length }} tours
                   </span>
                 </span>
+              </div>
+              <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
+                <span>Saldo a pagar el día del tour</span>
+                <span class="font-semibold">${{ balanceAmount.toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -114,6 +120,33 @@
 
         <!-- Right Column: Payment Method -->
         <div>
+          <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
+          <div v-if="hasAdvanceOption" class="mb-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+            <label
+              class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+              :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+            >
+              <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar adelanto</p>
+                <p class="text-[11px] text-slate-500">Saldo ${{ (fullTotal - advanceTotal).toFixed(2) }} el día del tour</p>
+              </div>
+              <span class="text-sm font-black text-primary">${{ advanceTotal.toFixed(2) }}</span>
+            </label>
+            <label
+              class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+              :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+            >
+              <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar todo ahora</p>
+                <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+              </div>
+              <span class="text-sm font-black text-primary">${{ fullTotal.toFixed(2) }}</span>
+            </label>
+          </div>
+
           <!-- Recoverable payment error (cancellation, declined card, etc.) -->
           <div v-if="paymentError" class="mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
             <div class="flex items-start gap-3">
@@ -131,7 +164,7 @@
             <template v-if="paymentConfig?.paypal_client_id">
               <PaymentPayPalCheckout
                 :client-id="paymentConfig.paypal_client_id"
-                :amount="grandTotal"
+                :amount="payNowAmount"
                 :currency="'USD'"
                 :description="allBookings.length > 1 ? `Incalake - ${allBookings.length} tours` : `Booking ${booking.booking_code} - ${booking.tour?.title || 'Tour'}`"
                 :customer-email="booking.customer?.email || ''"
@@ -217,13 +250,20 @@ const booking = ref<any>(null)
 const allBookings = ref<any[]>([])
 const paymentConfig = ref<any>(null)
 
-// Multi-tour cart: one PayPal capture for the SUM of every booking.
-const grandTotal = computed(() =>
-  allBookings.value.reduce(
-    (sum, b) => sum + (b.pricing?.amount_to_pay || b.pricing?.total || 0),
-    0
-  )
+// Multi-tour cart: one PayPal capture for the SUM of every booking. The
+// customer can pay the full total or the advance (deposit) when offered.
+const fullTotal = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.total || 0), 0)
 )
+const advanceTotal = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.amount_to_pay ?? b.pricing?.total ?? 0), 0)
+)
+const hasAdvanceOption = computed(() => advanceTotal.value > 0 && advanceTotal.value < fullTotal.value - 0.01)
+const paymentMode = ref<'full' | 'advance'>('full')
+const payNowAmount = computed(() =>
+  paymentMode.value === 'advance' && hasAdvanceOption.value ? advanceTotal.value : fullTotal.value
+)
+const balanceAmount = computed(() => Math.max(0, fullTotal.value - payNowAmount.value))
 
 onMounted(async () => {
   try {
@@ -261,6 +301,9 @@ onMounted(async () => {
       throw new Error('PayPal no esta configurado correctamente')
     }
 
+    // Default to the deposit when the tour offers it (customer can switch).
+    if (hasAdvanceOption.value) paymentMode.value = 'advance'
+
     loading.value = false
 
   } catch (err: any) {
@@ -294,7 +337,8 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
       allBookings.value[0].id,
       orderId,
       paymentData,
-      groupIds
+      groupIds,
+      paymentMode.value
     )
 
     if (!result) {

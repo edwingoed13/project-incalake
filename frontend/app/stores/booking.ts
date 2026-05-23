@@ -106,7 +106,7 @@ export const useBookingStore = defineStore('booking', {
       }
     },
 
-    async confirmCulqiPayment(bookingId: number, token: string, paymentData: any, bookingIds?: number[]) {
+    async confirmCulqiPayment(bookingId: number, token: string, paymentData: any, bookingIds?: number[], paymentMode: 'full' | 'advance' = 'full') {
       this.loading = true
       this.error = null
 
@@ -117,6 +117,7 @@ export const useBookingStore = defineStore('booking', {
           body: {
             token,
             payment_data: paymentData,
+            payment_mode: paymentMode,
             // Multi-tour cart: charge the whole group in ONE Culqi charge.
             ...(bookingIds && bookingIds.length > 1 ? { booking_ids: bookingIds } : {})
           }
@@ -132,7 +133,7 @@ export const useBookingStore = defineStore('booking', {
       }
     },
 
-    async confirmPayPalPayment(bookingId: number, orderId: string, paymentData: any, bookingIds?: number[]) {
+    async confirmPayPalPayment(bookingId: number, orderId: string, paymentData: any, bookingIds?: number[], paymentMode: 'full' | 'advance' = 'full') {
       this.loading = true
       this.error = null
 
@@ -143,6 +144,7 @@ export const useBookingStore = defineStore('booking', {
           body: {
             order_id: orderId,
             payment_data: paymentData,
+            payment_mode: paymentMode,
             // Multi-tour cart: one PayPal capture covers the whole group.
             ...(bookingIds && bookingIds.length > 1 ? { booking_ids: bookingIds } : {})
           }
