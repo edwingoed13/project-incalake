@@ -31,6 +31,30 @@ class TourController extends Controller
         $this->priceCalculator = $priceCalculator;
     }
 
+    /**
+     * Quick status change from the admin list (publish / archive / restore to
+     * draft) without opening the wizard. Keeps `active` in sync so publishing
+     * actually makes the tour visible.
+     */
+    public function updateStatus(Request $request, $id): JsonResponse
+    {
+        $data = $request->validate([
+            'status' => 'required|in:draft,published,archived',
+        ]);
+
+        $tour = Tour::findOrFail($id);
+        $tour->update([
+            'status' => $data['status'],
+            'active' => $data['status'] === 'published',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estado actualizado',
+            'status' => $tour->status,
+        ]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -125,12 +149,35 @@ class TourController extends Controller
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
+            // Counts per status for the admin tabs (respect the search filter
+            // but NOT the status filter, so every tab shows its own total).
+            // null/unknown status counts as draft, matching the admin UI.
+            $countQuery = Tour::query();
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $countQuery->whereHas('translations', function ($q) use ($s) {
+                    $q->where('h1_title', 'like', "%{$s}%")
+                      ->orWhere('short_description', 'like', "%{$s}%");
+                });
+            }
+            $rawCounts = $countQuery->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
+            $allCount = (int) $rawCounts->sum();
+            $publishedCount = (int) ($rawCounts['published'] ?? 0);
+            $archivedCount = (int) ($rawCounts['archived'] ?? 0);
+            $statusCounts = [
+                'all' => $allCount,
+                'published' => $publishedCount,
+                'archived' => $archivedCount,
+                'draft' => $allCount - $publishedCount - $archivedCount,
+            ];
+
             $perPage = $request->get('per_page', 15);
             $tours = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,
                 'data' => TourResource::collection($tours),
+                'status_counts' => $statusCounts,
                 'meta' => [
                     'current_page' => $tours->currentPage(),
                     'from' => $tours->firstItem(),

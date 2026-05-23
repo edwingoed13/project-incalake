@@ -188,6 +188,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [TourController::class, 'store'])->name('api.admin.tours.store');
         Route::match(['put', 'post'], '/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
         Route::match(['delete', 'post'], '/{id}/delete', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
+        Route::match(['patch', 'post'], '/{id}/status', [TourController::class, 'updateStatus'])->name('api.admin.tours.status');
     });
 
     // Admin routes - Upload
