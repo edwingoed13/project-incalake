@@ -78,6 +78,7 @@ const searchQuery = ref('')
 const statusFilter = ref<StatusFilter>('all')
 const currentPage = ref(1)
 const expandedTours = ref<Set<number>>(new Set())
+const statusCounts = ref<Record<string, number>>({ all: 0, draft: 0, published: 0, archived: 0 })
 
 const statusBadge = (s?: Tour['status']) => {
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
@@ -138,6 +139,7 @@ const fetchTours = async (page = 1, search = '') => {
     if (response?.success) {
       tours.value = response.data
       meta.value = response.meta
+      if (response.status_counts) statusCounts.value = response.status_counts
     }
   } catch (err) {
     console.error('Error fetching tours:', err)
@@ -316,18 +318,45 @@ const displayedPages = computed(() => {
   return pages
 })
 
-const rowActions = (tour: Tour) => [
-  [
-    { label: 'Editar tour', icon: 'i-lucide-edit', to: `/admin/v2/tours/${tour.id}/edit` },
-    { label: 'Disponibilidad', icon: 'i-lucide-calendar-days', to: `/admin/tours/${tour.id}/availability` },
-  ],
-  [
-    { label: 'Agregar idioma', icon: 'i-lucide-languages', onSelect: () => openCloneModal(tour) },
-  ],
-  [
-    { label: 'Eliminar tour', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => confirmDeleteTour(tour) },
-  ],
-]
+const changeStatus = async (tour: Tour, status: 'draft' | 'published' | 'archived') => {
+  const verb = status === 'published' ? 'Publicar' : status === 'archived' ? 'Archivar' : 'Mover a borrador'
+  const ok = await confirm({
+    title: `${verb} tour`,
+    description: `Vas a ${verb.toLowerCase()} "${getTourReferenceName(tour)}".${status === 'published' ? ' Quedará visible en el sitio público.' : ''}`,
+    confirmLabel: verb,
+    confirmColor: status === 'archived' ? 'warning' : 'primary',
+    confirmIcon: status === 'published' ? 'i-lucide-circle-check' : status === 'archived' ? 'i-lucide-archive' : 'i-lucide-file-text',
+    icon: 'i-lucide-refresh-cw',
+  })
+  if (!ok) return
+  try {
+    await $fetch(`${API_BASE_URL}/admin/tours/${tour.id}/status`, { method: 'POST', body: { status } })
+    toast.add({ title: 'Estado actualizado', icon: 'i-lucide-circle-check', color: 'success' })
+    fetchTours(currentPage.value, searchQuery.value)
+  } catch {
+    toast.add({ title: 'Error', description: 'No se pudo cambiar el estado.', color: 'error', icon: 'i-lucide-alert-triangle' })
+  }
+}
+
+const rowActions = (tour: Tour) => {
+  const status: any = []
+  if (tour.status !== 'published') {
+    status.push({ label: 'Publicar', icon: 'i-lucide-circle-check', color: 'success' as const, onSelect: () => changeStatus(tour, 'published') })
+  } else {
+    status.push({ label: 'Despublicar (borrador)', icon: 'i-lucide-file-text', onSelect: () => changeStatus(tour, 'draft') })
+  }
+  if (tour.status !== 'archived') {
+    status.push({ label: 'Archivar', icon: 'i-lucide-archive', color: 'warning' as const, onSelect: () => changeStatus(tour, 'archived') })
+  } else {
+    status.push({ label: 'Restaurar (borrador)', icon: 'i-lucide-archive-restore', onSelect: () => changeStatus(tour, 'draft') })
+  }
+  return [
+    [{ label: 'Editar tour', icon: 'i-lucide-edit', to: `/admin/v2/tours/${tour.id}/edit` }],
+    status,
+    [{ label: 'Agregar idioma', icon: 'i-lucide-languages', onSelect: () => openCloneModal(tour) }],
+    [{ label: 'Eliminar tour', icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => confirmDeleteTour(tour) }],
+  ]
+}
 
 onMounted(() => {
   fetchTours()
@@ -401,6 +430,12 @@ onMounted(() => {
           >
             <UIcon :name="tab.icon" class="size-3.5" />
             {{ tab.label }}
+            <span
+              class="text-[10px] font-bold rounded-full px-1.5 min-w-[18px] text-center"
+              :class="statusFilter === tab.id ? 'bg-primary/15 text-primary' : 'bg-elevated text-muted'"
+            >
+              {{ statusCounts[tab.id] ?? 0 }}
+            </span>
           </button>
         </div>
 
@@ -595,34 +630,12 @@ onMounted(() => {
               Mostrando <span class="font-semibold text-default">{{ meta.from }}-{{ meta.to }}</span>
               de <span class="font-semibold text-default">{{ meta.total }}</span> tours
             </p>
-            <div class="flex items-center gap-1">
-              <UButton
-                icon="i-lucide-chevron-left"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="meta.current_page === 1"
-                @click="changePage(meta.current_page - 1)"
-              />
-              <UButton
-                v-for="page in displayedPages"
-                :key="page"
-                :color="meta.current_page === page ? 'primary' : 'neutral'"
-                :variant="meta.current_page === page ? 'solid' : 'ghost'"
-                size="sm"
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </UButton>
-              <UButton
-                icon="i-lucide-chevron-right"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="meta.current_page === meta.last_page"
-                @click="changePage(meta.current_page + 1)"
-              />
-            </div>
+            <UPagination
+              :page="meta.current_page"
+              :total="meta.total"
+              :items-per-page="meta.per_page"
+              @update:page="changePage"
+            />
           </div>
         </UCard>
       </div>

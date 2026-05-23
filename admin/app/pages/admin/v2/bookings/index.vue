@@ -667,34 +667,12 @@ onMounted(() => {
               Mostrando <span class="font-semibold text-default">{{ pagination.from }}-{{ pagination.to }}</span>
               de <span class="font-semibold text-default">{{ pagination.total }}</span> reservas
             </p>
-            <div class="flex items-center gap-1">
-              <UButton
-                icon="i-lucide-chevron-left"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="pagination.current_page === 1"
-                @click="changePage(pagination.current_page - 1)"
-              />
-              <UButton
-                v-for="page in visiblePages"
-                :key="page"
-                :color="page === pagination.current_page ? 'primary' : 'neutral'"
-                :variant="page === pagination.current_page ? 'solid' : 'ghost'"
-                size="sm"
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </UButton>
-              <UButton
-                icon="i-lucide-chevron-right"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="pagination.current_page === pagination.last_page"
-                @click="changePage(pagination.current_page + 1)"
-              />
-            </div>
+            <UPagination
+              :page="pagination.current_page"
+              :total="pagination.total"
+              :items-per-page="pagination.per_page"
+              @update:page="changePage"
+            />
           </div>
         </UCard>
       </div>
