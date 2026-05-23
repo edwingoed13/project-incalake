@@ -46,11 +46,11 @@ const statusBadge: Record<string, { color: 'warning' | 'success' | 'error' | 'in
   completed: { color: 'info', label: 'Completado', icon: 'i-lucide-check-check' },
 }
 
-const paymentStatusBadge: Record<string, { color: 'success' | 'warning' | 'error' | 'neutral'; label: string }> = {
-  paid: { color: 'success', label: 'Pagado' },
-  pending: { color: 'warning', label: 'Pendiente' },
-  failed: { color: 'error', label: 'Fallido' },
+const paymentStateBadge: Record<string, { color: 'success' | 'warning' | 'neutral' | 'error'; label: string }> = {
+  full: { color: 'success', label: 'Pagado total' },
+  partial: { color: 'warning', label: 'Pago parcial' },
   refunded: { color: 'neutral', label: 'Reembolsado' },
+  unpaid: { color: 'error', label: 'Sin pagar' },
 }
 
 // Multi-tour purchase: every booking paid in the same charge (from
@@ -58,14 +58,28 @@ const paymentStatusBadge: Record<string, { color: 'success' | 'warning' | 'error
 const groupTours = computed(() => (fullDetails.value as any)?.group || [])
 const isMultiTour = computed(() => groupTours.value.length > 1)
 
-// For a multi-tour purchase the Payment section must show the WHOLE
-// purchase (what was charged), not just the primary booking's amount.
 const groupSubtotal = computed(() =>
   groupTours.value.reduce((s: number, t: any) => s + Number(t.subtotal || 0), 0)
 )
 const groupTotal = computed(() =>
   groupTours.value.reduce((s: number, t: any) => s + Number(t.total || 0), 0)
 )
+
+// Payment figures come from the list row (already derived from what was
+// actually charged): payment_state + amount_paid + amount_remaining.
+const grandTotal = computed(() =>
+  isMultiTour.value
+    ? groupTotal.value
+    : Number(props.booking.group_total ?? props.booking.total ?? props.booking.total_amount ?? 0)
+)
+const isPartial = computed(() => props.booking.payment_state === 'partial')
+const amountPaid = computed(() =>
+  isPartial.value && props.booking.amount_paid != null ? Number(props.booking.amount_paid) : grandTotal.value
+)
+const balanceDue = computed(() =>
+  isPartial.value && props.booking.amount_remaining != null ? Number(props.booking.amount_remaining) : 0
+)
+const currencyCode = computed(() => props.booking.currency || groupTours.value[0]?.currency || 'USD')
 
 const pickupLabel = (tr: any) => {
   if (!tr.pickup_configured) return null
@@ -80,6 +94,11 @@ const totalPax = computed(() => {
   return b.total_participants || ((b.adults || 0) + (b.children || 0) + (b.infants || 0))
 })
 
+const whatsappHref = computed(() => {
+  const phone = String(props.booking.customer_phone || '').replace(/[^\d]/g, '')
+  return phone ? `https://wa.me/${phone}` : null
+})
+
 const close = () => {
   emit('update:open', false)
   emit('close')
@@ -87,62 +106,114 @@ const close = () => {
 </script>
 
 <template>
-  <UModal :open="open" :ui="{ content: 'max-w-3xl' }" @update:open="(v) => !v && close()">
+  <USlideover
+    :open="open"
+    :ui="{ content: 'max-w-2xl w-full' }"
+    @update:open="(v) => !v && close()"
+  >
     <template #content>
-      <div class="flex flex-col max-h-[90vh] bg-default rounded-lg overflow-hidden">
+      <div class="flex flex-col h-full bg-default">
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-default flex items-start justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UIcon name="i-lucide-receipt" class="size-5 text-primary" />
+        <div class="px-5 py-4 border-b border-default">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-receipt" class="size-5 text-primary" />
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-lg font-bold leading-tight">Detalles de reserva</h2>
+                <p class="text-xs text-muted font-mono truncate">{{ booking.booking_code }}</p>
+              </div>
             </div>
-            <div>
-              <h2 class="text-lg font-bold">Detalles de reserva</h2>
-              <p class="text-xs text-muted mt-0.5 font-mono">{{ booking.booking_code }}</p>
-            </div>
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="close" />
           </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="close" />
-        </div>
-
-        <!-- Body -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
-          <!-- Status row -->
-          <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap mt-3">
             <UBadge
               :color="statusBadge[booking.status]?.color || 'neutral'"
               variant="subtle"
-              size="lg"
+              size="sm"
               :icon="statusBadge[booking.status]?.icon"
             >
               {{ statusBadge[booking.status]?.label || booking.status }}
             </UBadge>
-            <span class="text-xs text-muted">
-              Creado: <span class="font-medium text-default">{{ formatDateTime(booking.created_at) }}</span>
-            </span>
+            <UBadge
+              v-if="booking.payment_state && paymentStateBadge[booking.payment_state]"
+              :color="paymentStateBadge[booking.payment_state].color"
+              variant="soft"
+              size="sm"
+            >
+              {{ paymentStateBadge[booking.payment_state].label }}
+            </UBadge>
+            <UBadge v-if="isMultiTour" color="primary" variant="subtle" size="sm" icon="i-lucide-squares-2x2">
+              {{ groupTours.length }} tours
+            </UBadge>
+            <span class="text-[11px] text-muted ml-auto">Creado: {{ formatDateTime(booking.created_at) }}</span>
           </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-5 space-y-6">
+          <!-- Payment summary (operations: paid now vs balance) -->
+          <section>
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
+              <UIcon name="i-lucide-credit-card" class="size-3.5" />
+              Pago
+            </h3>
+            <div class="rounded-xl border border-default overflow-hidden">
+              <div class="grid grid-cols-3 divide-x divide-default">
+                <div class="p-3">
+                  <p class="text-[10px] text-muted uppercase font-semibold">Total</p>
+                  <p class="text-base font-bold tabular-nums mt-0.5">{{ currencyCode }} {{ grandTotal.toFixed(2) }}</p>
+                </div>
+                <div class="p-3">
+                  <p class="text-[10px] text-muted uppercase font-semibold">Pagado</p>
+                  <p class="text-base font-bold tabular-nums mt-0.5 text-success">{{ currencyCode }} {{ amountPaid.toFixed(2) }}</p>
+                </div>
+                <div class="p-3">
+                  <p class="text-[10px] text-muted uppercase font-semibold">Saldo</p>
+                  <p class="text-base font-bold tabular-nums mt-0.5" :class="balanceDue > 0 ? 'text-warning' : 'text-muted'">
+                    {{ currencyCode }} {{ balanceDue.toFixed(2) }}
+                  </p>
+                </div>
+              </div>
+              <div class="px-3 py-2 bg-elevated/40 border-t border-default flex items-center justify-between gap-2 text-xs">
+                <span class="text-muted">Método</span>
+                <UBadge color="neutral" variant="subtle" size="sm">{{ (booking.payment_method || 'N/A').toUpperCase() }}</UBadge>
+              </div>
+              <div v-if="balanceDue > 0" class="px-3 py-2 bg-warning/10 border-t border-warning/20 text-[11px] text-warning font-semibold flex items-center gap-1.5">
+                <UIcon name="i-lucide-alert-triangle" class="size-3.5" />
+                Cobrar saldo de {{ currencyCode }} {{ balanceDue.toFixed(2) }} el día del tour
+              </div>
+            </div>
+          </section>
 
           <!-- Cliente -->
           <section>
             <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
               <UIcon name="i-lucide-user" class="size-3.5" />
-              Información del cliente
+              Cliente
             </h3>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-x-4 gap-y-3">
               <div>
                 <p class="text-xs text-muted mb-1">Nombre</p>
                 <p class="text-sm font-medium">{{ booking.customer_name || '—' }}</p>
               </div>
               <div>
+                <p class="text-xs text-muted mb-1">País</p>
+                <p class="text-sm font-medium">{{ booking.customer_country || 'N/A' }}</p>
+              </div>
+              <div class="min-w-0">
                 <p class="text-xs text-muted mb-1">Email</p>
-                <p class="text-sm font-medium truncate">{{ booking.customer_email || '—' }}</p>
+                <a :href="`mailto:${booking.customer_email}`" class="text-sm font-medium text-primary hover:underline truncate block">{{ booking.customer_email || '—' }}</a>
               </div>
               <div>
                 <p class="text-xs text-muted mb-1">Teléfono</p>
-                <p class="text-sm font-medium">{{ booking.customer_phone || 'N/A' }}</p>
-              </div>
-              <div>
-                <p class="text-xs text-muted mb-1">País</p>
-                <p class="text-sm font-medium">{{ booking.customer_country || 'N/A' }}</p>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium">{{ booking.customer_phone || 'N/A' }}</span>
+                  <a v-if="whatsappHref" :href="whatsappHref" target="_blank" class="text-success hover:opacity-80" title="WhatsApp">
+                    <UIcon name="i-lucide-message-circle" class="size-4" />
+                  </a>
+                </div>
               </div>
             </div>
           </section>
@@ -153,10 +224,9 @@ const close = () => {
           <section>
             <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
               <UIcon name="i-lucide-map-pin" class="size-3.5" />
-              {{ isMultiTour ? `Tours de la compra (${groupTours.length})` : 'Información del tour' }}
+              {{ isMultiTour ? `Tours de la compra (${groupTours.length})` : 'Tour' }}
             </h3>
 
-            <!-- Multi-tour purchase: one row per tour -->
             <div v-if="isMultiTour" class="space-y-2">
               <div
                 v-for="(tr, i) in groupTours"
@@ -189,76 +259,69 @@ const close = () => {
                     </span>
                   </template>
                   <UBadge v-else color="neutral" variant="subtle" size="xs" icon="i-lucide-clock">
-                    Pickup pendiente de configurar
+                    Pickup pendiente
                   </UBadge>
                 </div>
               </div>
             </div>
 
-            <!-- Single tour -->
-            <div v-else class="grid grid-cols-2 gap-4">
+            <div v-else class="rounded-lg border border-default p-4 grid grid-cols-2 gap-x-4 gap-y-3">
               <div class="col-span-2">
                 <p class="text-xs text-muted mb-1">Tour</p>
                 <p class="text-sm font-medium">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
               </div>
               <div>
-                <p class="text-xs text-muted mb-1">Fecha del tour</p>
+                <p class="text-xs text-muted mb-1">Fecha</p>
                 <p class="text-sm font-medium">{{ formatDate(booking.tour_date) }}</p>
               </div>
               <div>
                 <p class="text-xs text-muted mb-1">Pasajeros</p>
-                <p class="text-sm font-medium">{{ totalPax }} personas</p>
-              </div>
-              <div v-if="booking.adults">
-                <p class="text-xs text-muted mb-1">Adultos</p>
-                <p class="text-sm font-medium">{{ booking.adults }}</p>
-              </div>
-              <div v-if="booking.children">
-                <p class="text-xs text-muted mb-1">Niños</p>
-                <p class="text-sm font-medium">{{ booking.children }}</p>
+                <p class="text-sm font-medium">{{ totalPax }} ({{ booking.adults || 0 }}A<template v-if="booking.children"> · {{ booking.children }}N</template>)</p>
               </div>
             </div>
           </section>
 
-          <USeparator />
-
-          <!-- Pago -->
-          <section>
-            <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
-              <UIcon name="i-lucide-credit-card" class="size-3.5" />
-              Información de pago
-            </h3>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <p class="text-xs text-muted mb-1">Método de pago</p>
-                <UBadge color="neutral" variant="subtle" size="sm">
-                  {{ booking.payment_method?.toUpperCase() || 'N/A' }}
-                </UBadge>
+          <!-- Pickup (single-tour only; multi-tour shows pickup per tour above) -->
+          <template v-if="fullDetails?.pickup_detail && !isMultiTour">
+            <USeparator />
+            <section>
+              <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
+                <UIcon name="i-lucide-map-pinned" class="size-3.5" />
+                Pickup
+              </h3>
+              <div class="rounded-lg border border-default p-4 space-y-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <UBadge
+                    :color="fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'info' : 'success'"
+                    variant="subtle"
+                    size="sm"
+                    :icon="fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'i-lucide-hotel' : 'i-lucide-flag'"
+                  >
+                    {{ fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'Recojo en hotel' : 'Punto de encuentro' }}
+                  </UBadge>
+                  <UBadge
+                    v-if="fullDetails.pickup_detail.requires_logistics_approval"
+                    color="warning"
+                    variant="subtle"
+                    size="sm"
+                    icon="i-lucide-shield-alert"
+                  >
+                    {{ fullDetails.pickup_detail.approval_status || 'Pendiente de aprobación' }}
+                  </UBadge>
+                </div>
+                <div v-if="fullDetails.pickup_detail.hotel_name">
+                  <p class="text-sm font-semibold">{{ fullDetails.pickup_detail.hotel_name }}</p>
+                  <p class="text-xs text-muted">{{ fullDetails.pickup_detail.hotel_address }}</p>
+                </div>
+                <div v-if="fullDetails.pickup_detail.distance_from_center" class="flex gap-4 text-xs text-muted">
+                  <span>Distancia: {{ parseFloat(fullDetails.pickup_detail.distance_from_center).toFixed(1) }} km</span>
+                  <span v-if="fullDetails.pickup_detail.extra_pickup_cost > 0" class="font-bold text-warning">
+                    Extra: ${{ parseFloat(fullDetails.pickup_detail.extra_pickup_cost).toFixed(2) }}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p class="text-xs text-muted mb-1">Estado de pago</p>
-                <UBadge
-                  :color="paymentStatusBadge[booking.payment_status]?.color || 'neutral'"
-                  variant="subtle"
-                  size="sm"
-                >
-                  {{ paymentStatusBadge[booking.payment_status]?.label || booking.payment_status }}
-                </UBadge>
-              </div>
-              <div>
-                <p class="text-xs text-muted mb-1">Subtotal{{ isMultiTour ? ` (${groupTours.length} tours)` : '' }}</p>
-                <p class="text-sm font-medium tabular-nums">
-                  ${{ isMultiTour ? groupSubtotal.toFixed(2) : parseFloat(String(booking.subtotal || booking.total || 0)).toFixed(2) }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs text-muted mb-1">Total {{ isMultiTour ? 'de la compra' : '' }}</p>
-                <p class="text-xl font-bold tabular-nums text-primary">
-                  ${{ isMultiTour ? groupTotal.toFixed(2) : parseFloat(String(booking.total || booking.total_amount || 0)).toFixed(2) }}
-                </p>
-              </div>
-            </div>
-          </section>
+            </section>
+          </template>
 
           <!-- Solicitudes especiales -->
           <template v-if="booking.special_requests">
@@ -281,48 +344,6 @@ const close = () => {
             </div>
           </template>
 
-          <!-- Pickup (single-tour only; multi-tour shows pickup per tour above) -->
-          <template v-if="fullDetails?.pickup_detail && !isMultiTour">
-            <USeparator />
-            <section>
-              <h3 class="text-[10px] font-black uppercase tracking-widest text-muted mb-3 flex items-center gap-2">
-                <UIcon name="i-lucide-map-pinned" class="size-3.5" />
-                Configuración de pickup
-              </h3>
-              <UCard :ui="{ body: 'p-4 space-y-2' }">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <UBadge
-                    :color="fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'info' : 'success'"
-                    variant="subtle"
-                    size="sm"
-                    :icon="fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'i-lucide-hotel' : 'i-lucide-flag'"
-                  >
-                    {{ fullDetails.pickup_detail.final_choice === 'hotel_pickup' ? 'Hotel Pickup' : 'Meeting Point' }}
-                  </UBadge>
-                  <UBadge
-                    v-if="fullDetails.pickup_detail.requires_logistics_approval"
-                    color="warning"
-                    variant="subtle"
-                    size="sm"
-                    icon="i-lucide-shield-alert"
-                  >
-                    {{ fullDetails.pickup_detail.approval_status || 'Pending Approval' }}
-                  </UBadge>
-                </div>
-                <div v-if="fullDetails.pickup_detail.hotel_name" class="pt-1">
-                  <p class="text-sm font-semibold">{{ fullDetails.pickup_detail.hotel_name }}</p>
-                  <p class="text-xs text-muted">{{ fullDetails.pickup_detail.hotel_address }}</p>
-                </div>
-                <div v-if="fullDetails.pickup_detail.distance_from_center" class="flex gap-4 text-xs text-muted pt-1">
-                  <span>Distancia: {{ parseFloat(fullDetails.pickup_detail.distance_from_center).toFixed(1) }} km</span>
-                  <span v-if="fullDetails.pickup_detail.extra_pickup_cost > 0" class="font-bold text-warning">
-                    Extra: ${{ parseFloat(fullDetails.pickup_detail.extra_pickup_cost).toFixed(2) }}
-                  </span>
-                </div>
-              </UCard>
-            </section>
-          </template>
-
           <!-- Travelers -->
           <template v-if="fullDetails?.travelers?.length">
             <USeparator />
@@ -332,10 +353,10 @@ const close = () => {
                 Viajeros ({{ fullDetails.travelers.length }})
               </h3>
               <div class="space-y-2">
-                <UCard
+                <div
                   v-for="(t, idx) in fullDetails.travelers"
                   :key="t.id"
-                  :ui="{ body: 'p-3' }"
+                  class="rounded-lg border border-default p-3"
                 >
                   <div class="flex items-center gap-3">
                     <div
@@ -347,7 +368,7 @@ const close = () => {
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
                         <p class="text-sm font-semibold truncate">{{ t.full_name }}</p>
-                        <UBadge v-if="t.is_leader" color="primary" variant="subtle" size="xs" icon="i-lucide-crown">Leader</UBadge>
+                        <UBadge v-if="t.is_leader" color="primary" variant="subtle" size="xs" icon="i-lucide-crown">Líder</UBadge>
                         <UBadge v-if="t.age_group && t.age_group !== 'adult'" color="warning" variant="subtle" size="xs">
                           {{ t.age_group }}
                         </UBadge>
@@ -368,17 +389,17 @@ const close = () => {
                       </div>
                     </div>
                   </div>
-                </UCard>
+                </div>
               </div>
             </section>
           </template>
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2">
+        <div class="px-5 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" @click="close">Cerrar</UButton>
         </div>
       </div>
     </template>
-  </UModal>
+  </USlideover>
 </template>

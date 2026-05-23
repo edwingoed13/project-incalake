@@ -64,6 +64,7 @@ const columns: TableColumn<Booking>[] = [
   { accessorKey: 'tour_date', header: 'Fecha' },
   { id: 'pax', header: 'Pax', meta: { class: { th: 'text-center', td: 'text-center' } } },
   { id: 'total', header: 'Total', meta: { class: { th: 'text-right', td: 'text-right' } } },
+  { id: 'balance', header: 'Saldo', meta: { class: { th: 'text-right', td: 'text-right' } } },
   { accessorKey: 'status', header: 'Estado' },
   { id: 'payment', header: 'Pago' },
   { id: 'actions', header: '', meta: { class: { th: 'text-right', td: 'text-right' } } },
@@ -72,6 +73,7 @@ const columns: TableColumn<Booking>[] = [
 const hideableColumns = [
   { id: 'tour_date', label: 'Fecha' },
   { id: 'pax', label: 'Pax' },
+  { id: 'balance', label: 'Saldo' },
   { id: 'payment', label: 'Pago' },
 ]
 const columnMenuItems = computed(() =>
@@ -593,6 +595,17 @@ onMounted(() => {
               <span class="font-bold tabular-nums whitespace-nowrap">${{ bookingTotal(row.original).toFixed(2) }}</span>
             </template>
 
+            <template #balance-cell="{ row }">
+              <span
+                v-if="row.original.payment_state === 'partial' && row.original.amount_remaining != null && row.original.amount_remaining > 0"
+                class="font-bold tabular-nums whitespace-nowrap text-amber-600"
+                title="Saldo a cobrar el día del tour"
+              >
+                ${{ row.original.amount_remaining.toFixed(2) }}
+              </span>
+              <span v-else class="text-muted">—</span>
+            </template>
+
             <template #status-cell="{ row }">
               <UBadge
                 :color="statusBadge[row.original.status]?.color || 'neutral'"
@@ -615,9 +628,8 @@ onMounted(() => {
                   variant="soft"
                   size="sm"
                   class="whitespace-nowrap"
-                  :title="row.original.payment_state === 'partial' && row.original.amount_remaining != null ? `Saldo pendiente: ${row.original.currency || ''} ${row.original.amount_remaining.toFixed(2)}` : undefined"
                 >
-                  {{ paymentStateBadge[row.original.payment_state].label }}<template v-if="row.original.payment_state === 'partial' && row.original.amount_remaining != null"> · falta ${{ row.original.amount_remaining.toFixed(2) }}</template>
+                  {{ paymentStateBadge[row.original.payment_state].label }}
                 </UBadge>
               </div>
             </template>
