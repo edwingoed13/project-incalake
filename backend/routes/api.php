@@ -99,6 +99,7 @@ Route::middleware(['throttle:60,1'])->prefix('bookings')->group(function () {
     Route::post('/{id}/payment/culqi', [BookingController::class, 'confirmCulqiPayment'])->name('api.bookings.payment.culqi');
     Route::post('/{id}/payment/paypal', [BookingController::class, 'confirmPayPalPayment'])->name('api.bookings.payment.paypal');
     Route::post('/{id}/cancel', [BookingController::class, 'cancel'])->name('api.bookings.cancel');
+    Route::post('/{id}/confirm', [BookingController::class, 'confirm'])->name('api.bookings.confirm');
 });
 
 // Public routes - Payment configuration

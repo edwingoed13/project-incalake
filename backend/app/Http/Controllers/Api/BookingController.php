@@ -834,6 +834,38 @@ class BookingController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Confirm a booking (admin). Also re-activates a cancelled booking.
+     */
+    public function confirm(Request $request, $id)
+    {
+        try {
+            $booking = Booking::findOrFail($id);
+
+            if ($booking->status === 'confirmed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta reserva ya está confirmada'
+                ], 400);
+            }
+
+            $booking->confirm();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reserva confirmada exitosamente',
+                'booking' => new BookingResource($booking->fresh())
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al confirmar la reserva',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function cancel(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -909,6 +941,33 @@ class BookingController extends Controller
                 $query->where('payment_method', $request->payment_method);
             }
 
+            // Payment state filter (derived from the tour's advance_payment_percentage):
+            //   full     = paid + tour charges 100% (or no advance configured)
+            //   partial  = paid + tour advance is between 1 and 99%
+            //   refunded = payment_status refunded
+            if ($request->filled('payment_state')) {
+                $state = $request->payment_state;
+                if ($state === 'refunded') {
+                    $query->where('payment_status', 'refunded');
+                } elseif ($state === 'partial') {
+                    $query->where('payment_status', 'paid')
+                        ->whereHas('tour', function ($t) {
+                            $t->where('advance_payment_percentage', '>', 0)
+                              ->where('advance_payment_percentage', '<', 100);
+                        });
+                } elseif ($state === 'full') {
+                    $query->where('payment_status', 'paid')
+                        ->where(function ($q) {
+                            $q->whereDoesntHave('tour')
+                              ->orWhereHas('tour', function ($t) {
+                                  $t->whereNull('advance_payment_percentage')
+                                    ->orWhere('advance_payment_percentage', '<=', 0)
+                                    ->orWhere('advance_payment_percentage', '>=', 100);
+                              });
+                        });
+                }
+            }
+
             // Date filter
             if ($request->has('date') && $request->date) {
                 $query->whereDate('tour_date', $request->date);
@@ -948,6 +1007,18 @@ class BookingController extends Controller
                 } else {
                     $b->group_count = 1;
                     $b->is_group    = false;
+                }
+
+                // Derived payment state for the admin badge/filter.
+                $advance = $b->tour?->advance_payment_percentage;
+                $advance = is_null($advance) ? 100.0 : (float) $advance;
+                $b->advance_payment_percentage = $advance;
+                if ($b->payment_status === 'refunded') {
+                    $b->payment_state = 'refunded';
+                } elseif ($b->payment_status === 'paid') {
+                    $b->payment_state = ($advance > 0 && $advance < 100) ? 'partial' : 'full';
+                } else {
+                    $b->payment_state = 'unpaid';
                 }
 
                 return $b;

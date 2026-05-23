@@ -203,4 +203,17 @@ class Booking extends Model
             'cancelled_at' => now(),
         ]);
     }
+
+    /**
+     * Confirm the booking. Also used to re-activate a previously cancelled
+     * booking (clears the cancellation fields).
+     */
+    public function confirm()
+    {
+        $this->update([
+            'status' => 'confirmed',
+            'cancellation_reason' => null,
+            'cancelled_at' => null,
+        ]);
+    }
 }
