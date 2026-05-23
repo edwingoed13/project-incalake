@@ -237,7 +237,7 @@ const loadBookings = async () => {
     stats.value.pending = bookings.value.filter(b => b.status === 'pending').length
     stats.value.revenue = bookings.value
       .filter(b => b.payment_status === 'paid')
-      .reduce((sum, b) => sum + bookingTotal(b), 0)
+      .reduce((sum, b) => sum + amountReceived(b), 0)
       .toFixed(2)
   } catch (err) {
     console.error('Error loading bookings:', err)
@@ -289,11 +289,18 @@ const totalPax = (booking: Booking) =>
   booking.total_participants || ((booking.adults || 0) + (booking.children || 0) + (booking.infants || 0))
 
 // For a multi-tour purchase the row represents the whole purchase, so show
-// the group total (what was actually charged), not the primary tour's total.
+// the group total (the contract value), not the primary tour's total.
 const bookingTotal = (booking: Booking) =>
   booking.is_group && booking.group_total != null
     ? Number(booking.group_total)
     : parseFloat(String(booking.total || booking.total_amount || 0))
+
+// Money actually received: for a partial (advance) payment this is only the
+// deposit, not the full total — so revenue must not count the unpaid balance.
+const amountReceived = (booking: Booking) =>
+  booking.payment_state === 'partial' && booking.amount_paid != null
+    ? Number(booking.amount_paid)
+    : bookingTotal(booking)
 
 const viewBooking = (booking: Booking) => {
   selectedBooking.value = booking
