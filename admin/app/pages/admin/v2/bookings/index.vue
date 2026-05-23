@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
 import BookingDetailsModalV2 from '~/components/v2/BookingDetailsModalV2.vue'
 
 definePageMeta({
@@ -26,6 +27,8 @@ interface Booking {
   is_group?: boolean
   status: string
   payment_status: string
+  payment_state?: 'full' | 'partial' | 'refunded' | 'unpaid'
+  advance_payment_percentage?: number
   payment_method?: string
 }
 
@@ -46,12 +49,63 @@ const loading = ref(true)
 const bookings = ref<Booking[]>([])
 const selectedBooking = ref<Booking | null>(null)
 
+// --- UTable: columns, selection, column visibility ---
+const bookingsTable = ref<any>(null)
+const rowSelection = ref<Record<string, boolean>>({})
+const columnVisibility = ref<Record<string, boolean>>({})
+
+const columns: TableColumn<Booking>[] = [
+  { id: 'select' },
+  { accessorKey: 'booking_code', header: 'Código' },
+  { accessorKey: 'customer_name', header: 'Cliente' },
+  { accessorKey: 'tour_title', header: 'Tour' },
+  { accessorKey: 'tour_date', header: 'Fecha' },
+  { id: 'pax', header: 'Pax', meta: { class: { th: 'text-center', td: 'text-center' } } },
+  { id: 'total', header: 'Total', meta: { class: { th: 'text-right', td: 'text-right' } } },
+  { accessorKey: 'status', header: 'Estado' },
+  { id: 'payment', header: 'Pago' },
+  { id: 'actions', header: '', meta: { class: { th: 'text-right', td: 'text-right' } } },
+]
+
+const hideableColumns = [
+  { id: 'tour_date', label: 'Fecha' },
+  { id: 'pax', label: 'Pax' },
+  { id: 'payment', label: 'Pago' },
+]
+const columnMenuItems = computed(() =>
+  hideableColumns.map(c => ({
+    label: c.label,
+    type: 'checkbox' as const,
+    checked: columnVisibility.value[c.id] !== false,
+    onUpdateChecked(val: boolean) {
+      columnVisibility.value = { ...columnVisibility.value, [c.id]: val }
+    },
+    onSelect(e: Event) { e.preventDefault() },
+  }))
+)
+
+const selectedBookings = computed<Booking[]>(() => {
+  void rowSelection.value // reactive dependency
+  const rows = bookingsTable.value?.tableApi?.getFilteredSelectedRowModel().rows ?? []
+  return rows.map((r: any) => r.original as Booking)
+})
+const clearSelection = () => { rowSelection.value = {} }
+
 const filters = ref({
   search: '',
-  status: '',
-  payment_method: '',
+  status: 'all',
+  payment_state: 'all',
+  payment_method: 'all',
   date: '',
 })
+
+const hasActiveFilters = computed(() =>
+  !!filters.value.search ||
+  filters.value.status !== 'all' ||
+  filters.value.payment_state !== 'all' ||
+  filters.value.payment_method !== 'all' ||
+  !!filters.value.date
+)
 
 const pagination = ref<Pagination>({
   current_page: 1,
@@ -69,19 +123,23 @@ const stats = ref({
   revenue: '0.00',
 })
 
+// USelect (reka-ui) forbids an empty-string value, so "Todos" uses the
+// 'all' sentinel and loadBookings() treats it as "no filter".
 const statusOptions = [
-  { label: 'Todos', value: '' },
-  { label: 'Pendiente', value: 'pending' },
+  { label: 'Todos', value: 'all' },
   { label: 'Confirmado', value: 'confirmed' },
   { label: 'Cancelado', value: 'cancelled' },
-  { label: 'Completado', value: 'completed' },
+]
+const paymentStateOptions = [
+  { label: 'Todos', value: 'all' },
+  { label: 'Pagado total', value: 'full' },
+  { label: 'Pago parcial', value: 'partial' },
+  { label: 'Reembolsado', value: 'refunded' },
 ]
 const paymentMethodOptions = [
-  { label: 'Todos', value: '' },
+  { label: 'Todos', value: 'all' },
   { label: 'Culqi', value: 'culqi' },
   { label: 'PayPal', value: 'paypal' },
-  { label: 'Efectivo', value: 'cash' },
-  { label: 'Transferencia', value: 'transfer' },
 ]
 
 const statusBadge: Record<string, { color: 'warning' | 'success' | 'error' | 'info' | 'neutral'; label: string; icon: string }> = {
@@ -142,13 +200,15 @@ const authHeader = () => ({
 
 const loadBookings = async () => {
   loading.value = true
+  rowSelection.value = {} // selection is page-local; reset on every (re)load
   try {
     const params = new URLSearchParams({
       page: String(pagination.value.current_page),
       per_page: String(pagination.value.per_page),
       ...(filters.value.search && { search: filters.value.search }),
-      ...(filters.value.status && { status: filters.value.status }),
-      ...(filters.value.payment_method && { payment_method: filters.value.payment_method }),
+      ...(filters.value.status !== 'all' && { status: filters.value.status }),
+      ...(filters.value.payment_state !== 'all' && { payment_state: filters.value.payment_state }),
+      ...(filters.value.payment_method !== 'all' && { payment_method: filters.value.payment_method }),
       ...(filters.value.date && { date: filters.value.date }),
     })
 
@@ -204,9 +264,16 @@ const changePage = (page: number) => {
 }
 
 const resetFilters = () => {
-  filters.value = { search: '', status: '', payment_method: '', date: '' }
+  filters.value = { search: '', status: 'all', payment_state: 'all', payment_method: 'all', date: '' }
   pagination.value.current_page = 1
   loadBookings()
+}
+
+const paymentStateBadge: Record<string, { color: 'success' | 'warning' | 'neutral' | 'error'; label: string }> = {
+  full: { color: 'success', label: 'Pagado total' },
+  partial: { color: 'warning', label: 'Pago parcial' },
+  refunded: { color: 'neutral', label: 'Reembolsado' },
+  unpaid: { color: 'error', label: 'Sin pagar' },
 }
 
 const formatDate = (date: string) => {
@@ -282,14 +349,64 @@ const rowActions = (booking: Booking) => {
     [{ label: 'Ver detalles', icon: 'i-lucide-eye', onSelect: () => viewBooking(booking) }],
   ]
   const transitions: any[] = []
-  if (booking.status === 'pending') {
-    transitions.push({ label: 'Confirmar', icon: 'i-lucide-circle-check', color: 'success', onSelect: () => confirmBooking(booking) })
+  if (booking.status !== 'confirmed') {
+    transitions.push({
+      label: booking.status === 'cancelled' ? 'Reactivar (confirmar)' : 'Confirmar',
+      icon: 'i-lucide-circle-check',
+      color: 'success',
+      onSelect: () => confirmBooking(booking),
+    })
   }
   if (booking.status !== 'cancelled') {
     transitions.push({ label: 'Cancelar', icon: 'i-lucide-circle-x', color: 'error', onSelect: () => cancelBooking(booking) })
   }
   if (transitions.length) items.push(transitions)
   return items
+}
+
+// --- Bulk actions over the selected rows ---
+const bulkRequest = (b: Booking, action: 'confirm' | 'cancel') =>
+  fetch(`${config.public.apiUrl}/bookings/${b.id}/${action}`, {
+    method: 'POST',
+    headers: { ...authHeader(), 'Content-Type': 'application/json' },
+  }).then(r => { if (!r.ok) throw new Error() })
+
+const bulkConfirm = async () => {
+  const targets = selectedBookings.value.filter(b => b.status !== 'confirmed')
+  if (!targets.length) {
+    toast.add({ title: 'Nada que confirmar', description: 'Las seleccionadas ya están confirmadas.', color: 'warning', icon: 'i-lucide-info' })
+    return
+  }
+  const ok = await confirm({
+    title: `Confirmar ${targets.length} reserva(s)`,
+    description: `Vas a confirmar ${targets.length} reserva(s) pendiente(s) seleccionada(s).`,
+    confirmLabel: 'Confirmar todas', confirmColor: 'success', confirmIcon: 'i-lucide-circle-check',
+    icon: 'i-lucide-circle-check', iconColor: 'success',
+  })
+  if (!ok) return
+  const results = await Promise.allSettled(targets.map(b => bulkRequest(b, 'confirm')))
+  const okCount = results.filter(r => r.status === 'fulfilled').length
+  toast.add({ title: `${okCount}/${targets.length} confirmada(s)`, color: okCount === targets.length ? 'success' : 'warning', icon: 'i-lucide-circle-check' })
+  await loadBookings()
+}
+
+const bulkCancel = async () => {
+  const targets = selectedBookings.value.filter(b => b.status !== 'cancelled')
+  if (!targets.length) {
+    toast.add({ title: 'Nada que cancelar', description: 'Las seleccionadas ya están canceladas.', color: 'warning', icon: 'i-lucide-info' })
+    return
+  }
+  const ok = await confirm({
+    title: `Cancelar ${targets.length} reserva(s)`,
+    description: `Vas a cancelar ${targets.length} reserva(s). Esta acción puede requerir reembolso.`,
+    confirmLabel: 'Cancelar todas', cancelLabel: 'Volver', confirmColor: 'error', confirmIcon: 'i-lucide-circle-x',
+    icon: 'i-lucide-triangle-alert', iconColor: 'warning',
+  })
+  if (!ok) return
+  const results = await Promise.allSettled(targets.map(b => bulkRequest(b, 'cancel')))
+  const okCount = results.filter(r => r.status === 'fulfilled').length
+  toast.add({ title: `${okCount}/${targets.length} cancelada(s)`, color: okCount === targets.length ? 'warning' : 'error', icon: 'i-lucide-circle-x' })
+  await loadBookings()
 }
 
 onMounted(() => {
@@ -309,6 +426,9 @@ onMounted(() => {
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
+          <UDropdownMenu :items="[columnMenuItems]" :content="{ align: 'end' }">
+            <UButton icon="i-lucide-columns-3" color="neutral" variant="ghost">Columnas</UButton>
+          </UDropdownMenu>
           <UButton
             icon="i-lucide-refresh-cw"
             color="neutral"
@@ -346,7 +466,7 @@ onMounted(() => {
 
         <!-- Filters -->
         <UCard :ui="{ body: 'p-4' }">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             <UFormField label="Buscar">
               <UInput
                 v-model="filters.search"
@@ -357,19 +477,25 @@ onMounted(() => {
               />
             </UFormField>
             <UFormField label="Estado">
-              <USelectMenu
+              <USelect
                 v-model="filters.status"
                 :items="statusOptions"
-                value-key="value"
+                class="w-full"
+                @update:model-value="() => { pagination.current_page = 1; loadBookings() }"
+              />
+            </UFormField>
+            <UFormField label="Estado de pago">
+              <USelect
+                v-model="filters.payment_state"
+                :items="paymentStateOptions"
                 class="w-full"
                 @update:model-value="() => { pagination.current_page = 1; loadBookings() }"
               />
             </UFormField>
             <UFormField label="Método de pago">
-              <USelectMenu
+              <USelect
                 v-model="filters.payment_method"
                 :items="paymentMethodOptions"
-                value-key="value"
                 class="w-full"
                 @update:model-value="() => { pagination.current_page = 1; loadBookings() }"
               />
@@ -383,116 +509,135 @@ onMounted(() => {
               />
             </UFormField>
           </div>
-          <div v-if="filters.search || filters.status || filters.payment_method || filters.date" class="flex justify-end mt-3">
+          <div v-if="hasActiveFilters" class="flex justify-end mt-3">
             <UButton variant="ghost" size="sm" icon="i-lucide-x" @click="resetFilters">Limpiar filtros</UButton>
           </div>
         </UCard>
 
+        <!-- Bulk actions bar -->
+        <div v-if="selectedBookings.length" class="flex items-center gap-2 flex-wrap px-1">
+          <UBadge color="primary" variant="subtle" size="md" icon="i-lucide-check-square">
+            {{ selectedBookings.length }} seleccionada(s)
+          </UBadge>
+          <UButton size="sm" color="success" variant="soft" icon="i-lucide-circle-check" @click="bulkConfirm">
+            Confirmar
+          </UButton>
+          <UButton size="sm" color="error" variant="soft" icon="i-lucide-circle-x" @click="bulkCancel">
+            Cancelar
+          </UButton>
+          <UButton size="sm" color="neutral" variant="ghost" icon="i-lucide-x" @click="clearSelection">
+            Limpiar
+          </UButton>
+        </div>
+
         <!-- Table -->
         <UCard :ui="{ body: 'p-0' }">
-          <!-- Loading -->
-          <div v-if="loading && bookings.length === 0" class="p-6 space-y-3">
-            <div v-for="i in 6" :key="i" class="flex items-center gap-4">
-              <USkeleton class="h-4 w-20" />
-              <div class="flex-1 space-y-1">
-                <USkeleton class="h-3 w-1/3" />
-                <USkeleton class="h-2 w-1/2" />
+          <UTable
+            ref="bookingsTable"
+            v-model:row-selection="rowSelection"
+            v-model:column-visibility="columnVisibility"
+            :data="bookings"
+            :columns="columns"
+            :loading="loading"
+            sticky
+            class="max-h-[70vh]"
+            :ui="{ thead: 'bg-elevated/50', th: 'text-[10px] font-black uppercase tracking-widest text-muted py-3', td: 'py-3' }"
+          >
+            <template #select-header="{ table }">
+              <UCheckbox
+                :model-value="table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected()"
+                aria-label="Seleccionar todo"
+                @update:model-value="(v: any) => table.toggleAllPageRowsSelected(!!v)"
+              />
+            </template>
+            <template #select-cell="{ row }">
+              <UCheckbox
+                :model-value="row.getIsSelected()"
+                aria-label="Seleccionar fila"
+                @update:model-value="(v: any) => row.toggleSelected(!!v)"
+              />
+            </template>
+
+            <template #booking_code-cell="{ row }">
+              <div class="flex items-center gap-1.5 whitespace-nowrap">
+                <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">{{ row.original.booking_code }}</UBadge>
+                <UBadge v-if="row.original.is_group" color="primary" variant="subtle" size="sm" icon="i-heroicons-squares-2x2">
+                  {{ row.original.group_count }} tours
+                </UBadge>
               </div>
-              <USkeleton class="h-6 w-20" />
-              <USkeleton class="h-6 w-16" />
-            </div>
-          </div>
+            </template>
 
-          <!-- Empty -->
-          <div v-else-if="bookings.length === 0" class="p-12 flex flex-col items-center text-center gap-3">
-            <UIcon name="i-lucide-inbox" class="size-12 text-muted" />
-            <p class="text-sm text-muted">No hay reservas con los filtros seleccionados.</p>
-            <UButton v-if="filters.search || filters.status || filters.payment_method || filters.date" variant="outline" size="sm" @click="resetFilters">
-              Limpiar filtros
-            </UButton>
-          </div>
+            <template #customer_name-cell="{ row }">
+              <p class="font-semibold truncate max-w-[200px]">{{ row.original.customer_name }}</p>
+              <p class="text-xs text-muted truncate max-w-[200px]">{{ row.original.customer_email }}</p>
+            </template>
 
-          <!-- Table -->
-          <div v-else class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-elevated/50 border-b border-default">
-                <tr class="text-left text-[10px] font-black uppercase tracking-widest text-muted">
-                  <th class="px-4 py-3">Código</th>
-                  <th class="px-4 py-3">Cliente</th>
-                  <th class="px-4 py-3">Tour</th>
-                  <th class="px-4 py-3">Fecha</th>
-                  <th class="px-4 py-3 text-center">Pax</th>
-                  <th class="px-4 py-3 text-right">Total</th>
-                  <th class="px-4 py-3">Estado</th>
-                  <th class="px-4 py-3">Pago</th>
-                  <th class="px-4 py-3 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-default">
-                <tr v-for="booking in bookings" :key="booking.id" class="hover:bg-elevated/30 transition-colors">
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <div class="flex items-center gap-1.5">
-                      <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">{{ booking.booking_code }}</UBadge>
-                      <UBadge
-                        v-if="booking.is_group"
-                        color="primary"
-                        variant="subtle"
-                        size="sm"
-                        icon="i-heroicons-squares-2x2"
-                      >
-                        {{ booking.group_count }} tours
-                      </UBadge>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 min-w-0">
-                    <p class="font-semibold truncate max-w-[200px]">{{ booking.customer_name }}</p>
-                    <p class="text-xs text-muted truncate max-w-[200px]">{{ booking.customer_email }}</p>
-                  </td>
-                  <td class="px-4 py-3">
-                    <p class="truncate max-w-[260px]">{{ booking.tour_title || booking.tour?.title || 'N/A' }}</p>
-                    <p v-if="booking.is_group" class="text-xs text-muted">
-                      + {{ (booking.group_count || 1) - 1 }} tour(s) más · ver detalle
-                    </p>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">{{ formatDate(booking.tour_date) }}</td>
-                  <td class="px-4 py-3 text-center tabular-nums">{{ totalPax(booking) || '-' }}</td>
-                  <td class="px-4 py-3 text-right whitespace-nowrap font-bold tabular-nums">
-                    ${{ bookingTotal(booking).toFixed(2) }}
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <UBadge
-                      :color="statusBadge[booking.status]?.color || 'neutral'"
-                      variant="subtle"
-                      size="sm"
-                      :icon="statusBadge[booking.status]?.icon"
-                    >
-                      {{ statusBadge[booking.status]?.label || booking.status }}
-                    </UBadge>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">
-                    <UBadge :color="paymentBadge(booking.payment_status)" variant="subtle" size="sm">
-                      {{ (booking.payment_method || 'N/A').toUpperCase() }}
-                    </UBadge>
-                  </td>
-                  <td class="px-4 py-3 text-right whitespace-nowrap">
-                    <div class="inline-flex items-center gap-1">
-                      <UButton
-                        icon="i-lucide-eye"
-                        color="neutral"
-                        variant="ghost"
-                        size="sm"
-                        title="Ver detalles"
-                        @click="viewBooking(booking)"
-                      />
-                      <UDropdownMenu :items="rowActions(booking)" :content="{ align: 'end' }">
-                        <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="sm" />
-                      </UDropdownMenu>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <template #tour_title-cell="{ row }">
+              <p class="truncate max-w-[260px]">{{ row.original.tour_title || row.original.tour?.title || 'N/A' }}</p>
+              <p v-if="row.original.is_group" class="text-xs text-muted">
+                + {{ (row.original.group_count || 1) - 1 }} tour(s) más · ver detalle
+              </p>
+            </template>
+
+            <template #tour_date-cell="{ row }">
+              <span class="whitespace-nowrap">{{ formatDate(row.original.tour_date) }}</span>
+            </template>
+
+            <template #pax-cell="{ row }">
+              <span class="tabular-nums">{{ totalPax(row.original) || '-' }}</span>
+            </template>
+
+            <template #total-cell="{ row }">
+              <span class="font-bold tabular-nums whitespace-nowrap">${{ bookingTotal(row.original).toFixed(2) }}</span>
+            </template>
+
+            <template #status-cell="{ row }">
+              <UBadge
+                :color="statusBadge[row.original.status]?.color || 'neutral'"
+                variant="subtle"
+                size="sm"
+                :icon="statusBadge[row.original.status]?.icon"
+              >
+                {{ statusBadge[row.original.status]?.label || row.original.status }}
+              </UBadge>
+            </template>
+
+            <template #payment-cell="{ row }">
+              <div class="flex flex-col items-start gap-1">
+                <UBadge :color="paymentBadge(row.original.payment_status)" variant="subtle" size="sm">
+                  {{ (row.original.payment_method || 'N/A').toUpperCase() }}
+                </UBadge>
+                <UBadge
+                  v-if="row.original.payment_state && paymentStateBadge[row.original.payment_state]"
+                  :color="paymentStateBadge[row.original.payment_state].color"
+                  variant="soft"
+                  size="sm"
+                  class="whitespace-nowrap"
+                >
+                  {{ paymentStateBadge[row.original.payment_state].label }}<template v-if="row.original.payment_state === 'partial' && row.original.advance_payment_percentage"> ({{ row.original.advance_payment_percentage }}%)</template>
+                </UBadge>
+              </div>
+            </template>
+
+            <template #actions-cell="{ row }">
+              <div class="inline-flex items-center gap-1 justify-end w-full">
+                <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="sm" title="Ver detalles" @click="viewBooking(row.original)" />
+                <UDropdownMenu :items="rowActions(row.original)" :content="{ align: 'end' }">
+                  <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="sm" />
+                </UDropdownMenu>
+              </div>
+            </template>
+
+            <template #empty>
+              <div class="py-12 flex flex-col items-center text-center gap-3">
+                <UIcon name="i-lucide-inbox" class="size-12 text-muted" />
+                <p class="text-sm text-muted">No hay reservas con los filtros seleccionados.</p>
+                <UButton v-if="hasActiveFilters" variant="outline" size="sm" @click="resetFilters">
+                  Limpiar filtros
+                </UButton>
+              </div>
+            </template>
+          </UTable>
 
           <!-- Pagination -->
           <div v-if="pagination.last_page > 1" class="p-4 border-t border-default flex items-center justify-between flex-wrap gap-3">
