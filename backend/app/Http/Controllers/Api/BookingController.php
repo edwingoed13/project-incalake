@@ -941,30 +941,29 @@ class BookingController extends Controller
                 $query->where('payment_method', $request->payment_method);
             }
 
-            // Payment state filter (derived from the tour's advance_payment_percentage):
-            //   full     = paid + tour charges 100% (or no advance configured)
-            //   partial  = paid + tour advance is between 1 and 99%
+            // Payment state filter — based on the AMOUNT ACTUALLY CHARGED
+            // (stored in payment_data), NOT the tour's advance config. Culqi
+            // charges the full total; only PayPal may charge an advance. So a
+            // booking is "partial" only when what was charged is less than the
+            // booking total.
+            //   full     = paid in full (charged >= total)
+            //   partial  = paid but charged < total (advance only)
             //   refunded = payment_status refunded
             if ($request->filled('payment_state')) {
                 $state = $request->payment_state;
+                $paidExpr = "COALESCE("
+                    . "CAST(JSON_UNQUOTE(JSON_EXTRACT(payment_data, '$.group_total_charged')) AS DECIMAL(12,2)) / 100,"
+                    . "CAST(JSON_UNQUOTE(JSON_EXTRACT(payment_data, '$.group_total_captured')) AS DECIMAL(12,2)),"
+                    . "CAST(JSON_UNQUOTE(JSON_EXTRACT(payment_data, '$.charge_data.amount')) AS DECIMAL(12,2)) / 100"
+                    . ")";
                 if ($state === 'refunded') {
                     $query->where('payment_status', 'refunded');
                 } elseif ($state === 'partial') {
                     $query->where('payment_status', 'paid')
-                        ->whereHas('tour', function ($t) {
-                            $t->where('advance_payment_percentage', '>', 0)
-                              ->where('advance_payment_percentage', '<', 100);
-                        });
+                        ->whereRaw("$paidExpr IS NOT NULL AND $paidExpr < total * 0.99");
                 } elseif ($state === 'full') {
                     $query->where('payment_status', 'paid')
-                        ->where(function ($q) {
-                            $q->whereDoesntHave('tour')
-                              ->orWhereHas('tour', function ($t) {
-                                  $t->whereNull('advance_payment_percentage')
-                                    ->orWhere('advance_payment_percentage', '<=', 0)
-                                    ->orWhere('advance_payment_percentage', '>=', 100);
-                              });
-                        });
+                        ->whereRaw("($paidExpr IS NULL OR $paidExpr >= total * 0.99)");
                 }
             }
 
@@ -1009,14 +1008,33 @@ class BookingController extends Controller
                     $b->is_group    = false;
                 }
 
-                // Derived payment state for the admin badge/filter.
-                $advance = $b->tour?->advance_payment_percentage;
-                $advance = is_null($advance) ? 100.0 : (float) $advance;
-                $b->advance_payment_percentage = $advance;
+                // Derived payment state from the AMOUNT ACTUALLY CHARGED
+                // (payment_data), not the tour's advance config — Culqi charges
+                // the full total, only PayPal may charge an advance.
+                $pd = is_array($b->payment_data ?? null) ? $b->payment_data : [];
+                $paid = null;
+                if (isset($pd['group_total_charged'])) {
+                    $paid = round(((float) $pd['group_total_charged']) / 100, 2); // Culqi cents
+                } elseif (isset($pd['group_total_captured'])) {
+                    $paid = round((float) $pd['group_total_captured'], 2);          // PayPal units
+                } elseif (isset($pd['charge_data']['amount'])) {
+                    $paid = round(((float) $pd['charge_data']['amount']) / 100, 2);
+                } elseif (isset($pd['amount_cents'])) {
+                    $paid = round(((float) $pd['amount_cents']) / 100, 2);
+                }
+
+                $expectedFull = $b->is_group ? (float) $b->group_total : (float) $b->total;
+
                 if ($b->payment_status === 'refunded') {
                     $b->payment_state = 'refunded';
                 } elseif ($b->payment_status === 'paid') {
-                    $b->payment_state = ($advance > 0 && $advance < 100) ? 'partial' : 'full';
+                    if ($paid !== null && $expectedFull > 0 && $paid < ($expectedFull - 0.5)) {
+                        $b->payment_state = 'partial';
+                        $b->amount_paid = $paid;
+                        $b->amount_remaining = round($expectedFull - $paid, 2);
+                    } else {
+                        $b->payment_state = 'full';
+                    }
                 } else {
                     $b->payment_state = 'unpaid';
                 }

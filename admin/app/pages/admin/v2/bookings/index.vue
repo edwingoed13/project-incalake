@@ -28,7 +28,9 @@ interface Booking {
   status: string
   payment_status: string
   payment_state?: 'full' | 'partial' | 'refunded' | 'unpaid'
-  advance_payment_percentage?: number
+  amount_paid?: number
+  amount_remaining?: number
+  currency?: string
   payment_method?: string
 }
 
@@ -613,8 +615,9 @@ onMounted(() => {
                   variant="soft"
                   size="sm"
                   class="whitespace-nowrap"
+                  :title="row.original.payment_state === 'partial' && row.original.amount_remaining != null ? `Saldo pendiente: ${row.original.currency || ''} ${row.original.amount_remaining.toFixed(2)}` : undefined"
                 >
-                  {{ paymentStateBadge[row.original.payment_state].label }}<template v-if="row.original.payment_state === 'partial' && row.original.advance_payment_percentage"> ({{ row.original.advance_payment_percentage }}%)</template>
+                  {{ paymentStateBadge[row.original.payment_state].label }}<template v-if="row.original.payment_state === 'partial' && row.original.amount_remaining != null"> · falta ${{ row.original.amount_remaining.toFixed(2) }}</template>
                 </UBadge>
               </div>
             </template>
