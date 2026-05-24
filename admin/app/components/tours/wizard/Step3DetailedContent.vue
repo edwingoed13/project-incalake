@@ -25,7 +25,7 @@
       </div>
     </UCard>
 
-    <!-- Sections (collapsibles) -->
+    <!-- Sections (collapsibles · WizardSection) -->
     <template v-if="currentLangData">
 
       <!-- Public title + short description: the title is the #1 content field,
@@ -53,66 +53,53 @@
       </UCard>
 
       <!-- Section: Long Description -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('description') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('description')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('description') }" />
-            <UIcon name="i-lucide-file-text" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Descripción detallada del tour</h3>
-            <UBadge v-if="hasContent(currentLangData.detailedDescription)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Descripción detallada del tour"
+        icon="i-lucide-file-text"
+        :open="isSectionExpanded('description')"
+        @update:open="toggleSection('description')"
+      >
+        <template #actions>
+          <UBadge v-if="hasContent(currentLangData.detailedDescription)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
         </template>
-        <div v-show="isSectionExpanded('description')">
-          <TiptapEditor
-            v-model="currentLangData.detailedDescription"
-            placeholder="Escribe una descripción larga y atractiva de la experiencia..."
-          />
-        </div>
-      </UCard>
+        <TiptapEditor
+          v-model="currentLangData.detailedDescription"
+          placeholder="Escribe una descripción larga y atractiva de la experiencia..."
+        />
+      </WizardSection>
 
       <!-- Section: Itinerary Text (Tiptap) -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('itinerary') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('itinerary')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('itinerary') }" />
-            <UIcon name="i-lucide-route" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Itinerario del tour</h3>
-            <UBadge v-if="hasContent(currentLangData.itineraryText)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Itinerario del tour"
+        icon="i-lucide-route"
+        :open="isSectionExpanded('itinerary')"
+        @update:open="toggleSection('itinerary')"
+      >
+        <template #actions>
+          <UBadge v-if="hasContent(currentLangData.itineraryText)" color="success" variant="subtle" size="xs" icon="i-lucide-check">Completo</UBadge>
         </template>
-        <div v-show="isSectionExpanded('itinerary')">
-          <TiptapEditor
-            v-model="currentLangData.itineraryText"
-            placeholder="Describe el itinerario con listas, títulos y texto en negrita..."
-          />
-        </div>
-      </UCard>
+        <TiptapEditor
+          v-model="currentLangData.itineraryText"
+          placeholder="Describe el itinerario con listas, títulos y texto en negrita..."
+        />
+      </WizardSection>
 
       <!-- Section: Daily Schedule & Map -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('map') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('map')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('map') }" />
-            <UIcon name="i-lucide-map" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Construye la ruta del tour</h3>
-            <UBadge v-if="(currentLangData.mapPoints?.length || 0) > 0" color="success" variant="subtle" size="xs" icon="i-lucide-map-pin">
-              {{ currentLangData.mapPoints?.length }} puntos
-            </UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Construye la ruta del tour"
+        icon="i-lucide-map"
+        :open="isSectionExpanded('map')"
+        @update:open="toggleSection('map')"
+      >
+        <template #actions>
+          <UBadge v-if="(currentLangData.mapPoints?.length || 0) > 0" color="success" variant="subtle" size="xs" icon="i-lucide-map-pin">
+            {{ currentLangData.mapPoints?.length }} puntos
+          </UBadge>
         </template>
-        <div v-show="isSectionExpanded('map')">
+        <div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <!-- Left: Map Preview -->
             <div class="space-y-6">
@@ -315,25 +302,22 @@
             </div>
           </div>
         </div>
-      </UCard>
+      </WizardSection>
 
       <!-- Section: Inclusions & Exclusions -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('inclusions') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('inclusions')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('inclusions') }" />
-            <UIcon name="i-lucide-list-checks" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Qué incluye / Qué NO incluye</h3>
-            <UBadge v-if="hasContent(currentLangData.inclusions) || hasContent(currentLangData.exclusions)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
-              {{ [hasContent(currentLangData.inclusions), hasContent(currentLangData.exclusions)].filter(Boolean).length }} / 2
-            </UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Qué incluye / Qué NO incluye"
+        icon="i-lucide-list-checks"
+        :open="isSectionExpanded('inclusions')"
+        @update:open="toggleSection('inclusions')"
+      >
+        <template #actions>
+          <UBadge v-if="hasContent(currentLangData.inclusions) || hasContent(currentLangData.exclusions)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
+            {{ [hasContent(currentLangData.inclusions), hasContent(currentLangData.exclusions)].filter(Boolean).length }} / 2
+          </UBadge>
         </template>
-        <div v-show="isSectionExpanded('inclusions')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-circle-check" class="size-4 text-success" />
@@ -349,25 +333,22 @@
             <TiptapEditor v-model="currentLangData.exclusions" placeholder="¿Qué NO está incluido? Sé claro para evitar reclamos." />
           </div>
         </div>
-      </UCard>
+      </WizardSection>
 
       <!-- Section: Recommendations & What to Bring -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('recommendations') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('recommendations')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('recommendations') }" />
-            <UIcon name="i-lucide-lightbulb" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Recomendaciones y qué llevar</h3>
-            <UBadge v-if="hasContent(currentLangData.recommendations) || hasContent(currentLangData.thingsToBring)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
-              {{ [hasContent(currentLangData.recommendations), hasContent(currentLangData.thingsToBring)].filter(Boolean).length }} / 2
-            </UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Recomendaciones y qué llevar"
+        icon="i-lucide-lightbulb"
+        :open="isSectionExpanded('recommendations')"
+        @update:open="toggleSection('recommendations')"
+      >
+        <template #actions>
+          <UBadge v-if="hasContent(currentLangData.recommendations) || hasContent(currentLangData.thingsToBring)" color="success" variant="subtle" size="xs" icon="i-lucide-check">
+            {{ [hasContent(currentLangData.recommendations), hasContent(currentLangData.thingsToBring)].filter(Boolean).length }} / 2
+          </UBadge>
         </template>
-        <div v-show="isSectionExpanded('recommendations')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-lightbulb" class="size-4 text-primary" />
@@ -383,25 +364,22 @@
             <TiptapEditor v-model="currentLangData.thingsToBring" placeholder="Ropa, equipo, documentos requeridos..." />
           </div>
         </div>
-      </UCard>
+      </WizardSection>
 
       <!-- Section: Custom additional sections -->
-      <UCard :ui="{ header: 'p-0', body: isSectionExpanded('custom') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-        <template #header>
-          <button
-            type="button"
-            class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-            @click="toggleSection('custom')"
-          >
-            <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('custom') }" />
-            <UIcon name="i-lucide-plus-circle" class="size-5 text-primary" />
-            <h3 class="text-base font-bold flex-1">Secciones adicionales</h3>
-            <UBadge v-if="(currentLangData.customSections?.length || 0) > 0" color="success" variant="subtle" size="xs">
-              {{ currentLangData.customSections?.length }}
-            </UBadge>
-          </button>
+      <WizardSection
+        collapsible
+        title="Secciones adicionales"
+        icon="i-lucide-plus-circle"
+        :open="isSectionExpanded('custom')"
+        @update:open="toggleSection('custom')"
+      >
+        <template #actions>
+          <UBadge v-if="(currentLangData.customSections?.length || 0) > 0" color="success" variant="subtle" size="xs">
+            {{ currentLangData.customSections?.length }}
+          </UBadge>
         </template>
-        <div v-show="isSectionExpanded('custom')" class="space-y-3">
+        <div class="space-y-3">
           <div class="flex items-center justify-between gap-3 flex-wrap">
             <p class="text-xs text-muted">
               Agrega bloques con título y contenido para información específica del tour (ej. requisitos especiales, equipos, contactos).
@@ -455,7 +433,7 @@
             </UCard>
           </div>
         </div>
-      </UCard>
+      </WizardSection>
 
     </template>
   </div>
@@ -465,6 +443,7 @@
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import TiptapEditor from '~/components/v2/TiptapEditorV2.vue'
+import WizardSection from './WizardSection.vue'
 import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
