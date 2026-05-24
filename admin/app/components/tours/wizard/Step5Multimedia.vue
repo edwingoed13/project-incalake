@@ -1,32 +1,25 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Video Section (per language) -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('video') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('video')"
-        >
-          <h3 class="text-base font-bold flex items-center gap-2">
-            <UIcon
-              name="i-lucide-chevron-down"
-              class="size-4 text-muted transition-transform"
-              :class="{ 'rotate-180': isSectionExpanded('video') }"
-            />
-            <UIcon name="i-lucide-play-circle" class="size-5 text-primary" />
-            Video destacado
-            <UBadge
-              v-if="currentLangSeo?.youtubeUrl"
-              color="success"
-              variant="subtle"
-              size="xs"
-              icon="i-lucide-circle-check"
-            >
-              {{ store.currentLanguage.toUpperCase() }}
-            </UBadge>
-          </h3>
-          <div class="flex gap-1" @click.stop>
+    <WizardSection
+      collapsible
+      title="Video destacado"
+      icon="i-lucide-play-circle"
+      :open="isSectionExpanded('video')"
+      @update:open="toggleSection('video')"
+    >
+      <template #actions>
+        <div class="flex items-center gap-2">
+          <UBadge
+            v-if="currentLangSeo?.youtubeUrl"
+            color="success"
+            variant="subtle"
+            size="xs"
+            icon="i-lucide-circle-check"
+          >
+            {{ store.currentLanguage.toUpperCase() }}
+          </UBadge>
+          <div class="flex gap-1">
             <UButton
               v-for="lang in videoLanguages"
               :key="lang"
@@ -40,10 +33,10 @@
               {{ lang }}
             </UButton>
           </div>
-        </button>
+        </div>
       </template>
 
-      <div v-show="isSectionExpanded('video')" class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <!-- Input Card -->
         <div class="space-y-4">
           <UFormField
@@ -125,32 +118,24 @@
            />
         </div>
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- Gallery Layout Detection Section -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('layout') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('layout')"
-        >
-          <h3 class="text-base font-bold flex items-center gap-2">
-            <UIcon
-              name="i-lucide-chevron-down"
-              class="size-4 text-muted transition-transform"
-              :class="{ 'rotate-180': isSectionExpanded('layout') }"
-            />
-            <UIcon name="i-lucide-layout-grid" class="size-5 text-primary" />
-            Detección de layout de galería
-            <UBadge color="primary" variant="subtle" size="xs" class="capitalize">
-              {{ store.multimedia.galleryLayout }}
-            </UBadge>
-          </h3>
-        </button>
+    <WizardSection
+      collapsible
+      title="Detección de layout de galería"
+      icon="i-lucide-layout-grid"
+      :open="isSectionExpanded('layout')"
+      @update:open="toggleSection('layout')"
+    >
+      <template #actions>
+        <UBadge color="primary" variant="subtle" size="xs" class="capitalize">
+          {{ store.multimedia.galleryLayout }}
+        </UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('layout')" class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Layout Options -->
         <button 
           v-for="layout in layouts" 
@@ -210,7 +195,6 @@
       </div>
 
       <UAlert
-        v-show="isSectionExpanded('layout')"
         color="primary"
         variant="subtle"
         icon="i-lucide-wand-sparkles"
@@ -218,32 +202,24 @@
         description="El layout se ajusta automáticamente según si el video es YouTube Shorts (vertical) u horizontal."
         class="mt-4"
       />
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- Image Gallery Section -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('gallery') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-4 flex items-center justify-between gap-3 flex-wrap hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('gallery')"
-        >
-          <h3 class="text-base font-bold flex items-center gap-2">
-            <UIcon
-              name="i-lucide-chevron-down"
-              class="size-4 text-muted transition-transform"
-              :class="{ 'rotate-180': isSectionExpanded('gallery') }"
-            />
-            <UIcon name="i-lucide-images" class="size-5 text-primary" />
-            Galería de imágenes
-          </h3>
-          <UBadge color="neutral" variant="subtle" size="sm">
-            {{ store.multimedia.images.length }} / 20 imágenes
-          </UBadge>
-        </button>
+    <WizardSection
+      collapsible
+      title="Galería de imágenes"
+      icon="i-lucide-images"
+      :open="isSectionExpanded('gallery')"
+      @update:open="toggleSection('gallery')"
+    >
+      <template #actions>
+        <UBadge color="neutral" variant="subtle" size="sm">
+          {{ store.multimedia.images.length }} / 20 imágenes
+        </UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('gallery')">
+      <div>
       <!-- Drag & Drop Upload Area -->
       <div
         :class="[
@@ -387,7 +363,7 @@
       </div>
       </div>
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- Image Editor Modal -->
     <UModal
@@ -510,6 +486,7 @@
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { useAuthStore } from '~/stores/auth'
+import WizardSection from './WizardSection.vue'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
