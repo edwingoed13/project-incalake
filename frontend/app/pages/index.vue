@@ -1,7 +1,7 @@
 <template>
   <div class="bg-white font-display text-slate-900 min-h-screen">
     <!-- Premium Hero Section -->
-    <section class="relative w-full h-[480px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
+    <section class="relative w-full h-[430px] sm:h-[540px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
         <NuxtImg
           :src="heroImage"
@@ -21,7 +21,7 @@
         <h2 class="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-3 md:mb-4 drop-shadow-2xl">
           {{ c('hero', 'title', 'home_hero_title') }}
         </h2>
-        <p class="hidden sm:block text-white/80 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+        <p class="text-white/85 text-sm sm:text-lg md:text-xl font-medium max-w-2xl mx-auto line-clamp-2">
           {{ c('hero', 'subtitle', 'home_hero_subtitle') }}
         </p>
       </div>
@@ -45,7 +45,8 @@
           </div>
           <button
             @click="goToTours"
-            class="bg-primary text-white px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
+            class="bg-primary text-white px-4 sm:px-8 min-h-[48px] py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
+            :aria-label="c('search_btn', '', 'home_search_btn')"
           >
             <span class="material-symbols-outlined text-lg">search</span>
             <span class="hidden sm:inline">{{ c('search_btn', '', 'home_search_btn') }}</span>
@@ -181,13 +182,13 @@
     </section>
 
     <!-- Explore by Destination (GetYourGuide style) -->
-    <section class="py-2 md:py-16 px-4 md:px-6">
+    <section class="py-8 md:py-16 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
-        <div class="mb-10">
+        <div class="mb-5 md:mb-10">
           <h3 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{{ c('destinations', 'title', 'home_destinations_title') }}</h3>
         </div>
 
-        <div v-if="cities.length" class="grid grid-cols-3 md:grid-cols-6 gap-5">
+        <div v-if="cities.length" class="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-5">
           <NuxtLink
             v-for="city in featuredCities"
             :key="city.id"
@@ -212,12 +213,12 @@
     <!-- Featured Tours -->
     <section class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
       <div class="max-w-7xl mx-auto">
-        <div class="flex items-end justify-between mb-8">
-          <div>
-            <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">{{ c('featured', 'label', 'home_featured_label') }}</p>
-            <h3 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">{{ c('featured', 'title', 'home_featured_title') }}</h3>
+        <div class="flex items-end justify-between gap-3 mb-6 md:mb-8">
+          <div class="min-w-0">
+            <p class="text-primary font-black uppercase tracking-[0.2em] text-[11px] mb-1.5">{{ c('featured', 'label', 'home_featured_label') }}</p>
+            <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900">{{ c('featured', 'title', 'home_featured_title') }}</h3>
           </div>
-          <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl shadow-sm border border-slate-100 hover:border-primary/50 transition-all font-bold text-sm">
+          <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-primary/50 transition-all font-bold text-xs sm:text-sm shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
             <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-lg">arrow_forward</span>
           </NuxtLink>
@@ -284,15 +285,15 @@
     <!-- Our Offers (only if 4+ tours have active offers) -->
     <section v-if="toursWithOffers.length >= 4" class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
-        <div class="flex items-end justify-between mb-8">
-          <div>
-            <p class="text-green-600 font-black uppercase tracking-[0.2em] text-[10px] mb-2">
+        <div class="flex items-end justify-between gap-3 mb-6 md:mb-8">
+          <div class="min-w-0">
+            <p class="text-green-600 font-black uppercase tracking-[0.2em] text-[11px] mb-1.5">
               <span class="material-symbols-outlined text-xs align-middle">local_offer</span>
               Special Deals
             </p>
-            <h3 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Our Offers</h3>
+            <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Our Offers</h3>
           </div>
-          <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl shadow-sm border border-slate-100 hover:border-green-500/50 transition-all font-bold text-sm text-green-700">
+          <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-green-500/50 transition-all font-bold text-xs sm:text-sm text-green-700 shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
             <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-lg">arrow_forward</span>
           </NuxtLink>
@@ -353,25 +354,22 @@
             <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">Testimonials</p>
             <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">What our travelers say</h3>
           </div>
-          <div class="flex gap-2">
-            <button @click="slideReviews(-1)" class="size-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+          <div class="hidden sm:flex gap-2">
+            <button @click="scrollReviews(-1)" aria-label="Anterior" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
               <span class="material-symbols-outlined text-lg">chevron_left</span>
             </button>
-            <button @click="slideReviews(1)" class="size-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+            <button @click="scrollReviews(1)" aria-label="Siguiente" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
               <span class="material-symbols-outlined text-lg">chevron_right</span>
             </button>
           </div>
         </div>
 
-        <div class="overflow-hidden">
-          <div
-            class="flex gap-6 transition-transform duration-500 ease-out"
-            :style="{ transform: `translateX(-${reviewSlide * (100 / 3)}%)` }"
-          >
+        <!-- Native scroll-snap carousel: swipe on mobile, arrows on desktop -->
+        <div ref="reviewsScroll" class="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2">
             <div
               v-for="review in featuredReviews"
               :key="review.id"
-              class="bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg transition-shadow shrink-0 w-full md:w-[calc(33.333%-16px)]"
+              class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow shrink-0 snap-start w-[85%] sm:w-[60%] md:w-[calc(33.333%-16px)]"
             >
               <div class="flex items-center gap-0.5 mb-3">
                 <span v-for="i in review.rating" :key="i" class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
@@ -393,18 +391,6 @@
                 </NuxtLink>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Dots -->
-        <div class="flex items-center justify-center gap-1.5 mt-6">
-          <button
-            v-for="i in maxSlide + 1"
-            :key="i"
-            @click="reviewSlide = i - 1"
-            class="size-2 rounded-full transition-all"
-            :class="reviewSlide === i - 1 ? 'bg-primary w-6' : 'bg-slate-300 hover:bg-slate-400'"
-          ></button>
         </div>
       </div>
     </section>
@@ -550,11 +536,12 @@ const { data: reviewsData } = useAsyncData(
   { lazy: true, default: () => [] }
 )
 const featuredReviews = computed(() => reviewsData.value || [])
-const reviewSlide = ref(0)
-const maxSlide = computed(() => Math.max(0, Math.ceil(featuredReviews.value.length / 3) - 1))
-
-function slideReviews(dir: number) {
-  reviewSlide.value = Math.max(0, Math.min(maxSlide.value, reviewSlide.value + dir))
+// Testimonials: native horizontal scroll-snap (swipe on mobile, arrows desktop).
+const reviewsScroll = ref<HTMLElement | null>(null)
+function scrollReviews(dir: number) {
+  const el = reviewsScroll.value
+  if (!el) return
+  el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
 }
 
 // Hero image: from API or default
