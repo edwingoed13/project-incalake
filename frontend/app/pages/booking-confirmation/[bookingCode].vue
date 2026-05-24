@@ -275,15 +275,17 @@
               <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-lg">group</span>
                 {{ t('step_travelers') }}
-                <span class="text-xs font-normal text-slate-400">({{ travelers.length }})</span>
+                <span class="text-xs font-normal text-slate-400">({{ travelers.length }}/{{ maxTravelers }})</span>
               </h3>
               <button
+                v-if="canAddTraveler"
                 @click="addTraveler"
                 class="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-lg active:bg-primary/20"
               >
                 <span class="material-symbols-outlined text-sm">add</span>
                 {{ t('add_traveler') }}
               </button>
+              <span v-else class="text-[11px] text-slate-400 font-medium">{{ t('travelers_complete') }}</span>
             </div>
 
             <div class="p-3 md:p-4 space-y-3">
@@ -310,13 +312,18 @@
                   </div>
                   <div>
                     <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('nationality') }}</label>
-                    <input v-model="traveler.nationality" type="text" placeholder="e.g. American" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" />
+                    <AppCountrySelect v-model="traveler.nationality" placeholder="Selecciona país" />
                   </div>
                   <div>
                     <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('doc_type') }}</label>
-                    <select v-model="traveler.doc_type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm">
-                      <option value="passport">Passport</option>
-                      <option value="dni">DNI / ID Card</option>
+                    <select v-model="traveler.doc_type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white">
+                      <option value="passport">Pasaporte</option>
+                      <option value="dni">DNI</option>
+                      <option value="ce">Carné de extranjería</option>
+                      <option value="cedula">Cédula de ciudadanía</option>
+                      <option value="run">RUN</option>
+                      <option value="rut">RUT</option>
+                      <option value="other">Otro</option>
                     </select>
                   </div>
                   <div>
@@ -477,6 +484,16 @@ const travelers = ref<any[]>([])
 const savingTravelers = ref(false)
 const travelerError = ref<string | null>(null)
 
+// Cap travelers at the participants paid for (adults + children): a 1-pax tour
+// shows only the leader (can't add anyone); a 2-pax tour allows just 1 extra.
+const maxTravelers = computed(() => {
+  const b: any = booking.value
+  const a = b?.participants?.adults ?? b?.adults ?? 0
+  const c = b?.participants?.children ?? b?.children ?? 0
+  return Math.max(1, a + c)
+})
+const canAddTraveler = computed(() => travelers.value.length < maxTravelers.value)
+
 // Load existing data when booking is available
 watch(booking, async (b) => {
   if (!b) return
@@ -580,6 +597,7 @@ function skipStep(step: number) {
 }
 
 function addTraveler() {
+  if (travelers.value.length >= maxTravelers.value) return
   travelers.value.push({
     full_name: '',
     nationality: '',

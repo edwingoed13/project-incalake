@@ -223,3 +223,64 @@ export const countries: Country[] = [
 export function getDialCode(countryCode: string): string {
   return countries.find(c => c.code === countryCode)?.dial || '+51'
 }
+
+// --- Nationality selector (traveler form) ----------------------------------
+// Curated, Spanish-named list with the most frequent visitors first, then the
+// rest alphabetically. The booking stores the Spanish name. Flags reuse
+// countryFlagUrl() (flagcdn images, render on every OS unlike emoji flags).
+export interface Nationality { code: string; name: string }
+
+export const NATIONALITIES: Nationality[] = [
+  // Priority — most frequent (Peru-based agency)
+  { code: 'PE', name: 'Perú' },
+  { code: 'US', name: 'Estados Unidos' },
+  { code: 'ES', name: 'España' },
+  { code: 'FR', name: 'Francia' },
+  { code: 'IT', name: 'Italia' },
+  { code: 'GB', name: 'Reino Unido' },
+  { code: 'DE', name: 'Alemania' },
+  { code: 'PT', name: 'Portugal' },
+  { code: 'AR', name: 'Argentina' },
+  { code: 'BR', name: 'Brasil' },
+  { code: 'CL', name: 'Chile' },
+  { code: 'MX', name: 'México' },
+  // Rest (alphabetical)
+  { code: 'AU', name: 'Australia' },
+  { code: 'AT', name: 'Austria' },
+  { code: 'BE', name: 'Bélgica' },
+  { code: 'BO', name: 'Bolivia' },
+  { code: 'CA', name: 'Canadá' },
+  { code: 'CN', name: 'China' },
+  { code: 'CO', name: 'Colombia' },
+  { code: 'KR', name: 'Corea del Sur' },
+  { code: 'CR', name: 'Costa Rica' },
+  { code: 'DK', name: 'Dinamarca' },
+  { code: 'EC', name: 'Ecuador' },
+  { code: 'FI', name: 'Finlandia' },
+  { code: 'GR', name: 'Grecia' },
+  { code: 'IN', name: 'India' },
+  { code: 'IE', name: 'Irlanda' },
+  { code: 'IL', name: 'Israel' },
+  { code: 'JP', name: 'Japón' },
+  { code: 'NO', name: 'Noruega' },
+  { code: 'NZ', name: 'Nueva Zelanda' },
+  { code: 'NL', name: 'Países Bajos' },
+  { code: 'PY', name: 'Paraguay' },
+  { code: 'PL', name: 'Polonia' },
+  { code: 'CZ', name: 'República Checa' },
+  { code: 'DO', name: 'República Dominicana' },
+  { code: 'RU', name: 'Rusia' },
+  { code: 'ZA', name: 'Sudáfrica' },
+  { code: 'SE', name: 'Suecia' },
+  { code: 'CH', name: 'Suiza' },
+  { code: 'TR', name: 'Turquía' },
+  { code: 'UY', name: 'Uruguay' },
+  { code: 'VE', name: 'Venezuela' },
+]
+
+/** Resolve a stored nationality (Spanish name or ISO code) to display it again. */
+export function findNationality(value?: string | null): Nationality | undefined {
+  if (!value) return undefined
+  const v = value.trim().toLowerCase()
+  return NATIONALITIES.find(n => n.name.toLowerCase() === v || n.code.toLowerCase() === v)
+}
