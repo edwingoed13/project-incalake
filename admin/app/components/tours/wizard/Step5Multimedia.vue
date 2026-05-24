@@ -271,6 +271,14 @@
 
       <!-- Image Grid -->
       <div v-if="store.multimedia.images.length > 0" class="space-y-2 mt-6">
+        <UAlert
+          v-if="galleryIncompleteCount > 0"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-triangle-alert"
+          :title="`${galleryIncompleteCount} ${galleryIncompleteCount === 1 ? 'imagen sin completar' : 'imágenes sin completar'}`"
+          description="Las imágenes marcadas en ámbar necesitan texto alternativo (ALT), título o descripción. Haz clic en una imagen para editarla. Completarlas mejora la accesibilidad y el SEO."
+        />
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <p class="text-[11px] text-muted flex items-center gap-1.5">
             <UIcon name="i-lucide-move" class="size-3.5" />
@@ -362,6 +370,28 @@
             </span>
           </div>
 
+          <!-- Completeness indicator (bottom-left, hidden on hover) -->
+          <div class="absolute bottom-2 left-2 z-10 transition-opacity group-hover:opacity-0">
+            <UBadge
+              v-if="getMissingFields(image).length"
+              :color="getMissingFields(image).includes('ALT') ? 'warning' : 'neutral'"
+              variant="solid"
+              size="xs"
+              icon="i-lucide-triangle-alert"
+              class="shadow-md backdrop-blur-md"
+              :title="`Faltan datos: ${getMissingFields(image).join(', ')}`"
+            >
+              Faltan {{ getMissingFields(image).join(' · ') }}
+            </UBadge>
+            <span
+              v-else
+              class="size-5 rounded-full bg-success/90 text-white flex items-center justify-center shadow-md backdrop-blur-md"
+              title="Datos completos (ALT, título y descripción)"
+            >
+              <UIcon name="i-lucide-check" class="size-3.5" />
+            </span>
+          </div>
+
           <!-- Hover overlay with actions -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
             <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
@@ -416,9 +446,9 @@
                 <UIcon name="i-lucide-image-plus" class="size-5 text-primary" />
               </div>
               <div>
-                <h3 class="text-lg font-bold">Editar imagen</h3>
+                <h3 class="text-lg font-bold">Recortar y describir imagen</h3>
                 <p class="text-xs text-muted mt-0.5">
-                  Imagen #{{ editingIndex + 1 }} · Idioma: <span class="font-bold text-primary">{{ store.currentLanguage.toUpperCase() }}</span>
+                  Imagen #{{ editingIndex + 1 }} · Datos en <span class="font-bold text-primary">{{ store.currentLanguage.toUpperCase() }}</span>
                 </p>
               </div>
             </div>
@@ -430,19 +460,36 @@
             <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-5">
               <!-- Preview / crop column -->
               <div class="space-y-3">
-                <!-- Aspect ratio presets -->
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-[10px] font-black uppercase tracking-widest text-muted mr-0.5">Proporción</span>
+                <div class="flex items-center gap-2">
+                  <span class="size-5 rounded-full bg-primary text-white text-[11px] font-black flex items-center justify-center shrink-0">1</span>
+                  <p class="text-sm font-bold">Recorta la imagen</p>
+                </div>
+
+                <!-- Aspect ratio presets + reset -->
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-muted mr-0.5">Proporción</span>
+                    <UButton
+                      v-for="preset in cropPresets"
+                      :key="preset.label"
+                      size="xs"
+                      :color="cropAspect === preset.value ? 'primary' : 'neutral'"
+                      :variant="cropAspect === preset.value ? 'solid' : 'subtle'"
+                      class="font-bold"
+                      @click="cropAspect = preset.value"
+                    >
+                      {{ preset.label }}
+                    </UButton>
+                  </div>
                   <UButton
-                    v-for="preset in cropPresets"
-                    :key="preset.label"
+                    icon="i-lucide-rotate-ccw"
+                    color="neutral"
+                    variant="ghost"
                     size="xs"
-                    :color="cropAspect === preset.value ? 'primary' : 'neutral'"
-                    :variant="cropAspect === preset.value ? 'solid' : 'subtle'"
-                    class="font-bold"
-                    @click="cropAspect = preset.value"
+                    title="Volver al encuadre original"
+                    @click="resetCrop"
                   >
-                    {{ preset.label }}
+                    Restablecer
                   </UButton>
                 </div>
 
@@ -478,23 +525,21 @@
                   </UBadge>
                 </div>
                 <p class="text-[10px] text-muted flex items-center gap-1.5">
-                  <UIcon name="i-lucide-crop" class="size-3 shrink-0" />
-                  Arrastra el marco para recortar. Al guardar se optimiza a máx 1920px y se convierte a WebP.
+                  <UIcon name="i-lucide-move" class="size-3 shrink-0" />
+                  Arrastra las esquinas del marco para encuadrar. Si no lo tocas, la imagen se guarda igual.
                 </p>
 
-                <UCard :ui="{ body: 'p-4' }">
+                <UCard :ui="{ body: 'p-3' }">
                   <div class="space-y-2 text-xs">
-                    <div>
-                      <p class="text-[10px] font-black uppercase tracking-widest text-muted mb-1">Archivo</p>
-                      <p class="font-mono font-bold truncate">
-                        {{ store.multimedia.images[editingIndex]?.filename || `tour-image-${(editingIndex || 0) + 1}.webp` }}
-                      </p>
-                    </div>
-                    <div class="flex items-center justify-between pt-2 border-t border-default">
-                      <span class="text-[10px] font-black uppercase tracking-widest text-muted">Tamaño</span>
-                      <UBadge color="primary" variant="subtle" size="xs" class="font-mono">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] font-black uppercase tracking-widest text-muted">Tamaño actual</span>
+                      <UBadge color="neutral" variant="subtle" size="xs" class="font-mono">
                         {{ ((store.multimedia.images[editingIndex]?.size || 0) / 1024).toFixed(1) }} KB
                       </UBadge>
+                    </div>
+                    <div class="flex items-start gap-1.5 pt-2 border-t border-default text-[11px] text-muted">
+                      <UIcon name="i-lucide-sparkles" class="size-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>Al guardar: recorte aplicado, optimizada a máx <span class="font-bold">1920px</span> y convertida a <span class="font-bold">WebP</span> para carga rápida.</span>
                     </div>
                   </div>
                 </UCard>
@@ -502,11 +547,17 @@
 
               <!-- Form column -->
               <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                  <span class="size-5 rounded-full bg-primary text-white text-[11px] font-black flex items-center justify-center shrink-0">2</span>
+                  <p class="text-sm font-bold">Describe la imagen</p>
+                </div>
+
                 <UFormField
                   label="Texto alternativo (ALT)"
                   required
                   :hint="`${editForm.altText.length}/125`"
-                  help="Describe la imagen para lectores de pantalla y motores de búsqueda."
+                  :help="editForm.altText.trim() ? 'Describe la imagen para lectores de pantalla y motores de búsqueda.' : undefined"
+                  :error="editForm.altText.trim() ? undefined : 'Obligatorio: lo leen Google y los lectores de pantalla.'"
                 >
                   <UInput
                     v-model="editForm.altText"
@@ -519,6 +570,7 @@
                 <UFormField
                   label="Título de la imagen"
                   :hint="`${editForm.titleText.length}/100`"
+                  help="Opcional. Aparece al pasar el cursor sobre la imagen."
                 >
                   <UInput
                     v-model="editForm.titleText"
@@ -531,6 +583,7 @@
                 <UFormField
                   label="Descripción detallada"
                   :hint="`${editForm.description.length}/250`"
+                  help="Opcional. Se muestra en el visor ampliado de la galería."
                 >
                   <UTextarea
                     v-model="editForm.description"
@@ -603,8 +656,10 @@ const stencilProps = computed(() => (cropAspect.value ? { aspectRatio: cropAspec
 const initialCropCoords = ref<any>(null)
 const currentCropCoords = ref<any>(null)
 const onCropChange = ({ coordinates }: any) => {
-  currentCropCoords.value = coordinates
-  if (!initialCropCoords.value) initialCropCoords.value = coordinates
+  // Snapshot so the "initial" reference can't be mutated to match the current one.
+  const snap = coordinates ? { ...coordinates } : null
+  currentCropCoords.value = snap
+  if (!initialCropCoords.value) initialCropCoords.value = snap
 }
 const cropChanged = () => {
   const a = initialCropCoords.value
@@ -612,6 +667,10 @@ const cropChanged = () => {
   if (!a || !b) return false
   const key = (c: any) => `${Math.round(c.left)},${Math.round(c.top)},${Math.round(c.width)},${Math.round(c.height)}`
   return key(a) !== key(b)
+}
+const resetCrop = () => {
+  cropAspect.value = null
+  cropperRef.value?.reset?.()
 }
 
 // Collapsible sections — state persisted in localStorage so F5 keeps each open/closed.
@@ -659,6 +718,22 @@ const getMediaText = (mediaId: any, field: 'alt_text' | 'title_text') => {
   return entry?.[field] || ''
 }
 
+// Which descriptive fields are still empty (ALT/title are per current language,
+// description is shared). Drives the per-tile "faltan datos" indicator.
+const getMissingFields = (image: any): string[] => {
+  const alt = (getMediaText(image.id, 'alt_text') || image.altText || '').trim()
+  const title = (getMediaText(image.id, 'title_text') || image.titleText || '').trim()
+  const desc = (image.description || '').trim()
+  const missing: string[] = []
+  if (!alt) missing.push('ALT')
+  if (!title) missing.push('Título')
+  if (!desc) missing.push('Descripción')
+  return missing
+}
+const galleryIncompleteCount = computed(
+  () => store.multimedia.images.filter((img: any) => getMissingFields(img).length > 0).length,
+)
+
 const openEditModal = (index: number) => {
   const image = store.multimedia.images[index]
   if (image) {
@@ -704,10 +779,27 @@ const applyCropAndUpload = async (image: any): Promise<boolean> => {
   const oldIdx = store.tempImages.findIndex((t: any) => t.filename === image.filename)
   if (oldIdx !== -1) store.tempImages.splice(oldIdx, 1)
 
+  // If this was an existing DB image (numeric id), turn it into a fresh upload:
+  // the backend's syncMediaGallery only updates metadata for numeric ids and
+  // never swaps the file, so we give it a UUID. That drops the original record
+  // (+ file) via whereNotIn and lets processImages store the cropped version in
+  // its place, preserving order/primary through the temp_images metadata below.
+  if (typeof image.id === 'number') {
+    image.id = (globalThis.crypto?.randomUUID?.() ?? `crop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+  }
+
   image.url = response.url
   image.filename = response.filename
   image.size = blob.size
-  store.tempImages.push({ filename: response.filename, path: response.path })
+  store.tempImages.push({
+    filename: response.filename,
+    path: response.path,
+    alt_text: editForm.value.altText,
+    title_text: editForm.value.titleText,
+    description: editForm.value.description,
+    is_primary: image.isPrimary,
+    order: (editingIndex.value ?? 0) + 1,
+  })
   store.isDirty = true
   return true
 }
