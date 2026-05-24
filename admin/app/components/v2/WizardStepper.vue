@@ -56,7 +56,7 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
           <!-- Label: every step shows its name (hidden on mobile = circles only).
                The "Paso N" subtitle is dropped to keep the bar compact. -->
           <p
-            class="text-xs font-bold tracking-tight whitespace-nowrap hidden sm:block"
+            class="text-xs font-bold tracking-tight whitespace-nowrap hidden 2xl:block"
             :class="[
               stepState(step.id) === 'current' && 'text-primary',
               stepState(step.id) === 'completed' && 'text-default',

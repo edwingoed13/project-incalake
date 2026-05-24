@@ -578,7 +578,8 @@ onMounted(() => {
                       </p>
                     </div>
 
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <!-- Always visible on touch (no hover); hover-reveal on desktop. -->
+                    <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
                       <UButton
                         :to="getTranslationPreviewUrl(tour, tr) || undefined"
                         target="_blank"

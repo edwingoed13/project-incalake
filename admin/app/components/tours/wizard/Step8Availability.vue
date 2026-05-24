@@ -16,11 +16,13 @@
       </div>
     </UCard>
 
-    <!-- 2-column layout: calendar (left) + controls (right) -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+    <!-- Calendar + controls: side by side only on very wide screens (2xl).
+         Below that (tablets/laptops) they stack full-width so the calendar is
+         prominent and the controls/tabs aren't cramped. -->
+    <div class="grid grid-cols-1 2xl:grid-cols-5 gap-4 items-start">
 
     <!-- Live Calendar (LEFT) — 2-month preview -->
-    <UCard class="lg:col-span-3 lg:sticky lg:top-4" :ui="{ body: 'p-4 space-y-4' }">
+    <UCard class="2xl:col-span-3 2xl:sticky 2xl:top-4" :ui="{ body: 'p-4 space-y-4' }">
       <!-- Header: title + month navigation -->
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-2">
@@ -100,22 +102,22 @@
     </UCard>
 
     <!-- Controls (RIGHT) -->
-    <UCard class="lg:col-span-2" :ui="{ body: '!p-0' }">
+    <UCard class="2xl:col-span-2" :ui="{ body: '!p-0' }">
       <div class="flex border-b border-default">
         <button
           v-for="tab in tabs"
           :key="tab.id"
           type="button"
           :class="[
-            'flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-bold transition-all border-b-2',
+            'flex-1 min-w-0 py-3 px-2 flex items-center justify-center gap-1.5 text-sm font-bold transition-all border-b-2 whitespace-nowrap',
             activeTab === tab.id
               ? 'text-primary border-primary bg-primary/5'
               : 'text-muted border-transparent hover:text-default',
           ]"
           @click="activeTab = tab.id"
         >
-          <UIcon :name="tab.icon" class="size-4" />
-          <span class="hidden sm:inline">{{ tab.label }}</span>
+          <UIcon :name="tab.icon" class="size-4 shrink-0" />
+          <span class="truncate">{{ tab.label }}</span>
         </button>
       </div>
 
