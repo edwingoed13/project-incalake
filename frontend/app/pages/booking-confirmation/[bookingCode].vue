@@ -158,21 +158,12 @@
             </div>
           </details>
 
-          <!-- Quick actions - icon buttons on mobile -->
-          <div class="grid grid-cols-3 gap-2">
-            <button @click="downloadPDF" class="flex flex-col items-center gap-1 p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 active:bg-slate-50 transition-colors">
-              <span class="material-symbols-outlined text-lg">download</span>
-              <span class="text-[10px] font-semibold">{{ t('voucher') }}</span>
-            </button>
-            <button @click="shareBooking" class="flex flex-col items-center gap-1 p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 active:bg-slate-50 transition-colors">
-              <span class="material-symbols-outlined text-lg">share</span>
-              <span class="text-[10px] font-semibold">{{ t('share') }}</span>
-            </button>
-            <button @click="sendEmailCopy" :disabled="emailSending" class="flex flex-col items-center gap-1 p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 active:bg-slate-50 transition-colors disabled:opacity-50">
-              <span class="material-symbols-outlined text-lg">{{ emailSending ? 'progress_activity' : 'mail' }}</span>
-              <span class="text-[10px] font-semibold">{{ emailSending ? t('sending') : t('send_email') }}</span>
-            </button>
-          </div>
+          <!-- Voucher: prints / saves the confirmation as PDF (works on mobile
+               via the browser's print dialog; no backend PDF needed). -->
+          <button @click="downloadVoucher" class="w-full flex items-center justify-center gap-2 p-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm active:bg-slate-50 transition-colors">
+            <span class="material-symbols-outlined text-lg">download</span>
+            {{ t('voucher') }}
+          </button>
 
           <button @click="currentStep = 1" class="w-full bg-primary active:bg-primary/80 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
             {{ t('continue_pickup') }}
@@ -383,7 +374,6 @@ const token = route.query.token as string
 
 const currentStep = ref(0)
 const completedSteps = ref(new Set<number>())
-const emailSending = ref(false)
 
 const steps = computed(() => [
   { label: t('step_summary') },
@@ -573,7 +563,11 @@ useHead({
 function getImageUrl(path: string) {
   if (!path) return ''
   if (path.startsWith('http')) return path
-  return `${config.public.storageBase}/${path}`
+  // Derive the storage origin from the API base so a missing/wrong
+  // NUXT_PUBLIC_STORAGE_BASE (which defaults to localhost) can't break images.
+  const origin = String(config.public.apiBase || '').replace(/\/api\/?$/, '')
+  const clean = String(path).replace(/^\/+/, '').replace(/^storage\//, '')
+  return `${origin}/storage/${clean}`
 }
 
 function formatDate(dateString: string) {
@@ -660,28 +654,10 @@ async function saveTravelers() {
   }
 }
 
-async function downloadPDF() {
-  window.open(`${config.public.apiBase}/bookings/${booking.value.booking_code}/pdf`, '_blank')
-}
-
-async function shareBooking() {
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: `Booking ${booking.value.booking_code}`, url: window.location.href })
-    } else {
-      await navigator.clipboard.writeText(window.location.href)
-      alert('Link copied!')
-    }
-  } catch (e) {}
-}
-
-async function sendEmailCopy() {
-  emailSending.value = true
-  try {
-    await api(`/bookings/${booking.value.booking_code}/resend-email`, { method: 'POST' })
-    alert('Email sent!')
-  } catch (e) { alert('Error sending email') }
-  finally { emailSending.value = false }
+// Voucher = the printable confirmation page. window.print() lets the user
+// save it as PDF / print, and works on mobile (no backend PDF endpoint needed).
+function downloadVoucher() {
+  if (import.meta.client) window.print()
 }
 </script>
 
