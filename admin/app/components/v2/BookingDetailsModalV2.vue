@@ -18,6 +18,18 @@ const API = config.public.apiUrl
 const fullDetails = ref<any>(null)
 const loadingDetails = ref(true)
 
+// Friendly labels for the traveler document types (stored as short codes).
+const DOC_TYPE_LABELS: Record<string, string> = {
+  passport: 'Pasaporte',
+  dni: 'DNI',
+  ce: 'Carné de extranjería',
+  cedula: 'Cédula',
+  run: 'RUN',
+  rut: 'RUT',
+  other: 'Documento',
+}
+const docTypeLabel = (code?: string) => (code ? (DOC_TYPE_LABELS[code] ?? code.toUpperCase()) : '')
+
 onMounted(async () => {
   try {
     const res: any = await $fetch(`${API}/bookings/${props.booking.id}/full-details`)
@@ -380,7 +392,7 @@ const close = () => {
                         </span>
                         <span v-if="t.doc_type && t.doc_number" class="flex items-center gap-1">
                           <UIcon name="i-lucide-id-card" class="size-3" />
-                          {{ t.doc_type.toUpperCase() }}: {{ t.doc_number }}
+                          {{ docTypeLabel(t.doc_type) }}: {{ t.doc_number }}
                         </span>
                         <span v-if="t.special_needs" class="flex items-center gap-1 text-warning">
                           <UIcon name="i-lucide-heart-pulse" class="size-3" />
