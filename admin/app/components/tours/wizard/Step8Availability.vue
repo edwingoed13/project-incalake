@@ -16,9 +16,90 @@
       </div>
     </UCard>
 
-    <!-- 2-column layout: forms (left) + live calendar (right) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-    <!-- Tabs -->
+    <!-- 2-column layout: calendar (left) + controls (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+
+    <!-- Live Calendar (LEFT) — 2-month preview -->
+    <UCard class="lg:col-span-3 lg:sticky lg:top-4" :ui="{ body: 'p-4 space-y-4' }">
+      <!-- Header: title + month navigation -->
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <div class="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <UIcon name="i-lucide-calendar-days" class="size-5 text-primary" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold leading-tight">Vista previa del calendario</h3>
+            <p class="text-[11px] text-muted">Refleja en vivo lo que configuras a la derecha</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <UButton icon="i-lucide-chevron-left" color="neutral" variant="soft" size="sm" title="Mes anterior" @click="shiftMonth(-1)" />
+          <UButton color="neutral" variant="soft" size="sm" @click="goToToday">Hoy</UButton>
+          <UButton icon="i-lucide-chevron-right" color="neutral" variant="soft" size="sm" title="Mes siguiente" @click="shiftMonth(1)" />
+        </div>
+      </div>
+
+      <!-- Two months side by side (stacked below xl) -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <div v-for="month in months" :key="month.key" class="space-y-1.5">
+          <p class="text-center text-xs font-black uppercase tracking-wider text-default capitalize">{{ month.label }}</p>
+          <div class="grid grid-cols-7 gap-1 text-center">
+            <div
+              v-for="d in weekdayHeaders"
+              :key="d"
+              class="text-[10px] font-black uppercase tracking-wider text-muted py-1"
+            >
+              {{ d }}
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-1">
+            <div
+              v-for="cell in month.cells"
+              :key="cell.key"
+              :class="[
+                'relative aspect-square rounded-lg flex items-center justify-center text-xs font-bold border transition-colors',
+                cell.outOfMonth ? 'border-transparent text-muted/30' : 'border-default',
+                cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth ? 'bg-primary/10 border-primary/40 text-primary' : '',
+                cell.blocked && !cell.outOfMonth ? 'bg-error/10 border-error/40 text-error line-through' : '',
+                cell.isHoliday && !cell.outOfMonth ? 'ring-2 ring-error/40 ring-inset' : '',
+                cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
+                !cell.inAvailability && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
+              ]"
+              :title="cell.tooltip"
+            >
+              <span>{{ cell.day }}</span>
+              <span
+                v-if="cell.offerColor && !cell.outOfMonth"
+                class="absolute bottom-1 left-1/2 -translate-x-1/2 size-1.5 rounded-full"
+                :style="{ backgroundColor: cell.offerColor }"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-3 border-t border-default text-[11px]">
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-primary/20 border border-primary/40" /><span class="text-muted">Disponible</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-error/10 border border-error/40" /><span class="text-muted">Bloqueado</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm ring-2 ring-error/40 ring-inset" /><span class="text-muted">Feriado</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-success" /><span class="text-muted">Con oferta</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm ring-2 ring-primary ring-inset" /><span class="text-muted">Hoy</span></div>
+      </div>
+
+      <!-- Compact summary -->
+      <div
+        v-if="store.availability.start && store.availability.end"
+        class="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-[11px] leading-snug"
+      >
+        Disponible <span class="font-bold">{{ formatDate(store.availability.start) }} → {{ formatDate(store.availability.end) }}</span>
+        · <span class="font-bold">{{ store.availability.activeDays.length }} días/semana</span>
+        <span v-if="(store.availability.blocks || []).length"> · <span class="text-error font-bold">{{ store.availability.blocks.length }} bloqueos</span></span>
+        <span v-if="(store.availability.offers || []).length"> · <span class="text-success font-bold">{{ store.availability.offers.length }} ofertas</span></span>
+      </div>
+    </UCard>
+
+    <!-- Controls (RIGHT) -->
     <UCard class="lg:col-span-2" :ui="{ body: '!p-0' }">
       <div class="flex border-b border-default">
         <button
@@ -98,7 +179,7 @@
 
           <!-- Holidays -->
           <UFormField label="Bloquear feriados nacionales">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <button
                 v-for="holiday in holidays"
                 :key="holiday.value"
@@ -288,90 +369,6 @@
       </div>
     </UCard>
 
-    <!-- Live Calendar (right column) -->
-    <UCard class="lg:col-span-1 lg:sticky lg:top-4" :ui="{ body: 'p-3 space-y-3' }">
-      <!-- Header with month navigation -->
-      <div class="flex items-center justify-between gap-2">
-        <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" size="xs" @click="shiftMonth(-1)" />
-        <button
-          type="button"
-          class="text-xs font-black uppercase tracking-wider hover:text-primary transition-colors"
-          :title="'Volver al mes actual'"
-          @click="goToToday"
-        >
-          {{ visibleMonthLabel }}
-        </button>
-        <UButton icon="i-lucide-chevron-right" color="neutral" variant="ghost" size="xs" @click="shiftMonth(1)" />
-      </div>
-
-      <!-- Week-day headers -->
-      <div class="grid grid-cols-7 gap-0.5 text-center">
-        <div
-          v-for="d in weekdayHeaders"
-          :key="d"
-          class="text-[9px] font-black uppercase tracking-wider text-muted py-1"
-        >
-          {{ d }}
-        </div>
-      </div>
-
-      <!-- Day grid -->
-      <div class="grid grid-cols-7 gap-0.5">
-        <div
-          v-for="cell in calendarCells"
-          :key="cell.key"
-          :class="[
-            'relative aspect-square rounded-md flex items-center justify-center text-[11px] font-bold border transition-colors',
-            cell.outOfMonth ? 'border-transparent text-muted/40' : 'border-default',
-            cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth ? 'bg-primary/10 border-primary/30 text-primary' : '',
-            cell.blocked && !cell.outOfMonth ? 'bg-error/10 border-error/40 text-error line-through' : '',
-            cell.isHoliday && !cell.outOfMonth ? 'ring-2 ring-error/40 ring-inset' : '',
-            cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
-            !cell.inAvailability && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
-          ]"
-          :title="cell.tooltip"
-        >
-          <span>{{ cell.day }}</span>
-          <!-- Offer dot -->
-          <span
-            v-if="cell.offerColor && !cell.outOfMonth"
-            class="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-1.5 rounded-full"
-            :style="{ backgroundColor: cell.offerColor }"
-          />
-        </div>
-      </div>
-
-      <!-- Legend -->
-      <div class="space-y-1 pt-2 border-t border-default text-[10px]">
-        <div class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-primary/20 border border-primary/40" />
-          <span class="text-muted">Disponible</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm bg-error/10 border border-error/40" />
-          <span class="text-muted">Bloqueado</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-full bg-success" />
-          <span class="text-muted">Con oferta</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="size-2.5 rounded-sm ring-2 ring-primary ring-inset" />
-          <span class="text-muted">Hoy</span>
-        </div>
-      </div>
-
-      <!-- Compact summary -->
-      <div
-        v-if="store.availability.start && store.availability.end"
-        class="rounded-lg bg-primary/5 border border-primary/20 px-2.5 py-2 text-[10px] leading-snug"
-      >
-        Disponible <span class="font-bold">{{ formatDate(store.availability.start) }} → {{ formatDate(store.availability.end) }}</span>
-        · <span class="font-bold">{{ store.availability.activeDays.length }} días/semana</span>
-        <span v-if="(store.availability.blocks || []).length"> · <span class="text-error font-bold">{{ store.availability.blocks.length }} bloqueos</span></span>
-        <span v-if="(store.availability.offers || []).length"> · <span class="text-success font-bold">{{ store.availability.offers.length }} ofertas</span></span>
-      </div>
-    </UCard>
     </div>
 
     <!-- Save button -->
@@ -514,10 +511,6 @@ today.setHours(0, 0, 0, 0)
 // Visible month — anchor to today at first; user can navigate freely.
 const visibleMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1))
 
-const visibleMonthLabel = computed(() => {
-  return visibleMonth.value.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-})
-
 const shiftMonth = (delta: number) => {
   const d = new Date(visibleMonth.value)
   d.setMonth(d.getMonth() + delta)
@@ -541,9 +534,9 @@ const parseISO = (s: string) => {
   return new Date(y, m - 1, d)
 }
 
-const calendarCells = computed(() => {
-  const first = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth(), 1)
-  const last = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth() + 1, 0)
+// Build the 42-cell (6×7) grid for a given month, with per-day availability state.
+const buildCells = (base: Date) => {
+  const first = new Date(base.getFullYear(), base.getMonth(), 1)
 
   // Find the Monday on or before the 1st (Mon=0 grid).
   const startOffset = (first.getDay() + 6) % 7
@@ -564,7 +557,7 @@ const calendarCells = computed(() => {
     d.setDate(gridStart.getDate() + i)
     d.setHours(0, 0, 0, 0)
 
-    const outOfMonth = d.getMonth() !== visibleMonth.value.getMonth()
+    const outOfMonth = d.getMonth() !== base.getMonth()
     const iso = isoDate(d)
     const dow = d.getDay() // 0=Sun..6=Sat
     const mmdd = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -622,6 +615,17 @@ const calendarCells = computed(() => {
     })
   }
   return cells
+}
+
+// Two consecutive months anchored at the visible month.
+const months = computed(() => {
+  const a = new Date(visibleMonth.value.getFullYear(), visibleMonth.value.getMonth(), 1)
+  const b = new Date(a.getFullYear(), a.getMonth() + 1, 1)
+  const fmt = (d: Date) => d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+  return [
+    { key: isoDate(a), label: fmt(a), cells: buildCells(a) },
+    { key: isoDate(b), label: fmt(b), cells: buildCells(b) },
+  ]
 })
 
 const toggleSpecialDay = (value: string) => {
