@@ -788,10 +788,19 @@ const citySlug = route.params.city as string
 // Get language code (ES, EN, PT) from i18n locale
 const langCode = computed(() => locale.value.toUpperCase())
 
+// Reuse cached fetch results when navigating BACK to an already-opened tour
+// (instant, no refetch). Each tour is cached under its own key, so A → B → A
+// serves A from cache. Still refetches on manual refresh / watched-dep change.
+function getCachedData(key: string, nuxtApp: any, ctx: any) {
+  if (ctx?.cause === 'watch' || ctx?.cause === 'refresh:manual') return undefined
+  return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+}
+
 // Fetch tour data with SSR using multilang API endpoint
 const { data: response, pending, error } = await useAsyncData(
   `tour-${langCode.value}-${citySlug}-${slug}`,
-  () => api(`/tours/${langCode.value.toLowerCase()}/${citySlug}/${slug}`)
+  () => api(`/tours/${langCode.value.toLowerCase()}/${citySlug}/${slug}`),
+  { getCachedData }
 )
 
 const tour = computed(() => response.value?.data || null)
@@ -812,7 +821,7 @@ const customSections = computed(() => {
 const { data: relatedResponse } = await useAsyncData(
   `related-tours-${slug}`,
   () => api('/tours?limit=4'),
-  { lazy: true, default: () => ({ data: [] }) }
+  { lazy: true, default: () => ({ data: [] }), getCachedData }
 )
 
 const relatedTours = computed(() => {
@@ -821,8 +830,13 @@ const relatedTours = computed(() => {
   return tours.filter((t: any) => t.slug !== slug)
 })
 
-// Reviews for this tour
-const tourReviews = ref<any[]>([])
+// Reviews for this tour — cached so returning to a tour doesn't refetch them.
+const { data: reviewsData } = await useAsyncData(
+  `reviews-${citySlug}-${slug}`,
+  () => tour.value?.id ? api(`/reviews?tour_id=${tour.value.id}&per_page=20`) : Promise.resolve({ data: [] }),
+  { lazy: true, default: () => ({ data: [] }), getCachedData }
+)
+const tourReviews = computed<any[]>(() => (reviewsData.value as any)?.data || [])
 const showAllReviews = ref(false)
 
 const avgRating = computed(() => {
@@ -850,16 +864,6 @@ function scrollToReviews() {
     document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
-
-// Fetch reviews when tour is loaded
-watch(tour, async (t) => {
-  if (t?.id) {
-    try {
-      const res = await api(`/reviews?tour_id=${t.id}&per_page=20`)
-      tourReviews.value = (res as any)?.data || []
-    } catch (e) { tourReviews.value = [] }
-  }
-}, { immediate: true })
 
 // Booking widget state
 const selectedDate = ref('')
