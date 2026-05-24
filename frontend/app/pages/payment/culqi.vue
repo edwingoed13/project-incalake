@@ -19,12 +19,12 @@
       </div>
 
       <!-- Payment Content -->
-      <div v-else-if="allBookings.length > 0" class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div v-else-if="allBookings.length > 0" class="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
 
         <!-- Left: Order Summary (3 cols) -->
         <div class="lg:col-span-3 space-y-4">
           <!-- Header -->
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
             <div class="flex items-center gap-3 mb-1">
               <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <span class="material-symbols-outlined text-primary">receipt_long</span>
@@ -65,8 +65,8 @@
                     </span>
                   </div>
 
-                  <!-- Booking code -->
-                  <span class="text-[10px] font-mono font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">{{ b.booking_code }}</span>
+                  <!-- Booking code is intentionally hidden until payment is
+                       confirmed (shown on the confirmation page). -->
                 </div>
 
                 <!-- Price -->
@@ -131,6 +131,21 @@
             <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
             <div v-if="hasAdvanceOption" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-2">
               <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+              <!-- Full payment first = the default/recommended -->
+              <label
+                class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+                :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
+              >
+                <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
+                <div class="flex-1">
+                  <p class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                    Pagar todo ahora
+                    <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">Recomendado</span>
+                  </p>
+                  <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+                </div>
+                <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(grandTotal) }}</span>
+              </label>
               <label
                 class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
                 :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
@@ -142,21 +157,10 @@
                 </div>
                 <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
               </label>
-              <label
-                class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
-                :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
-              >
-                <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
-                <div class="flex-1">
-                  <p class="text-sm font-bold text-slate-800">Pagar todo ahora</p>
-                  <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
-                </div>
-                <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(grandTotal) }}</span>
-              </label>
             </div>
 
             <!-- Pay Button -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
               <ClientOnly>
                 <PaymentCulqiCheckoutFixed
                   :public-key="paymentConfig?.culqi_public_key || 'pk_test_J0V01cM2W5eNlHNz'"
@@ -299,8 +303,8 @@ onMounted(async () => {
     const configResponse = await api('/payment/config')
     paymentConfig.value = configResponse.data || configResponse
 
-    // Default to the deposit when the tour offers it (customer can switch).
-    if (hasAdvanceOption.value) paymentMode.value = 'advance'
+    // Default to paying the FULL amount; the customer can opt into the deposit.
+    paymentMode.value = 'full'
 
     loading.value = false
   } catch (err: any) {

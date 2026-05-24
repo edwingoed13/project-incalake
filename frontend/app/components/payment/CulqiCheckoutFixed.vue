@@ -36,6 +36,13 @@ const culqiReady = ref(false)
 // Culqi amount must be in cents
 const amountInCents = Math.round(props.amount * 100)
 
+// Load the Culqi Checkout V4 SDK — it exposes window.CulqiCheckout, which the
+// polling below waits for. Without this the page showed "Payment system failed
+// to load" because the script was never injected.
+useHead({
+  script: [{ src: 'https://js.culqi.com/checkout-js', key: 'culqi-checkout-js' }],
+})
+
 // Initialize Culqi when component mounts
 onMounted(() => {
   console.log('💳 CulqiCheckoutFixed mounted!')
@@ -109,7 +116,7 @@ const initializeCulqi = () => {
       hiddenToolBarAmount: false,
       hiddenEmail: false,
       menuType: 'sidebar',
-      buttonCardPayText: `Pagar ${props.currency} ${props.amount.toFixed(2)}`,
+      buttonCardPayText: 'Pagar ahora',
       logo: null,
       defaultStyle: {
         bannerColor: '#667eea',
