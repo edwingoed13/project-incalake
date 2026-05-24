@@ -138,27 +138,7 @@
             {{ t(link.key) }}
           </NuxtLink>
 
-          <!-- Mobile Language -->
-          <div class="pt-3 mt-3 border-t border-slate-100">
-            <p class="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Language</p>
-            <div class="grid grid-cols-3 gap-1.5 px-4">
-              <NuxtLink
-                v-for="loc in locales"
-                :key="loc.code"
-                :to="switchLocalePath(loc.code)"
-                @click="mobileOpen = false"
-                class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-all"
-                :class="locale === loc.code
-                  ? 'border-primary bg-primary/5 text-primary font-bold'
-                  : 'border-slate-200 text-slate-600 hover:border-primary/40'"
-              >
-                <img :src="flagSrc(loc.code, 20)" :alt="loc.code" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
-                <span class="text-[10px] font-bold">{{ langShortLabels[loc.code] || loc.code.toUpperCase() }}</span>
-              </NuxtLink>
-            </div>
-          </div>
-
-          <!-- Mobile Currency -->
+          <!-- Mobile Currency (language lives in the top bar already) -->
           <div class="pt-3 mt-3 border-t border-slate-100">
             <p class="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Currency</p>
             <div class="flex flex-wrap gap-1.5 px-4">

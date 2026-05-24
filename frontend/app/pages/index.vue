@@ -228,12 +228,12 @@
           <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
 
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div v-else class="flex md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="tour in tours.slice(0, 4)"
             :key="tour.id"
             :to="getTourLink(tour)"
-            class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
             <div class="relative h-52 overflow-hidden">
               <NuxtImg
@@ -299,12 +299,12 @@
           </NuxtLink>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="flex md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="tour in toursWithOffers.slice(0, 4)"
             :key="tour.id"
             :to="getTourLink(tour)"
-            class="group bg-white rounded-2xl overflow-hidden border border-green-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative"
+            class="group bg-white rounded-2xl overflow-hidden border border-green-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
             <!-- Offer badge -->
             <div class="absolute top-3 right-3 z-10 px-2.5 py-1 bg-green-500 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1">

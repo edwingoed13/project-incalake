@@ -137,6 +137,15 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Hide scrollbars on horizontal scroll-snap carousels (mobile). */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Cancellation policy / booking-text tables produced by the admin TiptapEditor */
