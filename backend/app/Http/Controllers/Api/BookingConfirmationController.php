@@ -242,7 +242,7 @@ class BookingConfirmationController extends Controller
             'travelers' => 'required|array|min:1',
             'travelers.*.full_name' => 'required|string|max:150',
             'travelers.*.nationality' => 'nullable|string|max:80',
-            'travelers.*.doc_type' => 'nullable|string|in:passport,dni',
+            'travelers.*.doc_type' => 'nullable|string|in:passport,dni,ce,cedula,run,rut,other',
             'travelers.*.doc_number' => 'nullable|string|max:50',
             'travelers.*.age_group' => 'nullable|string|in:adult,child,infant',
             'travelers.*.special_needs' => 'nullable|string|max:500',

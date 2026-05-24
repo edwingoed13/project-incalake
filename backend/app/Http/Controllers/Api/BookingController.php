@@ -735,7 +735,9 @@ class BookingController extends Controller
                 'booking_code'      => $b->booking_code,
                 'tour_title'        => $b->tour_title,
                 'tour_slug'         => $b->tour?->slug,
-                'tour_image'        => $b->tour?->featured_image_path ?? $b->tour?->featured_image,
+                'tour_image'        => $b->tour?->featured_image_path
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($b->tour->featured_image_path)
+                    : null,
                 'tour_date'         => $b->tour_date,
                 'tour_time'         => $b->tour_time,
                 'adults'            => $b->adults,

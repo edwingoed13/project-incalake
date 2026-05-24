@@ -62,6 +62,10 @@ class BookingResource extends JsonResource
                 'id' => $this->tour_id,
                 'title' => $this->tour_title,
                 'slug' => $this->tour?->slug,
+                // Full URL so the frontend doesn't depend on a storage base env var.
+                'featured_image' => $this->tour?->featured_image_path
+                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->tour->featured_image_path)
+                    : null,
             ],
             'customer' => [
                 'name' => $this->customer_name,
