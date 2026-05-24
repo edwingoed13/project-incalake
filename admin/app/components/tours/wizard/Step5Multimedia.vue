@@ -370,8 +370,9 @@
             </span>
           </div>
 
-          <!-- Completeness indicator (bottom-left, hidden on hover) -->
-          <div class="absolute bottom-2 left-2 z-10 transition-opacity group-hover:opacity-0">
+          <!-- Completeness indicator (bottom-left, hidden on hover).
+               pointer-events-none so it never blocks the hover-overlay buttons. -->
+          <div class="absolute bottom-2 left-2 z-10 transition-opacity group-hover:opacity-0 pointer-events-none">
             <UBadge
               v-if="getMissingFields(image).length"
               :color="getMissingFields(image).includes('ALT') ? 'warning' : 'neutral'"
