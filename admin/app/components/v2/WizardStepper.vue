@@ -71,7 +71,7 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
         <div
           v-if="idx < steps.length - 1"
           :class="[
-            'h-0.5 w-6 lg:w-10 transition-colors shrink-0',
+            'h-0.5 w-2.5 lg:w-4 transition-colors shrink-0',
             stepState(step.id) === 'completed' ? 'bg-success' : 'bg-default',
           ]"
         />

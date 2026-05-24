@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
       <UDashboardNavbar :ui="{ center: 'flex-1 min-w-0', root: 'gap-2' }">
         <template #leading>
           <UDashboardSidebarCollapse />
-          <UBadge color="neutral" variant="subtle" size="sm" class="ml-1 font-mono shrink-0 hidden sm:inline-flex">
+          <UBadge color="primary" variant="subtle" size="md" class="ml-1 font-mono font-bold shrink-0 hidden sm:inline-flex">
             Tour {{ route.params.id !== 'new' ? '#' + route.params.id : 'nuevo' }}
           </UBadge>
         </template>
