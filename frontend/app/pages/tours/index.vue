@@ -439,7 +439,9 @@ const cities = computed<any[]>(() => {
 const { data: toursData, pending, error, refresh } = await useAsyncData(
   () => `tours-${langCode.value}-${selectedCitySlug.value || 'all'}-${selectedTagSlug.value || 'all'}`,
   () => {
-    let url = `/tours?per_page=500&active=1&language=${langCode.value}`
+    // light=1 returns a slim card payload (no 6 translations / full gallery /
+    // categories per tour) and avoids the per-tour N+1 in the API.
+    let url = `/tours?per_page=500&active=1&light=1&language=${langCode.value}`
     if (selectedCitySlug.value) url += `&city_slug=${selectedCitySlug.value}`
     if (selectedTagSlug.value) url += `&tag=${encodeURIComponent(selectedTagSlug.value)}`
     return api(url) as Promise<any>

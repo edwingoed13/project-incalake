@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTourRequest;
 use App\Http\Requests\UpdateTourRequest;
 use App\Http\Resources\TourResource;
+use App\Http\Resources\TourCardResource;
 use App\Http\Resources\TourDetailResource;
 use App\Models\Tour;
 use App\Services\TourService;
@@ -60,14 +61,29 @@ class TourController extends Controller
         try {
             $query = Tour::query();
 
-            $query->with([
-                'translations.language',
-                'city',
-                'prices.ageStage',
-                'mediaGallery',
-                'categories',
-                'tags',
-            ]);
+            // Lightweight payload for the public listing grid: only the
+            // relations/columns the cards need, so we avoid serializing 6
+            // translations + full gallery + categories + tags per tour.
+            $light = $request->boolean('light');
+
+            if ($light) {
+                $query->with([
+                    'city:id,slug',
+                    'translations:id,tour_id,language_id,h1_title,slug,short_description',
+                    'translations.language:id,code',
+                    'prices:id,tour_id,age_stage_id,amount,active',
+                    'mediaGallery:id,tour_id,image_path,order',
+                ]);
+            } else {
+                $query->with([
+                    'translations.language',
+                    'city',
+                    'prices.ageStage',
+                    'mediaGallery',
+                    'categories',
+                    'tags',
+                ]);
+            }
 
             if ($request->has('status')) {
                 $query->where('status', $request->status);
@@ -152,31 +168,37 @@ class TourController extends Controller
             // Counts per status for the admin tabs (respect the search filter
             // but NOT the status filter, so every tab shows its own total).
             // null/unknown status counts as draft, matching the admin UI.
-            $countQuery = Tour::query();
-            if ($request->filled('search')) {
-                $s = $request->search;
-                $countQuery->whereHas('translations', function ($q) use ($s) {
-                    $q->where('h1_title', 'like', "%{$s}%")
-                      ->orWhere('short_description', 'like', "%{$s}%");
-                });
+            // Skipped for the light public listing (admin-only).
+            $statusCounts = null;
+            if (!$light) {
+                $countQuery = Tour::query();
+                if ($request->filled('search')) {
+                    $s = $request->search;
+                    $countQuery->whereHas('translations', function ($q) use ($s) {
+                        $q->where('h1_title', 'like', "%{$s}%")
+                          ->orWhere('short_description', 'like', "%{$s}%");
+                    });
+                }
+                $rawCounts = $countQuery->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
+                $allCount = (int) $rawCounts->sum();
+                $publishedCount = (int) ($rawCounts['published'] ?? 0);
+                $archivedCount = (int) ($rawCounts['archived'] ?? 0);
+                $statusCounts = [
+                    'all' => $allCount,
+                    'published' => $publishedCount,
+                    'archived' => $archivedCount,
+                    'draft' => $allCount - $publishedCount - $archivedCount,
+                ];
             }
-            $rawCounts = $countQuery->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
-            $allCount = (int) $rawCounts->sum();
-            $publishedCount = (int) ($rawCounts['published'] ?? 0);
-            $archivedCount = (int) ($rawCounts['archived'] ?? 0);
-            $statusCounts = [
-                'all' => $allCount,
-                'published' => $publishedCount,
-                'archived' => $archivedCount,
-                'draft' => $allCount - $publishedCount - $archivedCount,
-            ];
 
             $perPage = $request->get('per_page', 15);
             $tours = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,
-                'data' => TourResource::collection($tours),
+                'data' => $light
+                    ? TourCardResource::collection($tours)
+                    : TourResource::collection($tours),
                 'status_counts' => $statusCounts,
                 'meta' => [
                     'current_page' => $tours->currentPage(),
