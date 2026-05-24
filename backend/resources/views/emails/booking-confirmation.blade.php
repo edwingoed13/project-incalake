@@ -224,25 +224,25 @@
                   <td style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:0;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600; width:40%;">Tour</td>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $booking->tour_title }}</td>
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600; width:40%;">Tour</td>
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $booking->tour_title }}</td>
                       </tr>
                       <tr>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Fecha</td>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ \Carbon\Carbon::parse($booking->tour_date)->format('d/m/Y') }}</td>
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Fecha</td>
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ \Carbon\Carbon::parse($booking->tour_date)->format('d/m/Y') }}</td>
                       </tr>
                       @if($booking->tour_time)
                       <tr>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Horario</td>
-                        <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Horario</td>
+                        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">
                           @php $h=(int)explode(':',$booking->tour_time)[0]; $m=explode(':',$booking->tour_time)[1]??'00'; @endphp
                           {{ $h%12?:12 }}:{{ $m }} {{ $h>=12?'PM':'AM' }}
                         </td>
                       </tr>
                       @endif
                       <tr>
-                        <td style="padding:12px 14px; color:#64748b; font-size:13px; font-weight:600;">Participantes</td>
-                        <td style="padding:12px 14px; font-size:13px; color:#1a1a2e;">
+                        <td style="padding:8px 14px; color:#64748b; font-size:13px; font-weight:600;">Participantes</td>
+                        <td style="padding:8px 14px; font-size:13px; color:#1a1a2e;">
                           {{ $booking->adults }} adulto{{ $booking->adults > 1 ? 's' : '' }}@if($booking->children > 0), {{ $booking->children }} nino{{ $booking->children > 1 ? 's' : '' }}@endif
                         </td>
                       </tr>
@@ -268,8 +268,12 @@
                         <td style="padding:3px 0 3px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
                       </tr>
                       @endforeach
-                      @if(!empty($includes) && !empty($excludes))
-                      <tr><td colspan="2" style="padding:6px 0 2px;"><div style="border-top:1px solid #f1f5f9; font-size:1px; line-height:1px;">&nbsp;</div></td></tr>
+                      @if(!empty($excludes))
+                      <tr>
+                        <td colspan="2" style="padding:{{ !empty($includes) ? '10px' : '0' }} 0 4px;{{ !empty($includes) ? ' border-top:1px solid #f1f5f9;' : '' }}">
+                          <p style="margin:{{ !empty($includes) ? '8px' : '0' }} 0 2px; font-size:11px; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:0.5px;">Que no incluye</p>
+                        </td>
+                      </tr>
                       @endif
                       @foreach($excludes as $exc)
                       <tr>

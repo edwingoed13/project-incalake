@@ -180,40 +180,34 @@
               @foreach($bookings as $b)
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
                 <tr><td style="padding:10px 14px; background:#1e3a5f; border-radius:8px 8px 0 0;">
-                  <p style="margin:0; font-size:12px; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:1px;">Tour {{ $loop->iteration }} de {{ $bookings->count() }}</p>
+                  <p style="margin:0 0 2px; font-size:10px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:1px;">Tour {{ $loop->iteration }} de {{ $bookings->count() }}</p>
+                  <p style="margin:0; font-size:14px; font-weight:700; color:#ffffff;">{{ $b->tour_title }}</p>
                 </td></tr>
                 <tr><td style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:0;">
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600; width:40%;">Tour</td>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $b->tour_title }}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Fecha</td>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ \Carbon\Carbon::parse($b->tour_date)->format('d/m/Y') }}</td>
+                      <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600; width:35%;">Fecha</td>
+                      <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ \Carbon\Carbon::parse($b->tour_date)->format('d/m/Y') }}</td>
                     </tr>
                     @if($b->tour_time)
                     <tr>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Horario</td>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">
+                      <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Horario</td>
+                      <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">
                         @php $h=(int)explode(':',$b->tour_time)[0]; $m=explode(':',$b->tour_time)[1]??'00'; @endphp
                         {{ $h%12?:12 }}:{{ $m }} {{ $h>=12?'PM':'AM' }}
                       </td>
                     </tr>
                     @endif
                     <tr>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Participantes</td>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ $b->adults }} adulto{{ $b->adults > 1 ? 's' : '' }}@if($b->children > 0), {{ $b->children }} nino{{ $b->children > 1 ? 's' : '' }}@endif</td>
-                    </tr>
-                    <tr>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Subtotal</td>
-                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $b->currency }} {{ number_format($b->total, 2) }}</td>
+                      <td style="padding:8px 14px; color:#64748b; font-size:13px; font-weight:600;">Participantes</td>
+                      <td style="padding:8px 14px; font-size:13px; color:#1a1a2e;">{{ $b->adults }} adulto{{ $b->adults > 1 ? 's' : '' }}@if($b->children > 0), {{ $b->children }} nino{{ $b->children > 1 ? 's' : '' }}@endif</td>
                     </tr>
                     @php $lists = $tourLists[$b->id] ?? ['includes' => [], 'excludes' => []]; @endphp
                     @if(!empty($lists['includes']) || !empty($lists['excludes']))
                     <tr>
-                      <td colspan="2" style="padding:10px 14px 12px;">
-                        <p style="margin:0 0 6px; font-size:10px; font-weight:700; color:#0f766e; text-transform:uppercase; letter-spacing:1px;">Que incluye</p>
+                      <td colspan="2" style="padding:10px 14px 12px; border-top:1px solid #f1f5f9;">
+                        @if(!empty($lists['includes']))
+                        <p style="margin:0 0 4px; font-size:10px; font-weight:700; color:#0f766e; text-transform:uppercase; letter-spacing:1px;">Que incluye</p>
                         <table width="100%" cellpadding="0" cellspacing="0">
                           @foreach($lists['includes'] as $inc)
                           <tr>
@@ -221,6 +215,11 @@
                             <td style="padding:2px 0 2px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
                           </tr>
                           @endforeach
+                        </table>
+                        @endif
+                        @if(!empty($lists['excludes']))
+                        <p style="margin:{{ !empty($lists['includes']) ? '10px' : '0' }} 0 4px; font-size:10px; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:1px;">Que no incluye</p>
+                        <table width="100%" cellpadding="0" cellspacing="0">
                           @foreach($lists['excludes'] as $exc)
                           <tr>
                             <td style="vertical-align:top; width:16px; padding:2px 0; color:#dc2626; font-size:13px; font-weight:700; line-height:1.4;">&#10007;</td>
@@ -228,6 +227,7 @@
                           </tr>
                           @endforeach
                         </table>
+                        @endif
                       </td>
                     </tr>
                     @endif
