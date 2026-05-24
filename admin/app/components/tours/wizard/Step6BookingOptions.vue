@@ -1,5 +1,6 @@
 <template>
   <div class="flex flex-col gap-6">
+    <!-- Opciones de reserva · secciones colapsables -->
     <!-- Language selector -->
     <UCard :ui="{ body: 'p-3 sm:p-3' }">
       <div class="flex items-center gap-3">
@@ -26,44 +27,41 @@
     </UCard>
 
     <!-- 1. Políticas y Cancelaciones -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('policies') ? 'p-5 space-y-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('policies')"
-        >
-          <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('policies') }" />
-          <UIcon name="i-lucide-shield-check" class="size-5 text-primary" />
-          <h3 class="text-base font-bold flex-1">Políticas y cancelaciones</h3>
-          <UBadge color="primary" variant="subtle" size="xs" class="capitalize">{{ store.bookingOptions.policyType || 'standard' }}</UBadge>
-        </button>
+    <WizardSection
+      collapsible
+      title="Políticas y cancelaciones"
+      icon="i-lucide-shield-check"
+      :open="isSectionExpanded('policies')"
+      @update:open="toggleSection('policies')"
+    >
+      <template #actions>
+        <UBadge color="primary" variant="subtle" size="xs" class="capitalize">{{ store.bookingOptions.policyType || 'standard' }}</UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('policies')" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <button
-          v-for="type in policyTypes"
-          :key="type.id"
-          type="button"
-          :class="[
-            'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
-            store.bookingOptions.policyType === type.id
-              ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-              : 'border-default hover:border-muted',
-          ]"
-          @click="store.bookingOptions.policyType = type.id"
-        >
-          <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', store.bookingOptions.policyType === type.id ? 'border-primary bg-primary' : 'border-default']">
-            <div v-if="store.bookingOptions.policyType === type.id" class="size-2 bg-white rounded-full" />
-          </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm font-bold" :class="store.bookingOptions.policyType === type.id ? 'text-primary' : ''">{{ type.name }}</span>
-            <span class="text-[11px] text-muted">{{ type.description }}</span>
-          </div>
-        </button>
-      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            v-for="type in policyTypes"
+            :key="type.id"
+            type="button"
+            :class="[
+              'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
+              store.bookingOptions.policyType === type.id
+                ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                : 'border-default hover:border-muted',
+            ]"
+            @click="store.bookingOptions.policyType = type.id"
+          >
+            <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', store.bookingOptions.policyType === type.id ? 'border-primary bg-primary' : 'border-default']">
+              <div v-if="store.bookingOptions.policyType === type.id" class="size-2 bg-white rounded-full" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-bold" :class="store.bookingOptions.policyType === type.id ? 'text-primary' : ''">{{ type.name }}</span>
+              <span class="text-[11px] text-muted">{{ type.description }}</span>
+            </div>
+          </button>
+        </div>
 
-      <div v-show="isSectionExpanded('policies')" class="space-y-4">
         <UFormField
           :label="store.bookingOptions.policyType === 'standard' ? 'Políticas pre-establecidas (editables)' : 'Descripción personalizada'"
         >
@@ -93,63 +91,59 @@
           description="Estas son las políticas estándar de Inca Lake. Puedes modificarlas si esta actividad lo requiere."
         />
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- 2. Tiempo de Anticipación -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('anticipation') ? 'p-5 space-y-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('anticipation')"
-        >
-          <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('anticipation') }" />
-          <UIcon name="i-lucide-clock" class="size-5 text-primary" />
-          <h3 class="text-base font-bold flex-1">Tiempo de anticipación</h3>
-          <UBadge color="warning" variant="subtle" size="xs">{{ anticipationSummary }}</UBadge>
-        </button>
+    <WizardSection
+      collapsible
+      title="Tiempo de anticipación"
+      icon="i-lucide-clock"
+      :open="isSectionExpanded('anticipation')"
+      @update:open="toggleSection('anticipation')"
+    >
+      <template #actions>
+        <UBadge color="warning" variant="subtle" size="xs">{{ anticipationSummary }}</UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('anticipation')" class="grid grid-cols-3 gap-3">
-        <UFormField label="Días" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
-          <UInputNumber v-model="anticipationDays" :min="0" :max="30" class="w-full" />
-        </UFormField>
-        <UFormField label="Horas" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
-          <UInputNumber v-model="anticipationHours" :min="0" :max="23" class="w-full" />
-        </UFormField>
-        <UFormField label="Minutos" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
-          <UInputNumber v-model="anticipationMinutes" :min="0" :max="59" :step="1" class="w-full" />
-        </UFormField>
-      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-3 gap-3">
+          <UFormField label="Días" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+            <UInputNumber v-model="anticipationDays" :min="0" :max="30" class="w-full" />
+          </UFormField>
+          <UFormField label="Horas" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+            <UInputNumber v-model="anticipationHours" :min="0" :max="23" class="w-full" />
+          </UFormField>
+          <UFormField label="Minutos" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+            <UInputNumber v-model="anticipationMinutes" :min="0" :max="59" :step="1" class="w-full" />
+          </UFormField>
+        </div>
 
-      <UAlert
-        v-show="isSectionExpanded('anticipation')"
-        color="warning"
-        variant="subtle"
-        icon="i-lucide-lightbulb"
-        :title="`Anticipación: ${anticipationSummary}`"
-        description="Combina días, horas y minutos. Ejemplo: 2 horas 30 minutos significa que los clientes deben reservar al menos 2h 30m antes del inicio del tour."
-      />
-    </UCard>
+        <UAlert
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-lightbulb"
+          :title="`Anticipación: ${anticipationSummary}`"
+          description="Combina días, horas y minutos. Ejemplo: 2 horas 30 minutos significa que los clientes deben reservar al menos 2h 30m antes del inicio del tour."
+        />
+      </div>
+    </WizardSection>
 
     <!-- 3 & 4. Datos Requeridos -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('data') ? 'p-5 space-y-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('data')"
-        >
-          <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('data') }" />
-          <UIcon name="i-lucide-user-plus" class="size-5 text-primary" />
-          <h3 class="text-base font-bold flex-1">Datos requeridos del cliente</h3>
-          <UBadge color="primary" variant="subtle" size="xs">
-            {{ store.bookingOptions.dataRequirementType === 'all' ? 'Todos' : 'Solo líder' }} · {{ (store.bookingOptions.personalInfoRequired?.length || 0) + (store.bookingOptions.operationalInfoRequired?.length || 0) }} campos
-          </UBadge>
-        </button>
+    <WizardSection
+      collapsible
+      title="Datos requeridos del cliente"
+      icon="i-lucide-user-plus"
+      :open="isSectionExpanded('data')"
+      @update:open="toggleSection('data')"
+    >
+      <template #actions>
+        <UBadge color="primary" variant="subtle" size="xs">
+          {{ store.bookingOptions.dataRequirementType === 'all' ? 'Todos' : 'Solo líder' }} · {{ (store.bookingOptions.personalInfoRequired?.length || 0) + (store.bookingOptions.operationalInfoRequired?.length || 0) }} campos
+        </UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('data')" class="flex bg-elevated rounded-lg p-1 border border-default w-fit">
+      <div class="space-y-4">
+      <div class="flex bg-elevated rounded-lg p-1 border border-default w-fit">
         <button
           type="button"
           :class="[
@@ -172,7 +166,7 @@
         </button>
       </div>
 
-      <div v-show="isSectionExpanded('data')" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <!-- Personal Info -->
         <div class="space-y-2">
           <div class="flex items-center justify-between pb-1.5 border-b border-default">
@@ -217,30 +211,29 @@
           </div>
         </div>
       </div>
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- 5. Opciones de Recojo -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('pickup') ? 'p-5 space-y-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('pickup')"
+    <WizardSection
+      collapsible
+      title="Opciones de recojo"
+      icon="i-lucide-map-pin"
+      :open="isSectionExpanded('pickup')"
+      @update:open="toggleSection('pickup')"
+    >
+      <template #actions>
+        <UBadge
+          :color="store.bookingOptions.enableMeetingPoint || store.bookingOptions.enableHotelPickup ? 'success' : 'error'"
+          variant="subtle"
+          size="xs"
         >
-          <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('pickup') }" />
-          <UIcon name="i-lucide-map-pin" class="size-5 text-primary" />
-          <h3 class="text-base font-bold flex-1">Opciones de recojo</h3>
-          <UBadge
-            :color="store.bookingOptions.enableMeetingPoint || store.bookingOptions.enableHotelPickup ? 'success' : 'error'"
-            variant="subtle"
-            size="xs"
-          >
-            {{ [store.bookingOptions.enableMeetingPoint && 'Encuentro', store.bookingOptions.enableHotelPickup && 'Hotel'].filter(Boolean).join(' + ') || 'Sin configurar' }}
-          </UBadge>
-        </button>
+          {{ [store.bookingOptions.enableMeetingPoint && 'Encuentro', store.bookingOptions.enableHotelPickup && 'Hotel'].filter(Boolean).join(' + ') || 'Sin configurar' }}
+        </UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('pickup')" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Meeting Points (multi) -->
         <div
           :class="[
@@ -423,38 +416,36 @@
           </Transition>
         </div>
       </div>
-      
+
       <UAlert
-        v-if="isSectionExpanded('pickup') && !store.bookingOptions.enableMeetingPoint && !store.bookingOptions.enableHotelPickup"
+        v-if="!store.bookingOptions.enableMeetingPoint && !store.bookingOptions.enableHotelPickup"
         color="error"
         variant="subtle"
         icon="i-lucide-triangle-alert"
         title="Alerta de seguridad"
         description="Debes habilitar al menos una opción de recojo para que el tour sea reservable."
       />
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- 6. Asociar Guías -->
-    <UCard :ui="{ header: 'p-0', body: isSectionExpanded('guide') ? 'p-5 space-y-4' : 'p-0 sm:p-0' }">
-      <template #header>
-        <button
-          type="button"
-          class="w-full p-3 flex items-center gap-2 hover:bg-elevated/40 transition-colors text-left"
-          @click="toggleSection('guide')"
-        >
-          <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="{ 'rotate-180': isSectionExpanded('guide') }" />
-          <UIcon name="i-lucide-megaphone" class="size-5 text-primary" />
-          <h3 class="text-base font-bold flex-1">Configuración de guía</h3>
-          <UBadge color="primary" variant="subtle" size="xs">
-            {{ guideTypes.find(g => g.id === store.bookingOptions.guideType)?.name || 'Sin definir' }}
-            <template v-if="store.bookingOptions.guideType === 'live_guide' && store.bookingOptions.guideLanguages?.length">
-              · {{ store.bookingOptions.guideLanguages.length }} idiomas
-            </template>
-          </UBadge>
-        </button>
+    <WizardSection
+      collapsible
+      title="Configuración de guía"
+      icon="i-lucide-megaphone"
+      :open="isSectionExpanded('guide')"
+      @update:open="toggleSection('guide')"
+    >
+      <template #actions>
+        <UBadge color="primary" variant="subtle" size="xs">
+          {{ guideTypes.find(g => g.id === store.bookingOptions.guideType)?.name || 'Sin definir' }}
+          <template v-if="store.bookingOptions.guideType === 'live_guide' && store.bookingOptions.guideLanguages?.length">
+            · {{ store.bookingOptions.guideLanguages.length }} idiomas
+          </template>
+        </UBadge>
       </template>
 
-      <div v-show="isSectionExpanded('guide')" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="space-y-2">
           <p class="text-[10px] font-black uppercase tracking-widest text-muted">Tipo de acompañante</p>
           <div class="space-y-1.5">
@@ -495,7 +486,7 @@
           </div>
         </div>
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- Map Modal -->
     <PickupMapModal 
@@ -512,6 +503,7 @@
 import { useTourWizardStore } from '~/stores/tourWizard'
 import TiptapEditor from '~/components/v2/TiptapEditorV2.vue'
 import PickupMapModal from '~/components/tours/wizard/PickupMapModal.vue'
+import WizardSection from './WizardSection.vue'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
