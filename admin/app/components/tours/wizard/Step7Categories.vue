@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5 pb-20">
+  <div class="flex flex-col gap-6">
     <!-- Header Section -->
     <UAlert
       icon="i-lucide-shield-check"

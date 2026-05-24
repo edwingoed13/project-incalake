@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5">
+  <div class="flex flex-col gap-6">
     <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4 space-y-6' }">
       <template #header>
         <div class="flex items-center justify-between gap-4 flex-wrap">

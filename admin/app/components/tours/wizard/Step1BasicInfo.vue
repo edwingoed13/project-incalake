@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  <div class="flex flex-col gap-6">
     <!-- Section: Basic Information -->
     <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
       <template #header>

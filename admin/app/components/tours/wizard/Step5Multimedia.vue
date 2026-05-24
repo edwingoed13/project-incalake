@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6 pb-20">
+  <div class="flex flex-col gap-6">
     <!-- Video Section (per language) -->
     <UCard :ui="{ header: 'p-0', body: isSectionExpanded('video') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
       <template #header>

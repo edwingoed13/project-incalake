@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-3 pb-20">
+  <div class="flex flex-col gap-6">
     <!-- Language selector -->
     <UCard :ui="{ body: 'p-3 sm:p-3' }">
       <div class="flex items-center gap-3">

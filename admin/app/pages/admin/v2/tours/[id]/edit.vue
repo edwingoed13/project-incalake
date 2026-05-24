@@ -23,6 +23,41 @@ definePageMeta({
 const store = useTourWizardStore()
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
+const { confirm } = useConfirm()
+
+// Publish from the bottom nav (last step). Mirrors the sidebar action so the
+// flow works below xl too, where the insights sidebar is hidden.
+const publishing = ref(false)
+const publishTour = async () => {
+  const wasPublished = store.basicInfo.status === 'published'
+  const ok = await confirm({
+    title: wasPublished ? 'Actualizar publicación' : 'Publicar tour',
+    description: wasPublished
+      ? '¿Confirmas la actualización? Los cambios serán visibles en el sitio público inmediatamente.'
+      : '¿Confirmas publicar este tour? Será visible en el sitio público inmediatamente.',
+    confirmLabel: wasPublished ? 'Actualizar' : 'Publicar',
+    confirmColor: 'success',
+    icon: 'i-lucide-rocket',
+    iconColor: 'success',
+  })
+  if (!ok) return
+  publishing.value = true
+  try {
+    store.basicInfo.status = 'published'
+    await store.saveCurrentProgress()
+    if (!store.isDirty) {
+      toast.add({
+        title: wasPublished ? 'Tour actualizado' : 'Tour publicado',
+        description: 'Ya es visible en el sitio público.',
+        icon: 'i-lucide-rocket',
+        color: 'success',
+      })
+    }
+  } finally {
+    publishing.value = false
+  }
+}
 
 // Remember the last focused input + scroll position per tour, so F5 keeps the user editing in place.
 const focusKey = computed(() => `wizard:focus:${route.params.id}:${route.query.lang || 'es'}:${store.currentStep}`)
@@ -211,9 +246,10 @@ onBeforeUnmount(() => {
       <!-- Horizontal stepper -->
       <WizardStepper />
 
-      <div class="flex h-full">
+      <div class="flex h-full min-h-0">
         <!-- Main content -->
-        <main class="flex-1 p-4 lg:p-6 overflow-y-auto">
+        <main class="flex-1 flex flex-col min-h-0">
+          <div class="flex-1 overflow-y-auto p-4 lg:p-6">
           <div class="max-w-5xl mx-auto">
             <!-- Step header -->
             <div class="mb-5">
@@ -247,6 +283,43 @@ onBeforeUnmount(() => {
                 </div>
               </UCard>
             </Transition>
+          </div>
+          </div>
+
+          <!-- Bottom navigation (always visible — sidebar is hidden below xl) -->
+          <div class="shrink-0 border-t border-default bg-default px-4 lg:px-6 py-3">
+            <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+              <UButton
+                icon="i-lucide-arrow-left"
+                color="neutral"
+                variant="ghost"
+                :disabled="store.currentStep <= 1"
+                @click="store.prevStep"
+              >
+                Anterior
+              </UButton>
+
+              <span class="text-xs text-muted tabular-nums">Paso {{ store.currentStep }} de {{ store.totalSteps }}</span>
+
+              <UButton
+                v-if="store.currentStep < store.totalSteps"
+                trailing-icon="i-lucide-arrow-right"
+                color="primary"
+                @click="store.nextStep"
+              >
+                Siguiente
+              </UButton>
+              <UButton
+                v-else
+                icon="i-lucide-rocket"
+                color="success"
+                :loading="publishing"
+                :disabled="store.loading || store.autosaving"
+                @click="publishTour"
+              >
+                {{ store.basicInfo.status === 'published' ? 'Actualizar publicación' : 'Publicar tour' }}
+              </UButton>
+            </div>
           </div>
         </main>
 
