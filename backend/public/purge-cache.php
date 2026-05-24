@@ -126,10 +126,19 @@ if (is_dir($dataCache)) {
     }
 }
 
+// 4) Reset PHP OPcache so updated .php files (controllers, resources, models)
+// take effect IMMEDIATELY after a deploy, instead of waiting for OPcache to
+// revalidate timestamps (which may be disabled on the host).
+$opcacheReset = false;
+if (function_exists('opcache_reset')) {
+    $opcacheReset = @opcache_reset();
+}
+
 echo json_encode([
     'success' => true,
     'message' => 'Cachés purgadas. Laravel las regenera en la próxima petición.',
     'app_base' => $appBase,
     'deleted_count' => count($deleted),
     'deleted' => array_slice($deleted, 0, 50),
+    'opcache_reset' => $opcacheReset,
 ]);
