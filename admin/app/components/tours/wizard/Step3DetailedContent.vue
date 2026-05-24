@@ -35,18 +35,18 @@
           <UIcon name="i-lucide-type" class="size-5 text-primary" />
           <h3 class="text-base font-bold">Título y resumen</h3>
         </div>
-        <UFormField label="Título público" required>
+        <UFormField v-if="seoData" label="Título público" required>
           <UInput
-            v-model="currentLangData.title"
+            v-model="seoData.title"
             placeholder="Ej. Tour mágico al atardecer en Cusco"
             class="w-full"
           />
         </UFormField>
-        <UFormField label="Descripción corta" hint="Resumen para listados de búsqueda">
+        <UFormField v-if="seoData" label="Descripción corta" hint="Resumen que se muestra en las tarjetas del catálogo del sitio">
           <UTextarea
-            v-model="currentLangData.shortDescription"
+            v-model="seoData.shortDescription"
             :rows="3"
-            placeholder="Resumen breve para listados..."
+            placeholder="Resumen breve para las tarjetas de tours..."
             class="w-full"
           />
         </UFormField>
@@ -489,6 +489,10 @@ const currentLangData = computed(() => {
   }
   return data
 })
+
+// Public title + short description live in contentSEO (not detailedContent),
+// so the "Título y resumen" fields bind here.
+const seoData = computed(() => store.contentSEO[store.currentLanguage])
 
 const addCustomSection = () => {
   if (!currentLangData.value) return
