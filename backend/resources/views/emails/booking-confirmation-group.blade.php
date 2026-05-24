@@ -170,9 +170,10 @@
 
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:18px;">
                 <tr><td style="padding:16px; text-align:center;">
-                  <p style="margin:0 0 6px; font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; font-weight:700;">Codigos de reserva</p>
-                  <p style="margin:0 0 10px; font-size:16px; font-weight:800; color:#1e3a5f; letter-spacing:1px; font-family:'Courier New',monospace;">{{ $bookings->pluck('booking_code')->implode(' · ') }}</p>
+                  <p style="margin:0 0 6px; font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; font-weight:700;">Reserva confirmada</p>
+                  <p style="margin:0 0 10px; font-size:20px; font-weight:800; color:#1e3a5f;">{{ $bookings->count() }} tours</p>
                   <span style="display:inline-block; background:#22c55e; color:#fff; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.5px;">PAGADO</span>
+                  <p style="margin:10px 0 0; font-size:11px; color:#94a3b8;">El codigo de cada tour esta en su tarjeta &darr;</p>
                 </td></tr>
               </table>
 
@@ -181,7 +182,8 @@
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
                 <tr><td style="padding:10px 14px; background:#1e3a5f; border-radius:8px 8px 0 0;">
                   <p style="margin:0 0 2px; font-size:10px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:1px;">Tour {{ $loop->iteration }} de {{ $bookings->count() }}</p>
-                  <p style="margin:0; font-size:14px; font-weight:700; color:#ffffff;">{{ $b->tour_title }}</p>
+                  <p style="margin:0 0 3px; font-size:14px; font-weight:700; color:#ffffff;">{{ $b->tour_title }}</p>
+                  <p style="margin:0; font-size:11px; color:rgba(255,255,255,0.8); font-family:'Courier New',monospace; letter-spacing:0.5px;">Codigo: {{ $b->booking_code }}</p>
                 </td></tr>
                 <tr><td style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:0;">
                   <table width="100%" cellpadding="0" cellspacing="0">
