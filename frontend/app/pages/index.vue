@@ -7,9 +7,11 @@
           :src="heroImage"
           class="absolute w-full h-full object-cover"
           alt="Lake Titicaca"
-          sizes="100vw"
+          width="1920"
+          height="1080"
+          densities="x1"
           format="webp"
-          quality="70"
+          quality="68"
           loading="eager"
           fetchpriority="high"
           preload
@@ -201,7 +203,6 @@
                 :alt="city.name"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 loading="lazy" format="webp" width="240" height="240"
-                sizes="(max-width:768px) 33vw, 160px" placeholder
               />
             </div>
             <h5 class="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{{ city.name }}</h5>
@@ -242,7 +243,6 @@
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 loading="lazy" format="webp" width="400" height="208"
-                sizes="(max-width:768px) 100vw, (max-width:1280px) 33vw, 25vw" placeholder
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
@@ -318,7 +318,6 @@
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 loading="lazy" format="webp" width="400" height="208"
-                sizes="(max-width:768px) 100vw, (max-width:1280px) 33vw, 25vw" placeholder
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>

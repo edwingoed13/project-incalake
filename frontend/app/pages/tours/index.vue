@@ -200,7 +200,7 @@
           class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5 hover:shadow-md transition-shadow"
         >
           <div class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
-            <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="96" height="96" sizes="96px" placeholder />
+            <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="96" height="96" />
             <div v-if="hasActiveOffer(tour)" class="absolute top-1 left-1 px-1 py-0.5 bg-green-500 text-white text-[7px] font-bold rounded">
               {{ getOfferLabel(tour) }}
             </div>
@@ -242,7 +242,7 @@
           <div class="relative aspect-[4/3] overflow-hidden">
             <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
-              format="webp" width="400" height="300" sizes="(max-width:768px) 50vw, (max-width:1280px) 33vw, 25vw" placeholder />
+              format="webp" width="400" height="300" />
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
               <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
             </div>
@@ -279,7 +279,7 @@
           <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0">
             <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
-              format="webp" width="256" height="176" sizes="256px" placeholder />
+              format="webp" width="256" height="176" />
             <div v-if="hasActiveOffer(tour)" class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
               <span class="material-symbols-outlined text-xs">local_offer</span>{{ getOfferLabel(tour) }}
             </div>
