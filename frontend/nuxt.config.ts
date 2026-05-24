@@ -34,6 +34,14 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  // @nuxt/image: allow optimizing the remote storage host + hero fallback,
+  // serve modern formats by default.
+  image: {
+    domains: ['api.incalake.com', 'incalake.com', 'lh3.googleusercontent.com'],
+    format: ['webp'],
+    quality: 72,
+  },
+
   runtimeConfig: {
     // Private keys (solo servidor)
     public: {

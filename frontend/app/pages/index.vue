@@ -3,10 +3,16 @@
     <!-- Premium Hero Section -->
     <section class="relative w-full h-[480px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
-        <img
+        <NuxtImg
           :src="heroImage"
           class="absolute w-full h-full object-cover"
           alt="Lake Titicaca"
+          sizes="100vw"
+          format="webp"
+          quality="70"
+          loading="eager"
+          fetchpriority="high"
+          preload
         />
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
       </div>
@@ -189,10 +195,12 @@
             class="group flex flex-col items-center gap-3"
           >
             <div class="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
-              <img
+              <NuxtImg
                 :src="getCityImage(city.slug)"
                 :alt="city.name"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy" format="webp" width="240" height="240"
+                sizes="(max-width:768px) 33vw, 160px" placeholder
               />
             </div>
             <h5 class="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{{ city.name }}</h5>
@@ -227,12 +235,13 @@
             class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
           >
             <div class="relative h-52 overflow-hidden">
-              <img
+              <NuxtImg
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                loading="lazy"
+                loading="lazy" format="webp" width="400" height="208"
+                sizes="(max-width:768px) 100vw, (max-width:1280px) 33vw, 25vw" placeholder
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
@@ -302,12 +311,13 @@
               {{ getOfferLabel(tour) }}
             </div>
             <div class="relative h-52 overflow-hidden">
-              <img
+              <NuxtImg
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                loading="lazy"
+                loading="lazy" format="webp" width="400" height="208"
+                sizes="(max-width:768px) 100vw, (max-width:1280px) 33vw, 25vw" placeholder
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
