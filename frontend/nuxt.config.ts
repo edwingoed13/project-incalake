@@ -1,5 +1,12 @@
 import tailwindcss from '@tailwindcss/vite'
 
+// SWR/ISR is a production optimisation. In `nuxt dev` it triggers a Nitro
+// payload-cache path collision (/es is cached as a file, /es/tours needs /es as
+// a dir) that 500s sub-routes. So apply the cache rules only in production —
+// dev renders fresh SSR, which is what you want while developing anyway.
+const isProd = process.env.NODE_ENV === 'production'
+const swr = (maxage: number) => (isProd ? { swr: maxage } : {})
+
 export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: true,
@@ -20,8 +27,9 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
+    // @nuxtjs/seo already bundles sitemap, robots, og-image, schema-org &
+    // seo-utils — so @nuxtjs/sitemap is NOT listed separately (was a duplicate).
     '@nuxtjs/seo',
-    '@nuxtjs/sitemap',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -41,7 +49,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       titleTemplate: '%s - Incalake Tours',
-      htmlAttrs: { lang: 'es' },
+      // <html lang> is set dynamically per-locale in app.vue (useLocaleHead).
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -67,7 +75,8 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'canonical', href: 'https://incalake.com' },
+        // No global canonical here — it was forcing every page to canonicalize
+        // to the homepage. Canonicals are now per-route (useLocaleHead + per-page).
       ],
       // Google Maps now lazy-loaded by useGoogleMaps() in the components that actually need it.
     }
@@ -86,26 +95,31 @@ export default defineNuxtConfig({
 
   // SSR + SPA + SWR Híbrido: Optimización por tipo de página
   routeRules: {
-    // SPA — páginas privadas (instant load, no SEO needed)
-    '/cart': { ssr: false },
-    '/checkout': { ssr: false },
-    '/payment/**': { ssr: false },
-    '/booking-confirmation/**': { ssr: false },
-    '/**/cart': { ssr: false },
-    '/**/checkout': { ssr: false },
+    // SPA — páginas privadas (instant load, no SEO). Localized too: with i18n
+    // strategy 'prefix' the real paths are /{locale}/cart, /{locale}/payment/…
+    // so the unprefixed rules alone never matched. robots:false = noindex.
+    '/**/cart': { ssr: false, robots: false },
+    '/**/checkout': { ssr: false, robots: false },
+    '/**/payment/**': { ssr: false, robots: false },
+    '/**/booking-confirmation/**': { ssr: false, robots: false },
+    '/**/saved': { ssr: false, robots: false },
 
-    // SWR — páginas públicas con cache (revalida en background)
-    '/': { swr: 3600 },
-    '/es': { swr: 3600 },
-    '/en': { swr: 3600 },
-    '/pt': { swr: 3600 },
-    '/fr': { swr: 3600 },
-    '/de': { swr: 3600 },
-    '/it': { swr: 3600 },
-    // Listing page only — individual tour detail pages are under /{city}/{slug}
-    '/**/tours': { swr: 60 },
-    '/**/about': { swr: 86400 },
-    '/**/contact': { swr: 86400 },
+    // SWR — páginas públicas con cache (revalida en background). Prod-only.
+    '/': swr(3600),
+    '/es': swr(3600),
+    '/en': swr(3600),
+    '/pt': swr(3600),
+    '/fr': swr(3600),
+    '/de': swr(3600),
+    '/it': swr(3600),
+    // Tour listing
+    '/**/tours': swr(300),
+    // Tour detail /{locale}/{city}/{slug} — was pure SSR (no cache) on every
+    // request. ISR/SWR 10 min. The more-specific SPA rules above (cart/payment/
+    // booking-confirmation) win over this 3-segment wildcard.
+    '/*/*/*': swr(600),
+    '/**/about': swr(86400),
+    '/**/contact': swr(86400),
 
     // API pass-through, sin caché
     '/api/**': { headers: { 'cache-control': 'no-cache' } }
@@ -118,20 +132,15 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    routes: async () => {
-      // Aquí puedes agregar rutas dinámicas desde la API
-      // Por ejemplo, fetchear todos los tours desde Laravel
-      return [
-        '/',
-        '/tours',
-        '/about',
-        '/contact',
-      ]
-    }
+    // Static pages get localized variants automatically via the i18n
+    // integration. Dynamic tour URLs come from the server source below.
+    sources: ['/api/__sitemap__/urls'],
   },
 
   // i18n configuration for multilang URLs
   i18n: {
+    // Absolute base for canonical + hreflang alternate links (useLocaleHead).
+    baseUrl: 'https://incalake.com',
     locales: [
       { code: 'es', iso: 'es-PE', name: 'Español' },
       { code: 'en', iso: 'en-US', name: 'English' },

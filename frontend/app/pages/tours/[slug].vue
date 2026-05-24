@@ -877,165 +877,26 @@ function handleBooking() {
 }
 
 
-// Dynamic SEO with Schema.org - Optimized for Google AI
+// This page 301-redirects to /{locale}/{city}/{slug} (the canonical detail page,
+// which owns the full SEO/JSON-LD). We only set a correct canonical here for the
+// edge case where a tour has no city slug and this page actually renders.
+const siteUrl = 'https://incalake.com'
 watchEffect(() => {
-  if (tour.value) {
-    const canonicalUrl = `https://voyager.com/tours/${slug}`
-    const imageUrl = tour.value.featured_image ? getImageUrl(tour.value.featured_image) : ''
-
-    useHead({
-      title: `${tour.value.title} | Voyager Marketplace`,
-      meta: [
-        // Basic SEO
-        { name: 'description', content: tour.value.short_description || tour.value.title },
-        { name: 'keywords', content: `${tour.value.title}, tours puno, lake titicaca tours, peru tours, ${tour.value.city?.name || 'puno'} tours` },
-        { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
-        { name: 'author', content: 'Voyager Marketplace' },
-
-        // Open Graph
-        { property: 'og:title', content: tour.value.title },
-        { property: 'og:description', content: tour.value.short_description || tour.value.title },
-        { property: 'og:type', content: 'product' },
-        { property: 'og:url', content: canonicalUrl },
-        { property: 'og:site_name', content: 'Voyager' },
-        { property: 'og:image', content: imageUrl },
-        { property: 'og:image:width', content: '1200' },
-        { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: tour.value.title },
-        { property: 'og:locale', content: 'en_US' },
-
-        // Twitter Card
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: tour.value.title },
-        { name: 'twitter:description', content: tour.value.short_description || tour.value.title },
-        { name: 'twitter:image', content: imageUrl },
-        { name: 'twitter:image:alt', content: tour.value.title },
-
-        // Mobile
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'theme-color', content: '#0077cc' },
-        { name: 'mobile-web-app-capable', content: 'yes' },
-      ],
-      link: [
-        { rel: 'canonical', href: canonicalUrl }
-      ],
-      script: [
-        // Product Schema
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Product',
-            name: tour.value.title,
-            description: tour.value.short_description || tour.value.title,
-            image: imageUrl,
-            brand: {
-              '@type': 'Brand',
-              name: 'Voyager Marketplace'
-            },
-            offers: {
-              '@type': 'Offer',
-              price: tour.value.min_price || 0,
-              priceCurrency: 'USD',
-              availability: 'https://schema.org/InStock',
-              url: canonicalUrl,
-              priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              seller: {
-                '@type': 'Organization',
-                name: 'Voyager Marketplace'
-              }
-            },
-            aggregateRating: {
-              '@type': 'AggregateRating',
-              ratingValue: tour.value.rating || '4.5',
-              reviewCount: tour.value.reviews_count || 0,
-              bestRating: '5',
-              worstRating: '1'
-            }
-          })
-        },
-        // TouristTrip Schema
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'TouristTrip',
-            name: tour.value.title,
-            description: tour.value.short_description || tour.value.title,
-            touristType: 'Tourist',
-            itinerary: {
-              '@type': 'ItemList',
-              name: 'Tour Itinerary',
-              description: tour.value.itinerary || 'Detailed tour itinerary'
-            },
-            offers: {
-              '@type': 'Offer',
-              price: tour.value.min_price || 0,
-              priceCurrency: 'USD'
-            },
-            provider: {
-              '@type': 'TouristInformationCenter',
-              name: 'Voyager Marketplace'
-            }
-          })
-        },
-        // BreadcrumbList Schema
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Home',
-                item: 'https://voyager.com/'
-              },
-              {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Tours',
-                item: 'https://voyager.com/tours'
-              },
-              {
-                '@type': 'ListItem',
-                position: 3,
-                name: tour.value.city?.name || 'Puno',
-                item: `https://voyager.com/tours?city=${tour.value.city?.slug || 'puno'}`
-              },
-              {
-                '@type': 'ListItem',
-                position: 4,
-                name: tour.value.title,
-                item: canonicalUrl
-              }
-            ]
-          })
-        },
-        // TouristAttraction Schema
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'TouristAttraction',
-            name: tour.value.title,
-            description: tour.value.short_description || tour.value.title,
-            image: imageUrl,
-            address: {
-              '@type': 'PostalAddress',
-              addressLocality: tour.value.city?.name || 'Puno',
-              addressRegion: 'Puno',
-              addressCountry: 'PE'
-            },
-            touristType: 'Tourist',
-            availableLanguage: ['English', 'Spanish'],
-            isAccessibleForFree: false
-          })
-        }
-      ]
-    })
-  }
+  if (!tour.value) return
+  const citySlug = tour.value.city?.slug || 'puno'
+  const url = `${siteUrl}/${locale.value}/${citySlug}/${slug}`
+  useSeoMeta({
+    title: () => tour.value.title,
+    description: () => tour.value.short_description || tour.value.title,
+    ogTitle: () => tour.value.title,
+    ogDescription: () => tour.value.short_description || tour.value.title,
+    ogType: 'website',
+    ogUrl: () => url,
+    ogSiteName: 'Incalake Tours',
+    ogImage: () => (tour.value.featured_image ? getImageUrl(tour.value.featured_image) : ''),
+    ogLocale: () => locale.value,
+  })
+  useHead({ link: [{ rel: 'canonical', href: url }] })
 })
 
 // Favorite state

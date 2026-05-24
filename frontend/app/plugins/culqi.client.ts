@@ -77,10 +77,14 @@ export default defineNuxtPlugin(() => {
     })
   }
 
-  // Load script on plugin initialization
-  loadCulqiScript().catch(error => {
-    console.error('Failed to load Culqi:', error)
-  })
+  // Only eagerly load Culqi on the pages that actually need it (checkout /
+  // payment). On every other page it was shipping the 3DS + checkout JS for
+  // nothing. Components can still call $loadCulqi() on demand.
+  if (/\/(checkout|payment)(\/|$)/.test(window.location.pathname)) {
+    loadCulqiScript().catch(error => {
+      console.error('Failed to load Culqi:', error)
+    })
+  }
 
   // Provide helper for components
   return {

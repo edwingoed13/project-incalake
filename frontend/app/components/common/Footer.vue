@@ -11,7 +11,7 @@
             </div>
             <div class="flex flex-col">
               <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none">Incalake</h2>
-              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Editorial Voyager</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Tours & Experiencias</span>
             </div>
           </NuxtLink>
           <p class="text-slate-500 dark:text-slate-400 mb-10 font-medium leading-relaxed">
@@ -59,7 +59,7 @@
                  <input type="email" placeholder="Your email address" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm font-bold outline-none group-focus-within:ring-2 ring-primary/10 transition-all" />
               </div>
               <button class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-primary group transition-all active:scale-95 shadow-xl shadow-black/5">
-                 Join Voyager <span class="material-symbols-outlined ml-2 text-xs group-hover:translate-x-1 transition-transform">trending_flat</span>
+                 Únete a Incalake <span class="material-symbols-outlined ml-2 text-xs group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
            </form>
         </div>
@@ -67,7 +67,7 @@
 
       <!-- Bottom Bar -->
       <div class="pt-10 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">© {{ new Date().getFullYear() }} Incalake Tours — The Editorial Voyager</p>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">© {{ new Date().getFullYear() }} Incalake Tours</p>
         <div class="flex gap-10">
            <NuxtLink to="/terms" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Privacy Policy</NuxtLink>
            <NuxtLink to="/terms" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Terms of Service</NuxtLink>

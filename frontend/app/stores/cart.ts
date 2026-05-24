@@ -104,7 +104,7 @@ export const useCartStore = defineStore('cart', {
     saveToLocalStorage() {
       if (typeof window !== 'undefined' && window.localStorage) {
         try {
-          localStorage.setItem('voyager_cart', JSON.stringify(this.items))
+          localStorage.setItem('incalake_cart', JSON.stringify(this.items))
           console.log('Cart saved to localStorage:', this.items.length, 'items')
         } catch (error) {
           console.error('Error saving cart to localStorage:', error)
@@ -115,7 +115,7 @@ export const useCartStore = defineStore('cart', {
     loadFromLocalStorage() {
       if (typeof window !== 'undefined' && window.localStorage) {
         try {
-          const stored = localStorage.getItem('voyager_cart')
+          const stored = localStorage.getItem('incalake_cart')
           if (stored) {
             this.items = JSON.parse(stored)
             console.log('Cart loaded from localStorage:', this.items.length, 'items')

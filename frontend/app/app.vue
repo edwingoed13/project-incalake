@@ -7,9 +7,21 @@
 </template>
 
 <script setup lang="ts">
-// Configuración global de SEO y fuentes
+// Dynamic <html lang> per locale (es-PE, en-US, …) — replaces the hardcoded
+// lang:'es' that used to live in nuxt.config for all 6 locales. The canonical
+// is emitted automatically by @nuxtjs/seo from site.url + path (verified
+// absolute). hreflang alternates are a follow-up: tour slugs are localized, so
+// a naive path-swap would point to the wrong URLs — needs per-locale slugs.
+const { locale, locales } = useI18n()
+const htmlLang = computed(() => {
+  const match = (locales.value as any[]).find(l => l.code === locale.value)
+  return (match?.iso || match?.language || locale.value) as string
+})
+useHead({ htmlAttrs: { lang: htmlLang } })
+
+// Default site meta + fonts (titleTemplate '%s - Incalake Tours' lives in nuxt.config)
 useHead({
-  title: 'Voyager | Discover Your Next Adventure',
+  title: 'Tours en Puno y Lago Titicaca',
   meta: [
     {
       name: 'description',
@@ -21,22 +33,16 @@ useHead({
     }
   ],
   link: [
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.googleapis.com'
-    },
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.gstatic.com',
-      crossorigin: ''
-    },
+    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
     {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
     },
     {
+      // display=swap (was 'block', which blocked first paint on every page)
       rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block'
+      href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap'
     }
   ]
 })
