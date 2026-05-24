@@ -1,74 +1,20 @@
 <template>
   <aside class="w-72 border-l border-default bg-default p-4 hidden xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
-    <!-- Wizard Actions -->
-    <div class="flex flex-col gap-2 pb-4 border-b border-default">
-      <!-- Primary flow CTA (hidden on the last step) -->
-      <UButton
-        v-if="store.currentStep < store.totalSteps"
-        trailing-icon="i-lucide-arrow-right"
-        color="primary"
-        size="md"
-        block
-        @click="store.nextStep"
-      >
-        Siguiente paso
-      </UButton>
-
-      <!-- Publicar / Actualizar — disponible siempre, no solo en el último paso -->
-      <UButton
-        icon="i-lucide-rocket"
-        color="success"
-        size="md"
-        block
-        :loading="publishing"
-        :disabled="store.loading || store.autosaving"
-        @click="publishTour"
-      >
-        {{ store.basicInfo.status === 'published' ? 'Actualizar publicación' : 'Publicar tour' }}
-      </UButton>
-
-      <!-- Secondary row: preview + exit (the two least-critical actions share
-           a line to save vertical space without shrinking the main CTAs). -->
-      <div class="grid grid-cols-2 gap-2">
-        <UButton
-          icon="i-lucide-eye"
-          color="primary"
-          variant="soft"
-          size="sm"
-          block
-          :disabled="!previewUrl"
-          :title="previewUrl || 'Guarda el tour para generar el slug'"
-          @click="previewTour"
-        >
-          Vista previa
-        </UButton>
-        <UButton
-          icon="i-lucide-arrow-left"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          block
-          @click="cancel"
-        >
-          Volver
-        </UButton>
-      </div>
-    </div>
-
-    <!-- Autosave Status -->
-    <UCard :ui="{ body: 'p-3 space-y-2' }">
-      <p class="text-xs font-bold flex items-center gap-1.5">
-        <UIcon name="i-lucide-activity" class="size-4 text-primary" />
-        Estado de guardado
-      </p>
-      <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg border" :class="autosaveStyle.box">
-        <UIcon :name="autosaveStyle.icon" :class="['size-4 shrink-0', autosaveStyle.iconColor, autosaveStyle.spin ? 'animate-spin' : '']" />
-        <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-bold leading-tight" :class="autosaveStyle.text">{{ autosaveStyle.title }}</p>
-          <p class="text-[10px] text-muted leading-tight">{{ autosaveStyle.subtitle }}</p>
-        </div>
-      </div>
-    </UCard>
+    <!-- Preview is the only action unique to this panel. Navigation lives in
+         the bottom bar; publish / back / save-status live in the top navbar. -->
+    <UButton
+      icon="i-lucide-eye"
+      trailing-icon="i-lucide-external-link"
+      color="primary"
+      variant="soft"
+      size="md"
+      block
+      :disabled="!previewUrl"
+      :title="previewUrl || 'Guarda el tour para generar el slug'"
+      @click="previewTour"
+    >
+      Vista previa
+    </UButton>
 
     <!-- Listing Quality -->
     <UCard :ui="{ body: 'p-3 space-y-3' }">

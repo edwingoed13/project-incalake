@@ -24,7 +24,7 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
 </script>
 
 <template>
-  <div class="border-b border-default bg-elevated/20 px-4 lg:px-6 py-4">
+  <div class="border-b border-default bg-elevated/20 px-4 lg:px-6 py-2.5">
     <ol class="flex items-center gap-1 overflow-x-auto">
       <li
         v-for="(step, idx) in steps"
@@ -39,7 +39,7 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
           <!-- Circle -->
           <div
             :class="[
-              'size-8 rounded-full flex items-center justify-center text-xs font-black transition-all shrink-0',
+              'size-7 rounded-full flex items-center justify-center text-xs font-black transition-all shrink-0',
               stepState(step.id) === 'completed' && 'bg-success text-white shadow-sm',
               stepState(step.id) === 'current' && 'bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/15',
               stepState(step.id) === 'pending' && 'bg-elevated text-muted ring-1 ring-default group-hover:ring-2 group-hover:ring-primary/30',
@@ -49,20 +49,13 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
             <span v-else>{{ step.id }}</span>
           </div>
 
-          <!-- Label -->
-          <div class="text-left hidden sm:block min-w-0">
-            <p
-              :class="[
-                'text-xs font-bold tracking-tight whitespace-nowrap',
-                stepState(step.id) === 'current' && 'text-primary',
-                stepState(step.id) === 'completed' && 'text-default',
-                stepState(step.id) === 'pending' && 'text-muted',
-              ]"
-            >
-              {{ step.label }}
-            </p>
-            <p class="text-[9px] font-bold uppercase tracking-widest text-muted">Paso {{ step.id }}</p>
-          </div>
+          <!-- Label: only the current step shows text — keeps the bar compact -->
+          <p
+            v-if="stepState(step.id) === 'current'"
+            class="text-xs font-bold tracking-tight whitespace-nowrap text-primary hidden sm:block"
+          >
+            {{ step.label }}
+          </p>
         </button>
 
         <!-- Connector -->

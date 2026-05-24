@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Section: Basic Information -->
-    <WizardSection title="Información básica del tour" icon="i-lucide-info">
+    <WizardSection title="Datos del tour" icon="i-lucide-info">
       <template v-if="isEditMode" #actions>
         <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
           <span class="text-base leading-none">{{ currentLangFlag }}</span>

@@ -231,6 +231,15 @@ onBeforeUnmount(() => {
             <span :class="{ 'animate-spin': store.autosaving }" class="inline-flex">{{ autosaveLabel }}</span>
           </UBadge>
           <UButton
+            icon="i-lucide-rocket"
+            color="success"
+            :loading="publishing"
+            :disabled="store.loading || store.autosaving"
+            @click="publishTour"
+          >
+            {{ store.basicInfo.status === 'published' ? 'Actualizar' : 'Publicar' }}
+          </UButton>
+          <UButton
             to="/admin/v2/tours"
             icon="i-lucide-arrow-left"
             color="neutral"
@@ -251,10 +260,9 @@ onBeforeUnmount(() => {
         <main class="flex-1 flex flex-col min-h-0">
           <div class="flex-1 overflow-y-auto p-4 lg:p-6">
           <div class="max-w-5xl mx-auto">
-            <!-- Step header -->
+            <!-- Step header (the stepper already shows the step/category) -->
             <div class="mb-5">
-              <UBadge color="primary" variant="subtle" size="sm" class="mb-2">{{ currentStepLabel?.category }}</UBadge>
-              <h1 class="text-2xl font-bold tracking-tight">{{ currentStepLabel?.title }}</h1>
+              <h1 class="text-xl font-bold tracking-tight">{{ currentStepLabel?.title }}</h1>
               <p class="text-sm text-muted leading-snug mt-1">{{ currentStepLabel?.description }}</p>
             </div>
 
@@ -309,16 +317,10 @@ onBeforeUnmount(() => {
               >
                 Siguiente
               </UButton>
-              <UButton
-                v-else
-                icon="i-lucide-rocket"
-                color="success"
-                :loading="publishing"
-                :disabled="store.loading || store.autosaving"
-                @click="publishTour"
-              >
-                {{ store.basicInfo.status === 'published' ? 'Actualizar publicación' : 'Publicar tour' }}
-              </UButton>
+              <span v-else class="text-xs text-muted inline-flex items-center gap-1">
+                <UIcon name="i-lucide-check" class="size-3.5 text-success" />
+                Último paso · publica arriba
+              </span>
             </div>
           </div>
         </main>
