@@ -725,7 +725,7 @@ class BookingController extends Controller
             return [];
         }
 
-        return Booking::with(['tour', 'pickupDetail'])
+        return Booking::with(['tour', 'tour.mediaGallery', 'pickupDetail'])
             ->whereIn('id', $ids)
             ->orderBy('tour_date')
             ->orderBy('booking_code')
@@ -735,9 +735,7 @@ class BookingController extends Controller
                 'booking_code'      => $b->booking_code,
                 'tour_title'        => $b->tour_title,
                 'tour_slug'         => $b->tour?->slug,
-                'tour_image'        => $b->tour?->featured_image_path
-                    ? \Illuminate\Support\Facades\Storage::disk('public')->url($b->tour->featured_image_path)
-                    : null,
+                'tour_image'        => $b->tour?->resolveImageUrl(),
                 'tour_date'         => $b->tour_date,
                 'tour_time'         => $b->tour_time,
                 'adults'            => $b->adults,
@@ -763,7 +761,7 @@ class BookingController extends Controller
     {
         try {
             $booking = Booking::where('booking_code', $bookingCode)
-                ->with('tour')
+                ->with(['tour', 'tour.mediaGallery'])
                 ->firstOrFail();
 
             // Security check: Require email verification to access booking details
@@ -858,7 +856,7 @@ class BookingController extends Controller
         try {
             $booking = Booking::where('confirmation_token', $token)
                 ->where('confirmation_token_expires_at', '>', now())
-                ->with('tour')
+                ->with(['tour', 'tour.mediaGallery'])
                 ->firstOrFail();
 
             return response()->json([

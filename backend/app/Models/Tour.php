@@ -163,6 +163,26 @@ class Tour extends Model
     }
 
     /**
+     * Resolve the tour's display image as a full URL: the featured image if set,
+     * otherwise the first gallery item (matches the public listing's fallback so
+     * a tour without a featured_image_path still shows an image). Requires the
+     * mediaGallery relation to be loaded for the fallback to apply.
+     */
+    public function resolveImageUrl(): ?string
+    {
+        $img = $this->featured_image_path;
+        if (!$img && $this->relationLoaded('mediaGallery') && $this->mediaGallery->count()) {
+            $img = $this->mediaGallery->sortBy('order')->first()?->image_path;
+        }
+        if (!$img) {
+            return null;
+        }
+        return str_starts_with($img, 'http')
+            ? $img
+            : \Illuminate\Support\Facades\Storage::disk('public')->url($img);
+    }
+
+    /**
      * Get slug for specific language (fallback to first translation)
      */
     public function getSlug(string $languageCode = 'ES'): ?string
