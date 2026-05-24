@@ -1026,6 +1026,20 @@ function handleBooking() {
 }
 
 
+// Per-locale slugs for correct hreflang/alternate links — tour slugs differ
+// per language, so the default path-swap would produce wrong URLs.
+const setI18nParams = useSetI18nParams()
+watchEffect(() => {
+  const trans = (tour.value as any)?.translations
+  if (!Array.isArray(trans)) return
+  const params: Record<string, { city: string; slug: string }> = {}
+  for (const tr of trans) {
+    const code = tr.language?.code?.toLowerCase()
+    if (code && tr.slug) params[code] = { city: citySlug, slug: tr.slug }
+  }
+  if (Object.keys(params).length) setI18nParams(params)
+})
+
 // Dynamic SEO + Schema.org — locale & city aware, on incalake.com.
 // Canonical + hreflang are emitted globally by useLocaleHead (app.vue) using
 // i18n.baseUrl, so we don't set a per-page canonical here (avoids duplicates).

@@ -142,12 +142,13 @@ export default defineNuxtConfig({
     // Absolute base for canonical + hreflang alternate links (useLocaleHead).
     baseUrl: 'https://incalake.com',
     locales: [
-      { code: 'es', iso: 'es-PE', name: 'Español' },
-      { code: 'en', iso: 'en-US', name: 'English' },
-      { code: 'pt', iso: 'pt-BR', name: 'Português' },
-      { code: 'fr', iso: 'fr-FR', name: 'Français' },
-      { code: 'de', iso: 'de-DE', name: 'Deutsch' },
-      { code: 'it', iso: 'it-IT', name: 'Italiano' },
+      // v10 uses `language` (not `iso`) for hreflang/<html lang>.
+      { code: 'es', language: 'es-PE', name: 'Español' },
+      { code: 'en', language: 'en-US', name: 'English' },
+      { code: 'pt', language: 'pt-BR', name: 'Português' },
+      { code: 'fr', language: 'fr-FR', name: 'Français' },
+      { code: 'de', language: 'de-DE', name: 'Deutsch' },
+      { code: 'it', language: 'it-IT', name: 'Italiano' },
     ],
     defaultLocale: 'es',
     strategy: 'prefix',

@@ -7,17 +7,19 @@
 </template>
 
 <script setup lang="ts">
-// Dynamic <html lang> per locale (es-PE, en-US, …) — replaces the hardcoded
-// lang:'es' that used to live in nuxt.config for all 6 locales. The canonical
-// is emitted automatically by @nuxtjs/seo from site.url + path (verified
-// absolute). hreflang alternates are a follow-up: tour slugs are localized, so
-// a naive path-swap would point to the wrong URLs — needs per-locale slugs.
-const { locale, locales } = useI18n()
-const htmlLang = computed(() => {
-  const match = (locales.value as any[]).find(l => l.code === locale.value)
-  return (match?.iso || match?.language || locale.value) as string
+// i18n SEO: dynamic <html lang>/dir, locale-aware canonical and hreflang
+// alternate links for every page. Tour detail pages refine the alternates
+// with their per-locale slugs via useSetI18nParams (the slugs differ per
+// language, so a plain path-swap would be wrong).
+const i18nHead = useLocaleHead()
+useHead({
+  htmlAttrs: {
+    lang: () => i18nHead.value.htmlAttrs?.lang,
+    dir: () => i18nHead.value.htmlAttrs?.dir,
+  },
+  link: () => i18nHead.value.link || [],
+  meta: () => i18nHead.value.meta || [],
 })
-useHead({ htmlAttrs: { lang: htmlLang } })
 
 // Default site meta + fonts (titleTemplate '%s - Incalake Tours' lives in nuxt.config)
 useHead({
