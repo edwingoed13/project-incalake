@@ -1,23 +1,13 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Section: Basic Information -->
-    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
-      <template #header>
-        <div class="flex items-center justify-between gap-3 flex-wrap">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 min-w-0">
-            <UIcon name="i-lucide-info" class="size-5 text-primary shrink-0" />
-            Información básica del tour
-          </h3>
-          <!-- Editing-language chip (edit mode) — replaces the old standalone banner -->
-          <div
-            v-if="isEditMode"
-            class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0"
-          >
-            <span class="text-base leading-none">{{ currentLangFlag }}</span>
-            <span>{{ currentLangName }}</span>
-            <span class="text-primary/60 font-mono">·</span>
-            <span class="font-mono">{{ store.basicInfo.code }}</span>
-          </div>
+    <WizardSection title="Información básica del tour" icon="i-lucide-info">
+      <template v-if="isEditMode" #actions>
+        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-bold">
+          <span class="text-base leading-none">{{ currentLangFlag }}</span>
+          <span>{{ currentLangName }}</span>
+          <span class="text-primary/60 font-mono">·</span>
+          <span class="font-mono">{{ store.basicInfo.code }}</span>
         </div>
       </template>
 
@@ -146,17 +136,10 @@
           />
         </UFormField>
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- Section: Schedules & Duration -->
-    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4' }">
-      <template #header>
-        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <UIcon name="i-lucide-calendar-clock" class="size-5 text-primary" />
-          Horarios y duración
-        </h3>
-      </template>
-
+    <WizardSection title="Horarios y duración" icon="i-lucide-calendar-clock">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
         <!-- Horarios de Salida (múltiples, con duración) -->
         <div class="md:col-span-2 space-y-3">
@@ -260,13 +243,14 @@
           </div>
         </UFormField>
       </div>
-    </UCard>
+    </WizardSection>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
+import WizardSection from './WizardSection.vue'
 import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
