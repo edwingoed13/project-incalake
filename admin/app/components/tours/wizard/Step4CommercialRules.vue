@@ -1,13 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Payment Methods -->
-    <UCard :ui="{ body: 'p-5' }">
-      <template #header>
-        <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-credit-card" class="size-5 text-primary" />
-          <h3 class="text-base font-bold">Método de pago aceptado <span class="text-primary">*</span></h3>
-        </div>
-      </template>
+    <WizardSection title="Método de pago aceptado *" icon="i-lucide-credit-card">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           v-for="opt in paymentMethodOptions"
@@ -35,31 +29,27 @@
           />
         </button>
       </div>
-    </UCard>
+    </WizardSection>
 
     <!-- Pricing — Age Stage Selector + Editor -->
-    <UCard :ui="{ body: 'p-5 space-y-4' }">
-      <template #header>
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-coins" class="size-5 text-primary" />
-            <div>
-              <h3 class="text-base font-bold">Precios por etapa de edad</h3>
-              <p class="text-xs text-muted mt-0.5">Configura precios por nacionalidad y cantidad de pasajeros</p>
-            </div>
-          </div>
-          <UBadge
-            v-if="hasConflicts"
-            color="error"
-            variant="subtle"
-            size="md"
-            icon="i-lucide-triangle-alert"
-          >
-            {{ Object.keys(conflictsByRange).length }} rango(s) en conflicto
-          </UBadge>
-        </div>
+    <WizardSection
+      title="Precios por etapa de edad"
+      icon="i-lucide-coins"
+      description="Configura precios por nacionalidad y cantidad de pasajeros"
+    >
+      <template #actions>
+        <UBadge
+          v-if="hasConflicts"
+          color="error"
+          variant="subtle"
+          size="md"
+          icon="i-lucide-triangle-alert"
+        >
+          {{ Object.keys(conflictsByRange).length }} rango(s) en conflicto
+        </UBadge>
       </template>
 
+      <div class="space-y-4">
       <UAlert
         v-if="hasConflicts"
         color="error"
@@ -322,17 +312,12 @@
           </Transition>
         </div>
       </div>
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- General Config Section -->
-    <UCard :ui="{ body: 'p-5 space-y-4' }">
-      <template #header>
-        <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-settings-2" class="size-5 text-primary" />
-          <h3 class="text-base font-bold">Configuración de precios generales</h3>
-        </div>
-      </template>
-
+    <WizardSection title="Configuración de precios generales" icon="i-lucide-settings-2">
+      <div class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UFormField label="Tasas e impuestos (%)" hint="Se añadirá al precio final para cubrir comisiones o impuestos locales">
           <UInput
@@ -372,7 +357,8 @@
         title="Reserva parcial habilitada"
         description="Los clientes podrán reservar pagando solo una parte. El monto restante deberá gestionarse directamente con el cliente o al inicio del tour."
       />
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- Tips -->
     <UAlert
@@ -388,6 +374,7 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
+import WizardSection from './WizardSection.vue'
 import type { AgeStagePrice, NationalityPrice } from '~/stores/tourWizard'
 
 const store = useTourWizardStore()
