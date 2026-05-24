@@ -38,11 +38,13 @@
         <div class="relative">
           <button
             @click="langOpen = !langOpen"
-            class="flex items-center gap-1.5 px-2 py-1.5 text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
+            aria-label="Idioma"
+            class="flex items-center gap-1.5 px-2 py-2 min-h-[40px] text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
           >
             <img :src="flagSrc(locale, 20)" :alt="locale" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
             <span class="hidden sm:inline">{{ langShortLabels[locale] || locale.toUpperCase() }}</span>
-            <span class="material-symbols-outlined text-xs transition-transform" :class="{ 'rotate-180': langOpen }">expand_more</span>
+            <!-- chevron only on desktop (next to the label); on mobile the flag alone is intuitive -->
+            <span class="material-symbols-outlined text-xs transition-transform hidden sm:inline-block" :class="{ 'rotate-180': langOpen }">expand_more</span>
           </button>
           <div v-if="langOpen" class="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
             <div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Language</div>

@@ -1,9 +1,35 @@
 <template>
-  <!-- Loading -->
-  <div v-if="pending" class="min-h-screen flex items-center justify-center bg-white pt-20">
-    <div class="text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-      <p class="mt-4 text-slate-500 text-sm">{{ t('loading_tours') }}</p>
+  <!-- Loading skeleton — mirrors the real layout so the transition feels instant -->
+  <div v-if="pending && !tours.length" class="bg-white min-h-screen pt-14 md:pt-20">
+    <section class="bg-gradient-to-r from-primary to-sky-600 px-4 sm:px-6 lg:px-10 py-4 md:py-8">
+      <div class="max-w-7xl mx-auto">
+        <div class="h-6 md:h-9 w-44 md:w-72 bg-white/30 rounded-lg animate-pulse mb-2"></div>
+        <div class="h-3 w-28 bg-white/20 rounded animate-pulse"></div>
+      </div>
+    </section>
+    <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-4 md:py-6">
+      <!-- Mobile: horizontal row skeletons -->
+      <div class="md:hidden space-y-3">
+        <div v-for="i in 6" :key="'sm-'+i" class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5">
+          <div class="w-24 h-24 rounded-lg bg-slate-200 animate-pulse shrink-0"></div>
+          <div class="flex-1 py-1 space-y-2">
+            <div class="h-3 bg-slate-200 rounded animate-pulse w-5/6"></div>
+            <div class="h-3 bg-slate-200 rounded animate-pulse w-2/3"></div>
+            <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-4"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Desktop: grid skeletons -->
+      <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div v-for="i in 8" :key="'lg-'+i" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div class="aspect-[4/3] bg-slate-200 animate-pulse"></div>
+          <div class="p-4 space-y-2.5">
+            <div class="h-3 bg-slate-200 rounded animate-pulse w-1/2"></div>
+            <div class="h-4 bg-slate-200 rounded animate-pulse w-5/6"></div>
+            <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-3"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -425,7 +451,7 @@ const featuredSlugs = ['puno','cusco','arequipa','la-paz','uyuni','copacabana']
 const { data: citiesData } = await useAsyncData(
   () => `cities-with-counts-${langCode.value}`,
   () => api(`/cities?with_tour_counts=1&language=${langCode.value}`) as Promise<any>,
-  { watch: [langCode] }
+  { watch: [langCode], lazy: true }
 )
 
 const cities = computed<any[]>(() => {
@@ -448,7 +474,8 @@ const { data: toursData, pending, error, refresh } = await useAsyncData(
     if (selectedTagSlug.value) url += `&tag=${encodeURIComponent(selectedTagSlug.value)}`
     return api(url) as Promise<any>
   },
-  { watch: [langCode, selectedCitySlug, selectedTagSlug] }
+  // lazy: don't block route navigation — show skeletons instantly, stream data in
+  { watch: [langCode, selectedCitySlug, selectedTagSlug], lazy: true }
 )
 
 const tours = computed<any[]>(() => {
