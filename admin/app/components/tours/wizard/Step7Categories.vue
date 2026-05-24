@@ -10,20 +10,18 @@
     />
 
     <!-- Categories -->
-    <UCard :ui="{ body: 'p-4 sm:p-4 space-y-4' }">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-tags" class="size-5 text-primary" />
-          <div>
-            <h4 class="text-base font-bold">Categorías del tour</h4>
-            <p class="text-xs text-muted">Define cómo aparece el tour en filtros de búsqueda. Recomendado: 1-3 categorías.</p>
-          </div>
-        </div>
+    <WizardSection
+      title="Categorías del tour"
+      icon="i-lucide-tags"
+      description="Define cómo aparece el tour en filtros de búsqueda. Recomendado: 1-3 categorías."
+    >
+      <template #actions>
         <UBadge :color="store.selectedCategories.length > 0 ? 'primary' : 'neutral'" variant="subtle" size="md">
           {{ store.selectedCategories.length }} de {{ categories.length }}
         </UBadge>
-      </div>
+      </template>
 
+      <div class="space-y-4">
       <!-- Selected categories as chips -->
       <div v-if="selectedCategoriesList.length > 0" class="flex flex-wrap gap-2">
         <div
@@ -120,7 +118,8 @@
           Quitar todas
         </UButton>
       </div>
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- Empty State Warning -->
     <UAlert
@@ -133,25 +132,21 @@
     />
 
     <!-- Tags catalog (CRUD + per-tour selection) -->
-    <UCard :ui="{ body: 'p-4 sm:p-4 space-y-4' }">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <UIcon name="i-lucide-tag" class="size-5" />
-          </div>
-          <div>
-            <h4 class="text-base font-bold">Etiquetas <span class="text-muted font-normal text-xs">(opcional)</span></h4>
-            <p class="text-xs text-muted">Las etiquetas refinan la búsqueda del cliente más allá de las categorías. Actívalas si tu tour tiene un perfil particular.</p>
-          </div>
-        </div>
+    <WizardSection
+      title="Etiquetas (opcional)"
+      icon="i-lucide-tag"
+      description="Las etiquetas refinan la búsqueda del cliente más allá de las categorías. Actívalas si tu tour tiene un perfil particular."
+    >
+      <template #actions>
         <USwitch
           v-model="tagsEnabled"
           color="primary"
           size="md"
           :label="tagsEnabled ? 'Activadas' : 'Desactivadas'"
         />
-      </div>
+      </template>
 
+      <div class="space-y-4">
       <!-- Contenido del bloque de tags — solo si el toggle está ON -->
       <div v-if="tagsEnabled" class="space-y-4 pt-2 border-t border-default">
         <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -240,7 +235,8 @@
         title="Etiquetas desactivadas"
         description="La mayoría de tours funcionan bien solo con categorías. Activa este bloque solo si tu tour tiene un perfil particular (fotográfico, místico, premium, etc.)."
       />
-    </UCard>
+      </div>
+    </WizardSection>
 
     <!-- Tag editor modal -->
     <UModal
@@ -305,6 +301,7 @@
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { useAuthStore } from '~/stores/auth'
+import WizardSection from './WizardSection.vue'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 
 const store = useTourWizardStore()
