@@ -13,6 +13,8 @@ class TourMediaGallery extends Model
         'tour_id',
         'language_id',
         'image_path',
+        'original_path',
+        'crop_data',
         'alt_text',
         'title_text',
         'description',
@@ -21,6 +23,7 @@ class TourMediaGallery extends Model
 
     protected $casts = [
         'order' => 'integer',
+        'crop_data' => 'array',
     ];
 
     public function tour(): BelongsTo

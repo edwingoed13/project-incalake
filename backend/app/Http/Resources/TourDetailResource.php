@@ -139,9 +139,14 @@ class TourDetailResource extends JsonResource
 
             'media_gallery' => $this->whenLoaded('mediaGallery', function () {
                 return $this->mediaGallery->map(function($media) {
+                    $disk = \Illuminate\Support\Facades\Storage::disk('public');
                     return [
                         'id' => $media->id,
-                        'url' => \Illuminate\Support\Facades\Storage::disk('public')->url($media->image_path),
+                        'url' => $disk->url($media->image_path),
+                        // Full image the crop was derived from (for re-editing).
+                        // Falls back to the displayed image for legacy records.
+                        'original_url' => $disk->url($media->original_path ?: $media->image_path),
+                        'crop_data' => $media->crop_data,
                         'alt_text' => $media->alt_text ?? '',
                         'title_text' => $media->title_text ?? '',
                         'description' => $media->description ?? '',

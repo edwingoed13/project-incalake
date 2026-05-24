@@ -174,6 +174,10 @@ export interface TourImage {
   description: string
   isPrimary: boolean
   order: number
+  // Non-destructive crop support
+  originalUrl?: string          // full image the crop was derived from
+  cropData?: { coordinates: { left: number; top: number; width: number; height: number }; aspect: number | null } | null
+  newDisplayPath?: string | null // temp path of a freshly cropped file (existing images, re-cropped this session)
 }
 
 export interface TourStep5Multimedia {
@@ -355,9 +359,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
       galleryLayout: 'featured',
       images: []
     } as TourStep5Multimedia,
-    tempImages: [] as { 
-      filename: string, 
+    tempImages: [] as {
+      filename: string,
       path: string,
+      original_path?: string,
+      crop_data?: { coordinates: { left: number; top: number; width: number; height: number }; aspect: number | null } | null,
       alt_text?: string,
       title_text?: string,
       description?: string,
@@ -687,6 +693,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
             images: (data.media_gallery || []).map((img: any) => ({
               id: img.id,
               url: img.url,
+              // Full image the crop was derived from — loaded into the cropper on
+              // re-edit so the saved crop box can be restored. Falls back to url.
+              originalUrl: img.original_url || img.url,
+              cropData: img.crop_data || null,
               filename: '', // backend doesn't seem to store original filename
               size: 0,
               altText: img.alt_text || '',
@@ -856,14 +866,18 @@ export const useTourWizardStore = defineStore('tourWizard', {
         duration_minutes: Number(this.basicInfo.durationMinutes) || 0,
         youtube_url: this.multimedia.youtubeUrl,
         gallery_layout: this.multimedia.galleryLayout,
-        media_gallery: this.multimedia.images.map(img => ({
+        media_gallery: this.multimedia.images.map((img: any) => ({
           id: img.id,
           url: img.url, // Base64 or existing URL
           alt_text: img.altText,
           title_text: img.titleText,
           description: img.description,
           is_primary: img.isPrimary,
-          order: img.order
+          order: img.order,
+          // Non-destructive crop: persist the crop box, and when re-cropped this
+          // session, the freshly derived temp file to swap in as the display.
+          crop_data: img.cropData ?? null,
+          new_display_path: img.newDisplayPath ?? null,
         })).filter(img => typeof img.id === 'number'), // Only send existing images (IDs are numbers from DB, newly uploaded tempImages have UUIDs)
         temp_images: this.tempImages,
 

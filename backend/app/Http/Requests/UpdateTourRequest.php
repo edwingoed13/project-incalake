@@ -144,6 +144,8 @@ class UpdateTourRequest extends FormRequest
             'temp_images' => 'nullable|array',
             'temp_images.*.filename' => 'required|string',
             'temp_images.*.path' => 'required|string',
+            'temp_images.*.original_path' => 'nullable|string',
+            'temp_images.*.crop_data' => 'nullable|array',
             'temp_images.*.alt_text' => 'nullable|string|max:255',
             'temp_images.*.title_text' => 'nullable|string|max:255',
             'temp_images.*.description' => 'nullable|string',
@@ -152,6 +154,8 @@ class UpdateTourRequest extends FormRequest
 
             'media_gallery' => 'nullable|array',
             'media_gallery.*.id' => 'required|integer',
+            'media_gallery.*.new_display_path' => 'nullable|string',
+            'media_gallery.*.crop_data' => 'nullable|array',
             'media_gallery.*.alt_text' => 'nullable|string|max:255',
             'media_gallery.*.title_text' => 'nullable|string|max:255',
             'media_gallery.*.description' => 'nullable|string',

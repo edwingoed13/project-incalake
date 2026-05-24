@@ -499,10 +499,12 @@
                   <ClientOnly>
                     <Cropper
                       ref="cropperRef"
-                      :key="store.multimedia.images[editingIndex]?.id"
+                      :key="currentEditImage?.id"
                       class="h-full w-full"
-                      :src="getImageUrl(store.multimedia.images[editingIndex]?.url || '')"
+                      :src="getImageUrl(currentEditImage?.originalUrl || currentEditImage?.url || '')"
                       :stencil-props="stencilProps"
+                      :default-size="defaultCropSize"
+                      :default-position="defaultCropPosition"
                       cross-origin="anonymous"
                       image-restriction="fit-area"
                       :canvas="{ maxWidth: 1920, maxHeight: 1920 }"
@@ -644,6 +646,21 @@ const editForm = ref({
 // === Image cropper (edit modal) ===
 const cropperRef = ref<any>(null)
 const cropProcessing = ref(false)
+const currentEditImage = computed<any>(() =>
+  editingIndex.value !== null ? store.multimedia.images[editingIndex.value] : null,
+)
+// Restore the saved crop box (in original-image pixels) when reopening; default
+// to the full image (= no crop) for images that were never cropped.
+const defaultCropSize = ({ imageSize }: any) => {
+  const cd = currentEditImage.value?.cropData
+  if (cd?.coordinates) return { width: cd.coordinates.width, height: cd.coordinates.height }
+  return { width: imageSize.width, height: imageSize.height }
+}
+const defaultCropPosition = () => {
+  const cd = currentEditImage.value?.cropData
+  if (cd?.coordinates) return { left: cd.coordinates.left, top: cd.coordinates.top }
+  return { left: 0, top: 0 }
+}
 // Aspect ratio: null = free. Presets cover the gallery layouts (hero, grid, mosaic).
 const cropAspect = ref<number | null>(null)
 const cropPresets = [
@@ -744,16 +761,18 @@ const openEditModal = (index: number) => {
       titleText: getMediaText(image.id, 'title_text') || image.titleText || '',
       description: image.description || ''
     }
-    // Reset cropper state for the freshly opened image
-    cropAspect.value = null
+    // Reset cropper state for the freshly opened image. Restore the saved
+    // aspect so the stencil reopens exactly as it was left.
+    cropAspect.value = image.cropData?.aspect ?? null
     initialCropCoords.value = null
     currentCropCoords.value = null
     editingIndex.value = index
   }
 }
 
-// Crop → resize (≤1920) → WebP → re-upload, then repoint the gallery entry
-// at the new file. Returns false if anything failed (keeps the modal open).
+// Non-destructive crop: derive a cropped WebP (≤1920) from the ORIGINAL and set
+// it as the displayed file, while keeping the original + crop box so re-editing
+// restores it. Returns false on failure (keeps the modal open).
 const applyCropAndUpload = async (image: any): Promise<boolean> => {
   const result = cropperRef.value?.getResult?.()
   const canvas = result?.canvas
@@ -776,31 +795,59 @@ const applyCropAndUpload = async (image: any): Promise<boolean> => {
   })
   if (!response?.success) return false
 
-  // Drop the previous temp file (matched by current filename) before repointing.
-  const oldIdx = store.tempImages.findIndex((t: any) => t.filename === image.filename)
-  if (oldIdx !== -1) store.tempImages.splice(oldIdx, 1)
-
-  // If this was an existing DB image (numeric id), turn it into a fresh upload:
-  // the backend's syncMediaGallery only updates metadata for numeric ids and
-  // never swaps the file, so we give it a UUID. That drops the original record
-  // (+ file) via whereNotIn and lets processImages store the cropped version in
-  // its place, preserving order/primary through the temp_images metadata below.
-  if (typeof image.id === 'number') {
-    image.id = (globalThis.crypto?.randomUUID?.() ?? `crop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+  // The crop box, in ORIGINAL-image pixels — re-applied on re-edit.
+  const c = result.coordinates || {}
+  const cropData = {
+    coordinates: {
+      left: Math.round(c.left || 0),
+      top: Math.round(c.top || 0),
+      width: Math.round(c.width || 0),
+      height: Math.round(c.height || 0),
+    },
+    aspect: cropAspect.value,
   }
 
-  image.url = response.url
-  image.filename = response.filename
-  image.size = blob.size
-  store.tempImages.push({
-    filename: response.filename,
-    path: response.path,
-    alt_text: editForm.value.altText,
-    title_text: editForm.value.titleText,
-    description: editForm.value.description,
-    is_primary: image.isPrimary,
-    order: (editingIndex.value ?? 0) + 1,
-  })
+  if (typeof image.id === 'number') {
+    // Existing DB image: keep the id, hand the backend a fresh derived file to
+    // swap in (new_display_path) while it preserves the original. No temp entry.
+    image.newDisplayPath = response.path
+    image.url = response.url
+    image.size = blob.size
+    image.cropData = cropData
+  } else {
+    // New upload (has a temp entry): keep the original temp file, point the
+    // display at the cropped derived. Match the temp entry by current filename.
+    const temp = store.tempImages.find((t: any) => t.filename === image.filename)
+    if (temp) {
+      if (!temp.original_path) temp.original_path = temp.path // first crop: remember original
+      temp.path = response.path                               // display = cropped
+      temp.filename = response.filename
+      temp.crop_data = cropData
+      temp.alt_text = editForm.value.altText
+      temp.title_text = editForm.value.titleText
+      temp.description = editForm.value.description
+      temp.is_primary = image.isPrimary
+      temp.order = (editingIndex.value ?? 0) + 1
+    } else {
+      store.tempImages.push({
+        filename: response.filename,
+        path: response.path,
+        original_path: response.path,
+        crop_data: cropData,
+        alt_text: editForm.value.altText,
+        title_text: editForm.value.titleText,
+        description: editForm.value.description,
+        is_primary: image.isPrimary,
+        order: (editingIndex.value ?? 0) + 1,
+      })
+    }
+    image.url = response.url
+    image.filename = response.filename
+    image.size = blob.size
+    image.cropData = cropData
+    // image.originalUrl stays pointing at the full original.
+  }
+
   store.isDirty = true
   return true
 }
@@ -947,7 +994,9 @@ const uploadOne = async (file: File) => {
     if (response.success) {
       store.multimedia.images.push({
         id: crypto.randomUUID(),
-        url: response.url, // URL for preview
+        url: response.url, // displayed image (== original until cropped)
+        originalUrl: response.url, // full image kept for non-destructive crop
+        cropData: null,
         filename: response.filename,
         size: file.size,
         altText: '',
@@ -960,6 +1009,8 @@ const uploadOne = async (file: File) => {
       store.tempImages.push({
         filename: response.filename,
         path: response.path,
+        original_path: response.path, // same file until a crop derives a new one
+        crop_data: null,
       })
 
       store.isDirty = true

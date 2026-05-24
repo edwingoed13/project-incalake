@@ -100,6 +100,13 @@ class StoreTourRequest extends FormRequest
             'temp_images' => 'nullable|array',
             'temp_images.*.filename' => 'required|string',
             'temp_images.*.path' => 'required|string',
+            'temp_images.*.original_path' => 'nullable|string',
+            'temp_images.*.crop_data' => 'nullable|array',
+            'temp_images.*.alt_text' => 'nullable|string|max:255',
+            'temp_images.*.title_text' => 'nullable|string|max:255',
+            'temp_images.*.description' => 'nullable|string',
+            'temp_images.*.is_primary' => 'nullable|boolean',
+            'temp_images.*.order' => 'nullable|integer',
         ];
     }
 
