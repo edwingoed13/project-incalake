@@ -49,10 +49,15 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
             <span v-else>{{ step.id }}</span>
           </div>
 
-          <!-- Label: only the current step shows text — keeps the bar compact -->
+          <!-- Label: every step shows its name (hidden on mobile = circles only).
+               The "Paso N" subtitle is dropped to keep the bar compact. -->
           <p
-            v-if="stepState(step.id) === 'current'"
-            class="text-xs font-bold tracking-tight whitespace-nowrap text-primary hidden sm:block"
+            class="text-xs font-bold tracking-tight whitespace-nowrap hidden sm:block"
+            :class="[
+              stepState(step.id) === 'current' && 'text-primary',
+              stepState(step.id) === 'completed' && 'text-default',
+              stepState(step.id) === 'pending' && 'text-muted',
+            ]"
           >
             {{ step.label }}
           </p>
