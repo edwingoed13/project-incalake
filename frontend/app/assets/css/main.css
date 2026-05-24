@@ -32,6 +32,22 @@
   body {
     @apply antialiased text-gray-900 bg-gray-50;
   }
+
+  /* Mobile-first: iOS Safari auto-zooms when a focused form field has a
+     font-size < 16px. Many inputs use text-xs/text-sm, so force 16px on
+     phones only (desktop keeps its smaller sizing). */
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Comfortable tap feedback + no 300ms delay on interactive elements. */
+  a, button, [role="button"], input, select, textarea {
+    touch-action: manipulation;
+  }
 }
 
 @layer components {
