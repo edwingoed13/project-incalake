@@ -270,74 +270,62 @@
 
         <!-- Step 2: Traveler Details -->
         <div v-else-if="currentStep === 2">
-          <div class="bg-white rounded-xl border border-slate-100 shadow-sm">
-            <div class="flex items-center justify-between p-3 md:p-4 border-b border-slate-50">
-              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-lg">group</span>
-                {{ t('step_travelers') }}
-                <span class="text-xs font-normal text-slate-400">({{ travelers.length }}/{{ maxTravelers }})</span>
-              </h3>
-              <button
-                v-if="canAddTraveler"
-                @click="addTraveler"
-                class="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-lg active:bg-primary/20"
+          <!-- MULTI-TOUR: travelers per tour (each capped at its own pax) -->
+          <template v-if="isMultiTour">
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+              <div class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary text-base">group</span>
+                <span class="text-xs font-bold text-slate-700">Viajeros por tour ({{ toursTravelersDone }}/{{ purchaseTours.length }})</span>
+              </div>
+              <div
+                v-for="(tr, i) in purchaseTours"
+                :key="tr.id"
+                :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : ''"
               >
-                <span class="material-symbols-outlined text-sm">add</span>
-                {{ t('add_traveler') }}
-              </button>
-              <span v-else class="text-[11px] text-slate-400 font-medium">{{ t('travelers_complete') }}</span>
-            </div>
-
-            <div class="p-3 md:p-4 space-y-3">
-              <div v-for="(traveler, idx) in travelers" :key="idx" class="p-3 bg-slate-50 rounded-xl">
-                <div class="flex items-center justify-between mb-2.5">
-                  <p class="text-[11px] font-bold uppercase" :class="traveler.is_leader ? 'text-primary' : 'text-slate-400'">
-                    {{ traveler.is_leader ? t('leader') : `Traveler ${idx + 1}` }}
-                    <span v-if="traveler.age_group === 'child'" class="ml-1 text-amber-500">(Child)</span>
-                  </p>
+                <button
+                  @click="openTourId = openTourId === tr.id ? null : tr.id"
+                  class="w-full flex items-center justify-between gap-2 p-3 md:p-4 text-left"
+                >
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-slate-800 truncate">{{ tr.tour_title }}</p>
+                    <p class="text-[11px] mt-0.5 font-semibold inline-flex items-center gap-1" :class="isTourTravelersDone(tr) ? 'text-green-600' : 'text-amber-600'">
+                      <span class="material-symbols-outlined text-xs">{{ isTourTravelersDone(tr) ? 'check_circle' : 'group' }}</span>
+                      {{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros
+                    </p>
+                  </div>
+                  <span class="material-symbols-outlined text-slate-400 transition-transform shrink-0" :class="openTourId === tr.id ? 'rotate-180' : ''">expand_more</span>
+                </button>
+                <div v-show="openTourId === tr.id" class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3">
                   <button
-                    v-if="!traveler.is_leader && travelers.length > 1"
-                    @click="removeTraveler(idx)"
-                    class="p-1 text-slate-400 active:text-red-500"
+                    v-if="i > 0"
+                    type="button"
+                    @click="copyFromPrevious(i)"
+                    class="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70"
                   >
-                    <span class="material-symbols-outlined text-sm">close</span>
+                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                    Copiar viajeros del tour anterior
                   </button>
-                </div>
-
-                <!-- Mobile: stack fields, Desktop: 2 cols -->
-                <div class="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-                  <div class="md:col-span-2">
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('full_name') }} *</label>
-                    <input v-model="traveler.full_name" type="text" placeholder="Full name" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('nationality') }}</label>
-                    <AppCountrySelect v-model="traveler.nationality" placeholder="Selecciona país" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('doc_type') }}</label>
-                    <select v-model="traveler.doc_type" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white">
-                      <option value="passport">Pasaporte</option>
-                      <option value="dni">DNI</option>
-                      <option value="ce">Carné de extranjería</option>
-                      <option value="cedula">Cédula de ciudadanía</option>
-                      <option value="run">RUN</option>
-                      <option value="rut">RUT</option>
-                      <option value="other">Otro</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('doc_number') }}</label>
-                    <input v-model="traveler.doc_number" type="text" placeholder="Document #" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('special_needs') }}</label>
-                    <input v-model="traveler.special_needs" type="text" placeholder="Optional" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" />
-                  </div>
+                  <BookingTravelersForm v-model="travelersByTour[tr.id]" :max-travelers="tourMax(tr)" />
                 </div>
               </div>
             </div>
-          </div>
+          </template>
+
+          <!-- SINGLE TOUR -->
+          <template v-else>
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm">
+              <div class="flex items-center justify-between p-3 md:p-4 border-b border-slate-50">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-lg">group</span>
+                  {{ t('step_travelers') }}
+                  <span class="text-xs font-normal text-slate-400">({{ travelers.length }}/{{ maxTravelers }})</span>
+                </h3>
+              </div>
+              <div class="p-3 md:p-4">
+                <BookingTravelersForm v-model="travelers" :max-travelers="maxTravelers" />
+              </div>
+            </div>
+          </template>
 
           <div v-if="travelerError" class="mt-2 bg-red-50 border border-red-200 rounded-xl p-3">
             <p class="text-red-700 text-sm">{{ travelerError }}</p>
@@ -480,7 +468,9 @@ function onTourPickupSaved() {
 }
 
 // Travelers form
-const travelers = ref<any[]>([])
+const travelers = ref<any[]>([])                       // single-tour purchase
+const travelersByTour = ref<Record<number, any[]>>({}) // multi-tour: keyed by booking id
+const openTourId = ref<number | null>(null)
 const savingTravelers = ref(false)
 const travelerError = ref<string | null>(null)
 
@@ -492,66 +482,86 @@ const maxTravelers = computed(() => {
   const c = b?.participants?.children ?? b?.children ?? 0
   return Math.max(1, a + c)
 })
-const canAddTraveler = computed(() => travelers.value.length < maxTravelers.value)
+
+// Per-tour cap + status (multi-tour): each tour is capped at its OWN pax, so a
+// purchase mixing a 1-pax tour and a 3-pax tour collects the right travelers.
+const tourMax = (tr: any) => Math.max(1, (tr?.adults || 0) + (tr?.children || 0))
+const filledCount = (id: number) => (travelersByTour.value[id] || []).filter((x: any) => x.full_name?.trim()).length
+const isTourTravelersDone = (tr: any) => filledCount(tr.id) >= 1
+const toursTravelersDone = computed(() => purchaseTours.value.filter((tr: any) => isTourTravelersDone(tr)).length)
+
+function seedTravelers(adults: number, children: number, leaderName?: string) {
+  const a = adults || 0, c = children || 0
+  const total = Math.max(1, a + c)
+  return Array.from({ length: total }, (_, i) => ({
+    full_name: i === 0 ? (leaderName || '') : '',
+    nationality: '', doc_type: 'passport', doc_number: '',
+    age_group: i < a ? 'adult' : 'child', special_needs: '', is_leader: i === 0,
+  }))
+}
+
+function mapTraveler(tr: any) {
+  return {
+    full_name: tr.full_name || '', nationality: tr.nationality || '',
+    doc_type: tr.doc_type || 'passport', doc_number: tr.doc_number || '',
+    age_group: tr.age_group || 'adult', special_needs: tr.special_needs || '',
+    is_leader: tr.is_leader || false,
+  }
+}
+
+// Reuse the travelers of the previous tour (same people on multiple tours),
+// trimmed to this tour's capacity.
+function copyFromPrevious(i: number) {
+  const prev = purchaseTours.value[i - 1]
+  const cur = purchaseTours.value[i]
+  if (!prev || !cur) return
+  const src = travelersByTour.value[prev.id] || []
+  const copy = src.slice(0, tourMax(cur)).map((x: any, idx: number) => ({ ...x, is_leader: idx === 0 }))
+  if (copy.length) travelersByTour.value[cur.id] = copy
+}
 
 // Load existing data when booking is available
 watch(booking, async (b) => {
   if (!b) return
 
-  // Load full details (travelers + pickup)
+  // MULTI-TOUR: seed every tour synchronously (so v-model keys exist), then load
+  // any already-saved travelers per tour.
+  if (isMultiTour.value) {
+    for (const tr of purchaseTours.value) {
+      travelersByTour.value[tr.id] = seedTravelers(tr.adults, tr.children, b.customer?.name)
+    }
+    openTourId.value = purchaseTours.value[0]?.id ?? null
+    let anySaved = false
+    await Promise.all(purchaseTours.value.map(async (tr: any) => {
+      try {
+        const res: any = await api(`/bookings/${tr.id}/travelers`)
+        const existing = res?.data || []
+        if (existing.length) {
+          travelersByTour.value[tr.id] = existing.map(mapTraveler)
+          anySaved = true
+        }
+      } catch {}
+    }))
+    if (anySaved) completedSteps.value.add(2)
+    return
+  }
+
+  // SINGLE TOUR: full details (travelers + pickup)
   try {
     const details = await api(`/bookings/${b.id}/full-details`)
     const data = (details as any)?.data || details
 
-    // Load existing travelers
     if (data?.travelers?.length) {
-      travelers.value = data.travelers.map((tr: any) => ({
-        full_name: tr.full_name || '',
-        nationality: tr.nationality || '',
-        doc_type: tr.doc_type || 'passport',
-        doc_number: tr.doc_number || '',
-        age_group: tr.age_group || 'adult',
-        special_needs: tr.special_needs || '',
-        is_leader: tr.is_leader || false,
-      }))
+      travelers.value = data.travelers.map(mapTraveler)
       completedSteps.value.add(2)
     } else {
-      // Generate empty travelers from booking participants
-      const adults = b.participants?.adults || 1
-      const children = b.participants?.children || 0
-      travelers.value = Array.from({ length: adults + children }, (_, i) => ({
-        full_name: i === 0 ? b.customer?.name || '' : '',
-        nationality: '',
-        doc_type: 'passport',
-        doc_number: '',
-        age_group: i < adults ? 'adult' : 'child',
-        special_needs: '',
-        is_leader: i === 0,
-      }))
+      travelers.value = seedTravelers(b.participants?.adults || 1, b.participants?.children || 0, b.customer?.name)
     }
 
-    // Check if pickup was already configured
-    if (data?.pickup_detail) {
-      completedSteps.value.add(1)
-    }
-
-    // If all steps done, go to complete
-    if (completedSteps.value.has(1) && completedSteps.value.has(2)) {
-      currentStep.value = 3
-    }
+    if (data?.pickup_detail) completedSteps.value.add(1)
+    if (completedSteps.value.has(1) && completedSteps.value.has(2)) currentStep.value = 3
   } catch (e) {
-    // Fallback: generate empty travelers
-    const adults = b.participants?.adults || 1
-    const children = b.participants?.children || 0
-    travelers.value = Array.from({ length: adults + children }, (_, i) => ({
-      full_name: i === 0 ? b.customer?.name || '' : '',
-      nationality: '',
-      doc_type: 'passport',
-      doc_number: '',
-      age_group: i < adults ? 'adult' : 'child',
-      special_needs: '',
-      is_leader: i === 0,
-    }))
+    travelers.value = seedTravelers(b.participants?.adults || 1, b.participants?.children || 0, b.customer?.name)
   }
 }, { immediate: true })
 
@@ -596,40 +606,46 @@ function skipStep(step: number) {
   currentStep.value = step + 1
 }
 
-function addTraveler() {
-  if (travelers.value.length >= maxTravelers.value) return
-  travelers.value.push({
-    full_name: '',
-    nationality: '',
-    doc_type: 'passport',
-    doc_number: '',
-    age_group: 'adult',
-    special_needs: '',
-    is_leader: false,
-  })
-}
-
-function removeTraveler(idx: number) {
-  if (travelers.value.length > 1 && !travelers.value[idx].is_leader) {
-    travelers.value.splice(idx, 1)
-  }
-}
-
 async function saveTravelers() {
-  // Validate at least leader has a name
-  if (!travelers.value[0]?.full_name) {
+  travelerError.value = null
+
+  // MULTI-TOUR: validate + save each tour against its OWN booking id.
+  if (isMultiTour.value) {
+    for (const tr of purchaseTours.value) {
+      const list = travelersByTour.value[tr.id] || []
+      if (!list[0]?.full_name?.trim()) {
+        travelerError.value = `Falta el responsable en "${tr.tour_title}"`
+        openTourId.value = tr.id
+        return
+      }
+    }
+    savingTravelers.value = true
+    try {
+      for (const tr of purchaseTours.value) {
+        const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
+        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+      }
+      completedSteps.value.add(2)
+      currentStep.value = 3
+    } catch (e: any) {
+      travelerError.value = t('error_saving')
+    } finally {
+      savingTravelers.value = false
+    }
+    return
+  }
+
+  // SINGLE TOUR
+  if (!travelers.value[0]?.full_name?.trim()) {
     travelerError.value = t('leader_required')
     return
   }
-  // Filter out empty names
   const validTravelers = travelers.value.filter(tr => tr.full_name?.trim())
   if (validTravelers.length === 0) {
     travelerError.value = t('traveler_required')
     return
   }
-
   savingTravelers.value = true
-  travelerError.value = null
   try {
     await api(`/bookings/${booking.value.id}/travelers`, {
       method: 'POST',
