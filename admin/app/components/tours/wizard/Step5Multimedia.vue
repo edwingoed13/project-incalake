@@ -428,21 +428,59 @@
           <!-- Body -->
           <div class="flex-1 overflow-y-auto p-6">
             <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-5">
-              <!-- Preview column -->
+              <!-- Preview / crop column -->
               <div class="space-y-3">
-                <div class="aspect-video rounded-xl overflow-hidden border border-default relative">
-                  <img :src="getImageUrl(store.multimedia.images[editingIndex]?.url || '')" class="w-full h-full object-cover" />
+                <!-- Aspect ratio presets -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-muted mr-0.5">Proporción</span>
+                  <UButton
+                    v-for="preset in cropPresets"
+                    :key="preset.label"
+                    size="xs"
+                    :color="cropAspect === preset.value ? 'primary' : 'neutral'"
+                    :variant="cropAspect === preset.value ? 'solid' : 'subtle'"
+                    class="font-bold"
+                    @click="cropAspect = preset.value"
+                  >
+                    {{ preset.label }}
+                  </UButton>
+                </div>
+
+                <!-- Interactive cropper -->
+                <div class="relative rounded-xl overflow-hidden border border-default bg-slate-900 h-[340px]">
+                  <ClientOnly>
+                    <Cropper
+                      ref="cropperRef"
+                      :key="store.multimedia.images[editingIndex]?.id"
+                      class="h-full w-full"
+                      :src="getImageUrl(store.multimedia.images[editingIndex]?.url || '')"
+                      :stencil-props="stencilProps"
+                      cross-origin="anonymous"
+                      image-restriction="fit-area"
+                      :canvas="{ maxWidth: 1920, maxHeight: 1920 }"
+                      @change="onCropChange"
+                    />
+                    <template #fallback>
+                      <div class="h-full w-full flex items-center justify-center text-white/60">
+                        <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
+                      </div>
+                    </template>
+                  </ClientOnly>
                   <UBadge
                     v-if="store.multimedia.images[editingIndex]?.isPrimary"
                     color="primary"
                     variant="solid"
                     size="sm"
                     icon="i-lucide-star"
-                    class="absolute top-3 left-3 shadow-md"
+                    class="absolute top-3 left-3 shadow-md z-10 pointer-events-none"
                   >
                     Principal
                   </UBadge>
                 </div>
+                <p class="text-[10px] text-muted flex items-center gap-1.5">
+                  <UIcon name="i-lucide-crop" class="size-3 shrink-0" />
+                  Arrastra el marco para recortar. Al guardar se optimiza a máx 1920px y se convierte a WebP.
+                </p>
 
                 <UCard :ui="{ body: 'p-4' }">
                   <div class="space-y-2 text-xs">
@@ -508,9 +546,14 @@
 
           <!-- Footer -->
           <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2 shrink-0">
-            <UButton color="neutral" variant="ghost" @click="editingIndex = null">Cancelar</UButton>
-            <UButton color="primary" icon="i-lucide-save" @click="saveChanges">
-              Guardar cambios
+            <UButton color="neutral" variant="ghost" :disabled="cropProcessing" @click="editingIndex = null">Cancelar</UButton>
+            <UButton
+              color="primary"
+              :icon="cropProcessing ? undefined : 'i-lucide-save'"
+              :loading="cropProcessing"
+              @click="saveChanges"
+            >
+              {{ cropProcessing ? 'Optimizando…' : 'Guardar cambios' }}
             </UButton>
           </div>
         </div>
@@ -523,6 +566,8 @@
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { useAuthStore } from '~/stores/auth'
 import WizardSection from './WizardSection.vue'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
@@ -541,6 +586,33 @@ const editForm = ref({
   titleText: '',
   description: ''
 })
+
+// === Image cropper (edit modal) ===
+const cropperRef = ref<any>(null)
+const cropProcessing = ref(false)
+// Aspect ratio: null = free. Presets cover the gallery layouts (hero, grid, mosaic).
+const cropAspect = ref<number | null>(null)
+const cropPresets = [
+  { label: 'Libre', value: null },
+  { label: '16:9', value: 16 / 9 },
+  { label: '4:3', value: 4 / 3 },
+  { label: '1:1', value: 1 },
+] as const
+const stencilProps = computed(() => (cropAspect.value ? { aspectRatio: cropAspect.value } : {}))
+// Track the stencil position so we only re-encode when the user actually crops.
+const initialCropCoords = ref<any>(null)
+const currentCropCoords = ref<any>(null)
+const onCropChange = ({ coordinates }: any) => {
+  currentCropCoords.value = coordinates
+  if (!initialCropCoords.value) initialCropCoords.value = coordinates
+}
+const cropChanged = () => {
+  const a = initialCropCoords.value
+  const b = currentCropCoords.value
+  if (!a || !b) return false
+  const key = (c: any) => `${Math.round(c.left)},${Math.round(c.top)},${Math.round(c.width)},${Math.round(c.height)}`
+  return key(a) !== key(b)
+}
 
 // Collapsible sections — state persisted in localStorage so F5 keeps each open/closed.
 const { toggleSection, isSectionExpanded } = useCollapsibles('wizard:step5')
@@ -596,14 +668,84 @@ const openEditModal = (index: number) => {
       titleText: getMediaText(image.id, 'title_text') || image.titleText || '',
       description: image.description || ''
     }
+    // Reset cropper state for the freshly opened image
+    cropAspect.value = null
+    initialCropCoords.value = null
+    currentCropCoords.value = null
     editingIndex.value = index
   }
 }
 
-const saveChanges = () => {
+// Crop → resize (≤1920) → WebP → re-upload, then repoint the gallery entry
+// at the new file. Returns false if anything failed (keeps the modal open).
+const applyCropAndUpload = async (image: any): Promise<boolean> => {
+  const result = cropperRef.value?.getResult?.()
+  const canvas = result?.canvas
+  if (!canvas) return false
+
+  const blob: Blob | null = await new Promise(res => canvas.toBlob(res, 'image/webp', 0.82))
+  if (!blob) return false
+
+  const auth = useAuthStore()
+  const config = useRuntimeConfig()
+  const base = (image.filename || 'imagen').replace(/\.[^.]+$/, '')
+  const file = new File([blob], `${base}.webp`, { type: 'image/webp' })
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const response: any = await $fetch(`${config.public.apiUrl}/admin/tours/upload-image`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+    body: formData,
+  })
+  if (!response?.success) return false
+
+  // Drop the previous temp file (matched by current filename) before repointing.
+  const oldIdx = store.tempImages.findIndex((t: any) => t.filename === image.filename)
+  if (oldIdx !== -1) store.tempImages.splice(oldIdx, 1)
+
+  image.url = response.url
+  image.filename = response.filename
+  image.size = blob.size
+  store.tempImages.push({ filename: response.filename, path: response.path })
+  store.isDirty = true
+  return true
+}
+
+const saveChanges = async () => {
   if (editingIndex.value !== null) {
     const image = store.multimedia.images[editingIndex.value]
     if (image) {
+      // 1. Apply crop only if the user actually moved/resized the stencil.
+      if (cropChanged() && cropperRef.value) {
+        cropProcessing.value = true
+        try {
+          const ok = await applyCropAndUpload(image)
+          if (!ok) {
+            toast.add({
+              title: 'No se pudo recortar la imagen',
+              description: 'Vuelve a intentarlo.',
+              icon: 'i-lucide-triangle-alert',
+              color: 'error',
+            })
+            cropProcessing.value = false
+            return // keep modal open so the user doesn't lose the crop
+          }
+        } catch (error) {
+          console.error('Crop/upload failed:', error)
+          toast.add({
+            title: 'No se pudo recortar la imagen',
+            description: 'Vuelve a intentarlo.',
+            icon: 'i-lucide-triangle-alert',
+            color: 'error',
+          })
+          cropProcessing.value = false
+          return
+        }
+        cropProcessing.value = false
+      }
+
+      // 2. Save metadata.
       // Save shared fields (description stays shared)
       image.description = editForm.value.description
 
