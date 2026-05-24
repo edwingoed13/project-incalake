@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\FormatsTourContent;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -14,6 +15,8 @@ use Illuminate\Support\Collection;
  */
 class GroupBookingConfirmationEmail extends Mailable
 {
+    use FormatsTourContent;
+
     /** @var Collection<int,\App\Models\Booking> */
     public Collection $bookings;
     public bool $isAdminCopy;
@@ -54,12 +57,20 @@ class GroupBookingConfirmationEmail extends Mailable
         $groupPaid = round($this->amountPaid ?? $groupTotal, 2);
         $groupRemaining = round(max(0, $groupTotal - $groupPaid), 2);
 
+        // Per-tour includes/excludes, keyed by booking id (the view loops the
+        // same collection).
+        $tourLists = [];
+        foreach ($this->bookings as $b) {
+            $tourLists[$b->id] = $this->tourIncludeLists($b->tour);
+        }
+
         return new Content(
             view: 'emails.booking-confirmation-group',
             with: [
                 'bookings'       => $this->bookings,
                 'primary'        => $this->bookings->first(),
                 'isAdminCopy'    => $this->isAdminCopy,
+                'tourLists'      => $tourLists,
                 'currency'       => $currency,
                 'groupSubtotal'  => $this->bookings->sum(fn ($b) => (float) $b->subtotal),
                 'groupTax'       => $this->bookings->sum(fn ($b) => (float) ($b->tax_amount ?? 0)),

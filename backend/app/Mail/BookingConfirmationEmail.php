@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\FormatsTourContent;
 use App\Models\Booking;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -10,6 +11,8 @@ use Illuminate\Mail\Mailables\Envelope;
 
 class BookingConfirmationEmail extends Mailable
 {
+    use FormatsTourContent;
+
     public Booking $booking;
     public bool $isAdminCopy;
     /** Real amount actually charged/captured by the gateway. Null = treat as
@@ -37,12 +40,16 @@ class BookingConfirmationEmail extends Mailable
 
     public function content(): Content
     {
+        $lists = $this->tourIncludeLists($this->booking->tour);
+
         return new Content(
             view: 'emails.booking-confirmation',
             with: [
                 'booking'     => $this->booking,
                 'isAdminCopy' => $this->isAdminCopy,
                 'amountPaid'  => $this->amountPaid,
+                'includes'    => $lists['includes'],
+                'excludes'    => $lists['excludes'],
             ]
         );
     }

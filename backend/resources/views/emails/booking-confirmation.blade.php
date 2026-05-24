@@ -187,25 +187,25 @@
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2980b9 100%); padding:32px 30px; text-align:center;">
+            <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2980b9 100%); padding:26px 30px; text-align:center;">
               <h1 style="margin:0; font-size:24px; font-weight:800; color:#ffffff; letter-spacing:-0.5px;">Incalake</h1>
               <p style="margin:4px 0 0; font-size:11px; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:2px;">Tours & Experiences</p>
             </td>
           </tr>
 
           <tr>
-            <td style="padding:32px 30px 24px;">
+            <td style="padding:24px 28px 20px;">
 
               <!-- Greeting -->
-              <p style="font-size:15px; color:#555; margin:0 0 20px; line-height:1.6;">
+              <p style="font-size:15px; color:#555; margin:0 0 16px; line-height:1.55;">
                 Hola <strong style="color:#1a1a2e;">{{ $booking->customer_name }}</strong>,<br>
                 Tu reserva ha sido confirmada. Aqui tienes el resumen.
               </p>
 
               <!-- Booking Code Card -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:18px;">
                 <tr>
-                  <td style="padding:20px; text-align:center;">
+                  <td style="padding:16px; text-align:center;">
                     <p style="margin:0 0 6px; font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; font-weight:700;">Codigo de reserva</p>
                     <p style="margin:0 0 10px; font-size:24px; font-weight:800; color:#1e3a5f; letter-spacing:2px; font-family:'Courier New',monospace;">{{ $booking->booking_code }}</p>
                     <span style="display:inline-block; background:#22c55e; color:#fff; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.5px;">PAGADO</span>
@@ -214,7 +214,7 @@
               </table>
 
               <!-- Tour Details -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
                 <tr>
                   <td style="padding:10px 14px; background:#1e3a5f; border-radius:8px 8px 0 0;">
                     <p style="margin:0; font-size:12px; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:1px;">Detalles del Tour</p>
@@ -251,11 +251,43 @@
                 </tr>
               </table>
 
+              <!-- What's Included / Not Included -->
+              @if(!empty($includes) || !empty($excludes))
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
+                <tr>
+                  <td style="padding:10px 14px; background:#0f766e; border-radius:8px 8px 0 0;">
+                    <p style="margin:0; font-size:12px; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:1px;">Que incluye tu tour</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #e2e8f0; border-top:none; border-radius:0 0 8px 8px; padding:12px 16px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      @foreach($includes as $inc)
+                      <tr>
+                        <td style="vertical-align:top; width:18px; padding:3px 0; color:#16a34a; font-size:14px; font-weight:700; line-height:1.4;">&#10003;</td>
+                        <td style="padding:3px 0 3px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
+                      </tr>
+                      @endforeach
+                      @if(!empty($includes) && !empty($excludes))
+                      <tr><td colspan="2" style="padding:6px 0 2px;"><div style="border-top:1px solid #f1f5f9; font-size:1px; line-height:1px;">&nbsp;</div></td></tr>
+                      @endif
+                      @foreach($excludes as $exc)
+                      <tr>
+                        <td style="vertical-align:top; width:18px; padding:3px 0; color:#dc2626; font-size:14px; font-weight:700; line-height:1.4;">&#10007;</td>
+                        <td style="padding:3px 0 3px 6px; font-size:12px; color:#94a3b8; line-height:1.5;">{{ $exc }}</td>
+                      </tr>
+                      @endforeach
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              @endif
+
               <!-- Payment Summary -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:18px;">
                 <tr>
                   <td style="padding:16px;">
-                    <p style="margin:0 0 12px; font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Resumen de pago</p>
+                    <p style="margin:0 0 10px; font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Resumen de pago</p>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:6px 0; font-size:14px; color:#64748b;">Subtotal</td>
@@ -313,9 +345,9 @@
               </table>
 
               <!-- CTA: View Booking -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
                 <tr>
-                  <td align="center" style="padding:24px 20px; background:#f8fafc; border-radius:12px;">
+                  <td align="center" style="padding:18px 20px; background:#f8fafc; border-radius:12px;">
                     <a href="{{ config('app.frontend_url') }}/es/booking-confirmation/{{ $booking->booking_code }}?token={{ $booking->confirmation_token }}"
                        style="display:inline-block; background:#1e3a5f; color:#ffffff; text-decoration:none; padding:14px 36px; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.3px;">
                       Ver detalles de mi reserva
@@ -338,7 +370,7 @@
                 $gcalDetails = urlencode('Reserva #' . $booking->booking_code . ' - Incalake Tours. Total: ' . $booking->currency . ' ' . number_format($booking->total, 2));
                 $gcalUrl     = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' . $gcalTitle . '&dates=' . $gcalStart . '/' . $gcalEnd . '&details=' . $gcalDetails . '&ctz=America/Lima';
               @endphp
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
                     <a href="{{ $gcalUrl }}" target="_blank"

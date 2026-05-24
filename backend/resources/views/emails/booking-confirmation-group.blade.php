@@ -155,21 +155,21 @@
 @else
           {{-- ===================== CLIENT ===================== --}}
           <tr>
-            <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2980b9 100%); padding:32px 30px; text-align:center;">
+            <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2980b9 100%); padding:26px 30px; text-align:center;">
               <h1 style="margin:0; font-size:24px; font-weight:800; color:#ffffff; letter-spacing:-0.5px;">Incalake</h1>
               <p style="margin:4px 0 0; font-size:11px; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:2px;">Tours & Experiences</p>
             </td>
           </tr>
           <tr>
-            <td style="padding:32px 30px 24px;">
+            <td style="padding:24px 28px 20px;">
 
-              <p style="font-size:15px; color:#555; margin:0 0 20px; line-height:1.6;">
+              <p style="font-size:15px; color:#555; margin:0 0 16px; line-height:1.55;">
                 Hola <strong style="color:#1a1a2e;">{{ $primary->customer_name }}</strong>,<br>
                 Tu reserva de <strong>{{ $bookings->count() }} tours</strong> ha sido confirmada. Aqui tienes el resumen.
               </p>
 
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:24px;">
-                <tr><td style="padding:20px; text-align:center;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:18px;">
+                <tr><td style="padding:16px; text-align:center;">
                   <p style="margin:0 0 6px; font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; font-weight:700;">Codigos de reserva</p>
                   <p style="margin:0 0 10px; font-size:16px; font-weight:800; color:#1e3a5f; letter-spacing:1px; font-family:'Courier New',monospace;">{{ $bookings->pluck('booking_code')->implode(' · ') }}</p>
                   <span style="display:inline-block; background:#22c55e; color:#fff; padding:4px 14px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.5px;">PAGADO</span>
@@ -206,9 +206,31 @@
                       <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1a1a2e;">{{ $b->adults }} adulto{{ $b->adults > 1 ? 's' : '' }}@if($b->children > 0), {{ $b->children }} nino{{ $b->children > 1 ? 's' : '' }}@endif</td>
                     </tr>
                     <tr>
-                      <td style="padding:12px 14px; color:#64748b; font-size:13px; font-weight:600;">Subtotal</td>
-                      <td style="padding:12px 14px; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $b->currency }} {{ number_format($b->total, 2) }}</td>
+                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:13px; font-weight:600;">Subtotal</td>
+                      <td style="padding:12px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; font-weight:700; color:#1a1a2e;">{{ $b->currency }} {{ number_format($b->total, 2) }}</td>
                     </tr>
+                    @php $lists = $tourLists[$b->id] ?? ['includes' => [], 'excludes' => []]; @endphp
+                    @if(!empty($lists['includes']) || !empty($lists['excludes']))
+                    <tr>
+                      <td colspan="2" style="padding:10px 14px 12px;">
+                        <p style="margin:0 0 6px; font-size:10px; font-weight:700; color:#0f766e; text-transform:uppercase; letter-spacing:1px;">Que incluye</p>
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          @foreach($lists['includes'] as $inc)
+                          <tr>
+                            <td style="vertical-align:top; width:16px; padding:2px 0; color:#16a34a; font-size:13px; font-weight:700; line-height:1.4;">&#10003;</td>
+                            <td style="padding:2px 0 2px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
+                          </tr>
+                          @endforeach
+                          @foreach($lists['excludes'] as $exc)
+                          <tr>
+                            <td style="vertical-align:top; width:16px; padding:2px 0; color:#dc2626; font-size:13px; font-weight:700; line-height:1.4;">&#10007;</td>
+                            <td style="padding:2px 0 2px 6px; font-size:12px; color:#94a3b8; line-height:1.5;">{{ $exc }}</td>
+                          </tr>
+                          @endforeach
+                        </table>
+                      </td>
+                    </tr>
+                    @endif
                   </table>
                 </td></tr>
               </table>
