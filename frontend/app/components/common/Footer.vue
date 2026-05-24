@@ -1,48 +1,56 @@
 <template>
-  <!-- Premium Editorial Footer -->
-  <footer class="bg-white dark:bg-slate-950 pt-32 pb-12 px-6 border-t border-slate-100 dark:border-slate-900">
+  <!-- Premium Editorial Footer (dark, separates clearly from content) -->
+  <footer class="bg-slate-900 text-slate-300 pt-16 md:pt-24 pb-10 px-5 md:px-6">
     <div class="max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-16 mb-24">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 mb-12 md:mb-20">
         <!-- Brand & Vision -->
         <div class="md:col-span-4 max-w-sm">
-          <NuxtLink to="/" class="flex items-center gap-3 mb-8 group">
-            <div class="size-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center shadow-2xl transition-transform group-hover:rotate-12">
+          <NuxtLink :to="localePath('/')" class="flex items-center gap-3 mb-6 group">
+            <div class="size-12 bg-white text-slate-900 rounded-2xl flex items-center justify-center shadow-2xl transition-transform group-hover:rotate-12 shrink-0">
                <span class="material-symbols-outlined font-bold text-3xl">explore</span>
             </div>
             <div class="flex flex-col">
-              <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none">Incalake</h2>
-              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Tours & Experiencias</span>
+              <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</h2>
+              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Tours & Experiencias</span>
             </div>
           </NuxtLink>
-          <p class="text-slate-500 dark:text-slate-400 mb-10 font-medium leading-relaxed">
-            Reimaging the way we explore the world. We combine editorial storytelling with exclusive access to provide the most authentic travel experiences in the Andes and beyond.
+          <p class="text-slate-400 mb-8 font-medium leading-relaxed text-sm">
+            Reinventamos la forma de explorar el mundo. Combinamos narrativa editorial con acceso exclusivo para ofrecer las experiencias más auténticas en los Andes y el Lago Titicaca.
           </p>
-          <div class="flex gap-4">
-             <a v-for="i in 3" :key="i" href="#" class="size-10 rounded-full border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-all shadow-sm">
-                <span class="material-symbols-outlined text-lg">public</span>
+          <div class="flex gap-3">
+             <a
+               v-for="s in socials"
+               :key="s.label"
+               :href="s.href"
+               target="_blank"
+               rel="noopener noreferrer"
+               :aria-label="s.label"
+               class="size-11 rounded-full border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-primary hover:border-primary transition-all"
+             >
+                <span class="material-symbols-outlined text-lg">{{ s.icon }}</span>
              </a>
           </div>
         </div>
 
         <!-- Links Grid -->
-        <div class="md:col-span-5 grid grid-cols-2 gap-12">
+        <div class="md:col-span-5 grid grid-cols-2 gap-8 md:gap-12">
             <div>
-              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-8 italic">Company</h6>
-              <ul class="space-y-4">
-                 <li v-for="link in companyLinks" :key="link.label">
-                    <NuxtLink :to="link.path" class="text-sm font-bold text-slate-500 hover:text-primary transition-all flex items-center gap-2 group">
-                       <span class="size-1 bg-slate-200 group-hover:bg-primary rounded-full transition-all"></span>
+              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">Compañía</h6>
+              <ul class="space-y-3.5">
+                 <li v-for="link in companyLinks" :key="link.path">
+                    <NuxtLink :to="localePath(link.path)" class="text-sm font-bold text-slate-400 hover:text-white transition-all flex items-center gap-2 group">
+                       <span class="size-1 bg-slate-600 group-hover:bg-primary rounded-full transition-all"></span>
                        {{ link.label }}
                     </NuxtLink>
                  </li>
               </ul>
             </div>
             <div>
-              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-8 italic">Product</h6>
-              <ul class="space-y-4">
-                 <li v-for="link in productLinks" :key="link.label">
-                    <NuxtLink :to="link.path" class="text-sm font-bold text-slate-500 hover:text-primary transition-all flex items-center gap-2 group">
-                       <span class="size-1 bg-slate-200 group-hover:bg-primary rounded-full transition-all"></span>
+              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">Explorar</h6>
+              <ul class="space-y-3.5">
+                 <li v-for="link in productLinks" :key="link.path">
+                    <NuxtLink :to="localePath(link.path)" class="text-sm font-bold text-slate-400 hover:text-white transition-all flex items-center gap-2 group">
+                       <span class="size-1 bg-slate-600 group-hover:bg-primary rounded-full transition-all"></span>
                        {{ link.label }}
                     </NuxtLink>
                  </li>
@@ -52,29 +60,28 @@
 
         <!-- Newsletter Section -->
         <div class="md:col-span-3">
-           <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white mb-8 italic">Stay Restless</h6>
-           <p class="text-xs font-medium text-slate-500 mb-6 leading-relaxed">Join our inner circle for secret destinations and early boarding access to new tours.</p>
+           <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-6 italic">Mantente al día</h6>
+           <p class="text-xs font-medium text-slate-400 mb-5 leading-relaxed">Recibe destinos secretos y acceso anticipado a nuevos tours.</p>
            <form class="space-y-3" @submit.prevent>
-              <div class="relative group">
-                 <input type="email" placeholder="Your email address" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl py-4 px-6 text-sm font-bold outline-none group-focus-within:ring-2 ring-primary/10 transition-all" />
-              </div>
-              <button class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-primary group transition-all active:scale-95 shadow-xl shadow-black/5">
-                 Únete a Incalake <span class="material-symbols-outlined ml-2 text-xs group-hover:translate-x-1 transition-transform">trending_flat</span>
+              <input
+                type="email"
+                placeholder="Tu correo electrónico"
+                class="w-full bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 rounded-2xl py-3.5 px-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+              />
+              <button class="w-full bg-primary text-white min-h-[48px] rounded-2xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 group transition-all active:scale-95 shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                 Únete a Incalake
+                 <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
            </form>
         </div>
       </div>
 
       <!-- Bottom Bar -->
-      <div class="pt-10 border-t border-slate-100 dark:border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">© {{ new Date().getFullYear() }} Incalake Tours</p>
-        <div class="flex gap-10">
-           <NuxtLink to="/terms" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Privacy Policy</NuxtLink>
-           <NuxtLink to="/terms" class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Terms of Service</NuxtLink>
-        </div>
-        <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-           <span>Designed by Stitch</span>
-           <span class="size-1 bg-primary rounded-full animate-pulse"></span>
+      <div class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-center">
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">© {{ new Date().getFullYear() }} Incalake Tours</p>
+        <div class="flex gap-8">
+           <NuxtLink :to="localePath('/terms')" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Privacidad</NuxtLink>
+           <NuxtLink :to="localePath('/terms')" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Términos</NuxtLink>
         </div>
       </div>
     </div>
@@ -82,17 +89,21 @@
 </template>
 
 <script setup lang="ts">
+const localePath = useLocalePath()
+
 const companyLinks = [
-  { label: 'About Us', path: '/about' },
-  { label: 'The Blog', path: '/blog' },
-  { label: 'Careers', path: '/careers' },
-  { label: 'Contact', path: '/contact' }
+  { label: 'Nosotros', path: '/about' },
+  { label: 'Contacto', path: '/contact' },
 ]
 
 const productLinks = [
-  { label: 'All Experiences', path: '/tours' },
-  { label: 'Destinations', path: '/destinations' },
-  { label: 'Help Center', path: '/help' },
-  { label: 'Safety', path: '/trust' }
+  { label: 'Todos los tours', path: '/tours' },
+  { label: 'Guardados', path: '/saved' },
+]
+
+const socials = [
+  { label: 'Facebook', icon: 'public', href: 'https://facebook.com' },
+  { label: 'Instagram', icon: 'photo_camera', href: 'https://instagram.com' },
+  { label: 'WhatsApp', icon: 'chat', href: 'https://wa.me/' },
 ]
 </script>
