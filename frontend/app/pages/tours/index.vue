@@ -68,28 +68,28 @@
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
           <button @click="mobileSheet = 'city'"
             :class="selectedCitySlug ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3 py-1.5 border rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0">
+            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedCitySlug ? formatCityName(selectedCitySlug) : t('destination') }}
             <span class="material-symbols-outlined text-[10px]">expand_more</span>
           </button>
           <button @click="mobileSheet = 'duration'"
             :class="selectedDuration ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3 py-1.5 border rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0">
+            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}
             <span class="material-symbols-outlined text-[10px]">expand_more</span>
           </button>
           <button @click="mobileSheet = 'price'"
             :class="selectedPrice ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3 py-1.5 border rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0">
+            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedPrice ? priceLabels[selectedPrice] : t('price') }}
             <span class="material-symbols-outlined text-[10px]">expand_more</span>
           </button>
           <button @click="mobileSheet = 'sort'"
-            class="flex items-center gap-1 px-3 py-1.5 bg-white text-slate-700 border border-slate-200 rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0">
+            class="flex items-center gap-1 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             <span class="material-symbols-outlined text-xs">sort</span>
             {{ sortLabels[sortBy]?.split(':')[0] || t('sort_by') }}
           </button>
-          <button v-if="hasActiveFilters" @click="clearFilters" class="text-red-500 text-[10px] font-bold whitespace-nowrap shrink-0 px-2">{{ t('clear_all') }}</button>
+          <button v-if="hasActiveFilters" @click="clearFilters" class="text-red-500 text-[11px] font-bold whitespace-nowrap shrink-0 px-2 py-2">{{ t('clear_all') }}</button>
         </div>
       </div>
     </div>
@@ -220,7 +220,7 @@
       <!-- MOBILE: Horizontal cards -->
       <div v-else class="md:hidden space-y-3">
         <NuxtLink
-          v-for="tour in paginatedTours.data"
+          v-for="tour in mobileVisibleTours"
           :key="'m-'+tour.id"
           :to="getTourLink(tour)"
           class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5 hover:shadow-md transition-shadow"
@@ -244,12 +244,11 @@
               </div>
             </div>
             <div class="flex items-end justify-between mt-1">
-              <div class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-yellow-400 text-xs" style="font-variation-settings: 'FILL' 1">star</span>
-                <span class="text-[10px] font-bold text-slate-700">4.5</span>
-              </div>
+              <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5">
+                {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </span>
               <div class="text-right">
-                <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
+                <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
                 <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
             </div>
@@ -286,7 +285,7 @@
                 <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
                 <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
-              <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+              <span class="text-xs font-bold text-primary opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                 {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </span>
             </div>
@@ -322,8 +321,7 @@
                   <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
                 </span>
                 <span class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
-                  <span class="font-bold text-slate-700">4.5</span>
+                  <span class="material-symbols-outlined text-sm">location_on</span>{{ tour.city?.name || 'Puno' }}
                 </span>
               </div>
             </div>
@@ -332,7 +330,7 @@
                 <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
                 <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
-              <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                 {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </span>
             </div>
@@ -340,19 +338,34 @@
         </NuxtLink>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="paginatedTours.lastPage > 1" class="flex items-center justify-center gap-2 mt-8 mb-4">
-        <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1"
-          class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
+      <!-- MOBILE: load more (fluid, no number tapping) -->
+      <div v-if="filteredTours.length > 0" class="md:hidden mt-6 mb-2 text-center">
+        <p class="text-xs text-slate-400 font-semibold mb-3">
+          {{ Math.min(mobileShown, filteredTours.length) }} / {{ filteredTours.length }}
+        </p>
+        <button
+          v-if="mobileVisibleTours.length < filteredTours.length"
+          @click="loadMore"
+          class="w-full min-h-[48px] bg-white border-2 border-primary text-primary font-bold rounded-xl text-sm active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2"
+        >
+          Cargar más tours
+          <span class="material-symbols-outlined text-lg">expand_more</span>
+        </button>
+      </div>
+
+      <!-- DESKTOP: numbered pagination -->
+      <div v-if="paginatedTours.lastPage > 1" class="hidden md:flex items-center justify-center gap-2 mt-8 mb-4">
+        <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1" aria-label="Anterior"
+          class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <span class="material-symbols-outlined text-base">chevron_left</span>
         </button>
         <button v-for="page in visiblePages" :key="page" @click="handlePageChange(page)"
           :class="page === currentPage ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-          class="w-9 h-9 flex items-center justify-center rounded-xl font-bold text-xs transition-all">
+          class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all">
           {{ page }}
         </button>
-        <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage"
-          class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
+        <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage" aria-label="Siguiente"
+          class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <span class="material-symbols-outlined text-base">chevron_right</span>
         </button>
       </div>
@@ -386,6 +399,8 @@ const selectedPrice = ref('')
 const sortBy = ref('featured')
 const currentPage = ref(1)
 const perPage = 12
+// Mobile uses a "load more" pattern (more fluid than numbered pages).
+const mobileShown = ref(perPage)
 
 // Active tag info (for the chip displayed at the top of the listing)
 const activeTagInfo = ref<{ slug: string; name: string } | null>(null)
@@ -526,12 +541,16 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// Mobile "load more": show the first N, grow by perPage.
+const mobileVisibleTours = computed(() => filteredTours.value.slice(0, mobileShown.value))
+function loadMore() { mobileShown.value += perPage }
+
 const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || sortBy.value !== 'featured')
 
-watch([searchQuery, selectedDuration, selectedPrice, sortBy, selectedCitySlug], () => { currentPage.value = 1 })
+watch([searchQuery, selectedDuration, selectedPrice, sortBy, selectedCitySlug], () => { currentPage.value = 1; mobileShown.value = perPage })
 
 function clearFilters() {
-  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; sortBy.value = 'featured'; currentPage.value = 1
+  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; sortBy.value = 'featured'; currentPage.value = 1; mobileShown.value = perPage
 }
 
 function handlePageChange(page: number) {
