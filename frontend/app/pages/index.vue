@@ -398,9 +398,9 @@
     <!-- Why Choose Us -->
     <section class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
-        <h3 class="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 text-center mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div v-for="(item, idx) in whyUsItems" :key="idx" class="flex flex-col items-center text-center">
+        <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900 text-center mb-6 md:mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
+        <div class="flex md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+          <div v-for="(item, idx) in whyUsItems" :key="idx" class="flex flex-col items-center text-center shrink-0 w-[80%] sm:w-[55%] md:w-auto snap-start bg-slate-50 md:bg-transparent rounded-2xl md:rounded-none p-6 md:p-0">
             <div class="size-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-6 shadow-xl">
               <span class="material-symbols-outlined text-3xl">{{ item.icon }}</span>
             </div>
