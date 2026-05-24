@@ -28,31 +28,6 @@
       </template>
 
       <div v-if="currentLangData" class="space-y-6">
-        <!-- Section: Tour Content -->
-        <section class="space-y-3">
-          <h3 class="text-base font-bold flex items-center gap-2">
-            <UIcon name="i-lucide-file-text" class="size-5 text-primary" />
-            Contenido del tour
-          </h3>
-          <UFormField label="Título público" required>
-            <UInput
-              v-model="currentLangData.title"
-              placeholder="Ej. Tour mágico al atardecer en Cusco"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="Descripción corta" hint="Resumen para listados de búsqueda">
-            <UTextarea
-              v-model="currentLangData.shortDescription"
-              :rows="3"
-              placeholder="Resumen breve para listados..."
-              class="w-full"
-            />
-          </UFormField>
-        </section>
-
-        <USeparator />
-
         <!-- Section: SEO Settings -->
         <section class="space-y-3">
           <div class="flex items-center justify-between gap-3 flex-wrap">

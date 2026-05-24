@@ -6,8 +6,8 @@ const store = useTourWizardStore()
 
 const steps = [
   { id: 1, label: 'Información', shortLabel: 'Info', icon: 'i-lucide-info' },
-  { id: 2, label: 'SEO', shortLabel: 'SEO', icon: 'i-lucide-search' },
-  { id: 3, label: 'Contenido', shortLabel: 'Detalle', icon: 'i-lucide-file-text' },
+  { id: 2, label: 'Contenido', shortLabel: 'Contenido', icon: 'i-lucide-file-text' },
+  { id: 3, label: 'SEO', shortLabel: 'SEO', icon: 'i-lucide-search' },
   { id: 4, label: 'Precios', shortLabel: 'Precios', icon: 'i-lucide-dollar-sign' },
   { id: 5, label: 'Multimedia', shortLabel: 'Media', icon: 'i-lucide-image' },
   { id: 6, label: 'Reservas', shortLabel: 'Reservas', icon: 'i-lucide-calendar-check' },

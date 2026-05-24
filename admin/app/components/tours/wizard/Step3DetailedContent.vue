@@ -28,6 +28,30 @@
     <!-- Sections (collapsibles) -->
     <template v-if="currentLangData">
 
+      <!-- Public title + short description: the title is the #1 content field,
+           so it leads the Contenido step (moved here from the SEO step). -->
+      <UCard :ui="{ body: 'p-4 sm:p-4 space-y-3' }">
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-type" class="size-5 text-primary" />
+          <h3 class="text-base font-bold">Título y resumen</h3>
+        </div>
+        <UFormField label="Título público" required>
+          <UInput
+            v-model="currentLangData.title"
+            placeholder="Ej. Tour mágico al atardecer en Cusco"
+            class="w-full"
+          />
+        </UFormField>
+        <UFormField label="Descripción corta" hint="Resumen para listados de búsqueda">
+          <UTextarea
+            v-model="currentLangData.shortDescription"
+            :rows="3"
+            placeholder="Resumen breve para listados..."
+            class="w-full"
+          />
+        </UFormField>
+      </UCard>
+
       <!-- Section: Long Description -->
       <UCard :ui="{ header: 'p-0', body: isSectionExpanded('description') ? 'p-4 sm:p-4' : 'p-0 sm:p-0' }">
         <template #header>

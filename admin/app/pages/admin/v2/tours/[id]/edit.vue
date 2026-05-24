@@ -70,8 +70,8 @@ const isInitialLoading = computed(() => store.loading && !hasFetched.value)
 
 const stepLabels = [
   { id: 1, category: 'Datos generales', title: 'Información básica', description: 'Comienza con los datos esenciales del tour. Se usan para indexación interna y filtros de búsqueda del cliente.' },
-  { id: 2, category: 'Contenido', title: 'Descripción y SEO', description: 'Crea títulos y descripciones atractivas para captar viajeros y posicionar en buscadores.' },
-  { id: 3, category: 'Itinerario', title: 'Contenido detallado', description: 'Define el itinerario, qué incluye y qué no, y recomendaciones específicas para viajeros.' },
+  { id: 2, category: 'Contenido', title: 'Contenido del tour', description: 'Redacta el título público, las descripciones y el itinerario que verá el viajero.' },
+  { id: 3, category: 'SEO', title: 'SEO y buscadores', description: 'Optimiza cómo aparece el tour en Google: meta título, meta descripción y URL.' },
   { id: 4, category: 'Reglas comerciales', title: 'Precios y rangos', description: 'Configura precios por etapa de edad, nacionalidad y cantidad de pasajeros.' },
   { id: 5, category: 'Multimedia', title: 'Galería y video', description: 'Sube fotos de calidad y un video que muestren lo mejor de la experiencia.' },
   { id: 6, category: 'Reservas', title: 'Opciones de reserva', description: 'Define políticas, anticipación, datos requeridos, recojo, guía y otras reglas de la reserva.' },
@@ -275,8 +275,8 @@ onBeforeUnmount(() => {
             <!-- Step components -->
             <Transition v-else name="fade" mode="out-in">
               <Step1BasicInfo v-if="store.currentStep === 1" />
-              <Step2ContentSEO v-else-if="store.currentStep === 2" />
-              <Step3DetailedContent v-else-if="store.currentStep === 3" />
+              <Step3DetailedContent v-else-if="store.currentStep === 2" />
+              <Step2ContentSEO v-else-if="store.currentStep === 3" />
               <Step4CommercialRules v-else-if="store.currentStep === 4" />
               <Step5Multimedia v-else-if="store.currentStep === 5" />
               <Step6BookingOptions v-else-if="store.currentStep === 6" />
