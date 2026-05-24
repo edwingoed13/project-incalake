@@ -1,42 +1,25 @@
 <template>
   <div class="flex flex-col gap-6">
-    <UCard :ui="{ header: 'p-4 sm:p-4', body: 'p-4 sm:p-4 space-y-6' }">
-      <template #header>
-        <div class="flex items-center justify-between gap-4 flex-wrap">
-          <div class="flex items-center gap-3">
-            <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <UIcon name="i-lucide-languages" class="size-5 text-primary" />
-            </div>
-            <div>
-              <p class="text-[10px] font-black uppercase tracking-widest text-muted">Editando contenido en</p>
-              <div class="flex items-center gap-1 mt-1">
-                <UButton
-                  v-for="lang in tourLanguages"
-                  :key="lang"
-                  size="xs"
-                  :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
-                  :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
-                  class="uppercase font-black tracking-wider"
-                  @click="store.currentLanguage = lang"
-                >
-                  {{ lang }}
-                </UButton>
-              </div>
-            </div>
-          </div>
+    <WizardSection title="SEO y buscadores" icon="i-lucide-search">
+      <template #actions>
+        <div class="flex items-center gap-1">
+          <UButton
+            v-for="lang in tourLanguages"
+            :key="lang"
+            size="xs"
+            :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
+            :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
+            class="uppercase font-black tracking-wider"
+            @click="store.currentLanguage = lang"
+          >
+            {{ lang }}
+          </UButton>
         </div>
       </template>
 
       <div v-if="currentLangData" class="space-y-6">
         <!-- Section: SEO Settings -->
         <section class="space-y-3">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <h3 class="text-base font-bold flex items-center gap-2">
-              <UIcon name="i-lucide-search" class="size-5 text-primary" />
-              Configuración SEO
-            </h3>
-            <UBadge color="neutral" variant="subtle" size="sm" class="uppercase tracking-widest">Google Preview</UBadge>
-          </div>
 
           <UFormField
             label="Meta title"
@@ -144,13 +127,14 @@
           </div>
         </section>
       </div>
-    </UCard>
+    </WizardSection>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { computed, ref, onMounted, watch } from 'vue'
+import WizardSection from './WizardSection.vue'
 
 const store = useTourWizardStore()
 const config = useRuntimeConfig()
