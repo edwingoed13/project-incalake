@@ -11,11 +11,11 @@
             </div>
             <div class="flex flex-col">
               <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</h2>
-              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Tours & Experiencias</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{{ t('footer_tagline') }}</span>
             </div>
           </NuxtLink>
           <p class="text-slate-400 mb-8 font-medium leading-relaxed text-sm">
-            Reinventamos la forma de explorar el mundo. Combinamos narrativa editorial con acceso exclusivo para ofrecer las experiencias más auténticas en los Andes y el Lago Titicaca.
+            {{ t('footer_description') }}
           </p>
           <div class="flex gap-3">
              <a
@@ -35,23 +35,23 @@
         <!-- Links Grid -->
         <div class="md:col-span-5 grid grid-cols-2 gap-8 md:gap-12">
             <div>
-              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">Compañía</h6>
+              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">{{ t('footer_company') }}</h6>
               <ul class="space-y-3.5">
                  <li v-for="link in companyLinks" :key="link.path">
                     <NuxtLink :to="localePath(link.path)" class="text-sm font-bold text-slate-400 hover:text-white transition-all flex items-center gap-2 group">
                        <span class="size-1 bg-slate-600 group-hover:bg-primary rounded-full transition-all"></span>
-                       {{ link.label }}
+                       {{ t(link.key) }}
                     </NuxtLink>
                  </li>
               </ul>
             </div>
             <div>
-              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">Explorar</h6>
+              <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-8 italic">{{ t('footer_explore') }}</h6>
               <ul class="space-y-3.5">
                  <li v-for="link in productLinks" :key="link.path">
                     <NuxtLink :to="localePath(link.path)" class="text-sm font-bold text-slate-400 hover:text-white transition-all flex items-center gap-2 group">
                        <span class="size-1 bg-slate-600 group-hover:bg-primary rounded-full transition-all"></span>
-                       {{ link.label }}
+                       {{ t(link.key) }}
                     </NuxtLink>
                  </li>
               </ul>
@@ -60,16 +60,16 @@
 
         <!-- Newsletter Section -->
         <div class="md:col-span-3">
-           <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-6 italic">Mantente al día</h6>
-           <p class="text-xs font-medium text-slate-400 mb-5 leading-relaxed">Recibe destinos secretos y acceso anticipado a nuevos tours.</p>
+           <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-6 italic">{{ t('footer_newsletter_title') }}</h6>
+           <p class="text-xs font-medium text-slate-400 mb-5 leading-relaxed">{{ t('footer_newsletter_desc') }}</p>
            <form class="space-y-3" @submit.prevent>
               <input
                 type="email"
-                placeholder="Tu correo electrónico"
+                :placeholder="t('footer_email_placeholder')"
                 class="w-full bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 rounded-2xl py-3.5 px-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               />
               <button class="w-full bg-primary text-white min-h-[48px] rounded-2xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 group transition-all active:scale-95 shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
-                 Únete a Incalake
+                 {{ t('footer_subscribe') }}
                  <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">trending_flat</span>
               </button>
            </form>
@@ -78,10 +78,10 @@
 
       <!-- Bottom Bar -->
       <div class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-center">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">© {{ new Date().getFullYear() }} Incalake Tours</p>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">© {{ currentYear }} Incalake Tours</p>
         <div class="flex gap-8">
-           <NuxtLink :to="localePath('/terms')" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Privacidad</NuxtLink>
-           <NuxtLink :to="localePath('/terms')" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Términos</NuxtLink>
+           <NuxtLink :to="localePath('/terms') + '#privacidad'" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">{{ t('footer_privacy') }}</NuxtLink>
+           <NuxtLink :to="localePath('/terms') + '#terminos'" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">{{ t('footer_terms') }}</NuxtLink>
         </div>
       </div>
     </div>
@@ -90,15 +90,19 @@
 
 <script setup lang="ts">
 const localePath = useLocalePath()
+const { t } = useI18n()
+
+// Computed once (stable across SSR/client — avoids calling Date() in template).
+const currentYear = new Date().getFullYear()
 
 const companyLinks = [
-  { label: 'Nosotros', path: '/about' },
-  { label: 'Contacto', path: '/contact' },
+  { key: 'about', path: '/about' },
+  { key: 'contact', path: '/contact' },
 ]
 
 const productLinks = [
-  { label: 'Todos los tours', path: '/tours' },
-  { label: 'Guardados', path: '/saved' },
+  { key: 'footer_all_tours', path: '/tours' },
+  { key: 'footer_saved', path: '/saved' },
 ]
 
 const socials = [
