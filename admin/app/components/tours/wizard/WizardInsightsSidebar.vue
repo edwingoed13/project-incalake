@@ -1,7 +1,31 @@
 <template>
   <aside class="w-72 border-l border-default bg-default p-4 hidden xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
-    <!-- Preview is the only action unique to this panel. Navigation lives in
-         the bottom bar; publish / back / save-status live in the top navbar. -->
+    <!-- Primary actions grouped here (moved out of the top navbar to free room
+         for the steps). Publish + back together, with preview right below. -->
+    <div class="grid grid-cols-2 gap-2">
+      <UButton
+        icon="i-lucide-rocket"
+        color="success"
+        size="md"
+        block
+        :loading="publishing"
+        :disabled="store.loading || store.autosaving"
+        @click="publishTour"
+      >
+        {{ store.basicInfo.status === 'published' ? 'Actualizar' : 'Publicar' }}
+      </UButton>
+      <UButton
+        icon="i-lucide-arrow-left"
+        color="neutral"
+        variant="soft"
+        size="md"
+        block
+        @click="cancel"
+      >
+        Volver
+      </UButton>
+    </div>
+
     <UButton
       icon="i-lucide-eye"
       trailing-icon="i-lucide-external-link"

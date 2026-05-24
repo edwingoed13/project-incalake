@@ -2,6 +2,10 @@
 import { useTourWizardStore } from '~/stores/tourWizard'
 import { computed } from 'vue'
 
+// `bare` drops the row chrome (border/bg/padding) so the stepper can live
+// inside the dashboard navbar, which provides its own spacing.
+withDefaults(defineProps<{ bare?: boolean }>(), { bare: false })
+
 const store = useTourWizardStore()
 
 const steps = [
@@ -24,7 +28,7 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
 </script>
 
 <template>
-  <div class="border-b border-default bg-elevated/20 px-4 lg:px-6 py-2.5">
+  <div :class="bare ? 'w-full min-w-0 overflow-x-auto' : 'border-b border-default bg-elevated/20 px-4 lg:px-6 py-2.5'">
     <ol class="flex items-center gap-1 overflow-x-auto">
       <li
         v-for="(step, idx) in steps"

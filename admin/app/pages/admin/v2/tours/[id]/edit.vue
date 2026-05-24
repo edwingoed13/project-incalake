@@ -222,17 +222,29 @@ onBeforeUnmount(() => {
 <template>
   <UDashboardPanel id="tour-editor-v2">
     <template #header>
-      <UDashboardNavbar :title="`Tour ${route.params.id !== 'new' ? '#' + route.params.id : 'nuevo'}`">
+      <UDashboardNavbar :ui="{ center: 'flex-1 min-w-0', root: 'gap-2' }">
         <template #leading>
           <UDashboardSidebarCollapse />
+          <UBadge color="neutral" variant="subtle" size="sm" class="ml-1 font-mono shrink-0 hidden sm:inline-flex">
+            Tour {{ route.params.id !== 'new' ? '#' + route.params.id : 'nuevo' }}
+          </UBadge>
         </template>
+
+        <!-- Steps live in the top bar to save a row of vertical space -->
+        <template #default>
+          <WizardStepper bare />
+        </template>
+
         <template #right>
-          <UBadge :color="autosaveColor" variant="subtle" size="md" :icon="store.autosaving ? 'i-lucide-loader-circle' : (store.isDirty ? 'i-lucide-circle-dot' : 'i-lucide-circle-check')">
+          <UBadge :color="autosaveColor" variant="subtle" size="md" class="shrink-0" :icon="store.autosaving ? 'i-lucide-loader-circle' : (store.isDirty ? 'i-lucide-circle-dot' : 'i-lucide-circle-check')">
             <span :class="{ 'animate-spin': store.autosaving }" class="inline-flex">{{ autosaveLabel }}</span>
           </UBadge>
+          <!-- Below xl the insights sidebar (which now holds these) is hidden,
+               so keep publish + back reachable here as a fallback. -->
           <UButton
             icon="i-lucide-rocket"
             color="success"
+            class="xl:hidden"
             :loading="publishing"
             :disabled="store.loading || store.autosaving"
             @click="publishTour"
@@ -244,6 +256,7 @@ onBeforeUnmount(() => {
             icon="i-lucide-arrow-left"
             color="neutral"
             variant="ghost"
+            class="xl:hidden"
           >
             Volver
           </UButton>
@@ -252,9 +265,6 @@ onBeforeUnmount(() => {
     </template>
 
     <template #body>
-      <!-- Horizontal stepper -->
-      <WizardStepper />
-
       <div class="flex h-full min-h-0">
         <!-- Main content -->
         <main class="flex-1 flex flex-col min-h-0">
@@ -319,7 +329,7 @@ onBeforeUnmount(() => {
               </UButton>
               <span v-else class="text-xs text-muted inline-flex items-center gap-1">
                 <UIcon name="i-lucide-check" class="size-3.5 text-success" />
-                Último paso · publica arriba
+                Último paso · revisa y publica
               </span>
             </div>
           </div>
