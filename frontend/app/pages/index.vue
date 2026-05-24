@@ -229,7 +229,7 @@
           <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
 
-        <div v-else class="flex md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+        <div v-else class="flex md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="tour in tours.slice(0, 4)"
             :key="tour.id"
@@ -261,14 +261,14 @@
               </div>
             </div>
             <div class="p-4">
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
                 <span class="material-symbols-outlined text-xs">location_on</span>
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h4>
               <div class="flex items-end justify-between pt-3 border-t border-slate-100">
                 <div>
-                  <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                  <span class="text-[11px] text-slate-400 font-medium block">{{ t('from') }}</span>
                   <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
                 </div>
                 <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
@@ -299,7 +299,7 @@
           </NuxtLink>
         </div>
 
-        <div class="flex md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+        <div class="flex md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="tour in toursWithOffers.slice(0, 4)"
             :key="tour.id"
@@ -324,14 +324,14 @@
               </div>
             </div>
             <div class="p-4">
-              <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
                 <span class="material-symbols-outlined text-xs">location_on</span>
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors leading-snug">{{ tour.title }}</h4>
               <div class="flex items-end justify-between pt-3 border-t border-green-100">
                 <div>
-                  <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                  <span class="text-[11px] text-slate-400 font-medium block">{{ t('from') }}</span>
                   <span class="text-lg font-black text-green-600">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
                 </div>
                 <span class="text-xs font-bold text-green-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
