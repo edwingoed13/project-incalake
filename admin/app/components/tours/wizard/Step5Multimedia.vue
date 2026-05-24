@@ -228,19 +228,45 @@
             ? 'border-primary bg-primary/5 scale-[0.99]'
             : 'border-default hover:border-primary/40 hover:bg-elevated/40 bg-elevated/20',
         ]"
-        @dragover.prevent="isDragging = true"
+        @dragover.prevent="!isUploading && (isDragging = true)"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
       >
-        <input type="file" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileChange" />
-        <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-          <UIcon name="i-lucide-cloud-upload" class="size-6" />
-        </div>
-        <p class="text-sm font-bold mb-1">Arrastra y suelta fotos aquí</p>
-        <p class="text-[11px] text-muted mb-4">JPEG, PNG o WebP · Recomendado 1920×1080px</p>
-        <UButton icon="i-lucide-folder-open" color="primary" size="sm">
-          Seleccionar archivos
-        </UButton>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          :disabled="isUploading"
+          class="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-default"
+          @change="handleFileChange"
+        />
+
+        <!-- Uploading state -->
+        <template v-if="isUploading">
+          <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
+            <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
+          </div>
+          <p class="text-sm font-bold mb-1">Subiendo {{ uploadDone }} de {{ uploadTotal }} {{ uploadTotal === 1 ? 'imagen' : 'imágenes' }}…</p>
+          <p class="text-[11px] text-muted mb-3">No cierres ni cambies de paso hasta que termine.</p>
+          <div class="w-48 h-1.5 rounded-full bg-elevated overflow-hidden">
+            <div
+              class="h-full bg-primary rounded-full transition-all duration-300"
+              :style="{ width: uploadTotal ? `${Math.round((uploadDone / uploadTotal) * 100)}%` : '0%' }"
+            />
+          </div>
+        </template>
+
+        <!-- Idle state -->
+        <template v-else>
+          <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
+            <UIcon name="i-lucide-cloud-upload" class="size-6" />
+          </div>
+          <p class="text-sm font-bold mb-1">Arrastra y suelta fotos aquí</p>
+          <p class="text-[11px] text-muted mb-4">JPEG, PNG o WebP · Puedes seleccionar varias a la vez · Recomendado 1920×1080px</p>
+          <UButton icon="i-lucide-folder-open" color="primary" size="sm">
+            Seleccionar archivos
+          </UButton>
+        </template>
       </div>
 
       <!-- Image Grid -->
@@ -359,6 +385,16 @@
               />
             </div>
           </div>
+        </div>
+
+        <!-- Skeleton placeholders for images still uploading -->
+        <div
+          v-for="n in uploadingCount"
+          :key="'skel-' + n"
+          class="aspect-square rounded-xl border-2 border-dashed border-primary/30 bg-elevated animate-pulse flex flex-col items-center justify-center gap-2 text-muted"
+        >
+          <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin text-primary" />
+          <span class="text-[10px] font-bold uppercase tracking-widest">Subiendo…</span>
         </div>
       </div>
       </div>
@@ -492,6 +528,13 @@ import { ref, computed } from 'vue'
 const store = useTourWizardStore()
 const { confirm } = useConfirm()
 const isDragging = ref(false)
+
+// Upload progress — drives the drop-area spinner + per-tile skeletons.
+const uploadingCount = ref(0) // uploads currently in flight
+const uploadTotal = ref(0)    // total queued in the active batch(es)
+const uploadDone = ref(0)     // finished (ok or failed) in the active batch(es)
+const isUploading = computed(() => uploadingCount.value > 0)
+
 const editingIndex = ref<number | null>(null)
 const editForm = ref({
   altText: '',
@@ -635,74 +678,97 @@ const youtubeId = computed(() => {
 })
 
 const handleFileChange = (e: Event) => {
-  const files = (e.target as HTMLInputElement).files
+  const input = e.target as HTMLInputElement
+  const files = input.files
   if (files) addFiles(Array.from(files))
+  // Reset so picking the same file(s) again re-triggers the change event.
+  input.value = ''
 }
 
 const handleDrop = (e: DragEvent) => {
   isDragging.value = false
+  if (isUploading.value) return
   const files = e.dataTransfer?.files
   if (files) addFiles(Array.from(files))
 }
 
-const addFiles = async (files: File[]) => {
+const uploadOne = async (file: File) => {
   const auth = useAuthStore()
   const config = useRuntimeConfig()
-  
-  for (const file of files) {
-    if (!file.type.startsWith('image/')) continue
-    
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const previewUrl = e.target?.result as string
-      
-      // Upload to server
-      const formData = new FormData()
-      formData.append('image', file)
-      
-      try {
-        const response: any = await $fetch(`${config.public.apiUrl}/admin/tours/upload-image`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${auth.token}`,
-            'Accept': 'application/json'
-          },
-          body: formData
-        })
-        
-        if (response.success) {
-          store.multimedia.images.push({
-            id: crypto.randomUUID(),
-            url: response.url, // URL for preview
-            filename: response.filename,
-            size: file.size,
-            altText: '',
-            titleText: '',
-            description: '',
-            isPrimary: store.multimedia.images.length === 0,
-            order: store.multimedia.images.length
-          })
 
-          store.tempImages.push({
-            filename: response.filename,
-            path: response.path
-          })
+  const formData = new FormData()
+  formData.append('image', file)
 
-          store.isDirty = true
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error)
-        toast.add({
-          title: 'Error al subir',
-          description: file.name,
-          icon: 'i-lucide-triangle-alert',
-          color: 'error',
-        })
-      }
+  try {
+    const response: any = await $fetch(`${config.public.apiUrl}/admin/tours/upload-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${auth.token}`,
+        'Accept': 'application/json',
+      },
+      body: formData,
+    })
+
+    if (response.success) {
+      store.multimedia.images.push({
+        id: crypto.randomUUID(),
+        url: response.url, // URL for preview
+        filename: response.filename,
+        size: file.size,
+        altText: '',
+        titleText: '',
+        description: '',
+        isPrimary: store.multimedia.images.length === 0,
+        order: store.multimedia.images.length,
+      })
+
+      store.tempImages.push({
+        filename: response.filename,
+        path: response.path,
+      })
+
+      store.isDirty = true
+    } else {
+      throw new Error(response.message || 'upload failed')
     }
-    reader.readAsDataURL(file)
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    toast.add({
+      title: 'Error al subir',
+      description: file.name,
+      icon: 'i-lucide-triangle-alert',
+      color: 'error',
+    })
+  } finally {
+    uploadingCount.value--
+    uploadDone.value++
+    // Whole queue drained → reset the batch counters for the next upload.
+    if (uploadingCount.value === 0) {
+      uploadTotal.value = 0
+      uploadDone.value = 0
+    }
   }
+}
+
+const addFiles = async (files: File[]) => {
+  const images = files.filter(f => f.type.startsWith('image/'))
+  const skipped = files.length - images.length
+  if (skipped > 0) {
+    toast.add({
+      title: skipped === 1 ? 'Se omitió 1 archivo' : `Se omitieron ${skipped} archivos`,
+      description: 'Solo se permiten imágenes (JPEG, PNG o WebP).',
+      icon: 'i-lucide-triangle-alert',
+      color: 'warning',
+    })
+  }
+  if (images.length === 0) return
+
+  // Track the batch so the UI shows "Subiendo X de N…" + skeleton tiles.
+  uploadTotal.value += images.length
+  uploadingCount.value += images.length
+
+  // Upload in parallel; each call decrements the counters in its finally block.
+  await Promise.all(images.map(file => uploadOne(file)))
 }
 
 const removeImage = async (index: number) => {
