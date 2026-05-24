@@ -31,19 +31,28 @@ onMounted(async () => {
 })
 
 const editingItem = ref<string | null>(null)
-const editForm = ref({ date: '', time: '', adults: 1 })
+const editForm = ref({ date: '', time: '', adults: 1, children: 0 })
 
 function openEdit(item: CartItem) {
-  editForm.value = { date: item.selectedDate, time: item.selectedTime, adults: item.adults }
+  editForm.value = {
+    date: item.selectedDate,
+    time: item.selectedTime,
+    adults: item.adults,
+    children: item.children || 0,
+  }
   editingItem.value = item.id
 }
 
 function saveEdit(item: CartItem) {
-  const newTotal = item.basePrice * editForm.value.adults
+  // Keep child cost in the total when only adults are edited.
+  const newTotal =
+    item.basePrice * editForm.value.adults +
+    (item.childPrice || 0) * editForm.value.children
   cartStore.updateItem(item.id, {
     selectedDate: editForm.value.date,
     selectedTime: editForm.value.time,
     adults: editForm.value.adults,
+    children: editForm.value.children,
     total: newTotal,
   })
   editingItem.value = null
@@ -153,25 +162,15 @@ function getImageUrl(path: string) {
                 v-if="item.tourImage"
                 :src="getImageUrl(item.tourImage)"
                 :alt="item.tourTitle"
-                class="w-28 h-28 object-cover rounded-xl shrink-0"
+                class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-xl shrink-0"
               />
-              <div v-else class="w-28 h-28 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
+              <div v-else class="w-20 h-20 sm:w-28 sm:h-28 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
                 <span class="material-symbols-outlined text-slate-300 text-3xl">image</span>
               </div>
 
               <!-- Details -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-2 mb-2">
-                  <h3 class="text-sm font-bold text-slate-800 line-clamp-2">{{ item.tourTitle }}</h3>
-                  <div class="flex items-center gap-0.5 shrink-0">
-                    <button @click="openEdit(item)" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" title="Edit">
-                      <span class="material-symbols-outlined text-base">edit</span>
-                    </button>
-                    <button @click="removeItem(item.id)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Remove">
-                      <span class="material-symbols-outlined text-base">delete</span>
-                    </button>
-                  </div>
-                </div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 leading-snug mb-2">{{ item.tourTitle }}</h3>
 
                 <!-- Offer badge -->
                 <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mb-2" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
@@ -206,14 +205,23 @@ function getImageUrl(path: string) {
                   </button>
                 </div>
 
-                <!-- Price -->
-                <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                  <div v-if="item.hasOffer && item.originalPrice" class="text-xs">
-                    <span class="line-through text-slate-400">{{ currencyStore.formatConverted(item.originalPrice * item.adults) }}</span>
-                    <span class="text-green-600 font-semibold ml-1">-{{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }}</span>
+                <!-- Actions + Price -->
+                <div class="flex items-end justify-between mt-3 pt-3 border-t border-slate-100">
+                  <div class="flex items-center gap-0.5 -ml-1.5">
+                    <button @click="openEdit(item)" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" :title="t('edit')">
+                      <span class="material-symbols-outlined text-base">edit</span>
+                    </button>
+                    <button @click="removeItem(item.id)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Eliminar">
+                      <span class="material-symbols-outlined text-base">delete</span>
+                    </button>
                   </div>
-                  <div v-else></div>
-                  <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(item.total) }}</span>
+                  <div class="text-right">
+                    <div v-if="item.hasOffer && item.originalPrice" class="text-[11px] leading-none mb-0.5">
+                      <span class="line-through text-slate-400">{{ currencyStore.formatConverted(item.originalPrice * item.adults) }}</span>
+                      <span class="text-green-600 font-semibold ml-1">-{{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }}</span>
+                    </div>
+                    <span class="text-lg font-black text-primary leading-none">{{ currencyStore.formatConverted(item.total) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -222,7 +230,7 @@ function getImageUrl(path: string) {
             <Transition name="slide">
               <div v-if="editingItem === item.id" class="p-4 bg-slate-50 border-t border-slate-100">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{{ t('edit_booking') }}</p>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('date') }}</label>
                     <input v-model="editForm.date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
@@ -238,7 +246,19 @@ function getImageUrl(path: string) {
                         <span class="material-symbols-outlined text-sm">remove</span>
                       </button>
                       <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
-                      <button @click="editForm.adults = Math.min(20, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                      <button @click="editForm.adults = Math.min(99, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="item.childPrice > 0 || item.children > 0">
+                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('children_label') }}</label>
+                    <div class="flex items-center gap-2">
+                      <button @click="editForm.children = Math.max(0, editForm.children - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                        <span class="material-symbols-outlined text-sm">remove</span>
+                      </button>
+                      <span class="text-sm font-bold w-6 text-center">{{ editForm.children }}</span>
+                      <button @click="editForm.children = Math.min(99, editForm.children + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
                         <span class="material-symbols-outlined text-sm">add</span>
                       </button>
                     </div>
@@ -272,16 +292,12 @@ function getImageUrl(path: string) {
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500 flex items-center gap-1">
                   {{ t('transaction_fees') }}
-                  <span class="relative group cursor-help">
-                    <span class="material-symbols-outlined text-slate-400 text-xs">info</span>
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                      <div v-for="item in sortedCartItems" :key="'tax-'+item.id" class="flex justify-between py-0.5">
-                        <span class="truncate mr-2">{{ item.tourTitle }}</span>
-                        <span class="shrink-0 font-semibold">{{ item.taxPercentage || 0 }}%</span>
-                      </div>
-                      <div class="w-2 h-2 bg-slate-800 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                  <AppPopover :label="t('transaction_fees')">
+                    <div v-for="ti in sortedCartItems" :key="'tax-'+ti.id" class="flex justify-between py-0.5 gap-2">
+                      <span class="truncate">{{ ti.tourTitle }}</span>
+                      <span class="shrink-0 font-semibold">{{ ti.taxPercentage || 0 }}%</span>
                     </div>
-                  </span>
+                  </AppPopover>
                 </span>
                 <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
               </div>
@@ -327,64 +343,57 @@ function getImageUrl(path: string) {
       </div>
     </div>
     <!-- Policies Modal -->
-    <Teleport to="body">
-      <div v-if="policiesItem" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closePolicies">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden">
-          <div class="flex items-center justify-between p-5 border-b border-slate-100">
-            <h3 class="text-base font-bold text-slate-800">{{ t('terms_conditions') }}</h3>
-            <button @click="closePolicies" class="p-1 hover:bg-slate-100 rounded-lg">
-              <span class="material-symbols-outlined text-slate-400">close</span>
-            </button>
+    <AppModal
+      :model-value="!!policiesItem"
+      @update:model-value="(v) => { if (!v) closePolicies() }"
+      :title="t('terms_conditions')"
+    >
+      <div v-if="policiesItem" class="space-y-4">
+        <p class="text-xs font-bold text-slate-400 uppercase">{{ policiesItem.tourTitle }}</p>
+
+        <!-- Custom policies from admin -->
+        <div v-if="policiesItem.policies">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <span class="material-symbols-outlined text-blue-500 text-base">policy</span>
+            {{ t('tour_policies') }}
+          </h4>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
+        </div>
+
+        <div v-if="policiesItem.cancellationPolicy">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <span class="material-symbols-outlined text-red-500 text-base">cancel</span>
+            {{ t('cancellation_policy') }}
+          </h4>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
+        </div>
+
+        <!-- Standard policy (default when nothing configured) -->
+        <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+            {{ t('standard_policy') }}
+          </h4>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
+            <p><strong>Free cancellation</strong> up to 24 hours before the tour start time for a full refund.</p>
+            <p><strong>No changes</strong> are accepted within 24 hours of the tour.</p>
+            <p><strong>No-shows</strong> will be charged in full.</p>
+            <p>All tours are subject to weather conditions and minimum participant requirements.</p>
           </div>
-          <div class="p-5 overflow-y-auto max-h-[calc(80vh-120px)] space-y-4">
-            <p class="text-xs font-bold text-slate-400 uppercase">{{ policiesItem.tourTitle }}</p>
+        </div>
 
-            <!-- Custom policies from admin -->
-            <div v-if="policiesItem.policies">
-              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
-                <span class="material-symbols-outlined text-blue-500 text-base">policy</span>
-                {{ t('tour_policies') }}
-              </h4>
-              <div class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
-            </div>
-
-            <div v-if="policiesItem.cancellationPolicy">
-              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
-                <span class="material-symbols-outlined text-red-500 text-base">cancel</span>
-                {{ t('cancellation_policy') }}
-              </h4>
-              <div class="text-xs text-slate-600 bg-red-50 border border-red-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
-            </div>
-
-            <!-- Standard policy (default when nothing configured) -->
-            <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
-              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
-                <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
-                {{ t('standard_policy') }}
-              </h4>
-              <div class="text-xs text-slate-600 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
-                <p><strong>Free cancellation</strong> up to 24 hours before the tour start time for a full refund.</p>
-                <p><strong>No changes</strong> are accepted within 24 hours of the tour.</p>
-                <p><strong>No-shows</strong> will be charged in full.</p>
-                <p>All tours are subject to weather conditions and minimum participant requirements.</p>
-              </div>
-            </div>
-
-            <!-- Custom type selected but no content yet -->
-            <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
-              <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
-                <span class="material-symbols-outlined text-amber-500 text-base">info</span>
-                {{ t('custom_policy') }}
-              </h4>
-              <div class="text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-3">
-                <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>
-              </div>
-            </div>
+        <!-- Custom type selected but no content yet -->
+        <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
+          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <span class="material-symbols-outlined text-amber-500 text-base">info</span>
+            {{ t('custom_policy') }}
+          </h4>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3">
+            <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>
           </div>
         </div>
       </div>
-    </Teleport>
+    </AppModal>
   </div>
 </template>
 

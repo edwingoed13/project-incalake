@@ -33,7 +33,7 @@ const sortedItems = computed(() =>
 </script>
 
 <template>
-  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-5 sticky top-24 border border-slate-200 dark:border-slate-800">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-5 sticky top-24 border border-slate-200 dark:border-slate-800">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-black">{{ t('booking_summary') }}</h3>
       <NuxtLink :to="localePath('/cart')" class="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
@@ -44,7 +44,7 @@ const sortedItems = computed(() =>
     <!-- Tours -->
     <div class="space-y-3 mb-4 pb-4 border-b border-slate-100">
       <div v-for="item in sortedItems" :key="item.id" class="space-y-1.5">
-        <h4 class="text-sm font-bold text-slate-800 line-clamp-1">{{ item.tourTitle }}</h4>
+        <h4 class="text-sm font-bold text-slate-800 leading-snug">{{ item.tourTitle }}</h4>
 
         <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '15', color: item.offerColor || '#22c55e' }">
           <span class="material-symbols-outlined text-[10px]">sell</span>
@@ -83,16 +83,12 @@ const sortedItems = computed(() =>
       <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
         <span class="text-slate-500 flex items-center gap-1">
           {{ t('transaction_fees') }}
-          <span class="relative group cursor-help">
-            <span class="material-symbols-outlined text-slate-400 text-xs">info</span>
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <div v-for="item in sortedItems" :key="'tax-'+item.id" class="flex justify-between py-0.5">
-                <span class="truncate mr-2">{{ item.tourTitle }}</span>
-                <span class="shrink-0 font-semibold">{{ item.taxPercentage || 0 }}%</span>
-              </div>
-              <div class="w-2 h-2 bg-slate-800 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+          <AppPopover :label="t('transaction_fees')">
+            <div v-for="ti in sortedItems" :key="'tax-'+ti.id" class="flex justify-between py-0.5 gap-2">
+              <span class="truncate">{{ ti.tourTitle }}</span>
+              <span class="shrink-0 font-semibold">{{ ti.taxPercentage || 0 }}%</span>
             </div>
-          </span>
+          </AppPopover>
         </span>
         <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
       </div>

@@ -2,11 +2,11 @@
   <div class="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-8 lg:pt-28 lg:pb-12">
     <div class="container mx-auto px-4 lg:px-6 max-w-7xl">
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-2">
+      <div class="mb-6 lg:mb-8">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-1.5">
           {{ t('checkout.title') }}
         </h1>
-        <p class="text-secondary-light dark:text-secondary-dark">
+        <p class="text-sm sm:text-base text-secondary-light dark:text-secondary-dark">
           {{ t('checkout.subtitle') }}
         </p>
       </div>
@@ -54,7 +54,7 @@
       </div>
 
       <!-- Checkout Content -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <!-- Left Column: Checkout Form -->
         <div class="lg:col-span-2">
           <CheckoutForm
