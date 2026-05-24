@@ -13,7 +13,7 @@
           <li class="text-slate-300" aria-hidden="true">/</li>
           <li>
             <NuxtLink :to="localePath(`/tours?city=${tour.city?.slug || route.params.city}`)" class="hover:text-primary transition-colors">
-              {{ tour.city?.name || formatCityName(String(route.params.city)) }}
+              {{ cityLabel(tour) }}
             </NuxtLink>
           </li>
           <li class="text-slate-300" aria-hidden="true">/</li>
@@ -32,7 +32,7 @@
           <BookmarkSolidIcon class="size-3.5" aria-hidden="true" />
           Más vendido
         </span>
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
+        <span v-if="tour.free_cancellation" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
           <CheckCircleSolidIcon class="size-3.5" aria-hidden="true" />
           Cancelación gratuita
         </span>
@@ -51,29 +51,31 @@
           <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900 dark:text-white">
             {{ tour.title }}
           </h1>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[15px]">
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] sm:text-[15px]">
             <!-- Rating -->
             <button
+              v-if="tourReviews.length > 0"
               type="button"
+              @click="scrollToReviews"
               class="inline-flex items-center gap-1 font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
             >
               <StarSolidIcon class="size-4 text-rating" aria-hidden="true" />
-              <span class="tabular-nums">{{ tourReviews.length > 0 ? avgRating : '—' }}</span>
-              <span class="text-slate-500 underline-offset-2 hover:underline">({{ tourReviews.length }} opiniones)</span>
+              <span class="tabular-nums">{{ avgRating }}</span>
+              <span class="text-slate-500 underline-offset-2 hover:underline">({{ tourReviews.length }})</span>
             </button>
-            <span class="text-slate-300" aria-hidden="true">•</span>
+            <span v-if="tourReviews.length > 0" class="text-slate-300" aria-hidden="true">•</span>
             <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
-              <MapPinIcon class="size-4" aria-hidden="true" />
-              {{ tour.city?.name || 'Puno' }}, Perú
+              <MapPinIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
+              {{ cityLabel(tour) }}, Perú
             </span>
             <span class="text-slate-300" aria-hidden="true">•</span>
             <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
-              <ClockIcon class="size-4" aria-hidden="true" />
+              <ClockIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
               {{ formatDuration(tour) }}
             </span>
           </div>
         </div>
-        <div class="flex gap-2 items-start shrink-0">
+        <div class="hidden md:flex gap-2 items-start shrink-0">
           <button
             @click="openShare"
             type="button"
@@ -103,7 +105,31 @@
         <!-- Left Column: Multimedia + Content -->
         <div class="space-y-6 lg:space-y-10">
           <!-- Multimedia Gallery -->
-          <TourMediaGallery :tour="tour" />
+          <div class="relative">
+            <TourMediaGallery :tour="tour" />
+            <!-- Mobile: share + save overlaid on the gallery image to save space -->
+            <div class="md:hidden absolute top-3 right-3 z-20 flex gap-2">
+              <button
+                @click="openShare"
+                type="button"
+                class="size-9 rounded-full bg-black/45 backdrop-blur-sm text-white flex items-center justify-center active:scale-90 transition-transform"
+                aria-label="Compartir tour"
+              >
+                <ShareIcon class="size-5" aria-hidden="true" />
+              </button>
+              <button
+                @click="toggleSave"
+                type="button"
+                class="size-9 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
+                :class="isSaved ? 'text-red-500' : 'text-white'"
+                :aria-label="isSaved ? 'Quitar de guardados' : 'Guardar tour'"
+                :aria-pressed="isSaved"
+              >
+                <HeartSolidIcon v-if="isSaved" class="size-5" aria-hidden="true" />
+                <HeartIcon v-else class="size-5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
 
           <!-- Inline Mobile Booking Panel — appears after gallery so price/date are
                visible without scrolling to the bottom. Hidden on lg+ where the
@@ -118,7 +144,7 @@
                     <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
                       {{ currencyStore.formatConverted(basePrice || 0) }}
                     </span>
-                    <span class="text-xs font-semibold text-slate-500">{{ currency }} / persona</span>
+                    <span class="text-xs font-semibold text-slate-500">{{ currencyStore.selectedCurrency }} / persona</span>
                   </div>
                 </div>
                 <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
@@ -128,7 +154,7 @@
               </div>
             </div>
 
-            <div class="p-4 sm:p-5 space-y-4">
+            <div class="p-4 space-y-3">
               <!-- Calendar -->
               <div>
                 <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
@@ -168,24 +194,63 @@
                   <UsersIcon class="size-4 text-primary" aria-hidden="true" />
                   Viajeros
                 </label>
-                <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
-                  <button @click="decrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="adults <= 1" aria-label="Quitar viajero">
-                    <MinusIcon class="size-4" aria-hidden="true" />
-                  </button>
-                  <span class="font-bold text-sm tabular-nums">{{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
-                  <button @click="incrementAdults" type="button" class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200" aria-label="Agregar viajero">
-                    <PlusIcon class="size-4" aria-hidden="true" />
-                  </button>
+                <div class="space-y-2">
+                  <!-- Adults -->
+                  <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
+                    <div class="leading-tight">
+                      <span class="font-bold text-sm text-slate-800">Adultos</span>
+                      <span class="block text-[11px] text-slate-500">{{ currencyStore.formatConverted(adultPrice || 0) }} c/u</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button @click="decrementAdults" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="adults <= 1" aria-label="Quitar adulto">
+                        <MinusIcon class="size-4" aria-hidden="true" />
+                      </button>
+                      <span class="w-6 text-center font-bold text-sm tabular-nums">{{ adults }}</span>
+                      <button @click="incrementAdults" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="totalPax >= maxPax" aria-label="Agregar adulto">
+                        <PlusIcon class="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Children (only when the tour has child pricing) -->
+                  <div v-if="hasChildPricing" class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
+                    <div class="leading-tight">
+                      <span class="font-bold text-sm text-slate-800">Niños</span>
+                      <span class="block text-[11px] text-slate-500">{{ children > 0 ? `${currencyStore.formatConverted(childPrice || 0)} c/u` : 'Opcional' }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button @click="decrementChildren" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="children <= 0" aria-label="Quitar niño">
+                        <MinusIcon class="size-4" aria-hidden="true" />
+                      </button>
+                      <span class="w-6 text-center font-bold text-sm tabular-nums">{{ children }}</span>
+                      <button @click="incrementChildren" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="totalPax >= maxPax" aria-label="Agregar niño">
+                        <PlusIcon class="size-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Total bar -->
-              <div class="flex justify-between items-baseline pt-3 border-t border-slate-100">
-                <span class="text-sm font-bold text-slate-800">Total</span>
-                <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                  {{ currencyStore.formatConverted(total || 0) }}
-                  <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
-                </span>
+              <!-- Price breakdown + total -->
+              <div class="pt-3 border-t border-slate-100 space-y-1.5">
+                <div class="flex justify-between text-xs text-slate-600">
+                  <span>{{ currencyStore.formatConverted(adultPrice || 0) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
+                  <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(adultPrice * adults || 0) }}</span>
+                </div>
+                <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600">
+                  <span>{{ currencyStore.formatConverted(childPrice || 0) }} × {{ children }} {{ children === 1 ? 'niño' : 'niños' }}</span>
+                  <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(childPrice * children || 0) }}</span>
+                </div>
+                <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
+                  <span class="text-trust font-bold inline-flex items-center gap-1"><TagIcon class="size-3" aria-hidden="true" />Descuento</span>
+                  <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
+                </div>
+                <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-100">
+                  <span class="text-sm font-bold text-slate-800">Total</span>
+                  <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
+                    {{ currencyStore.formatConverted(total || 0) }}
+                    <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
+                  </span>
+                </div>
               </div>
 
               <!-- Validation error -->
@@ -205,7 +270,7 @@
 
               <!-- Trust signals (compact 3-row stack) -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
-                <div class="flex items-center gap-1.5 text-xs">
+                <div v-if="tour.free_cancellation" class="flex items-center gap-1.5 text-xs">
                   <CheckCircleSolidIcon class="size-4 text-trust shrink-0" aria-hidden="true" />
                   <span class="text-slate-600 font-medium">Cancelación gratuita</span>
                 </div>
@@ -241,7 +306,7 @@
           <section v-if="customSections.length" class="space-y-6">
             <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
               <h3 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white">{{ section.title }}</h3>
-              <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="section.content"></div>
+              <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="sanitizeHtml(section.content)"></div>
             </div>
           </section>
 
@@ -267,53 +332,61 @@
           <hr class="border-slate-200 dark:border-slate-800" />
 
           <!-- Reviews Section -->
-          <section>
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold">{{ t('customer_reviews') }}</h3>
-              <div v-if="tourReviews.length > 0" class="flex items-center gap-2">
-                <span class="font-bold text-2xl">{{ avgRating }}</span>
+          <section id="reviews" class="scroll-mt-24">
+            <h3 class="text-xl font-bold mb-3 md:mb-4">{{ t('customer_reviews') }}</h3>
+
+            <!-- Rating summary -->
+            <div v-if="tourReviews.length > 0" class="flex items-center gap-3 mb-5 md:mb-6">
+              <span class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{{ avgRating }}</span>
+              <div class="min-w-0">
                 <div class="flex">
-                  <StarSolidIcon v-for="i in 5" :key="i" class="size-5" :class="i <= Math.round(avgRating) ? 'text-yellow-500' : 'text-slate-300'" aria-hidden="true" />
+                  <StarSolidIcon v-for="i in 5" :key="i" class="size-4 md:size-5" :class="i <= Math.round(avgRating) ? 'text-rating' : 'text-slate-300 dark:text-slate-600'" aria-hidden="true" />
                 </div>
-                <span class="text-sm text-slate-500">({{ tourReviews.length }})</span>
+                <p class="text-xs md:text-sm text-slate-500 mt-0.5">
+                  <span v-if="ratingLabel" class="font-bold text-slate-700 dark:text-slate-300">{{ ratingLabel }}</span>
+                  <span v-if="ratingLabel"> · </span>{{ tourReviews.length }} {{ tourReviews.length === 1 ? 'opinión' : 'opiniones' }}
+                </p>
               </div>
             </div>
 
-            <div v-if="tourReviews.length > 0" class="space-y-6">
-              <div
-                v-for="review in tourReviews.slice(0, showAllReviews ? tourReviews.length : 3)"
-                :key="review.id"
-                class="border-b border-slate-100 dark:border-slate-800 pb-6"
-              >
-                <div class="flex items-center gap-3 mb-2">
-                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm">
-                    {{ getInitials(review.name) }}
-                  </div>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <h4 class="text-[15px] font-bold">{{ review.name }}</h4>
-                      <span class="text-xs text-slate-400">{{ review.review_date }}</span>
+            <div v-if="tourReviews.length > 0">
+              <!-- Mobile: swipeable review cards · Desktop: stacked list -->
+              <div class="flex md:block gap-3 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:space-y-6 pb-1 md:pb-0">
+                <div
+                  v-for="review in tourReviews.slice(0, showAllReviews ? tourReviews.length : 3)"
+                  :key="review.id"
+                  class="shrink-0 w-[85%] sm:w-[55%] md:w-auto snap-start bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4 md:bg-transparent md:dark:bg-transparent md:rounded-none md:p-0 md:border-b md:border-slate-100 md:dark:border-slate-800 md:pb-6"
+                >
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+                      {{ getInitials(review.name) }}
                     </div>
-                    <div class="flex items-center gap-0.5 mt-0.5">
-                      <StarSolidIcon v-for="i in review.rating" :key="i" class="size-3 text-yellow-400" aria-hidden="true" />
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h4 class="text-[15px] font-bold truncate">{{ review.name }}</h4>
+                        <span class="text-xs text-slate-400 shrink-0">{{ review.review_date }}</span>
+                      </div>
+                      <div class="flex items-center gap-0.5 mt-0.5">
+                        <StarSolidIcon v-for="i in review.rating" :key="i" class="size-3 text-rating" aria-hidden="true" />
+                      </div>
                     </div>
                   </div>
+                  <p v-if="review.title" class="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
+                  <p class="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-5 md:line-clamp-none">{{ review.comment }}</p>
                 </div>
-                <p v-if="review.title" class="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
-                <p class="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed">{{ review.comment }}</p>
               </div>
 
               <button
                 v-if="tourReviews.length > 3"
                 @click="showAllReviews = !showAllReviews"
-                class="font-bold text-primary hover:underline text-sm flex items-center gap-1"
+                class="mt-4 md:mt-6 font-bold text-primary hover:underline text-sm inline-flex items-center gap-1"
               >
                 {{ showAllReviews ? t('show_less') : t('view_all_reviews', { count: tourReviews.length }) }}
                 <ChevronDownIcon class="size-4 transition-transform" :class="{ 'rotate-180': showAllReviews }" aria-hidden="true" />
               </button>
             </div>
 
-            <div v-else class="py-8 text-center text-slate-400">
+            <div v-else class="py-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
               <ChatBubbleLeftRightIcon class="size-8 mb-2 mx-auto" aria-hidden="true" />
               <p class="text-sm font-medium">{{ t('no_reviews') }}</p>
             </div>
@@ -326,18 +399,18 @@
             <!-- Booking Widget Card -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
               <!-- Price Header — dominant, OTA pattern -->
-              <div class="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800">
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Desde</p>
-                <div class="flex items-baseline gap-2">
-                  <span class="text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+              <div class="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-baseline gap-1.5 flex-wrap">
+                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
+                  <span class="text-[32px] leading-none font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
                     {{ currencyStore.formatConverted(basePrice || 0) }}
                   </span>
-                  <span class="text-sm font-semibold text-slate-500">{{ currency }}</span>
+                  <span class="text-sm font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5">por persona · impuestos incluidos</p>
+                <p class="text-[11px] text-slate-500 mt-1">por persona · impuestos incluidos</p>
               </div>
 
-              <div class="p-5 space-y-4">
+              <div class="p-4 space-y-3">
                 <!-- Date Selector -->
                 <div>
                   <label class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
@@ -385,33 +458,75 @@
                     <UsersIcon class="size-4 text-primary" aria-hidden="true" />
                     Viajeros
                   </label>
-                  <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-                    <button
-                      @click="decrementAdults"
-                      type="button"
-                      class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
-                      :disabled="adults <= 1"
-                      aria-label="Quitar viajero"
-                    >
-                      <MinusIcon class="size-4" aria-hidden="true" />
-                    </button>
-                    <span class="font-bold text-sm tabular-nums">{{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
-                    <button
-                      @click="incrementAdults"
-                      type="button"
-                      class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition"
-                      aria-label="Agregar viajero"
-                    >
-                      <PlusIcon class="size-4" aria-hidden="true" />
-                    </button>
+                  <div class="space-y-2">
+                    <!-- Adults -->
+                    <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                      <div class="leading-tight">
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Adultos</span>
+                        <span class="block text-[11px] text-slate-500">{{ currencyStore.formatConverted(adultPrice || 0) }} c/u</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button
+                          @click="decrementAdults"
+                          type="button"
+                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
+                          :disabled="adults <= 1"
+                          aria-label="Quitar adulto"
+                        >
+                          <MinusIcon class="size-4" aria-hidden="true" />
+                        </button>
+                        <span class="w-6 text-center font-bold text-sm tabular-nums">{{ adults }}</span>
+                        <button
+                          @click="incrementAdults"
+                          type="button"
+                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
+                          :disabled="totalPax >= maxPax"
+                          aria-label="Agregar adulto"
+                        >
+                          <PlusIcon class="size-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Children (only when the tour has child pricing) -->
+                    <div v-if="hasChildPricing" class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+                      <div class="leading-tight">
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Niños</span>
+                        <span class="block text-[11px] text-slate-500">{{ children > 0 ? `${currencyStore.formatConverted(childPrice || 0)} c/u` : 'Opcional' }}</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button
+                          @click="decrementChildren"
+                          type="button"
+                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
+                          :disabled="children <= 0"
+                          aria-label="Quitar niño"
+                        >
+                          <MinusIcon class="size-4" aria-hidden="true" />
+                        </button>
+                        <span class="w-6 text-center font-bold text-sm tabular-nums">{{ children }}</span>
+                        <button
+                          @click="incrementChildren"
+                          type="button"
+                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
+                          :disabled="totalPax >= maxPax"
+                          aria-label="Agregar niño"
+                        >
+                          <PlusIcon class="size-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Compact total -->
                 <div v-if="adults" class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5">
                   <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-                    <span>{{ currencyStore.formatConverted(basePrice || 0) }} × {{ adults }}</span>
-                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(subtotal || 0) }}</span>
+                    <span>{{ currencyStore.formatConverted(adultPrice || 0) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
+                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(adultPrice * adults || 0) }}</span>
+                  </div>
+                  <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                    <span>{{ currencyStore.formatConverted(childPrice || 0) }} × {{ children }} {{ children === 1 ? 'niño' : 'niños' }}</span>
+                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(childPrice * children || 0) }}</span>
                   </div>
                   <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
                     <span class="text-trust font-bold inline-flex items-center gap-1">
@@ -442,7 +557,7 @@
 
             <!-- Trust signals card — OTA pattern: stacks below booking widget -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2.5">
-              <div class="flex items-start gap-2.5">
+              <div v-if="tour.free_cancellation" class="flex items-start gap-2.5">
                 <CheckCircleSolidIcon class="size-5 text-trust shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <p class="text-sm font-bold text-slate-900 dark:text-white">Cancelación gratuita</p>
@@ -469,19 +584,23 @@
       </div>
 
       <!-- Related Tours (Full Width) -->
-      <section class="mt-20" v-if="relatedTours.length > 0">
-        <h2 class="text-2xl font-black mb-8">{{ t('you_might_like') }}</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section class="mt-16 md:mt-20" v-if="relatedTours.length > 0">
+        <h2 class="text-xl md:text-2xl font-black mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
+        <div class="flex md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
             :key="relatedTour.id"
             :to="`/${locale}/${relatedTour.city?.slug || 'puno'}/${relatedTour.slug}`"
-            class="group cursor-pointer"
+            class="group cursor-pointer shrink-0 w-[75%] sm:w-[48%] md:w-auto snap-start"
           >
-            <div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative">
-              <img
+            <div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative bg-slate-100">
+              <NuxtImg
                 :src="getImageUrl(relatedTour.featured_image)"
                 :alt="relatedTour.title"
+                format="webp"
+                width="400"
+                height="300"
+                densities="x1"
                 loading="lazy"
                 decoding="async"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -498,12 +617,13 @@
                 <HeartIcon v-else class="size-5" aria-hidden="true" />
               </button>
             </div>
-            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
+            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ cityLabel(relatedTour) }}</p>
             <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
-            <div class="flex items-center gap-1 mt-1">
+            <!-- Rating shown only when there are real reviews (no fabricated 4.5) -->
+            <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
               <StarSolidIcon class="size-3 text-yellow-500" aria-hidden="true" />
-              <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
-              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
+              <span class="text-sm font-bold">{{ Number(relatedTour.rating).toFixed(1) }}</span>
+              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count }})</span>
             </div>
             <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</p>
           </NuxtLink>
@@ -711,8 +831,24 @@ const avgRating = computed(() => {
   return (sum / tourReviews.value.length).toFixed(1)
 })
 
+// Qualitative label for the rating summary (OTA pattern).
+const ratingLabel = computed(() => {
+  const r = parseFloat(String(avgRating.value)) || 0
+  if (r >= 4.5) return 'Excelente'
+  if (r >= 4) return 'Muy bueno'
+  if (r >= 3.5) return 'Bueno'
+  return r > 0 ? 'Aceptable' : ''
+})
+
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+}
+
+// Clicking the rating in the header jumps to the reviews section (OTA pattern).
+function scrollToReviews() {
+  if (import.meta.client) {
+    document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 // Fetch reviews when tour is loaded
@@ -729,6 +865,7 @@ watch(tour, async (t) => {
 const selectedDate = ref('')
 const selectedTime = ref('')
 const adults = ref(2)
+const children = ref(0)
 const mobileError = ref('')
 const mobileBookingRef = ref<HTMLElement | null>(null)
 
@@ -780,38 +917,62 @@ onBeforeUnmount(() => stickyObserver?.disconnect())
 watch(selectedDate, () => { if (mobileError.value) mobileError.value = '' })
 watch(selectedTime, () => { if (mobileError.value) mobileError.value = '' })
 
-// Computed - Base price with price_details logic
-const basePrice = computed(() => {
-  const details = tour.value?.price_details
-  if (details && details.length > 0) {
-    const activePrices = details
-      .filter((p: any) => p.active)
-      .sort((a: any, b: any) => (a.min_quantity || 1) - (b.min_quantity || 1))
-
-    if (activePrices.length > 0) {
-      const matchingPrice = activePrices.find((p: any) => {
-        const min = p.min_quantity || 1
-        const max = p.max_quantity || Infinity
-        return adults.value >= min && adults.value <= max
-      })
-
-      if (matchingPrice) {
-        return parseFloat(matchingPrice.price || 0)
-      }
-
-      const lastPrice = activePrices[activePrices.length - 1]
-      if (adults.value > (lastPrice.max_quantity || 0)) {
-        return parseFloat(lastPrice.price || 0)
-      }
-
-      return Math.min(...activePrices.map((p: any) => parseFloat(p.price || 0)))
-    }
+// Pricing model — a tour defines `price_details[]`, one row per
+// (age_stage, quantity-tier). We group active rows by age stage and order the
+// stages by `age_stage_id` ASC. The backend treats the FIRST stage (lowest id)
+// as the primary/adult stage (see Tour::getMinPriceAttribute), and legacy prod
+// data sometimes mislabels the text description ("Niño"/"Adulto") — so we trust
+// the id order, NOT the label. Within a stage the per-person price drops as the
+// group grows (quantity tiers).
+const priceStages = computed(() => {
+  const details = (tour.value?.price_details || []).filter((p: any) => p.active)
+  const byStage: Record<string, { id: any; desc: string; tiers: any[] }> = {}
+  for (const p of details) {
+    const key = String(p.age_stage_id ?? '0')
+    if (!byStage[key]) byStage[key] = { id: p.age_stage_id, desc: p.age_stage?.description || '', tiers: [] }
+    byStage[key].tiers.push(p)
   }
-
-  return tour.value?.min_price || 0
+  const stages = Object.values(byStage)
+  for (const s of stages) s.tiers.sort((a: any, b: any) => (a.min_quantity || 1) - (b.min_quantity || 1))
+  // Lowest age_stage_id first = primary/adult stage (matches backend min_price).
+  stages.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0))
+  return stages
 })
 
-const subtotal = computed(() => basePrice.value * adults.value)
+// Adult = the primary (lowest-id) stage; child = the next stage, if any.
+const adultStage = computed(() => priceStages.value[0] || null)
+const childStage = computed(() => priceStages.value[1] || null)
+const hasChildPricing = computed(() => !!childStage.value)
+
+// Per-person price for a stage at a given quantity, honoring quantity tiers
+// (beyond the last tier we keep the cheapest/last per-person rate).
+function tierPriceFor(stage: { tiers: any[] } | null, qty: number): number {
+  if (!stage || !stage.tiers.length) return 0
+  const tiers = stage.tiers
+  const match = tiers.find((p: any) => {
+    const min = p.min_quantity || 1
+    const max = p.max_quantity || Infinity
+    return qty >= min && qty <= max
+  })
+  if (match) return parseFloat(match.price || 0)
+  const last = tiers[tiers.length - 1]
+  if (qty > (last.max_quantity || 0)) return parseFloat(last.price || 0)
+  return Math.min(...tiers.map((p: any) => parseFloat(p.price || 0)))
+}
+
+const adultPrice = computed(() => {
+  if (!adultStage.value) return tour.value?.min_price || 0
+  return tierPriceFor(adultStage.value, adults.value)
+})
+
+const childPrice = computed(() =>
+  childStage.value ? tierPriceFor(childStage.value, children.value) : 0)
+
+// `basePrice` is the headline "Desde" / per-adult price (template compat).
+const basePrice = computed(() => adultPrice.value)
+
+const subtotal = computed(() =>
+  adultPrice.value * adults.value + childPrice.value * children.value)
 
 // Check if selected date has an active offer
 const activeOffer = computed(() => {
@@ -837,7 +998,7 @@ const offerDiscount = computed(() => {
   if (activeOffer.value.discountType === 'percentage') {
     return subtotal.value * (activeOffer.value.discount / 100)
   }
-  return activeOffer.value.discount * adults.value
+  return activeOffer.value.discount * (adults.value + children.value)
 })
 
 const groupDiscount = computed(() => offerDiscount.value)
@@ -948,12 +1109,32 @@ const availableTimes = computed(() => {
 })
 
 // Booking widget methods
-function incrementAdults() {
-  if (adults.value < 20) adults.value++
-}
+// Max bookable participants — prefer explicit capacity/cupos, else the largest
+// quantity tier admin configured, else a sane default. Adults + children share
+// this cap (so e.g. 21 adults / 0 children is allowed when admin permits 21).
+const maxPax = computed(() => {
+  const cap = Number(tour.value?.capacity) || Number(tour.value?.cupos) || 0
+  if (cap > 0) return cap
+  const maxes = (tour.value?.price_details || [])
+    .filter((p: any) => p.active)
+    .map((p: any) => Number(p.max_quantity))
+    .filter((n: number) => Number.isFinite(n) && n > 0)
+  return maxes.length ? Math.max(...maxes) : 20
+})
 
+const totalPax = computed(() => adults.value + children.value)
+
+function incrementAdults() {
+  if (totalPax.value < maxPax.value) adults.value++
+}
 function decrementAdults() {
   if (adults.value > 1) adults.value--
+}
+function incrementChildren() {
+  if (totalPax.value < maxPax.value) children.value++
+}
+function decrementChildren() {
+  if (children.value > 0) children.value--
 }
 
 const guideLanguageMap: Record<number, string> = { 1: 'Spanish', 2: 'English', 3: 'French', 4: 'German', 5: 'Portuguese', 6: 'Italian' }
@@ -990,10 +1171,8 @@ function handleBooking() {
     ? getImageUrl(tour.value.media_gallery[0].url)
     : ''
 
-  // Calculate total
-  const totalPrice = basePrice.value * adults.value
-
-  // Add to cart
+  // Add to cart — `total` already accounts for adults, children and any
+  // active offer discount (tax is added downstream by the cart store).
   const cartItem = {
     tourId: tour.value?.id,
     tourTitle: tour.value?.title,
@@ -1003,10 +1182,10 @@ function handleBooking() {
     selectedTime: selectedTime.value,
     timezone: tour.value?.timezone || 'America/Lima',
     adults: adults.value,
-    children: 0,
-    basePrice: basePrice.value,
-    childPrice: 0,
-    total: totalPrice,
+    children: children.value,
+    basePrice: adultPrice.value,
+    childPrice: childPrice.value,
+    total: total.value,
     currency: tour.value?.currency || 'USD',
     policies: tour.value?.policies || '',
     cancellationPolicy: tour.value?.cancellation_policy || '',
@@ -1098,11 +1277,13 @@ watchEffect(() => {
             priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
             seller: { '@type': 'Organization', name: 'Incalake Tours' },
           },
-          ...(Number(tour.value.reviews_count) > 0 ? {
+          // Only emit aggregateRating from REAL fetched reviews — never a
+          // fabricated rating (Google penalizes fake review rich snippets).
+          ...(tourReviews.value.length > 0 ? {
             aggregateRating: {
               '@type': 'AggregateRating',
-              ratingValue: tour.value.rating || '4.5',
-              reviewCount: tour.value.reviews_count,
+              ratingValue: String(avgRating.value),
+              reviewCount: tourReviews.value.length,
               bestRating: '5',
               worstRating: '1',
             },
@@ -1145,6 +1326,17 @@ function formatCityName(slug: string): string {
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
+}
+
+// Clean city label from the slug (city.name is inconsistent in the DB, e.g.
+// "Vinicunca Peru - Rainbow Mountain, Cusco, Perú"). Falls back to first name
+// segment, then the route's city param.
+function cityLabel(t: any): string {
+  const slug = t?.city?.slug
+  if (slug) return formatCityName(slug)
+  const name = t?.city?.name
+  if (name) return name.split(',')[0].trim()
+  return formatCityName(citySlug)
 }
 
 function formatDuration(tour: any) {

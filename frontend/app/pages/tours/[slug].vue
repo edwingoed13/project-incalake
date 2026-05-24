@@ -9,9 +9,11 @@
           <h1 class="text-xl font-black mb-2 leading-tight">{{ tour.title }}</h1>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 text-xs text-slate-600">
-              <span class="material-symbols-outlined text-yellow-500 fill-1 text-sm">star</span>
-              <span class="font-bold">{{ tour.rating || '4.5' }}</span>
-              <span class="text-slate-300">-</span>
+              <template v-if="tour.rating && tour.reviews_count > 0">
+                <span class="material-symbols-outlined text-yellow-500 fill-1 text-sm">star</span>
+                <span class="font-bold">{{ Number(tour.rating).toFixed(1) }}</span>
+                <span class="text-slate-300">-</span>
+              </template>
               <span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
               <span>{{ tour.city?.name || 'Puno' }}</span>
               <span class="text-slate-300">-</span>
@@ -42,12 +44,14 @@
           <div class="flex-1">
             <h1 class="text-3xl font-black mb-3 leading-tight">{{ tour.title }}</h1>
             <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
-              <div class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
-                <span>{{ tour.rating || '4.5' }}</span>
-                <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count || 0 }} {{ t('reviews') }})</span>
-              </div>
-              <span class="text-slate-300">•</span>
+              <template v-if="tour.rating && tour.reviews_count > 0">
+                <div class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
+                  <span>{{ Number(tour.rating).toFixed(1) }}</span>
+                  <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count }} {{ t('reviews') }})</span>
+                </div>
+                <span class="text-slate-300">•</span>
+              </template>
               <div class="flex items-center gap-1">
                 <span class="material-symbols-outlined text-slate-500 text-base">location_on</span>
                 <span>{{ tour.city?.name || 'Puno' }}, Peru</span>
@@ -132,31 +136,11 @@
 
           <hr class="border-slate-200 dark:border-slate-800" />
 
-          <!-- Reviews Section -->
+          <!-- Reviews Section — no fabricated reviews; canonical page owns the
+               real reviews UI. This legacy route 301-redirects anyway. -->
           <section>
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold">{{ t('customer_reviews') }}</h3>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-2xl">{{ tour.rating || '4.5' }}</span>
-                <div class="flex">
-                  <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-500 fill-1 text-lg">star</span>
-                </div>
-              </div>
-            </div>
-            <div class="space-y-8">
-              <!-- Sample reviews - replace with real data when available -->
-              <div class="border-b border-slate-100 dark:border-slate-800 pb-8">
-                <div class="flex items-center gap-4 mb-3">
-                  <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">JD</div>
-                  <div>
-                    <h4 class="font-bold">John Doe</h4>
-                    <p class="text-xs text-slate-500">2 days ago • Verified Booking</p>
-                  </div>
-                </div>
-                <p class="text-slate-600 dark:text-slate-400">Incredible experience! Our guide was very knowledgeable and passionate about sharing the culture and history of Lake Titicaca.</p>
-              </div>
-            </div>
-            <button class="mt-6 font-bold text-primary hover:underline text-sm">{{ t('view_all_reviews', { count: tour.reviews_count || 0 }) }}</button>
+            <h3 class="text-xl font-bold mb-6">{{ t('customer_reviews') }}</h3>
+            <p class="text-sm text-slate-400">{{ t('no_reviews') }}</p>
           </section>
         </div>
 
@@ -329,10 +313,10 @@
             </div>
             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
             <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
-            <div class="flex items-center gap-1 mt-1">
+            <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
               <span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
-              <span class="text-sm font-bold">{{ relatedTour.rating || '4.5' }}</span>
-              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count || 0 }})</span>
+              <span class="text-sm font-bold">{{ Number(relatedTour.rating).toFixed(1) }}</span>
+              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count }})</span>
             </div>
             <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0, false) }}</p>
           </NuxtLink>
@@ -501,11 +485,14 @@ const tour = computed(() => response.value?.data || null)
 
 // Permanent redirect to canonical /{city}/{slug} URL — keeps SEO clean and
 // avoids the 404 we get when this URL is loaded directly via Vercel's ISR.
+// Fire on BOTH server and client: server uses a 301 (SEO), client uses a
+// history replace so the legacy template (and its placeholder content) never
+// renders during SPA navigation.
 const localePath = useLocalePath()
-if (import.meta.server && tour.value?.city?.slug) {
+if (tour.value?.city?.slug) {
   await navigateTo(
     localePath(`/${tour.value.city.slug}/${slug}`),
-    { redirectCode: 301 }
+    import.meta.server ? { redirectCode: 301, replace: true } : { replace: true }
   )
 }
 

@@ -217,43 +217,62 @@
         <button @click="clearFilters" class="px-5 py-2 bg-primary text-white font-bold rounded-xl text-sm">{{ t('clear_filters') }}</button>
       </div>
 
-      <!-- MOBILE: Horizontal cards -->
-      <div v-else class="md:hidden space-y-3">
-        <NuxtLink
+      <!-- MOBILE: GetYourGuide-style horizontal cards -->
+      <div v-else class="md:hidden space-y-3.5">
+        <div
           v-for="tour in mobileVisibleTours"
           :key="'m-'+tour.id"
-          :to="getTourLink(tour)"
-          class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5 hover:shadow-md transition-shadow"
+          class="relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
         >
-          <div class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0">
-            <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="96" height="96" />
-            <div v-if="hasActiveOffer(tour)" class="absolute top-1 left-1 px-1 py-0.5 bg-green-500 text-white text-[7px] font-bold rounded">
-              {{ getOfferLabel(tour) }}
+          <NuxtLink :to="getTourLink(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors">
+            <!-- Image -->
+            <div class="relative w-[42%] max-w-[150px] aspect-square rounded-xl overflow-hidden shrink-0 bg-slate-100">
+              <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
+              <div v-if="hasActiveOffer(tour)" class="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[9px] font-black rounded-md shadow">
+                {{ getOfferLabel(tour) }}
+              </div>
             </div>
-          </div>
-          <div class="flex-1 min-w-0 flex flex-col justify-between">
-            <div>
-              <h3 class="text-xs font-bold text-slate-800 line-clamp-2 leading-snug mb-1">{{ tour.title }}</h3>
-              <div class="flex items-center gap-2 text-[10px] text-slate-500">
-                <span v-if="formatDuration(tour)" class="flex items-center gap-0.5">
-                  <span class="material-symbols-outlined text-[10px]">schedule</span>{{ formatDuration(tour) }}
+            <!-- Content -->
+            <div class="flex-1 min-w-0 flex flex-col py-0.5 pr-8">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 inline-flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[12px]">location_on</span>{{ cityLabel(tour) }}
+              </p>
+              <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug mb-1.5">{{ tour.title }}</h3>
+              <!-- Attributes -->
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-slate-500 mb-auto">
+                <span v-if="formatDuration(tour)" class="inline-flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-[12px]">schedule</span>{{ formatDuration(tour) }}
                 </span>
-                <span class="flex items-center gap-0.5">
-                  <span class="material-symbols-outlined text-[10px]">location_on</span>{{ tour.city?.name || 'Puno' }}
+                <!-- Data-driven: only shows when the tour actually offers it
+                     (set `free_cancellation` on the tour from the admin later). -->
+                <span v-if="tour.free_cancellation" class="inline-flex items-center gap-0.5 text-trust font-semibold">
+                  <span class="material-symbols-outlined text-[12px]">verified_user</span>{{ t('free_cancellation') }}
+                </span>
+              </div>
+              <!-- Price -->
+              <div class="flex items-end justify-between mt-2">
+                <div class="leading-tight">
+                  <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
+                  <span class="text-base font-black text-slate-900">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
+                  <span class="text-[9px] text-slate-400">{{ t('per_person') }}</span>
+                </div>
+                <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 shrink-0">
+                  {{ t('view') }}<span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </span>
               </div>
             </div>
-            <div class="flex items-end justify-between mt-1">
-              <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5">
-                {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
-              </span>
-              <div class="text-right">
-                <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
-                <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
-              </div>
-            </div>
-          </div>
-        </NuxtLink>
+          </NuxtLink>
+          <!-- Wishlist heart -->
+          <button
+            @click.stop.prevent="toggleWishlist(tour)"
+            class="absolute top-3 right-3 size-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+            :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400'"
+            :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
+            :aria-pressed="wishlistStore.has(tour.id)"
+          >
+            <span class="material-symbols-outlined text-lg" :style="wishlistStore.has(tour.id) ? 'font-variation-settings: \'FILL\' 1' : ''">favorite</span>
+          </button>
+        </div>
       </div>
 
       <!-- DESKTOP: Grid cards -->
@@ -264,10 +283,10 @@
           :to="getTourLink(tour)"
           class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
-          <div class="relative aspect-[4/3] overflow-hidden">
+          <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
             <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
-              format="webp" width="400" height="300" />
+              format="webp" width="400" height="300" sizes="50vw lg:33vw xl:25vw" />
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
               <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
             </div>
@@ -277,7 +296,7 @@
           </div>
           <div class="p-4">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-              <span class="material-symbols-outlined text-xs">location_on</span>{{ tour.city?.name || 'Puno' }}
+              <span class="material-symbols-outlined text-xs">location_on</span>{{ cityLabel(tour) }}
             </div>
             <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
             <div class="flex items-end justify-between pt-3 border-t border-slate-100">
@@ -301,10 +320,10 @@
           :to="getTourLink(tour)"
           class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3"
         >
-          <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0">
+          <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0 bg-slate-100">
             <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
-              format="webp" width="256" height="176" />
+              format="webp" width="256" height="176" sizes="256px" />
             <div v-if="hasActiveOffer(tour)" class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
               <span class="material-symbols-outlined text-xs">local_offer</span>{{ getOfferLabel(tour) }}
             </div>
@@ -312,7 +331,7 @@
           <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
             <div>
               <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-                <span class="material-symbols-outlined text-xs">location_on</span>{{ tour.city?.name || 'Puno' }}
+                <span class="material-symbols-outlined text-xs">location_on</span>{{ cityLabel(tour) }}
               </div>
               <h3 class="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
               <p v-if="tour.short_description" class="text-xs text-slate-500 line-clamp-2 mb-3">{{ tour.short_description }}</p>
@@ -321,7 +340,7 @@
                   <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
                 </span>
                 <span class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">location_on</span>{{ tour.city?.name || 'Puno' }}
+                  <span class="material-symbols-outlined text-sm">location_on</span>{{ cityLabel(tour) }}
                 </span>
               </div>
             </div>
@@ -348,14 +367,14 @@
           @click="loadMore"
           class="w-full min-h-[48px] bg-white border-2 border-primary text-primary font-bold rounded-xl text-sm active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2"
         >
-          Cargar más tours
+          {{ t('load_more') }}
           <span class="material-symbols-outlined text-lg">expand_more</span>
         </button>
       </div>
 
       <!-- DESKTOP: numbered pagination -->
       <div v-if="paginatedTours.lastPage > 1" class="hidden md:flex items-center justify-center gap-2 mt-8 mb-4">
-        <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1" aria-label="Anterior"
+        <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1" :aria-label="t('previous')"
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <span class="material-symbols-outlined text-base">chevron_left</span>
         </button>
@@ -364,7 +383,7 @@
           class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all">
           {{ page }}
         </button>
-        <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage" aria-label="Siguiente"
+        <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage" :aria-label="t('next')"
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <span class="material-symbols-outlined text-base">chevron_right</span>
         </button>
@@ -379,8 +398,17 @@ const config = useRuntimeConfig()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
+const wishlistStore = useWishlistStore()
 
 const langCode = computed(() => locale.value.toUpperCase())
+
+// Reuse cached fetch results when navigating BACK to /tours (instant, no
+// refetch). Still refetches when language/tag (watched deps) change, since the
+// cache key encodes them and watch passes cause='watch'.
+function getCachedData(key: string, nuxtApp: any, ctx: any) {
+  if (ctx?.cause === 'watch' || ctx?.cause === 'refresh:manual') return undefined
+  return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+}
 
 useHead({ title: computed(() => `${t('tours')} - Incalake Tours`) })
 
@@ -466,31 +494,34 @@ const featuredSlugs = ['puno','cusco','arequipa','la-paz','uyuni','copacabana']
 const { data: citiesData } = await useAsyncData(
   () => `cities-with-counts-${langCode.value}`,
   () => api(`/cities?with_tour_counts=1&language=${langCode.value}`) as Promise<any>,
-  { watch: [langCode], lazy: true }
+  { watch: [langCode], lazy: true, getCachedData }
 )
 
 const cities = computed<any[]>(() => {
   const list = (citiesData.value as any)?.data || []
   return list
     .filter((c: any) => featuredSlugs.includes(c.slug))
-    .map((c: any) => ({ ...c, count: c.tours_count ?? 0 }))
+    // Count from the loaded tours (not the backend withCount) so the badge
+    // matches what selecting the city actually shows.
+    .map((c: any) => ({ ...c, count: cityCounts.value[c.slug] ?? 0 }))
     .filter((c: any) => c.count > 0)
 })
 
-// Tours listing — keyed by filter so navigating to a new city is a fresh fetch
-// but coming back hits the cache. SSR-rendered, payload transferred to client.
+// Tours listing — City filtering is done CLIENT-SIDE (the slug is in the light
+// payload) so the per-city badge counts always match the visible results, AND
+// switching cities is instant (no refetch). Tag stays server-side because the
+// light payload doesn't carry tags. Keyed by language + tag only.
 const { data: toursData, pending, error, refresh } = await useAsyncData(
-  () => `tours-${langCode.value}-${selectedCitySlug.value || 'all'}-${selectedTagSlug.value || 'all'}`,
+  () => `tours-${langCode.value}-${selectedTagSlug.value || 'all'}`,
   () => {
     // light=1 returns a slim card payload (no 6 translations / full gallery /
     // categories per tour) and avoids the per-tour N+1 in the API.
     let url = `/tours?per_page=500&active=1&light=1&language=${langCode.value}`
-    if (selectedCitySlug.value) url += `&city_slug=${selectedCitySlug.value}`
     if (selectedTagSlug.value) url += `&tag=${encodeURIComponent(selectedTagSlug.value)}`
     return api(url) as Promise<any>
   },
   // lazy: don't block route navigation — show skeletons instantly, stream data in
-  { watch: [langCode, selectedCitySlug, selectedTagSlug], lazy: true }
+  { watch: [langCode, selectedTagSlug], lazy: true, getCachedData }
 )
 
 const tours = computed<any[]>(() => {
@@ -498,9 +529,24 @@ const tours = computed<any[]>(() => {
   return Array.isArray(d?.data) ? d.data : (Array.isArray(d) ? d : [])
 })
 
+// Per-city counts derived from the actually-listable tours, so the dropdown
+// badge always equals the number of results when that city is selected.
+// (The backend's withCount badge included non-listable tours -> mismatch.)
+const cityCounts = computed<Record<string, number>>(() => {
+  const counts: Record<string, number> = {}
+  for (const t of tours.value) {
+    const slug = t.city?.slug
+    if (slug) counts[slug] = (counts[slug] || 0) + 1
+  }
+  return counts
+})
+
 // Client-side filters
 const filteredTours = computed(() => {
   let result = [...tours.value]
+  if (selectedCitySlug.value) {
+    result = result.filter(tour => tour.city?.slug === selectedCitySlug.value)
+  }
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(tour => tour.title?.toLowerCase().includes(q) || tour.short_description?.toLowerCase().includes(q) || tour.city?.name?.toLowerCase().includes(q))
@@ -582,9 +628,31 @@ function formatCityName(slug: string) {
   return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
+// City label for cards: derive from the clean `slug` (e.g. "cusco" -> "Cusco")
+// because `city.name` is inconsistent in the DB (e.g. "Vinicunca Peru - Rainbow
+// Mountain, Cusco, Perú"). Falls back to the first segment of name, then "Puno".
+function cityLabel(tour: any) {
+  const slug = tour?.city?.slug
+  if (slug) return formatCityName(slug)
+  const name = tour?.city?.name
+  return name ? name.split(',')[0].trim() : 'Puno'
+}
+
 function getTourLink(tour: any) {
   const citySlug = tour.city?.slug || 'puno'
   return localePath(`/${citySlug}/${tour.slug || tour.id}`)
+}
+
+function toggleWishlist(tour: any) {
+  wishlistStore.toggle({
+    id: tour.id,
+    title: tour.title,
+    slug: tour.slug,
+    city_slug: tour.city?.slug || 'puno',
+    image: getImageUrl(tour.featured_image || tour.thumbnail),
+    min_price: tour.min_price || 0,
+    currency: tour.currency || 'USD',
+  })
 }
 
 function hasActiveOffer(tour: any) {

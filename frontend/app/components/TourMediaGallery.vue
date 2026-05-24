@@ -27,26 +27,30 @@ const youtubeVideoId = computed(() => {
   return null
 })
 
-// Generate optimized YouTube embed URL
-const getYouTubeEmbedUrl = computed(() => {
+// Build the embed URL. autoplay is a param here (NOT appended later) so we
+// never end up with a duplicate `autoplay` — YouTube uses the first value, so
+// appending `&autoplay=1` to a url that already has `autoplay=0` never plays.
+function buildEmbedUrl(autoplay: boolean) {
   if (!youtubeVideoId.value) return ''
-
-  const baseUrl = 'https://www.youtube-nocookie.com/embed/'
   const params = new URLSearchParams({
-    autoplay: '0',
+    autoplay: autoplay ? '1' : '0',
     rel: '0',
     modestbranding: '1',
     playsinline: '1',
-    enablejsapi: '1'
+    enablejsapi: '1',
   })
+  return `https://www.youtube-nocookie.com/embed/${youtubeVideoId.value.id}?${params.toString()}`
+}
 
-  return `${baseUrl}${youtubeVideoId.value.id}?${params.toString()}`
-})
+// Desktop inline embeds don't autoplay; the modal (opened by a tap) does.
+const getYouTubeEmbedUrl = computed(() => buildEmbedUrl(false))
+const getYouTubeEmbedUrlAutoplay = computed(() => buildEmbedUrl(true))
 
-// YouTube thumbnail URL
+// YouTube thumbnail — hqdefault is 4:3 (fits the slider) and always exists
+// (maxresdefault can 404, especially for Shorts).
 const youtubeThumbnail = computed(() => {
   if (!youtubeVideoId.value) return ''
-  return `https://img.youtube.com/vi/${youtubeVideoId.value.id}/maxresdefault.jpg`
+  return `https://img.youtube.com/vi/${youtubeVideoId.value.id}/hqdefault.jpg`
 })
 
 // Gallery images
@@ -59,6 +63,15 @@ const images = computed(() => {
     alt: media.alt_text || props.tour.title,
     title: media.title_text || '',
   }))
+})
+
+// Mobile carousel slides: the video (if any) leads as a poster, then the
+// photos. `imageIndex` keeps the photo lightbox mapping correct.
+const mobileSlides = computed(() => {
+  const slides: Array<{ type: 'video' } | { type: 'image'; img: any; imageIndex: number }> = []
+  if (youtubeVideoId.value) slides.push({ type: 'video' })
+  images.value.forEach((img: any, i: number) => slides.push({ type: 'image', img, imageIndex: i }))
+  return slides
 })
 
 // Auto-detect layout based on content
@@ -108,7 +121,7 @@ function onTouchEnd(e: TouchEvent) {
   touchEndX = e.changedTouches[0].screenX
   const diff = touchStartX - touchEndX
   if (Math.abs(diff) > 50) {
-    if (diff > 0 && mobileSlideIndex.value < images.value.length - 1) {
+    if (diff > 0 && mobileSlideIndex.value < mobileSlides.value.length - 1) {
       mobileSlideIndex.value++
     } else if (diff < 0 && mobileSlideIndex.value > 0) {
       mobileSlideIndex.value--
@@ -166,9 +179,9 @@ function getImageUrl(path: string) {
 <template>
   <div>
     <!-- MOBILE SLIDER (all layouts) -->
-    <div v-if="images.length > 0" class="md:hidden relative">
+    <div v-if="mobileSlides.length > 0" class="md:hidden relative">
       <div
-        class="relative overflow-hidden rounded-2xl aspect-[4/3]"
+        class="relative overflow-hidden rounded-2xl aspect-[4/3] bg-slate-100"
         @touchstart="onTouchStart"
         @touchend="onTouchEnd"
       >
@@ -177,41 +190,62 @@ function getImageUrl(path: string) {
           :style="{ transform: `translateX(-${mobileSlideIndex * 100}%)` }"
         >
           <div
-            v-for="(image, index) in images"
+            v-for="(slide, index) in mobileSlides"
             :key="index"
             class="w-full flex-shrink-0 h-full"
           >
-            <img
-              :src="image.url"
-              :alt="image.alt"
+            <!-- Video poster slide: YouTube thumbnail + play → opens the modal -->
+            <button
+              v-if="slide.type === 'video'"
+              type="button"
+              @click="openVideoModal"
+              class="relative block w-full h-full"
+              aria-label="Reproducir video"
+            >
+              <img :src="youtubeThumbnail" :alt="tour.title" loading="eager" decoding="async" class="w-full h-full object-cover" />
+              <span class="absolute inset-0 flex items-center justify-center bg-black/25">
+                <span class="flex items-center justify-center size-16 rounded-full bg-black/55 backdrop-blur-sm text-white shadow-lg">
+                  <span class="material-symbols-outlined text-4xl">play_arrow</span>
+                </span>
+              </span>
+            </button>
+            <!-- Photo slide -->
+            <NuxtImg
+              v-else
+              :src="slide.img.url"
+              :alt="slide.img.alt"
+              format="webp"
+              width="800"
+              height="600"
+              densities="x1"
               :fetchpriority="index === 0 ? 'high' : undefined"
               :loading="index === 0 ? 'eager' : 'lazy'"
               decoding="async"
               class="w-full h-full object-cover"
-              @click="openLightbox(index)"
+              @click="openLightbox(slide.imageIndex)"
             />
           </div>
         </div>
 
-        <!-- Photo count button (bottom right) -->
+        <!-- Slide count button (bottom right) -->
         <button
-          v-if="images.length > 1"
+          v-if="mobileSlides.length > 1"
           class="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold"
           @click="openLightbox(0)"
         >
           <span class="material-symbols-outlined text-sm">photo_library</span>
-          {{ mobileSlideIndex + 1 }}/{{ images.length }}
+          {{ mobileSlideIndex + 1 }}/{{ mobileSlides.length }}
         </button>
 
         <!-- Dots indicator -->
-        <div v-if="images.length > 1 && images.length <= 10" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+        <div v-if="mobileSlides.length > 1 && mobileSlides.length <= 10" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
           <span
-            v-for="(_, i) in images.slice(0, Math.min(images.length, 7))"
+            v-for="(_, i) in mobileSlides.slice(0, Math.min(mobileSlides.length, 7))"
             :key="i"
             class="block rounded-full transition-all duration-200"
             :class="mobileSlideIndex === i ? 'w-2 h-2 bg-white' : 'w-1.5 h-1.5 bg-white/50'"
           ></span>
-          <span v-if="images.length > 7" class="block w-1 h-1 rounded-full bg-white/30"></span>
+          <span v-if="mobileSlides.length > 7" class="block w-1 h-1 rounded-full bg-white/30"></span>
         </div>
       </div>
     </div>
@@ -220,10 +254,15 @@ function getImageUrl(path: string) {
     <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[500px] overflow-hidden rounded-xl">
       <!-- Hero Image (primera imagen grande) -->
       <div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
-        <img
+        <NuxtImg
           :src="images[0].url"
           :alt="images[0].alt"
+          format="webp"
+          width="800"
+          height="600"
+          densities="x1"
           fetchpriority="high"
+          loading="eager"
           decoding="async"
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -237,9 +276,13 @@ function getImageUrl(path: string) {
           class="relative cursor-pointer group overflow-hidden"
           @click="openLightbox(4)"
         >
-          <img
+          <NuxtImg
             :src="image.url"
             :alt="image.alt"
+            format="webp"
+            width="440"
+            height="340"
+            densities="x1"
             loading="lazy"
             decoding="async"
             class="w-full h-full object-cover"
@@ -255,9 +298,13 @@ function getImageUrl(path: string) {
           class="relative group cursor-pointer overflow-hidden"
           @click="openLightbox(index + 1)"
         >
-          <img
+          <NuxtImg
             :src="image.url"
             :alt="image.alt"
+            format="webp"
+            width="440"
+            height="340"
+            densities="x1"
             loading="lazy"
             decoding="async"
             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -291,14 +338,14 @@ function getImageUrl(path: string) {
             class="relative cursor-pointer hover:opacity-90 transition-opacity flex-1"
             @click="openLightbox(0)"
           >
-            <img :src="displayImages[0].url" :alt="displayImages[0].alt" fetchpriority="high" decoding="async" class="w-full h-full object-cover rounded" />
+            <NuxtImg :src="displayImages[0].url" :alt="displayImages[0].alt" format="webp" width="700" height="420" densities="x1" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover rounded" />
           </div>
           <div class="grid grid-cols-2 gap-2 h-[182px]">
             <div v-if="displayImages[1]" class="relative cursor-pointer hover:opacity-90 transition-opacity" @click="openLightbox(1)">
-              <img :src="displayImages[1].url" :alt="displayImages[1].alt" loading="lazy" decoding="async" class="w-full h-full object-cover rounded" />
+              <NuxtImg :src="displayImages[1].url" :alt="displayImages[1].alt" format="webp" width="380" height="200" densities="x1" loading="lazy" decoding="async" class="w-full h-full object-cover rounded" />
             </div>
             <div v-if="displayImages[2]" class="relative cursor-pointer group overflow-hidden rounded" @click="openLightbox(2)">
-              <img :src="displayImages[2].url" :alt="displayImages[2].alt" loading="lazy" decoding="async" class="w-full h-full object-cover" />
+              <NuxtImg :src="displayImages[2].url" :alt="displayImages[2].alt" format="webp" width="380" height="200" densities="x1" loading="lazy" decoding="async" class="w-full h-full object-cover" />
               <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors">
                 <div class="flex flex-col items-center">
                   <span class="material-symbols-outlined text-white text-3xl mb-2">photo_library</span>
@@ -333,11 +380,16 @@ function getImageUrl(path: string) {
 
         <!-- Featured Image with Gallery Button -->
         <div class="relative cursor-pointer group" @click="openLightbox(0)">
-          <img
+          <NuxtImg
             v-if="displayImages[0]"
             :src="displayImages[0].url"
             :alt="displayImages[0].alt"
+            format="webp"
+            width="640"
+            height="400"
+            densities="x1"
             fetchpriority="high"
+            loading="eager"
             decoding="async"
             class="w-full h-full object-cover rounded-r-xl"
           />
@@ -370,12 +422,16 @@ function getImageUrl(path: string) {
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
 
-        <div class="relative w-full h-full flex items-center justify-center" @click.stop>
-          <div class="relative h-full" style="aspect-ratio: 9/16;">
+        <div class="relative w-full h-full flex items-center justify-center p-3" @click.stop>
+          <div
+            class="relative"
+            :class="youtubeVideoId?.isShort ? 'h-full' : 'w-full max-w-2xl'"
+            :style="youtubeVideoId?.isShort ? 'aspect-ratio: 9/16' : 'aspect-ratio: 16/9'"
+          >
             <iframe
-              :src="`${getYouTubeEmbedUrl}&autoplay=1`"
+              :src="getYouTubeEmbedUrlAutoplay"
               :title="`Video: ${tour.title}`"
-              class="w-full h-full"
+              class="absolute inset-0 w-full h-full rounded-lg"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen
@@ -408,9 +464,13 @@ function getImageUrl(path: string) {
           <span class="material-symbols-outlined text-3xl">chevron_left</span>
         </button>
 
-        <img
+        <NuxtImg
           :src="images[currentImageIndex].url"
           :alt="images[currentImageIndex].alt"
+          format="webp"
+          width="1600"
+          height="1067"
+          densities="x1"
           class="max-w-full max-h-full object-contain px-4"
           @click.stop
         />

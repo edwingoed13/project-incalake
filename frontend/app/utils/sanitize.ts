@@ -13,6 +13,11 @@ export function sanitizeHtml(html: string): string {
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/on\w+="[^"]*"/gi, '')
       .replace(/on\w+='[^']*'/gi, '')
+      // The admin editor inserts iframes with sandbox="" which disables JS
+      // inside the iframe → YouTube embeds show the "enable JavaScript" error.
+      // Strip sandbox so the player can run.
+      .replace(/\ssandbox\s*=\s*"[^"]*"/gi, '')
+      .replace(/\ssandbox\s*=\s*'[^']*'/gi, '')
   }
 
   // Client-side: Use DOM parsing
@@ -22,6 +27,10 @@ export function sanitizeHtml(html: string): string {
   // Remove script tags
   const scripts = div.querySelectorAll('script')
   scripts.forEach(script => script.remove())
+
+  // Drop `sandbox` on iframes — sandbox="" blocks the iframe's JS, breaking
+  // YouTube embeds ("enable JavaScript" error). Removing it lets them play.
+  div.querySelectorAll('iframe[sandbox]').forEach(f => f.removeAttribute('sandbox'))
 
   // Remove dangerous attributes
   const allElements = div.querySelectorAll('*')

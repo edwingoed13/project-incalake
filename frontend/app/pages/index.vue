@@ -197,12 +197,13 @@
             :to="localePath(`/tours?city=${city.slug}`)"
             class="group flex flex-col items-center gap-3"
           >
-            <div class="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300">
+            <div class="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 bg-slate-100">
               <NuxtImg
                 :src="getCityImage(city.slug)"
                 :alt="city.name"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 loading="lazy" format="webp" width="240" height="240"
+                sizes="33vw md:16vw"
               />
             </div>
             <h5 class="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{{ city.name }}</h5>
@@ -236,13 +237,14 @@
             :to="getTourLink(tour)"
             class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
-            <div class="relative h-52 overflow-hidden">
+            <div class="relative h-52 overflow-hidden bg-slate-100">
               <NuxtImg
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 loading="lazy" format="webp" width="400" height="208"
+                sizes="78vw sm:45vw md:30vw lg:25vw"
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
@@ -311,13 +313,14 @@
               <span class="material-symbols-outlined text-xs">local_offer</span>
               {{ getOfferLabel(tour) }}
             </div>
-            <div class="relative h-52 overflow-hidden">
+            <div class="relative h-52 overflow-hidden bg-slate-100">
               <NuxtImg
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 loading="lazy" format="webp" width="400" height="208"
+                sizes="78vw sm:45vw md:30vw lg:25vw"
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
@@ -354,10 +357,10 @@
             <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">What our travelers say</h3>
           </div>
           <div class="hidden sm:flex gap-2">
-            <button @click="scrollReviews(-1)" aria-label="Anterior" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+            <button @click="scrollReviews(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
               <span class="material-symbols-outlined text-lg">chevron_left</span>
             </button>
-            <button @click="scrollReviews(1)" aria-label="Siguiente" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+            <button @click="scrollReviews(1)" :aria-label="t('next')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
               <span class="material-symbols-outlined text-lg">chevron_right</span>
             </button>
           </div>
@@ -420,6 +423,14 @@ const { t, te, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
 
+// Reuse cached fetch results when navigating BACK to this page (instant, no
+// refetch). Still refetches when a watched dep (language) changes or on manual
+// refresh — so content stays correct.
+function getCachedData(key: string, nuxtApp: any, ctx: any) {
+  if (ctx?.cause === 'watch' || ctx?.cause === 'refresh:manual') return undefined
+  return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+}
+
 function translateDifficulty(value: string | null | undefined): string {
   if (!value) return ''
   const raw = String(value).toLowerCase()
@@ -442,7 +453,7 @@ const langCode = computed(() => locale.value.toUpperCase())
 const { data: pageContentData } = useAsyncData(
   `home-content-${langCode.value}`,
   () => api(`/pages/home?language=${langCode.value}`).catch(() => null),
-  { lazy: true, default: () => null, watch: [langCode] }
+  { lazy: true, default: () => null, watch: [langCode], getCachedData }
 )
 const pageContent = computed(() => (pageContentData.value as any)?.data?.content || null)
 
@@ -470,7 +481,7 @@ useHead({
 const { data: citiesResponse } = useAsyncData(
   'cities',
   () => api('/cities').catch(() => ({ data: [] })),
-  { lazy: true, default: () => ({ data: [] }) }
+  { lazy: true, default: () => ({ data: [] }), getCachedData }
 )
 const cities = computed(() => (citiesResponse.value as any)?.data || [])
 
@@ -486,7 +497,7 @@ const featuredCities = computed(() => {
 const { data: toursData, status: toursStatus } = useAsyncData(
   `tours-featured-${langCode.value}`,
   () => api(`/tours?active=1&per_page=8&language=${langCode.value}`).catch(() => ({ data: [] })),
-  { lazy: true, default: () => ({ data: [] }), watch: [langCode] }
+  { lazy: true, default: () => ({ data: [] }), watch: [langCode], getCachedData }
 )
 const tours = computed(() => {
   const data = (toursData.value as any)?.data
@@ -498,7 +509,7 @@ const toursPending = computed(() => toursStatus.value === 'pending')
 const { data: allToursData } = useAsyncData(
   `tours-offers-${langCode.value}`,
   () => api(`/tours?active=1&per_page=100&language=${langCode.value}`).catch(() => ({ data: [] })),
-  { lazy: true, default: () => ({ data: [] }), watch: [langCode] }
+  { lazy: true, default: () => ({ data: [] }), watch: [langCode], getCachedData }
 )
 const toursWithOffers = computed(() => {
   const data = (allToursData.value as any)?.data
@@ -532,7 +543,7 @@ const { data: reviewsData } = useAsyncData(
       return reviews
     } catch { return [] }
   },
-  { lazy: true, default: () => [] }
+  { lazy: true, default: () => [], getCachedData }
 )
 const featuredReviews = computed(() => reviewsData.value || [])
 // Testimonials: native horizontal scroll-snap (swipe on mobile, arrows desktop).

@@ -38,6 +38,9 @@ export default defineNuxtConfig({
   // serve modern formats by default.
   image: {
     domains: ['api.incalake.com', 'incalake.com', 'lh3.googleusercontent.com'],
+    // WebP only: encodes fast (AVIF is 5-10x slower to encode on-demand, which
+    // added multi-second latency when optimizing from the remote origin).
+    // WebP is ~70% smaller than the original and universally supported.
     format: ['webp'],
     quality: 72,
   },
