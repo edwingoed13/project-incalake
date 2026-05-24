@@ -435,13 +435,13 @@
     <!-- Image Editor Modal -->
     <UModal
       :open="editingIndex !== null"
-      :ui="{ content: 'max-w-4xl' }"
+      :ui="{ content: 'max-w-5xl' }"
       @update:open="(v) => !v && (editingIndex = null)"
     >
       <template #content>
         <div v-if="editingIndex !== null && store.multimedia.images[editingIndex]" class="flex flex-col max-h-[90vh] bg-default rounded-lg overflow-hidden">
           <!-- Header -->
-          <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3 shrink-0">
+          <div class="px-5 sm:px-6 py-4 border-b border-default flex items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <UIcon name="i-lucide-image-plus" class="size-5 text-primary" />
@@ -457,8 +457,8 @@
           </div>
 
           <!-- Body -->
-          <div class="flex-1 overflow-y-auto p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-5">
+          <div class="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-start">
               <!-- Preview / crop column -->
               <div class="space-y-3">
                 <div class="flex items-center gap-2">
@@ -495,7 +495,7 @@
                 </div>
 
                 <!-- Interactive cropper -->
-                <div class="relative rounded-xl overflow-hidden border border-default bg-slate-900 h-[340px]">
+                <div class="relative rounded-xl overflow-hidden border border-default bg-slate-900 h-[280px] sm:h-[320px] lg:h-[360px]">
                   <ClientOnly>
                     <Cropper
                       ref="cropperRef"
@@ -599,7 +599,7 @@
           </div>
 
           <!-- Footer -->
-          <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2 shrink-0">
+          <div class="px-5 sm:px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2 shrink-0">
             <UButton color="neutral" variant="ghost" :disabled="cropProcessing" @click="editingIndex = null">Cancelar</UButton>
             <UButton
               color="primary"
