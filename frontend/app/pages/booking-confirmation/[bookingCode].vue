@@ -72,13 +72,14 @@
               class="flex items-center gap-3 p-3 md:p-4"
               :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : 'border-b border-slate-50'"
             >
-              <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+              <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center">
                 <img
                   v-if="tr.tour_image"
                   :src="getImageUrl(tr.tour_image)"
                   :alt="tr.tour_title"
                   class="w-full h-full object-cover"
                 />
+                <span v-else class="material-symbols-outlined text-slate-300 text-2xl">image</span>
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ tr.tour_title }}</h3>
