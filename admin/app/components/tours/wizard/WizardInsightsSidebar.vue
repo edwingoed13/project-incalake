@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-72 border-l border-default bg-default p-4 hidden xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
+  <aside class="w-72 border-l border-default bg-default p-4 hidden 2xl:flex flex-col gap-4 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
     <!-- Primary actions grouped here (moved out of the top navbar to free room
          for the steps). Publish + back together, with preview right below. -->
     <div class="grid grid-cols-2 gap-2">

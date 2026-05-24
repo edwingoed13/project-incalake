@@ -239,12 +239,12 @@ onBeforeUnmount(() => {
           <UBadge :color="autosaveColor" variant="subtle" size="md" class="shrink-0" :icon="store.autosaving ? 'i-lucide-loader-circle' : (store.isDirty ? 'i-lucide-circle-dot' : 'i-lucide-circle-check')">
             <span :class="{ 'animate-spin': store.autosaving }" class="inline-flex">{{ autosaveLabel }}</span>
           </UBadge>
-          <!-- Below xl the insights sidebar (which now holds these) is hidden,
+          <!-- Below 2xl the insights sidebar (which holds these) is hidden,
                so keep publish + back reachable here as a fallback. -->
           <UButton
             icon="i-lucide-rocket"
             color="success"
-            class="xl:hidden"
+            class="2xl:hidden"
             :loading="publishing"
             :disabled="store.loading || store.autosaving"
             @click="publishTour"
@@ -256,7 +256,7 @@ onBeforeUnmount(() => {
             icon="i-lucide-arrow-left"
             color="neutral"
             variant="ghost"
-            class="xl:hidden"
+            class="2xl:hidden"
           >
             Volver
           </UButton>
