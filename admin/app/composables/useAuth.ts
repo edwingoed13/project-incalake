@@ -21,6 +21,21 @@ export const useAuth = () => {
                  store.setToken(response.data.token)
                  store.setUser(response.data.user)
 
+                 // The login response doesn't include permissions, and logout
+                 // clears them — so load them now. Otherwise the permission-gated
+                 // sidebar (Tours, Categorías, Idiomas, Usuarios…) stays empty
+                 // until a manual reload if the layout's fetch happens to fail.
+                 try {
+                     const perms: any = await $fetch(`${defaultApiUrl}/auth/permissions`, {
+                         headers: { Authorization: `Bearer ${response.data.token}` },
+                     })
+                     if (perms?.success && perms.data) {
+                         store.setPermissions(perms.data.permissions, perms.data.role)
+                     }
+                 } catch (e) {
+                     console.error('Could not preload permissions after login', e)
+                 }
+
                  return true
             }
 
