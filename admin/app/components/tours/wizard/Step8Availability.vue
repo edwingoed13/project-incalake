@@ -220,10 +220,10 @@
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               <UFormField label="Desde">
-                <UInput v-model="newBlock.startDate" type="date" icon="i-lucide-calendar" class="w-full" />
+                <UInput v-model="newBlock.startDate" type="date" :min="todayISO" icon="i-lucide-calendar" class="w-full" />
               </UFormField>
               <UFormField label="Hasta">
-                <UInput v-model="newBlock.endDate" type="date" icon="i-lucide-calendar" class="w-full" />
+                <UInput v-model="newBlock.endDate" type="date" :min="newBlock.startDate || todayISO" icon="i-lucide-calendar" class="w-full" />
               </UFormField>
             </div>
             <UFormField label="Motivo" hint="Opcional">
@@ -287,13 +287,13 @@
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               <UFormField label="Desde">
-                <UInput v-model="newOffer.startDate" type="date" icon="i-lucide-calendar" class="w-full" />
+                <UInput v-model="newOffer.startDate" type="date" :min="todayISO" icon="i-lucide-calendar" class="w-full" />
               </UFormField>
               <UFormField label="Hasta">
-                <UInput v-model="newOffer.endDate" type="date" icon="i-lucide-calendar" class="w-full" />
+                <UInput v-model="newOffer.endDate" type="date" :min="newOffer.startDate || todayISO" icon="i-lucide-calendar" class="w-full" />
               </UFormField>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <UFormField label="Descuento">
                 <UInputNumber v-model="newOffer.discount" :min="1" class="w-full" />
               </UFormField>
@@ -305,23 +305,23 @@
                   class="w-full"
                 />
               </UFormField>
-              <UFormField label="Color">
-                <div class="flex gap-1.5">
-                  <button
-                    v-for="color in offerColors"
-                    :key="color.value"
-                    type="button"
-                    class="size-9 rounded-lg border-2 transition-all flex items-center justify-center"
-                    :style="{ backgroundColor: color.value }"
-                    :class="newOffer.color === color.value ? 'ring-2 ring-offset-1 ring-default scale-105' : 'hover:scale-105'"
-                    :title="color.label"
-                    @click="newOffer.color = color.value"
-                  >
-                    <UIcon v-if="newOffer.color === color.value" name="i-lucide-check" class="size-3.5 text-white drop-shadow" />
-                  </button>
-                </div>
-              </UFormField>
             </div>
+            <UFormField label="Color en el calendario">
+              <div class="flex items-center gap-2.5 pt-1">
+                <button
+                  v-for="color in offerColors"
+                  :key="color.value"
+                  type="button"
+                  class="size-8 rounded-full flex items-center justify-center transition-transform hover:scale-110 outline-2 outline-offset-2 outline-transparent"
+                  :style="{ backgroundColor: color.value }"
+                  :class="newOffer.color === color.value ? 'outline-gray-400 dark:outline-gray-500 scale-110' : ''"
+                  :title="color.label"
+                  @click="newOffer.color = color.value"
+                >
+                  <UIcon v-if="newOffer.color === color.value" name="i-lucide-check" class="size-4 text-white drop-shadow-sm" />
+                </button>
+              </div>
+            </UFormField>
             <UButton
               icon="i-lucide-plus"
               color="success"
@@ -452,6 +452,14 @@ const hasAnyAvailability = computed(() =>
 
 const addBlock = () => {
   if (!newBlock.startDate || !newBlock.endDate) return
+  if (newBlock.startDate < todayISO) {
+    toast.add({ title: 'Fecha inválida', description: 'El bloqueo no puede empezar antes de hoy.', color: 'warning', icon: 'i-lucide-triangle-alert' })
+    return
+  }
+  if (newBlock.endDate < newBlock.startDate) {
+    toast.add({ title: 'Rango inválido', description: 'La fecha "hasta" no puede ser anterior a "desde".', color: 'warning', icon: 'i-lucide-triangle-alert' })
+    return
+  }
   if (!store.availability.blocks) store.availability.blocks = []
   store.availability.blocks.push({
     id: crypto.randomUUID(),
@@ -470,6 +478,14 @@ const removeBlock = (index: number) => {
 
 const addOffer = () => {
   if (!newOffer.startDate || !newOffer.endDate || !newOffer.discount) return
+  if (newOffer.startDate < todayISO) {
+    toast.add({ title: 'Fecha inválida', description: 'La oferta no puede empezar antes de hoy.', color: 'warning', icon: 'i-lucide-triangle-alert' })
+    return
+  }
+  if (newOffer.endDate < newOffer.startDate) {
+    toast.add({ title: 'Rango inválido', description: 'La fecha "hasta" no puede ser anterior a "desde".', color: 'warning', icon: 'i-lucide-triangle-alert' })
+    return
+  }
   if (!store.availability.offers) store.availability.offers = []
   store.availability.offers.push({
     id: crypto.randomUUID(),
