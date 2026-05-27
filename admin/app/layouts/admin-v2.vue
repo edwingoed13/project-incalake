@@ -15,7 +15,7 @@ onMounted(async () => {
   try {
     const config = useRuntimeConfig()
     const response = await fetch(`${config.public.apiUrl}/auth/permissions`, {
-      headers: { 'Authorization': `Bearer ${auth.token}` },
+      headers: { 'Authorization': `Bearer ${auth.token}`, 'Accept': 'application/json' },
     })
     if (response.ok) {
       const data = await response.json()

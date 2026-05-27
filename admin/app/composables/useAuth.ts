@@ -27,7 +27,7 @@ export const useAuth = () => {
                  // until a manual reload if the layout's fetch happens to fail.
                  try {
                      const perms: any = await $fetch(`${defaultApiUrl}/auth/permissions`, {
-                         headers: { Authorization: `Bearer ${response.data.token}` },
+                         headers: { Authorization: `Bearer ${response.data.token}`, Accept: 'application/json' },
                      })
                      if (perms?.success && perms.data) {
                          store.setPermissions(perms.data.permissions, perms.data.role)
