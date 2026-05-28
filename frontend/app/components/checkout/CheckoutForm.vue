@@ -292,7 +292,11 @@ const modalTitle = computed(() => {
             <input type="radio" v-model="paymentMethod" value="culqi" class="sr-only" />
             <Icon name="material-symbols:credit-card-outline" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'" class="text-2xl" />
             <span class="text-sm font-bold" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">{{ t('checkout.card') }}</span>
-            <span class="text-[10px] text-slate-500">Visa, Mastercard, Amex</span>
+            <div class="flex items-center gap-1">
+              <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#1a1f71]">VISA</span>
+              <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#eb001b]">MC</span>
+              <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#006fcf]">AMEX</span>
+            </div>
           </label>
           <label
             class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all"

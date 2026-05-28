@@ -134,6 +134,44 @@
             </div>
           </div>
 
+          <!-- What's included / not included (collapsible, one per tour) -->
+          <template v-for="(tr, i) in purchaseTours" :key="'inc-' + i">
+            <details
+              v-if="toItems(tr.what_includes).length || toItems(tr.what_not_includes).length"
+              class="bg-white rounded-xl border border-slate-100 shadow-sm group"
+            >
+              <summary class="flex items-center justify-between p-3 md:p-4 cursor-pointer list-none">
+                <div class="flex items-center gap-2 min-w-0">
+                  <Icon name="material-symbols:fact-check-outline" class="text-primary text-lg shrink-0" />
+                  <span class="text-sm font-bold text-slate-800 truncate">
+                    Qué incluye<span v-if="isMultiTour" class="text-slate-400 font-medium"> · {{ tr.tour_title }}</span>
+                  </span>
+                </div>
+                <Icon name="material-symbols:expand-more" class="text-slate-400 text-lg transition-transform group-open:rotate-180 shrink-0" />
+              </summary>
+              <div class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3 space-y-3">
+                <div v-if="toItems(tr.what_includes).length">
+                  <p class="text-[11px] font-bold uppercase tracking-wider text-green-600 mb-1.5">Incluye</p>
+                  <ul class="space-y-1">
+                    <li v-for="(it, k) in toItems(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-sm text-slate-700">
+                      <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base shrink-0 mt-0.5" />
+                      <span>{{ it }}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div v-if="toItems(tr.what_not_includes).length">
+                  <p class="text-[11px] font-bold uppercase tracking-wider text-red-500 mb-1.5">No incluye</p>
+                  <ul class="space-y-1">
+                    <li v-for="(it, k) in toItems(tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-sm text-slate-500">
+                      <Icon name="material-symbols:cancel-outline" class="text-red-400 text-base shrink-0 mt-0.5" />
+                      <span>{{ it }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </details>
+          </template>
+
           <!-- Customer info (collapsible on mobile) -->
           <details class="bg-white rounded-xl border border-slate-100 shadow-sm group">
             <summary class="flex items-center justify-between p-3 md:p-4 cursor-pointer list-none">
@@ -474,10 +512,11 @@ const steps = computed(() => [
 const { data: response, pending, error } = await useAsyncData(
   `booking-${bookingCode}`,
   () => {
+    const lang = (locale.value || 'es').toUpperCase()
     if (token) {
-      return api(`/bookings/token/${token}`)
+      return api(`/bookings/token/${token}?language=${lang}`)
     }
-    const params = email ? `?email=${encodeURIComponent(email)}` : ''
+    const params = email ? `?email=${encodeURIComponent(email)}&language=${lang}` : `?language=${lang}`
     return api(`/bookings/${bookingCode}${params}`)
   }
 )
@@ -503,9 +542,26 @@ const purchaseTours = computed(() => {
     children: b.participants?.children ?? b.children ?? 0,
     currency: b.pricing?.currency || b.currency,
     total: b.pricing?.total ?? b.total ?? 0,
+    what_includes: b.tour?.what_includes ?? [],
+    what_not_includes: b.tour?.what_not_includes ?? [],
   }]
 })
 const isMultiTour = computed(() => purchaseTours.value.length > 1)
+
+// Normalize what_includes/what_not_includes to a string[] regardless of shape
+// (array of strings/objects, an HTML <ul>, or newline-separated text).
+function toItems(val: any): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) {
+    return val.map((x: any) => typeof x === 'string' ? x : (x?.text || x?.item || x?.name || '')).map((s: string) => String(s).trim()).filter(Boolean)
+  }
+  const s = String(val).trim()
+  if (!s) return []
+  if (/<li[\s>]/i.test(s)) {
+    return s.replace(/<\/li>/gi, '\n').replace(/<[^>]*>/g, '').split('\n').map(x => x.trim()).filter(Boolean)
+  }
+  return s.split('\n').map(x => x.trim()).filter(Boolean)
+}
 
 // Payment summary from the API: how much was charged now vs the balance due
 // (for tours paid with a deposit/advance).

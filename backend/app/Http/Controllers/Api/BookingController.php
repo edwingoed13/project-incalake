@@ -725,7 +725,14 @@ class BookingController extends Controller
             return [];
         }
 
-        return Booking::with(['tour', 'tour.mediaGallery', 'pickupDetail'])
+        $glang = strtoupper((string) (request()->language ?? ''));
+        $pickTr = function ($b) use ($glang) {
+            if (!$b->tour || !$b->tour->relationLoaded('translations')) return null;
+            return ($glang ? $b->tour->translations->first(fn ($t) => optional($t->language)->code === $glang) : null)
+                ?? $b->tour->translations->first();
+        };
+
+        return Booking::with(['tour', 'tour.mediaGallery', 'tour.translations.language', 'pickupDetail'])
             ->whereIn('id', $ids)
             ->orderBy('tour_date')
             ->orderBy('booking_code')
@@ -751,6 +758,9 @@ class BookingController extends Controller
                 'data_requirement'           => (int) ($b->tour?->data_requirement ?? 1),
                 'personal_info_required'     => $b->tour?->personal_info_required ?? [],
                 'operational_info_required'  => $b->tour?->operational_info_required ?? [],
+                // What's included / not included (per requested language).
+                'what_includes'              => $pickTr($b)?->what_includes ?? [],
+                'what_not_includes'          => $pickTr($b)?->what_not_includes ?? [],
             ])
             ->values();
     }
@@ -766,7 +776,7 @@ class BookingController extends Controller
     {
         try {
             $booking = Booking::where('booking_code', $bookingCode)
-                ->with(['tour', 'tour.mediaGallery'])
+                ->with(['tour', 'tour.mediaGallery', 'tour.translations.language'])
                 ->firstOrFail();
 
             // Security check: Require email verification to access booking details
@@ -861,7 +871,7 @@ class BookingController extends Controller
         try {
             $booking = Booking::where('confirmation_token', $token)
                 ->where('confirmation_token_expires_at', '>', now())
-                ->with(['tour', 'tour.mediaGallery'])
+                ->with(['tour', 'tour.mediaGallery', 'tour.translations.language'])
                 ->firstOrFail();
 
             return response()->json([

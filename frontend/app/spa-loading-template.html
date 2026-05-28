@@ -1,0 +1,10 @@
+<!-- Shown by Nuxt while a client-only (ssr:false) page mounts — cart, checkout,
+     payment and booking-confirmation. Without it those routes flash a blank
+     screen on a direct/hard load before the app hydrates. -->
+<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f8fafc;z-index:9999">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+    <div style="width:38px;height:38px;border:4px solid rgba(79,70,229,0.18);border-top-color:#4f46e5;border-radius:9999px;animation:incaspin 0.7s linear infinite"></div>
+    <p style="font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;color:#64748b;margin:0">Cargando…</p>
+  </div>
+</div>
+<style>@keyframes incaspin{to{transform:rotate(360deg)}}</style>

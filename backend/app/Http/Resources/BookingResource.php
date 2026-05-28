@@ -14,6 +14,15 @@ class BookingResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Pick the tour translation for the requested language (fallback: first)
+        // so the confirmation summary can show what's included / not included.
+        $tlang = strtoupper((string) ($request->language ?? ''));
+        $ttr = null;
+        if ($this->tour && $this->tour->relationLoaded('translations')) {
+            $ttr = ($tlang ? $this->tour->translations->first(fn ($t) => optional($t->language)->code === $tlang) : null)
+                ?? $this->tour->translations->first();
+        }
+
         return [
             'id' => $this->id,
             'booking_code' => $this->booking_code,
@@ -70,6 +79,9 @@ class BookingResource extends JsonResource
                 'data_requirement' => (int) ($this->tour?->data_requirement ?? 1),
                 'personal_info_required' => $this->tour?->personal_info_required ?? [],
                 'operational_info_required' => $this->tour?->operational_info_required ?? [],
+                // What's included / not included (per the requested language).
+                'what_includes' => $ttr?->what_includes ?? [],
+                'what_not_includes' => $ttr?->what_not_includes ?? [],
             ],
             'customer' => [
                 'name' => $this->customer_name,

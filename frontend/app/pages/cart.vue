@@ -292,9 +292,9 @@ function getImageUrl(path: string) {
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
                 <span class="text-slate-500 flex items-center gap-1">
                   {{ t('transaction_fees') }}
-                  <AppPopover :label="t('transaction_fees')">
+                  <AppPopover :label="t('transaction_fees')" width="w-64">
                     <div v-for="ti in sortedCartItems" :key="'tax-'+ti.id" class="flex justify-between py-0.5 gap-2">
-                      <span class="truncate">{{ ti.tourTitle }}</span>
+                      <span class="flex-1 break-words">{{ ti.tourTitle }}</span>
                       <span class="shrink-0 font-semibold">{{ ti.taxPercentage || 0 }}%</span>
                     </div>
                   </AppPopover>
