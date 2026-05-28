@@ -83,7 +83,6 @@
         <!-- Legend -->
         <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-5 text-xs font-semibold text-slate-400">
           <span class="flex items-center gap-1"><span class="text-amber-500 text-[8px] font-black">%</span> {{ t('offer_legend') }}</span>
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span> {{ t('unavailable_legend') }}</span>
         </div>
       </div>
     </Transition>

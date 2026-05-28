@@ -251,7 +251,6 @@ export default defineI18nConfig(() => ({
       booking_not_found: 'Reserva no encontrada',
       // Calendar
       offer_legend: 'Oferta',
-      unavailable_legend: 'No disponible',
       // Misc
       reviews: 'reseñas',
       no_reviews: 'Sin reseñas',
@@ -515,7 +514,6 @@ export default defineI18nConfig(() => ({
       back_home: 'Back to Home',
       booking_not_found: 'Booking Not Found',
       offer_legend: 'Offer',
-      unavailable_legend: 'Unavailable',
       reviews: 'reviews',
       no_reviews: 'No reviews',
       tour_not_found: 'Tour not found',
