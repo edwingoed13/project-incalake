@@ -585,7 +585,7 @@ const whyUsItems = computed(() => {
 const cityImages: Record<string, string> = {
   'puno': 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?w=800&q=80',
   'cusco': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800&q=80',
-  'arequipa': 'https://images.unsplash.com/photo-1580975556080-e1a7e28e4b36?w=800&q=80',
+  'arequipa': 'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=800&q=80',
   'lima': 'https://images.unsplash.com/photo-1531968455001-5c5272a67c71?w=800&q=80',
   'la-paz': 'https://images.unsplash.com/photo-1591543620767-582b2e76369e?w=800&q=80',
   'uyuni': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80',

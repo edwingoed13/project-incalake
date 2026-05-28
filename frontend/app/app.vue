@@ -52,6 +52,13 @@ useHead({
 </script>
 
 <style>
+/* Las imágenes no muestran su texto `alt` mientras cargan ni si fallan (evita
+   el "texto donde debería ir la imagen"); los lectores de pantalla siguen
+   leyendo el alt. El placeholder gris/skeleton del contenedor se ve igual. */
+img {
+  color: transparent;
+}
+
 /* Ocultar placeholders de imágenes durante la carga */
 img[src=""] {
   visibility: hidden;
