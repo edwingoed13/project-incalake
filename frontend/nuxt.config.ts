@@ -211,11 +211,18 @@ export default defineNuxtConfig({
     // SPA — páginas privadas (instant load, no SEO). Localized too: with i18n
     // strategy 'prefix' the real paths are /{locale}/cart, /{locale}/payment/…
     // so the unprefixed rules alone never matched. robots:false = noindex.
-    '/**/cart': { ssr: false, robots: false },
-    '/**/checkout': { ssr: false, robots: false },
-    '/**/payment/**': { ssr: false, robots: false },
-    '/**/booking-confirmation/**': { ssr: false, robots: false },
-    '/**/saved': { ssr: false, robots: false },
+    // swr:false is REQUIRED: payment (/es/payment/culqi) and booking-confirmation
+    // (/es/booking-confirmation/{code}) are 3-segment paths, so the `/*/*/*`
+    // swr(600) rule below also matches and — being merged in — would SSR-render
+    // and cache them by PATH, dropping the per-user `?token=`/`?email=` query.
+    // That made confirmation links always hit the no-token path → "verificación
+    // de email requerida", and would also cache personal data. Forcing swr:false
+    // keeps them client-only so the token is read in the browser.
+    '/**/cart': { ssr: false, robots: false, swr: false },
+    '/**/checkout': { ssr: false, robots: false, swr: false },
+    '/**/payment/**': { ssr: false, robots: false, swr: false },
+    '/**/booking-confirmation/**': { ssr: false, robots: false, swr: false },
+    '/**/saved': { ssr: false, robots: false, swr: false },
 
     // SWR — páginas públicas con cache (revalida en background). Prod-only.
     '/': swr(3600),
