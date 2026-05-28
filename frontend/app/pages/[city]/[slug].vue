@@ -583,6 +583,26 @@
         </div>
       </div>
 
+      <!-- FAQ (derived from tour data — visible answers match the FAQPage JSON-LD) -->
+      <section v-if="faqItems.length" class="mt-16 md:mt-20">
+        <h2 class="text-xl md:text-2xl font-black mb-5 md:mb-8">{{ faqL.title }}</h2>
+        <div class="space-y-3 max-w-3xl">
+          <details
+            v-for="(item, i) in faqItems"
+            :key="i"
+            class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden"
+          >
+            <summary class="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden px-4 md:px-5 py-4 font-bold text-slate-900 dark:text-white">
+              <span>{{ item.q }}</span>
+              <ChevronDownIcon class="size-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div class="px-4 md:px-5 pb-4 -mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {{ item.a }}
+            </div>
+          </details>
+        </div>
+      </section>
+
       <!-- Related Tours (Full Width) -->
       <section class="mt-16 md:mt-20" v-if="relatedTours.length > 0">
         <h2 class="text-xl md:text-2xl font-black mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
@@ -1061,6 +1081,90 @@ const durationLabel = computed(() => {
   return ''
 })
 
+// --- Derived FAQ (visible accordion + FAQPage JSON-LD) --------------------
+// Q&As are GENERATED from existing tour fields — no manual authoring — so every
+// tour gets an FAQ. The visible section and the FAQPage structured data render
+// from the SAME `faqItems` source, so they stay identical (Google requires the
+// schema answer to match the on-page answer). Price uses the tour's base
+// currency (not the user-selected one) to stay deterministic across SSR/hydration
+// and consistent with the Product Offer schema. Labels follow the active locale;
+// partially-translated locales (pt/fr/de/it) fall back to English.
+const FAQ_LABELS: Record<string, any> = {
+  es: {
+    title: 'Preguntas frecuentes',
+    durationQ: (title: string) => `¿Cuánto dura ${title}?`,
+    durationA: (dur: string) => `Este tour tiene una duración aproximada de ${dur}.`,
+    locationQ: '¿Dónde se realiza este tour?',
+    locationA: (city: string) => `El tour se realiza en ${city}, Perú. El punto exacto de encuentro se confirma al momento de reservar.`,
+    pickupQ: '¿Incluye recojo desde el hotel?',
+    pickupA: 'Sí, este tour incluye servicio de recojo desde tu hotel dentro de la zona de cobertura.',
+    cancelQ: '¿Puedo cancelar mi reserva?',
+    cancelAFree: 'Sí, ofrecemos cancelación gratuita: puedes cancelar hasta 24 horas antes del inicio del tour y recibir un reembolso completo.',
+    priceQ: '¿Cuánto cuesta este tour?',
+    priceA: (price: string) => `El precio comienza desde ${price} por persona. El monto final depende del número de viajeros y la temporada.`,
+    bookQ: '¿Cómo reservo este tour?',
+    bookA: 'Puedes reservar en línea seleccionando la fecha y el número de personas. Recibirás la confirmación de tu reserva de inmediato por correo electrónico.',
+  },
+  en: {
+    title: 'Frequently asked questions',
+    durationQ: (title: string) => `How long does ${title} last?`,
+    durationA: (dur: string) => `This tour lasts approximately ${dur}.`,
+    locationQ: 'Where does this tour take place?',
+    locationA: (city: string) => `The tour takes place in ${city}, Peru. The exact meeting point is confirmed when you book.`,
+    pickupQ: 'Is hotel pickup included?',
+    pickupA: 'Yes, this tour includes hotel pickup within the coverage area.',
+    cancelQ: 'Can I cancel my booking?',
+    cancelAFree: 'Yes, we offer free cancellation: you can cancel up to 24 hours before the tour starts for a full refund.',
+    priceQ: 'How much does this tour cost?',
+    priceA: (price: string) => `Prices start from ${price} per person. The final amount depends on the number of travelers and the season.`,
+    bookQ: 'How do I book this tour?',
+    bookA: 'You can book online by choosing your date and the number of travelers. You will receive your booking confirmation by email right away.',
+  },
+}
+
+const faqL = computed(() => FAQ_LABELS[locale.value] || FAQ_LABELS.en)
+
+function stripHtml(html: string): string {
+  return String(html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+const faqItems = computed<Array<{ q: string; a: string }>>(() => {
+  const t = tour.value
+  if (!t) return []
+  const L = faqL.value
+  const items: Array<{ q: string; a: string }> = []
+
+  if (durationLabel.value) {
+    items.push({ q: L.durationQ(t.title), a: L.durationA(durationLabel.value) })
+  }
+
+  const city = cityLabel(t)
+  if (city) {
+    items.push({ q: L.locationQ, a: L.locationA(city) })
+  }
+
+  if (t.enable_hotel_pickup) {
+    items.push({ q: L.pickupQ, a: L.pickupA })
+  }
+
+  if (t.free_cancellation) {
+    items.push({ q: L.cancelQ, a: L.cancelAFree })
+  } else {
+    const cp = stripHtml(t.cancellation_policy)
+    if (cp) items.push({ q: L.cancelQ, a: cp.length > 300 ? cp.slice(0, 297) + '…' : cp })
+  }
+
+  const price = Number(t.min_price)
+  if (Number.isFinite(price) && price > 0) {
+    const priceStr = `${t.currency || 'USD'} ${price.toFixed(0)}`
+    items.push({ q: L.priceQ, a: L.priceA(priceStr) })
+  }
+
+  items.push({ q: L.bookQ, a: L.bookA })
+
+  return items
+})
+
 const tzInfo = computed(() => {
   const tz = tour.value?.timezone
   if (tz === 'America/Lima') return { code: 'HP', gmt: 'GMT-5', name: t('peruvian_time') }
@@ -1319,6 +1423,21 @@ watchEffect(() => {
           ],
         }),
       },
+      // FAQPage — biggest lever for AI-search citation (ChatGPT/Perplexity/AI
+      // Overviews). Answers MUST match the visible FAQ section: both render from
+      // `faqItems`, so they can't drift.
+      ...(faqItems.value.length ? [{
+        type: 'application/ld+json',
+        children: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqItems.value.map(f => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        }),
+      }] : []),
     ],
   })
 })
