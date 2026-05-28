@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<{
   customerPhone?: string
   requiredFields?: string[]
   applyToAllPax?: boolean
+  showErrors?: boolean
 }>(), {
   maxTravelers: 1,
   modelValue: () => [],
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{
   customerPhone: '',
   requiredFields: () => [],
   applyToAllPax: false,
+  showErrors: false,
 })
 
 const emit = defineEmits<{ 'update:modelValue': [v: any[]] }>()
@@ -35,6 +37,17 @@ const fields = computed(() => (props.requiredFields || []).filter(k => FIELD_DEF
 
 const canAdd = computed(() => props.modelValue.length < props.maxTravelers)
 const showExtras = (traveler: any) => !!traveler?.is_leader || props.applyToAllPax
+
+// Inline validation: required fields are enforced on the lead traveler only.
+// `showErrors` is flipped on by the parent when a submit attempt fails.
+function fieldEmpty(traveler: any, key: string): boolean {
+  const v = key === 'nationality' ? traveler?.nationality : traveler?.extra_data?.[key]
+  return !String(v ?? '').trim()
+}
+const fieldInvalid = (traveler: any, key: string) =>
+  props.showErrors && !!traveler?.is_leader && fieldEmpty(traveler, key)
+const nameInvalid = (traveler: any) =>
+  props.showErrors && !!traveler?.is_leader && !String(traveler?.full_name ?? '').trim()
 
 // Guarantee every traveler has an extra_data object so v-model on its keys is
 // reactive, and prefill the lead traveler's email/phone from the purchase.
@@ -100,7 +113,10 @@ function remove(idx: number) {
           <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
             {{ t('full_name') }}<span v-if="traveler.is_leader"> *</span>
           </label>
-          <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" placeholder="Nombre completo" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" placeholder="Nombre completo"
+            class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            :class="nameInvalid(traveler) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'" />
+          <p v-if="nameInvalid(traveler)" class="text-[10px] text-red-500 mt-1">Requerido</p>
         </div>
 
         <!-- Admin-configured fields -->
@@ -110,16 +126,18 @@ function remove(idx: number) {
               {{ FIELD_DEFS[key].label }}<span v-if="traveler.is_leader"> *</span>
             </label>
 
-            <AppCountrySelect
-              v-if="FIELD_DEFS[key].type === 'country'"
-              v-model="traveler.nationality"
-              placeholder="Selecciona país"
-            />
+            <div v-if="FIELD_DEFS[key].type === 'country'" class="rounded-lg" :class="fieldInvalid(traveler, key) ? 'ring-1 ring-red-300' : ''">
+              <AppCountrySelect
+                v-model="traveler.nationality"
+                placeholder="Selecciona país"
+              />
+            </div>
 
             <select
               v-else-if="FIELD_DEFS[key].type === 'gender'"
               v-model="traveler.extra_data[key]"
-              class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white"
+              class="w-full px-3 py-2.5 rounded-lg border text-sm bg-white"
+              :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             >
               <option value="">Selecciona</option>
               <option value="male">Masculino</option>
@@ -135,8 +153,10 @@ function remove(idx: number) {
               :inputmode="FIELD_DEFS[key].type === 'number' ? 'decimal' : undefined"
               :autocomplete="FIELD_DEFS[key].type === 'email' ? 'email' : FIELD_DEFS[key].type === 'tel' ? 'tel' : 'off'"
               :placeholder="FIELD_DEFS[key].label"
-              class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             />
+            <p v-if="fieldInvalid(traveler, key)" class="text-[10px] text-red-500 mt-1">Requerido</p>
           </div>
         </template>
       </div>

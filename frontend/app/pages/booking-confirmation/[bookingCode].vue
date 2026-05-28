@@ -262,6 +262,24 @@
 
         <!-- Step 2: Traveler Details -->
         <div v-else-if="currentStep === 2">
+          <!-- Autosave + deadline notice: data persists as you type and the
+               same link lets you come back to finish later. -->
+          <div class="mb-3 flex items-start gap-2 p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+            <Icon name="material-symbols:cloud-done-outline" class="text-blue-500 text-base mt-0.5 shrink-0" />
+            <div class="flex-1 min-w-0">
+              <p class="text-[11px] text-blue-800 leading-snug">
+                Tus datos se guardan automáticamente. Puedes cerrar y volver a este enlace para completarlos
+                <template v-if="bookingDeadline"> — idealmente antes del <span class="font-semibold">{{ formatDate(bookingDeadline) }}</span></template>.
+              </p>
+            </div>
+            <span class="shrink-0 text-[10px] font-semibold inline-flex items-center gap-1"
+              :class="autoSaveState === 'saved' ? 'text-green-600' : autoSaveState === 'saving' ? 'text-slate-400' : 'text-transparent'">
+              <Icon :name="autoSaveState === 'saving' ? 'material-symbols:progress-activity' : 'material-symbols:check'"
+                :class="autoSaveState === 'saving' ? 'animate-spin' : ''" class="text-xs" />
+              {{ autoSaveState === 'saving' ? 'Guardando…' : autoSaveState === 'saved' ? 'Guardado' : '' }}
+            </span>
+          </div>
+
           <!-- MULTI-TOUR: travelers per tour (each capped at its own pax) -->
           <template v-if="isMultiTour">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -282,9 +300,10 @@
                 >
                   <div class="min-w-0">
                     <p class="text-sm font-bold text-slate-800 truncate">{{ tr.tour_title }}</p>
-                    <p class="text-[11px] mt-0.5 font-semibold inline-flex items-center gap-1" :class="isTourTravelersDone(tr) ? 'text-green-600' : 'text-amber-600'">
-                      <Icon :name="isTourTravelersDone(tr) ? 'material-symbols:check-circle-outline' : 'material-symbols:group-outline'" class="text-xs" />
-                      {{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros
+                    <p class="text-[11px] mt-0.5 font-semibold inline-flex items-center gap-1" :class="isTourComplete(tr) ? 'text-green-600' : 'text-amber-600'">
+                      <Icon :name="isTourComplete(tr) ? 'material-symbols:check-circle-outline' : 'material-symbols:group-outline'" class="text-xs" />
+                      <template v-if="isTourComplete(tr)">Responsable completo</template>
+                      <template v-else>{{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros</template>
                     </p>
                   </div>
                   <Icon name="material-symbols:expand-more" :class="openTourId === tr.id ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
@@ -318,6 +337,7 @@
                     :customer-phone="booking.customer?.phone"
                     :required-fields="travelerFieldsFor(tr)"
                     :apply-to-all-pax="travelerApplyAll(tr)"
+                    :show-errors="showErrors"
                   />
                 </div>
               </div>
@@ -343,6 +363,7 @@
                   :customer-phone="booking.customer?.phone"
                   :required-fields="travelerFieldsFor(booking.tour)"
                   :apply-to-all-pax="travelerApplyAll(booking.tour)"
+                  :show-errors="showErrors"
                 />
               </div>
             </div>
@@ -388,6 +409,41 @@
             </div>
           </div>
         </div>
+
+        <!-- Pre-submit review (final confirm before locking in traveler data) -->
+        <Teleport to="body">
+          <div v-if="reviewOpen" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+            <div class="absolute inset-0 bg-black/50" @click="reviewOpen = false"></div>
+            <div class="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl">
+              <div class="sticky top-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+                <p class="text-sm font-bold text-slate-800">Revisa los datos</p>
+                <button @click="reviewOpen = false" class="p-1.5 text-slate-400 active:text-slate-700">
+                  <Icon name="material-symbols:close" class="text-2xl" />
+                </button>
+              </div>
+              <div class="p-4 space-y-3">
+                <div v-for="(g, gi) in reviewGroups" :key="gi" class="rounded-xl border border-slate-100 p-3">
+                  <p class="text-xs font-bold text-slate-700 truncate mb-1.5">{{ g.title }}</p>
+                  <div class="space-y-1">
+                    <p v-for="(p, pi) in g.travelers" :key="pi" class="text-sm text-slate-700 flex items-center gap-1.5">
+                      <Icon name="material-symbols:person-outline" class="text-slate-400 text-sm" />
+                      {{ p.name }}
+                      <span v-if="p.isLeader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">RESPONSABLE</span>
+                    </p>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-400">Puedes volver a este enlace para editarlos más adelante.</p>
+              </div>
+              <div class="sticky bottom-0 bg-white border-t border-slate-100 px-4 py-3 flex gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <button @click="reviewOpen = false" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">Editar</button>
+                <button @click="commitTravelers" :disabled="savingTravelers" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:bg-primary/80">
+                  <Icon name="material-symbols:progress-activity" v-if="savingTravelers" class="animate-spin text-base" />
+                  {{ savingTravelers ? t('saving') : 'Confirmar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
       </div>
     </div>
   </div>
@@ -495,6 +551,15 @@ const travelersByTour = ref<Record<number, any[]>>({}) // multi-tour: keyed by b
 const openTourId = ref<number | null>(null)
 const savingTravelers = ref(false)
 const travelerError = ref<string | null>(null)
+const showErrors = ref(false)                              // flip on after a failed submit → inline field highlights
+const reviewOpen = ref(false)                              // pre-submit review modal
+const autoSaveState = ref<'idle' | 'saving' | 'saved'>('idle')
+
+// Deadline shown to the traveler: data should be completed before the (earliest) tour starts.
+const bookingDeadline = computed(() => {
+  const dates = purchaseTours.value.map((t: any) => t.tour_date).filter(Boolean).sort()
+  return dates[0] || booking.value?.tour_date || ''
+})
 
 // Cap travelers at the participants paid for (adults + children): a 1-pax tour
 // shows only the leader (can't add anyone); a 2-pax tour allows just 1 extra.
@@ -511,6 +576,29 @@ const tourMax = (tr: any) => Math.max(1, (tr?.adults || 0) + (tr?.children || 0)
 const filledCount = (id: number) => (travelersByTour.value[id] || []).filter((x: any) => x.full_name?.trim()).length
 const isTourTravelersDone = (tr: any) => filledCount(tr.id) >= 1
 const toursTravelersDone = computed(() => purchaseTours.value.filter((tr: any) => isTourTravelersDone(tr)).length)
+// "Complete" = the lead traveler has a name AND all admin-required fields filled.
+const isTourComplete = (tr: any) => {
+  const leader = (travelersByTour.value[tr.id] || [])[0]
+  return !!leader?.full_name?.trim() && firstMissingLeaderExtra(leader, tr) === null
+}
+
+// Compact summary for the pre-submit review modal.
+const reviewGroups = computed(() => {
+  if (isMultiTour.value) {
+    return purchaseTours.value.map((tr: any) => ({
+      title: tr.tour_title,
+      travelers: (travelersByTour.value[tr.id] || [])
+        .filter((x: any) => x.full_name?.trim())
+        .map((x: any, i: number) => ({ name: x.full_name, isLeader: i === 0 })),
+    }))
+  }
+  return [{
+    title: booking.value?.tour?.title || booking.value?.tour_title || '',
+    travelers: travelers.value
+      .filter((x: any) => x.full_name?.trim())
+      .map((x: any, i: number) => ({ name: x.full_name, isLeader: i === 0 })),
+  }]
+})
 
 function seedTravelers(adults: number, children: number, leaderName?: string) {
   const a = adults || 0, c = children || 0
@@ -666,68 +754,78 @@ function skipStep(step: number) {
   currentStep.value = step + 1
 }
 
-async function saveTravelers() {
+// Open + scroll to the tour that failed validation, and turn on inline errors.
+function failTour(id: number) {
+  showErrors.value = true
+  openTourId.value = id
+  if (import.meta.client) {
+    nextTick(() => document.getElementById('traveler-tour-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+}
+
+// Lead-traveler-only validation. On failure sets the message + inline highlights
+// and returns false; returns true when every required field is complete.
+function validateTravelers(): boolean {
   travelerError.value = null
 
-  // MULTI-TOUR: validate + save each tour against its OWN booking id.
   if (isMultiTour.value) {
     for (const tr of purchaseTours.value) {
       const list = travelersByTour.value[tr.id] || []
       if (!list[0]?.full_name?.trim()) {
         travelerError.value = `Falta el responsable en "${tr.tour_title}"`
-        openTourId.value = tr.id
-        if (import.meta.client) {
-          nextTick(() => document.getElementById('traveler-tour-' + tr.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-        }
-        return
+        failTour(tr.id)
+        return false
       }
       const missing = firstMissingLeaderExtra(list[0], tr)
       if (missing) {
         travelerError.value = `Completa "${missing}" del responsable en "${tr.tour_title}"`
-        openTourId.value = tr.id
-        if (import.meta.client) {
-          nextTick(() => document.getElementById('traveler-tour-' + tr.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
-        }
-        return
+        failTour(tr.id)
+        return false
       }
     }
-    savingTravelers.value = true
-    try {
-      for (const tr of purchaseTours.value) {
-        const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
-        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: valid } })
-      }
-      completedSteps.value.add(2)
-      currentStep.value = 3
-    } catch (e: any) {
-      travelerError.value = t('error_saving')
-    } finally {
-      savingTravelers.value = false
-    }
-    return
+    return true
   }
 
   // SINGLE TOUR
   if (!travelers.value[0]?.full_name?.trim()) {
     travelerError.value = t('leader_required')
-    return
+    showErrors.value = true
+    return false
   }
   const missingSingle = firstMissingLeaderExtra(travelers.value[0], booking.value?.tour)
   if (missingSingle) {
     travelerError.value = `Completa "${missingSingle}" del responsable`
-    return
+    showErrors.value = true
+    return false
   }
-  const validTravelers = travelers.value.filter(tr => tr.full_name?.trim())
-  if (validTravelers.length === 0) {
+  if (travelers.value.filter(tr => tr.full_name?.trim()).length === 0) {
     travelerError.value = t('traveler_required')
-    return
+    showErrors.value = true
+    return false
   }
+  return true
+}
+
+// Button handler: validate, then show the review modal as a final confirm.
+function saveTravelers() {
+  if (validateTravelers()) reviewOpen.value = true
+}
+
+// Persist all travelers and advance to the final step (assumes validation passed).
+async function commitTravelers() {
+  clearTimeout(autoSaveTimer)
+  reviewOpen.value = false
   savingTravelers.value = true
   try {
-    await api(`/bookings/${booking.value.id}/travelers`, {
-      method: 'POST',
-      body: { travelers: validTravelers }
-    })
+    if (isMultiTour.value) {
+      for (const tr of purchaseTours.value) {
+        const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
+        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+      }
+    } else {
+      const valid = travelers.value.filter(tr => tr.full_name?.trim())
+      await api(`/bookings/${booking.value.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+    }
     completedSteps.value.add(2)
     currentStep.value = 3
   } catch (e: any) {
@@ -736,6 +834,40 @@ async function saveTravelers() {
     savingTravelers.value = false
   }
 }
+
+// --- Autosave (silent) -----------------------------------------------------
+// Persist progress as the user types so nothing is lost if they leave and
+// return via the same link. Reuses the travelers endpoint (delete+recreate is
+// idempotent); only saves tours whose lead traveler already has a name, never
+// validates and never advances the step.
+let autoSaveTimer: any = null
+async function runAutoSave() {
+  try {
+    let savedAny = false
+    if (isMultiTour.value) {
+      for (const tr of purchaseTours.value) {
+        const list = travelersByTour.value[tr.id] || []
+        if (!list[0]?.full_name?.trim()) continue
+        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: list.filter((x: any) => x.full_name?.trim()) } })
+        savedAny = true
+      }
+    } else if (travelers.value[0]?.full_name?.trim()) {
+      await api(`/bookings/${booking.value.id}/travelers`, { method: 'POST', body: { travelers: travelers.value.filter(x => x.full_name?.trim()) } })
+      savedAny = true
+    }
+    autoSaveState.value = savedAny ? 'saved' : 'idle'
+  } catch {
+    autoSaveState.value = 'idle'
+  }
+}
+function scheduleAutoSave() {
+  if (currentStep.value !== 2) return
+  travelerError.value = null            // user is editing → dismiss any stale error
+  autoSaveState.value = 'saving'
+  clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(runAutoSave, 1200)
+}
+watch([travelers, travelersByTour], scheduleAutoSave, { deep: true })
 
 // Voucher = the printable confirmation page. window.print() lets the user
 // save it as PDF / print, and works on mobile (no backend PDF endpoint needed).
