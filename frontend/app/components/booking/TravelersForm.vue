@@ -6,7 +6,8 @@ import { computed } from 'vue'
 const props = withDefaults(defineProps<{
   modelValue?: any[]
   maxTravelers: number
-}>(), { maxTravelers: 1, modelValue: () => [] })
+  customerName?: string
+}>(), { maxTravelers: 1, modelValue: () => [], customerName: '' })
 
 const emit = defineEmits<{ 'update:modelValue': [v: any[]] }>()
 const { t } = useI18n()
@@ -33,13 +34,23 @@ function remove(idx: number) {
 <template>
   <div class="space-y-3">
     <div v-for="(traveler, idx) in modelValue" :key="idx" class="p-3 bg-slate-50 rounded-xl">
-      <div class="flex items-center justify-between mb-2.5">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
         <p class="text-[11px] font-bold uppercase" :class="traveler.is_leader ? 'text-primary' : 'text-slate-400'">
           {{ traveler.is_leader ? t('leader') : `Viajero ${idx + 1}` }}
           <span v-if="traveler.age_group === 'child'" class="ml-1 text-amber-500">(Niño)</span>
         </p>
         <button
-          v-if="!traveler.is_leader && modelValue.length > 1"
+          v-if="traveler.is_leader && customerName"
+          type="button"
+          @click="traveler.full_name = customerName"
+          class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-primary active:text-primary/70"
+        >
+          <Icon name="material-symbols:badge-outline" class="text-sm" />
+          Usar mis datos
+        </button>
+        <button
+          v-else-if="!traveler.is_leader && modelValue.length > 1"
+          type="button"
           @click="remove(idx)"
           class="p-1 text-slate-400 active:text-red-500"
         >
@@ -50,7 +61,7 @@ function remove(idx: number) {
       <div class="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
         <div class="md:col-span-2">
           <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('full_name') }} *</label>
-          <input v-model="traveler.full_name" type="text" placeholder="Nombre completo" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" placeholder="Nombre completo" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary" />
         </div>
         <div>
           <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('nationality') }}</label>
@@ -70,7 +81,7 @@ function remove(idx: number) {
         </div>
         <div>
           <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('doc_number') }}</label>
-          <input v-model="traveler.doc_number" type="text" placeholder="N° de documento" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm" />
+          <input v-model="traveler.doc_number" type="text" autocomplete="off" autocapitalize="characters" placeholder="N° de documento" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm uppercase placeholder:normal-case" />
         </div>
         <div>
           <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">{{ t('special_needs') }}</label>

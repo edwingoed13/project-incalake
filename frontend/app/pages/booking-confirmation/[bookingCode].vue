@@ -272,6 +272,8 @@
               <div
                 v-for="(tr, i) in purchaseTours"
                 :key="tr.id"
+                :id="'traveler-tour-' + tr.id"
+                class="scroll-mt-24"
                 :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : ''"
               >
                 <button
@@ -288,16 +290,27 @@
                   <Icon name="material-symbols:expand-more" :class="openTourId === tr.id ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
                 </button>
                 <div v-show="openTourId === tr.id" class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3">
-                  <button
-                    v-if="i > 0"
-                    type="button"
-                    @click="copyFromPrevious(i)"
-                    class="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70"
-                  >
-                    <Icon name="material-symbols:content-copy-outline" class="text-sm" />
-                    Copiar viajeros del tour anterior
-                  </button>
-                  <BookingTravelersForm v-model="travelersByTour[tr.id]" :max-travelers="tourMax(tr)" />
+                  <div v-if="purchaseTours.length > 1" class="flex flex-wrap gap-x-4 gap-y-2 mb-3">
+                    <button
+                      type="button"
+                      @click="applyLeaderToAll(tr.id)"
+                      :disabled="!(travelersByTour[tr.id]?.[0]?.full_name || '').trim()"
+                      class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Icon name="material-symbols:groups-outline" class="text-sm" />
+                      Usar este responsable en todos los tours
+                    </button>
+                    <button
+                      v-if="i > 0"
+                      type="button"
+                      @click="copyFromPrevious(i)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70"
+                    >
+                      <Icon name="material-symbols:content-copy-outline" class="text-sm" />
+                      Copiar viajeros del tour anterior
+                    </button>
+                  </div>
+                  <BookingTravelersForm v-model="travelersByTour[tr.id]" :max-travelers="tourMax(tr)" :customer-name="booking.customer?.name" />
                 </div>
               </div>
             </div>
@@ -314,7 +327,7 @@
                 </h3>
               </div>
               <div class="p-3 md:p-4">
-                <BookingTravelersForm v-model="travelers" :max-travelers="maxTravelers" />
+                <BookingTravelersForm v-model="travelers" :max-travelers="maxTravelers" :customer-name="booking.customer?.name" />
               </div>
             </div>
           </template>
@@ -323,7 +336,9 @@
             <p class="text-red-700 text-sm">{{ travelerError }}</p>
           </div>
 
-          <div class="flex gap-2 mt-3">
+          <!-- Sticky on mobile so the primary action stays reachable on long
+               multi-tour forms; normal flow from sm: up. -->
+          <div class="flex gap-2 mt-3 sticky bottom-0 z-30 -mx-3 px-3 py-3 bg-slate-50/95 backdrop-blur border-t border-slate-200 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:border-0 sm:pb-0 sm:backdrop-blur-none">
             <button @click="currentStep = 1" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
             <button @click="saveTravelers" :disabled="savingTravelers" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:bg-primary/80 active:scale-[0.98] transition-transform">
               <Icon name="material-symbols:progress-activity" v-if="savingTravelers" class="animate-spin text-base" />
@@ -511,6 +526,28 @@ function copyFromPrevious(i: number) {
   if (copy.length) travelersByTour.value[cur.id] = copy
 }
 
+// Same lead traveler across the whole purchase: take the leader filled in one
+// tour and write it into the first (leader) slot of every other tour, keeping
+// each tour's remaining travelers untouched.
+function applyLeaderToAll(sourceTourId: number) {
+  const src = (travelersByTour.value[sourceTourId] || [])[0]
+  if (!src?.full_name?.trim()) return
+  for (const tr of purchaseTours.value) {
+    if (tr.id === sourceTourId) continue
+    const list = travelersByTour.value[tr.id]
+    if (!list?.length) continue
+    const merged = {
+      ...list[0],
+      full_name: src.full_name,
+      nationality: src.nationality,
+      doc_type: src.doc_type,
+      doc_number: src.doc_number,
+      is_leader: true,
+    }
+    travelersByTour.value[tr.id] = [merged, ...list.slice(1)]
+  }
+}
+
 // Load existing data when booking is available
 watch(booking, async (b) => {
   if (!b) return
@@ -611,6 +648,9 @@ async function saveTravelers() {
       if (!list[0]?.full_name?.trim()) {
         travelerError.value = `Falta el responsable en "${tr.tour_title}"`
         openTourId.value = tr.id
+        if (import.meta.client) {
+          nextTick(() => document.getElementById('traveler-tour-' + tr.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        }
         return
       }
     }
