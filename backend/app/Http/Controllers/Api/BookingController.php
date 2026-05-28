@@ -746,6 +746,11 @@ class BookingController extends Controller
                 'pickup_configured' => (bool) $b->pickupDetail,
                 'pickup_type'       => $b->pickupDetail?->pickup_type,
                 'pickup_hotel'      => $b->pickupDetail?->hotel_name,
+                // Per-traveler fields the admin requires for THIS tour (drives the
+                // dynamic traveler form). 1 = lead traveler only, 2 = every pax.
+                'data_requirement'           => (int) ($b->tour?->data_requirement ?? 1),
+                'personal_info_required'     => $b->tour?->personal_info_required ?? [],
+                'operational_info_required'  => $b->tour?->operational_info_required ?? [],
             ])
             ->values();
     }

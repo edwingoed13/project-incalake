@@ -310,7 +310,15 @@
                       Copiar viajeros del tour anterior
                     </button>
                   </div>
-                  <BookingTravelersForm v-model="travelersByTour[tr.id]" :max-travelers="tourMax(tr)" :customer-name="booking.customer?.name" />
+                  <BookingTravelersForm
+                    v-model="travelersByTour[tr.id]"
+                    :max-travelers="tourMax(tr)"
+                    :customer-name="booking.customer?.name"
+                    :customer-email="booking.customer?.email"
+                    :customer-phone="booking.customer?.phone"
+                    :required-fields="travelerFieldsFor(tr)"
+                    :apply-to-all-pax="travelerApplyAll(tr)"
+                  />
                 </div>
               </div>
             </div>
@@ -327,7 +335,15 @@
                 </h3>
               </div>
               <div class="p-3 md:p-4">
-                <BookingTravelersForm v-model="travelers" :max-travelers="maxTravelers" :customer-name="booking.customer?.name" />
+                <BookingTravelersForm
+                  v-model="travelers"
+                  :max-travelers="maxTravelers"
+                  :customer-name="booking.customer?.name"
+                  :customer-email="booking.customer?.email"
+                  :customer-phone="booking.customer?.phone"
+                  :required-fields="travelerFieldsFor(booking.tour)"
+                  :apply-to-all-pax="travelerApplyAll(booking.tour)"
+                />
               </div>
             </div>
           </template>
@@ -502,7 +518,7 @@ function seedTravelers(adults: number, children: number, leaderName?: string) {
   return Array.from({ length: total }, (_, i) => ({
     full_name: i === 0 ? (leaderName || '') : '',
     nationality: '', doc_type: 'passport', doc_number: '',
-    age_group: i < a ? 'adult' : 'child', special_needs: '', is_leader: i === 0,
+    age_group: i < a ? 'adult' : 'child', special_needs: '', extra_data: {}, is_leader: i === 0,
   }))
 }
 
@@ -511,6 +527,7 @@ function mapTraveler(tr: any) {
     full_name: tr.full_name || '', nationality: tr.nationality || '',
     doc_type: tr.doc_type || 'passport', doc_number: tr.doc_number || '',
     age_group: tr.age_group || 'adult', special_needs: tr.special_needs || '',
+    extra_data: (tr.extra_data && typeof tr.extra_data === 'object') ? { ...tr.extra_data } : {},
     is_leader: tr.is_leader || false,
   }
 }
@@ -542,10 +559,21 @@ function applyLeaderToAll(sourceTourId: number) {
       nationality: src.nationality,
       doc_type: src.doc_type,
       doc_number: src.doc_number,
+      extra_data: { ...(src.extra_data || {}) },
       is_leader: true,
     }
     travelersByTour.value[tr.id] = [merged, ...list.slice(1)]
   }
+}
+
+// Lead-traveler validation: the admin-configured fields are required only for
+// the leader (other pax stay optional). Returns the first missing field's
+// label, or null when complete.
+function firstMissingLeaderExtra(leader: any, configSrc: any): string | null {
+  for (const key of travelerFieldsFor(configSrc)) {
+    if (!travelerFieldValue(leader, key).trim()) return TRAVELER_FIELD_DEFS[key].label
+  }
+  return null
 }
 
 // Load existing data when booking is available
@@ -653,6 +681,15 @@ async function saveTravelers() {
         }
         return
       }
+      const missing = firstMissingLeaderExtra(list[0], tr)
+      if (missing) {
+        travelerError.value = `Completa "${missing}" del responsable en "${tr.tour_title}"`
+        openTourId.value = tr.id
+        if (import.meta.client) {
+          nextTick(() => document.getElementById('traveler-tour-' + tr.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        }
+        return
+      }
     }
     savingTravelers.value = true
     try {
@@ -673,6 +710,11 @@ async function saveTravelers() {
   // SINGLE TOUR
   if (!travelers.value[0]?.full_name?.trim()) {
     travelerError.value = t('leader_required')
+    return
+  }
+  const missingSingle = firstMissingLeaderExtra(travelers.value[0], booking.value?.tour)
+  if (missingSingle) {
+    travelerError.value = `Completa "${missingSingle}" del responsable`
     return
   }
   const validTravelers = travelers.value.filter(tr => tr.full_name?.trim())

@@ -64,6 +64,12 @@ class BookingResource extends JsonResource
                 'slug' => $this->tour?->slug,
                 // Full URL (featured image, or first gallery item as fallback).
                 'featured_image' => $this->tour?->resolveImageUrl(),
+                // Per-traveler data the admin configured for this tour. Drives the
+                // dynamic traveler form on the confirmation page. data_requirement:
+                // 1 = lead traveler only, 2 = every passenger.
+                'data_requirement' => (int) ($this->tour?->data_requirement ?? 1),
+                'personal_info_required' => $this->tour?->personal_info_required ?? [],
+                'operational_info_required' => $this->tour?->operational_info_required ?? [],
             ],
             'customer' => [
                 'name' => $this->customer_name,

@@ -9,11 +9,12 @@ class BookingTraveler extends Model
 {
     protected $fillable = [
         'booking_id', 'full_name', 'nationality', 'doc_type',
-        'doc_number', 'age_group', 'special_needs', 'is_leader', 'order',
+        'doc_number', 'age_group', 'special_needs', 'extra_data', 'is_leader', 'order',
     ];
 
     protected $casts = [
         'is_leader' => 'boolean',
+        'extra_data' => 'array',
     ];
 
     public function booking(): BelongsTo

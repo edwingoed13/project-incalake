@@ -246,6 +246,10 @@ class BookingConfirmationController extends Controller
             'travelers.*.doc_number' => 'nullable|string|max:50',
             'travelers.*.age_group' => 'nullable|string|in:adult,child,infant',
             'travelers.*.special_needs' => 'nullable|string|max:500',
+            // Admin-configurable per-traveler fields (birthdate, hotel, flights,
+            // weight, etc.), keyed by the tour's required-field codes.
+            'travelers.*.extra_data' => 'nullable|array',
+            'travelers.*.extra_data.*' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -255,6 +259,12 @@ class BookingConfirmationController extends Controller
             $booking->travelers()->delete();
 
             foreach ($request->travelers as $idx => $data) {
+                // Keep only non-empty extra fields so we don't store blank keys.
+                $extra = array_filter(
+                    $data['extra_data'] ?? [],
+                    fn ($v) => $v !== null && $v !== ''
+                );
+
                 $booking->travelers()->create([
                     'full_name' => $data['full_name'],
                     'nationality' => $data['nationality'] ?? null,
@@ -262,6 +272,7 @@ class BookingConfirmationController extends Controller
                     'doc_number' => $data['doc_number'] ?? null,
                     'age_group' => $data['age_group'] ?? 'adult',
                     'special_needs' => $data['special_needs'] ?? null,
+                    'extra_data' => $extra ?: null,
                     'is_leader' => $idx === 0,
                     'order' => $idx,
                 ]);

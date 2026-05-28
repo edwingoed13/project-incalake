@@ -144,7 +144,7 @@
             Travelers ({{ fullDetails.travelers.length }})
           </h3>
           <div class="space-y-2">
-            <div v-for="(t, idx) in fullDetails.travelers" :key="t.id" class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+            <div v-for="(t, idx) in fullDetails.travelers" :key="t.id" class="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
               <div class="size-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
                 :class="t.is_leader ? 'bg-primary/10 text-primary' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'">
                 {{ idx + 1 }}
@@ -155,10 +155,15 @@
                   <span v-if="t.is_leader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1 font-bold">LEADER</span>
                   <span v-if="t.age_group !== 'adult'" class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-1 font-bold uppercase">{{ t.age_group }}</span>
                 </p>
-                <div class="flex gap-3 text-[10px] text-slate-500 mt-0.5">
+                <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 mt-0.5">
                   <span v-if="t.nationality">{{ t.nationality }}</span>
                   <span v-if="t.doc_type && t.doc_number">{{ t.doc_type.toUpperCase() }}: {{ t.doc_number }}</span>
                   <span v-if="t.special_needs" class="text-amber-600">{{ t.special_needs }}</span>
+                </div>
+                <div v-if="t.extra_data && Object.keys(t.extra_data).length" class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-600 dark:text-slate-300 mt-1">
+                  <span v-for="(val, key) in t.extra_data" :key="key">
+                    <span class="text-slate-400">{{ extraFieldLabel(key) }}:</span> {{ val }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -196,6 +201,26 @@ onMounted(async () => {
     if (res.success) fullDetails.value = res.data
   } catch (e) { /* ignore - fields just won't show */ }
 })
+
+// Human labels for the per-traveler fields collected on the confirmation page
+// (stored in traveler.extra_data, keyed by the tour's required-field codes).
+const EXTRA_FIELD_LABELS: Record<string, string> = {
+  birthdate: 'Fecha de nacimiento',
+  phone_whatsapp: 'WhatsApp',
+  email: 'Correo',
+  dietary_restrictions: 'Restricciones alimentarias',
+  gender: 'Género',
+  peru_entry_date: 'Ingreso al Perú',
+  hotel_name: 'Hotel',
+  passport_copy: 'Pasaporte/ID',
+  arrival_flight: 'Vuelo de llegada',
+  departure_flight: 'Vuelo de salida',
+  weight_kg: 'Peso (kg)',
+  height_m: 'Altura (m)',
+  arrival_bus_company: 'Bus de llegada',
+  arrival_train: 'Tren de llegada',
+}
+const extraFieldLabel = (key: string) => EXTRA_FIELD_LABELS[key] || key
 
 const formatDate = (date: string) => {
   if (!date) return 'N/A'
