@@ -1,49 +1,5 @@
 <template>
-  <!-- Loading skeleton — mirrors the real layout so the transition feels instant -->
-  <div v-if="pending && !tours.length" class="bg-white min-h-screen pt-14 md:pt-20">
-    <section class="bg-gradient-to-r from-primary to-sky-600 px-4 sm:px-6 lg:px-10 py-4 md:py-8">
-      <div class="max-w-7xl mx-auto">
-        <div class="h-6 md:h-9 w-44 md:w-72 bg-white/30 rounded-lg animate-pulse mb-2"></div>
-        <div class="h-3 w-28 bg-white/20 rounded animate-pulse"></div>
-      </div>
-    </section>
-    <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-4 md:py-6">
-      <!-- Mobile: horizontal row skeletons -->
-      <div class="md:hidden space-y-3">
-        <div v-for="i in 6" :key="'sm-'+i" class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5">
-          <div class="w-24 h-24 rounded-lg bg-slate-200 animate-pulse shrink-0"></div>
-          <div class="flex-1 py-1 space-y-2">
-            <div class="h-3 bg-slate-200 rounded animate-pulse w-5/6"></div>
-            <div class="h-3 bg-slate-200 rounded animate-pulse w-2/3"></div>
-            <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-4"></div>
-          </div>
-        </div>
-      </div>
-      <!-- Desktop: grid skeletons -->
-      <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        <div v-for="i in 8" :key="'lg-'+i" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-          <div class="aspect-[4/3] bg-slate-200 animate-pulse"></div>
-          <div class="p-4 space-y-2.5">
-            <div class="h-3 bg-slate-200 rounded animate-pulse w-1/2"></div>
-            <div class="h-4 bg-slate-200 rounded animate-pulse w-5/6"></div>
-            <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-3"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Error -->
-  <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white pt-20">
-    <div class="text-center px-4">
-      <Icon name="material-symbols:wifi-off" class="text-5xl text-slate-300 mb-4" />
-      <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h2>
-      <button @click="refresh()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">{{ t('retry') }}</button>
-    </div>
-  </div>
-
-  <!-- Main -->
-  <div v-else class="bg-white font-display text-slate-900 min-h-screen pt-14 md:pt-20">
+  <div class="bg-white font-display text-slate-900 min-h-screen pt-14 md:pt-20">
 
     <!-- Compact Hero -->
     <section class="bg-gradient-to-r from-primary to-sky-600 text-white px-4 sm:px-6 lg:px-10 py-4 md:py-8">
@@ -51,7 +7,7 @@
         <h1 class="text-xl md:text-3xl font-black mb-0.5">
           {{ selectedCitySlug ? `Tours ${formatCityName(selectedCitySlug)}` : t('hero_title') }}
         </h1>
-        <p class="text-white/70 text-xs md:text-sm">{{ t('tours_found', { count: filteredTours.length }) }}</p>
+        <p class="text-white/70 text-xs md:text-sm">{{ pending && !tours.length ? '…' : t('tours_found', { count: filteredTours.length }) }}</p>
       </div>
     </section>
 
@@ -125,7 +81,7 @@
           <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-semibold text-red-500 flex items-center gap-1">
             <Icon name="material-symbols:close" class="text-sm" /> {{ t('clear_all') }}
           </button>
-          <span class="text-xs font-bold text-slate-400 mr-2">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <span v-if="tours.length" class="text-xs font-bold text-slate-400 mr-2">{{ t('tours_found', { count: filteredTours.length }) }}</span>
           <div class="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <button
               @click="viewMode = 'grid'"
@@ -210,6 +166,39 @@
         </span>
       </div>
 
+      <!-- Loading: skeleton SOLO para las tarjetas (el título y los filtros de arriba ya están visibles) -->
+      <div v-if="pending && !tours.length">
+        <div class="md:hidden space-y-3">
+          <div v-for="i in 6" :key="'sm-'+i" class="flex gap-3 bg-white rounded-xl border border-slate-100 p-2.5">
+            <div class="w-24 h-24 rounded-lg bg-slate-200 animate-pulse shrink-0"></div>
+            <div class="flex-1 py-1 space-y-2">
+              <div class="h-3 bg-slate-200 rounded animate-pulse w-5/6"></div>
+              <div class="h-3 bg-slate-200 rounded animate-pulse w-2/3"></div>
+              <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-4"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div v-for="i in 8" :key="'lg-'+i" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <div class="aspect-[4/3] bg-slate-200 animate-pulse"></div>
+            <div class="p-4 space-y-2.5">
+              <div class="h-3 bg-slate-200 rounded animate-pulse w-1/2"></div>
+              <div class="h-4 bg-slate-200 rounded animate-pulse w-5/6"></div>
+              <div class="h-5 bg-slate-200 rounded animate-pulse w-1/3 mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error (la API falló y no había nada cacheado) -->
+      <div v-else-if="error && !tours.length" class="text-center py-16">
+        <Icon name="material-symbols:wifi-off" class="text-5xl text-slate-300 mb-3" />
+        <h3 class="text-base font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h3>
+        <button @click="refresh()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">{{ t('retry') }}</button>
+      </div>
+
+      <!-- Contenido real -->
+      <template v-else>
       <!-- Empty -->
       <div v-if="filteredTours.length === 0" class="text-center py-16">
         <Icon name="material-symbols:search-off" class="text-5xl text-slate-300 mb-3" />
@@ -388,6 +377,7 @@
           <Icon name="material-symbols:chevron-right" class="text-base" />
         </button>
       </div>
+      </template>
     </div>
   </div>
 </template>
