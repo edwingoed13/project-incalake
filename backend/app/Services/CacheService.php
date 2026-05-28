@@ -113,9 +113,16 @@ class CacheService
      * card-visible change — see the model observers in AppServiceProvider. That
      * makes edits show up immediately; the TTL is only a backstop.
      */
+    // Bump when the listing PAYLOAD SHAPE changes in code (e.g. TourCardResource
+    // fields). The data-driven version (bumpToursVersion) only covers DATA edits,
+    // not code deploys — without this, a deploy keeps serving the old shape from
+    // cache until the TTL. v2: dropped availability_data for a small `offer` field.
+    private const LISTING_CODE_VERSION = 2;
+
     public function getPublicTourListing(array $params, \Closure $builder): array
     {
-        $key = 'tours:public:v' . self::toursVersion() . ':' . md5(serialize($params));
+        $key = 'tours:public:c' . self::LISTING_CODE_VERSION
+            . ':v' . self::toursVersion() . ':' . md5(serialize($params));
 
         try {
             return Cache::remember($key, 1800, $builder);
