@@ -49,17 +49,20 @@ class TourCardResource extends JsonResource
 
         // Active-offer badge only. Shipping the full availability_data (calendar,
         // blocks, every offer with dates/colors) was ~53% of the listing payload,
-        // yet the card just needs "is there an active offer + its label". Mirrors
-        // the old frontend logic: first offer with endDate >= today (UTC).
+        // yet the card just needs "is there an active offer + its label". The
+        // badge shows ONLY while today falls inside the offer window
+        // [startDate, endDate] (Lima time, matching how the admin enters dates),
+        // so an offer "for May 30" doesn't appear days early. The listing cache
+        // key carries this same date, so the badge flips on the right day.
         $offer = null;
         $av = $this->availability_data;
         if (is_string($av)) {
             $av = json_decode($av, true) ?: [];
         }
         $offers = is_array($av) ? ($av['offers'] ?? []) : [];
-        $today = gmdate('Y-m-d');
+        $today = now('America/Lima')->toDateString();
         foreach ($offers as $o) {
-            if (($o['endDate'] ?? '') >= $today) {
+            if (($o['startDate'] ?? '') <= $today && ($o['endDate'] ?? '') >= $today) {
                 $discount = $o['discount'] ?? 0;
                 $offer = [
                     'label' => (($o['discountType'] ?? '') === 'percentage')

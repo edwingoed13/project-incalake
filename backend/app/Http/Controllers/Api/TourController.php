@@ -218,6 +218,11 @@ class TourController extends Controller
                     'sort_order' => $sortOrder,
                     'per_page' => (int) $perPage,
                     'page' => (int) $request->get('page', 1),
+                    // Offer badges depend on the current Lima date (see
+                    // TourCardResource), so the cache must vary by day —
+                    // otherwise a date-windowed offer wouldn't appear/disappear
+                    // until the 24h TTL. One rebuild per day is cheap.
+                    'today' => now('America/Lima')->toDateString(),
                 ];
 
                 $cached = $this->cacheService->getPublicTourListing($params, function () use ($query, $perPage) {
