@@ -25,6 +25,48 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const { confirm } = useConfirm()
+const config = useRuntimeConfig()
+
+// Public preview — also exposed in the navbar (below 2xl the insights sidebar
+// that normally holds this button is hidden, so testers on tablets/laptops
+// couldn't reach it).
+const FRONTEND_URL = (config.public as any).frontendUrl || 'https://incalake-frontend.vercel.app'
+const slugifyCity = (name: string) => (name || '')
+  .toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  .replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-')
+const previewLang = computed(() => {
+  const langs = [store.currentLanguage || 'es', 'es', 'en', 'pt', 'fr', 'de', 'it']
+  for (const l of langs) {
+    if (store.contentSEO?.[l]?.slug) return l
+  }
+  return ''
+})
+const previewUrl = computed(() => {
+  if (!store.tourId || store.tourId === 'new' || !previewLang.value) return ''
+  const slug = (store.contentSEO[previewLang.value].slug || '').trim()
+  if (!slug) return ''
+  const city = store.basicInfo.citySlug || slugifyCity(store.basicInfo.nearestCity || '') || 'puno'
+  return `${FRONTEND_URL}/${previewLang.value}/${city}/${slug}`
+})
+const previewTour = () => {
+  if (!previewUrl.value) {
+    toast.add({ title: 'Vista previa no disponible', description: 'Guarda el tour para generar el enlace.', color: 'warning', icon: 'i-lucide-info' })
+    return
+  }
+  window.open(previewUrl.value, '_blank', 'noopener,noreferrer')
+}
+
+// Pre-warm the public page's Vercel cache as soon as the preview link is known,
+// so opening "Vista previa" is a cache HIT (~0.5s) instead of a cold SSR (~3-4s).
+let warmedUrl = ''
+const warmPreview = () => {
+  if (!import.meta.client) return
+  const u = previewUrl.value
+  if (!u || warmedUrl === u) return
+  warmedUrl = u
+  fetch(u, { mode: 'no-cors' }).catch(() => {})
+}
+watch(previewUrl, (u) => { if (u) warmPreview() }, { immediate: true })
 
 // Publish from the bottom nav (last step). Mirrors the sidebar action so the
 // flow works below xl too, where the insights sidebar is hidden.
@@ -240,7 +282,18 @@ onBeforeUnmount(() => {
             <span :class="{ 'animate-spin': store.autosaving }" class="inline-flex">{{ autosaveLabel }}</span>
           </UBadge>
           <!-- Below 2xl the insights sidebar (which holds these) is hidden,
-               so keep publish + back reachable here as a fallback. -->
+               so keep preview + publish + back reachable here as a fallback. -->
+          <UButton
+            icon="i-lucide-eye"
+            color="neutral"
+            variant="ghost"
+            class="2xl:hidden"
+            :disabled="!previewUrl"
+            :title="previewUrl || 'Guarda el tour para generar el enlace'"
+            aria-label="Vista previa"
+            @mouseenter="warmPreview"
+            @click="previewTour"
+          />
           <UButton
             icon="i-lucide-rocket"
             color="success"
