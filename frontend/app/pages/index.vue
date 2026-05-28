@@ -507,7 +507,7 @@ const featuredCities = computed(() => {
 // Fetch featured tours by current language (lazy, non-blocking)
 const { data: toursData, status: toursStatus } = useAsyncData(
   `tours-featured-${langCode.value}`,
-  () => api(`/tours?active=1&per_page=8&language=${langCode.value}`).catch(() => ({ data: [] })),
+  () => api(`/tours?active=1&per_page=8&light=1&language=${langCode.value}`).catch(() => ({ data: [] })),
   { lazy: true, default: () => ({ data: [] }), watch: [langCode], getCachedData }
 )
 const tours = computed(() => {
@@ -519,25 +519,18 @@ const toursPending = computed(() => toursStatus.value === 'pending')
 // Tours with active offers (lazy, non-blocking)
 const { data: allToursData } = useAsyncData(
   `tours-offers-${langCode.value}`,
-  () => api(`/tours?active=1&per_page=100&language=${langCode.value}`).catch(() => ({ data: [] })),
+  () => api(`/tours?active=1&per_page=100&light=1&language=${langCode.value}`).catch(() => ({ data: [] })),
   { lazy: true, default: () => ({ data: [] }), watch: [langCode], getCachedData }
 )
 const toursWithOffers = computed(() => {
   const data = (allToursData.value as any)?.data
   const allTours = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
-  const today = new Date().toISOString().split('T')[0]
-  return allTours.filter((tour: any) => {
-    const offers = tour.availability_data?.offers || []
-    return offers.some((o: any) => o.endDate >= today)
-  })
+  // Light payload precomputes the active offer server-side (tour.offer:{label}|null).
+  return allTours.filter((tour: any) => !!tour.offer)
 })
 
 function getOfferLabel(tour: any) {
-  const today = new Date().toISOString().split('T')[0]
-  const offers = tour.availability_data?.offers || []
-  const active = offers.find((o: any) => o.endDate >= today)
-  if (!active) return ''
-  return active.discountType === 'percentage' ? `${active.discount}% OFF` : `$${active.discount} OFF`
+  return tour.offer?.label || ''
 }
 
 // Fetch featured reviews (lazy, non-blocking)
