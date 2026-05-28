@@ -559,7 +559,10 @@ function scrollReviews(dir: number) {
 }
 
 // Hero image: from API or default
-const defaultHeroImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuC_RYQ7qkkoEaBPmoTKZzaG0YqRCjHegCR7RyERPQkd1TtLTQg9RBjbabWhebnRMrUB20ewsrsBPSVd6DSHmHht2CDGuVapyxM2-QivgVXECSdMWlVIrUHpRWi-kYXNgGWzL5n8LrG0LDy65HR5hOFM_toPA7xM8lnDtR4JFasVk-50uf1v5cmyZfqOvKFkinf3_DBwZiEeJp-2fgM5W72REPm0RxDXSlTGjmg4V1Jfto_VIJ4AUc9TPFiZlRzbS-VIy24MMT2dYVq1'
+// Stable fallback = the real hero on our own CDN (NOT a fragile Google design-tool
+// URL). It's the same image pageContent.hero.image normally returns, so even if
+// the page content fails to load there's no broken placeholder and no jarring swap.
+const defaultHeroImage = 'https://api.incalake.com/storage/pages/79770cd8-69a2-4da3-9e42-50fda4ca5ceb.webp'
 const heroImage = computed(() => pageContent.value?.hero?.image || defaultHeroImage)
 
 // Dynamic content from API with i18n fallback
