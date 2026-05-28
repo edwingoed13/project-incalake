@@ -100,7 +100,12 @@
                 <span class="font-semibold">{{ currencyStore.formatConverted(subtotalAmount) }}</span>
               </div>
               <div v-if="taxAmount > 0" class="flex justify-between text-xs">
-                <span class="text-slate-500">{{ t('transaction_fees') }}</span>
+                <span class="text-slate-500 flex items-center gap-1">
+                  {{ t('transaction_fees') }}
+                  <AppPopover :label="t('transaction_fees')">
+                    {{ t('transaction_fees_info') }}
+                  </AppPopover>
+                </span>
                 <span class="font-semibold">{{ currencyStore.formatConverted(taxAmount) }}</span>
               </div>
             </div>
@@ -112,7 +117,7 @@
               </p>
             </div>
             <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
-              <span>Saldo a pagar el día del tour</span>
+              <span>Saldo a pagar en efectivo el día del tour</span>
               <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
             </div>
             <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
@@ -153,10 +158,18 @@
                 <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
                 <div class="flex-1">
                   <p class="text-sm font-bold text-slate-800">Pagar adelanto</p>
-                  <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(grandTotal - advanceTotal) }} el día del tour</p>
+                  <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(grandTotal - advanceTotal) }} en efectivo el día del tour</p>
                 </div>
                 <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
               </label>
+
+              <!-- Partial payment: the balance is collected in person, cash only -->
+              <div v-if="paymentMode === 'advance'" class="flex items-start gap-1.5 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5 shrink-0" />
+                <p class="text-[11px] text-amber-800 leading-snug">
+                  El saldo restante se paga únicamente <strong>en efectivo</strong>, directamente al operador, antes de iniciar el tour.
+                </p>
+              </div>
             </div>
 
             <!-- Pay Button -->

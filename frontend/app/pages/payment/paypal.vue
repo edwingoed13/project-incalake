@@ -111,7 +111,7 @@
                 </span>
               </div>
               <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
-                <span>Saldo a pagar el día del tour</span>
+                <span>Saldo a pagar en efectivo el día del tour</span>
                 <span class="font-semibold">${{ balanceAmount.toFixed(2) }}</span>
               </div>
             </div>
@@ -130,7 +130,7 @@
               <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
               <div class="flex-1">
                 <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar adelanto</p>
-                <p class="text-[11px] text-slate-500">Saldo ${{ (fullTotal - advanceTotal).toFixed(2) }} el día del tour</p>
+                <p class="text-[11px] text-slate-500">Saldo ${{ (fullTotal - advanceTotal).toFixed(2) }} en efectivo el día del tour</p>
               </div>
               <span class="text-sm font-black text-primary">${{ advanceTotal.toFixed(2) }}</span>
             </label>
@@ -145,6 +145,14 @@
               </div>
               <span class="text-sm font-black text-primary">${{ fullTotal.toFixed(2) }}</span>
             </label>
+
+            <!-- Partial payment: the balance is collected in person, cash only -->
+            <div v-if="paymentMode === 'advance'" class="flex items-start gap-1.5 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+              <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5 shrink-0" />
+              <p class="text-[11px] text-amber-800 leading-snug">
+                El saldo restante se paga únicamente <strong>en efectivo</strong>, directamente al operador, antes de iniciar el tour.
+              </p>
+            </div>
           </div>
 
           <!-- Recoverable payment error (cancellation, declined card, etc.) -->
