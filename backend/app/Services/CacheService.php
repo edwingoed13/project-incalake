@@ -119,13 +119,18 @@ class CacheService
     // cache until the TTL. v2: dropped availability_data for a small `offer` field.
     private const LISTING_CODE_VERSION = 2;
 
+    // 24h backstop TTL. Real freshness comes from bumpToursVersion (fires on every
+    // tour/translation/price/media save), so a long TTL just avoids cold rebuilds
+    // (the slow ~1.5s query) without staleness — edits still invalidate instantly.
+    private const PUBLIC_TTL = 86400;
+
     public function getPublicTourListing(array $params, \Closure $builder): array
     {
         $key = 'tours:public:c' . self::LISTING_CODE_VERSION
             . ':v' . self::toursVersion() . ':' . md5(serialize($params));
 
         try {
-            return Cache::remember($key, 1800, $builder);
+            return Cache::remember($key, self::PUBLIC_TTL, $builder);
         } catch (\Exception $e) {
             Log::error('Error caching public tour listing', ['error' => $e->getMessage()]);
             return $builder();
@@ -145,7 +150,7 @@ class CacheService
             . ':' . md5($lang . '|' . $citySlug . '|' . $tourSlug);
 
         try {
-            return Cache::remember($key, 1800, $builder);
+            return Cache::remember($key, self::PUBLIC_TTL, $builder);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             throw $e; // 404 must propagate, not be cached or swallowed
         } catch (\Exception $e) {
