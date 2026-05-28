@@ -406,8 +406,8 @@
                     {{ currencyStore.formatConverted(basePrice || 0) }}
                   </span>
                   <span class="text-sm font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
+                  <span class="text-[11px] text-slate-500 font-medium">por persona</span>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-1">por persona · impuestos incluidos</p>
               </div>
 
               <div class="p-4 space-y-3">

@@ -42,16 +42,39 @@ useHead({
       href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
     },
     {
-      // display=swap (was 'block', which blocked first paint on every page)
+      // Pinned axes (@24,400,0,0 = static instance) → the font is ~312 KB
+      // instead of ~3.8 MB for the full variable font. That huge file was why
+      // icons took seconds to appear. Trade-off: a fixed weight (font-bold on
+      // icons won't thicken them — negligible visually).
+      // display=block keeps the GLYPHS invisible (not the ligature text like
+      // "search"/"favorite") until the font loads; paired with the
+      // visibility-hidden CSS + ms-ready script for a flash-free, fast load.
       rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap'
+      href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block'
     }
-  ]
+  ],
+  script: [
+    {
+      // Reveal Material Symbols icons only once the font is ready, so users
+      // never see the raw icon names flash on first load. Safety timeout shows
+      // them after 2.5s even if font detection fails.
+      key: 'ms-ready',
+      tagPosition: 'head',
+      innerHTML: "(function(){var h=document.documentElement,r=function(){h.classList.add('ms-ready')};try{if(document.fonts&&document.fonts.load){document.fonts.load(\"24px 'Material Symbols Outlined'\").then(r).catch(r);setTimeout(r,2500)}else{r()}}catch(e){r()}})()",
+    },
+  ],
 })
 </script>
 
 <style>
-/* Ocultar el texto de los iconos hasta que la fuente esté cargada */
+/* Hasta que la fuente de íconos esté lista (clase ms-ready, puesta por el
+   script del <head>), ocultar los glyphs — NO mostrar el texto del ligature
+   ("search", "favorite", "location_on"...). visibility:hidden reserva el
+   espacio, así no hay saltos de layout cuando aparecen los íconos. */
+html:not(.ms-ready) .material-symbols-outlined {
+  visibility: hidden;
+}
+
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
