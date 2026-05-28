@@ -97,6 +97,8 @@
                 v-for="result in searchResults"
                 :key="result.id"
                 :to="getTourLink(result)"
+                @mouseenter="prefetchTour(result)"
+                @focus="prefetchTour(result)"
                 @click="showDropdown = false; searchQuery = ''"
                 class="flex items-center gap-3 px-5 py-2.5 hover:bg-primary/5 transition-colors"
               >
@@ -235,6 +237,8 @@
             v-for="tour in tours.slice(0, 4)"
             :key="tour.id"
             :to="getTourLink(tour)"
+            @mouseenter="prefetchTour(tour)"
+            @focus="prefetchTour(tour)"
             class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
             <div class="relative h-52 overflow-hidden bg-slate-100">
@@ -306,6 +310,8 @@
             v-for="tour in toursWithOffers.slice(0, 4)"
             :key="tour.id"
             :to="getTourLink(tour)"
+            @mouseenter="prefetchTour(tour)"
+            @focus="prefetchTour(tour)"
             class="group bg-white rounded-2xl overflow-hidden border border-green-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
             <!-- Offer badge -->
@@ -419,6 +425,7 @@
 <script setup lang="ts">
 import { msIcon } from '~/utils/icons'
 const { api } = useApi()
+const { prefetchTour } = useTourPrefetch()
 const config = useRuntimeConfig()
 const { t, te, locale } = useI18n()
 const localePath = useLocalePath()

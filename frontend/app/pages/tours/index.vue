@@ -213,7 +213,7 @@
           :key="'m-'+tour.id"
           class="relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
         >
-          <NuxtLink :to="getTourLink(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors">
+          <NuxtLink :to="getTourLink(tour)" @mouseenter="prefetchTour(tour)" @focus="prefetchTour(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors">
             <!-- Image -->
             <div class="relative w-[42%] max-w-[150px] aspect-square rounded-xl overflow-hidden shrink-0 bg-slate-100">
               <NuxtImg :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
@@ -270,6 +270,8 @@
           v-for="tour in paginatedTours.data"
           :key="'d-'+tour.id"
           :to="getTourLink(tour)"
+          @mouseenter="prefetchTour(tour)"
+          @focus="prefetchTour(tour)"
           class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
           <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
@@ -307,6 +309,8 @@
           v-for="tour in paginatedTours.data"
           :key="'l-'+tour.id"
           :to="getTourLink(tour)"
+          @mouseenter="prefetchTour(tour)"
+          @focus="prefetchTour(tour)"
           class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3"
         >
           <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0 bg-slate-100">
@@ -388,6 +392,7 @@
 <script setup lang="ts">
 import { msIcon } from '~/utils/icons'
 const { api } = useApi()
+const { prefetchTour } = useTourPrefetch()
 const config = useRuntimeConfig()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
