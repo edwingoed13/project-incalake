@@ -56,4 +56,16 @@ useHead({
 img[src=""] {
   visibility: hidden;
 }
+
+/* Skeleton shimmer mientras una imagen (tour) carga — aplicado por la directiva
+   v-skeleton al contenedor de la imagen; se quita al cargar. */
+.img-skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #eef2f7 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: imgShimmer 1.4s ease-in-out infinite;
+}
+@keyframes imgShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>

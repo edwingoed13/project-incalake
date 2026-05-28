@@ -201,6 +201,7 @@
           >
             <div class="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 bg-slate-100">
               <NuxtImg
+                v-skeleton
                 :src="getCityImage(city.slug)"
                 :alt="city.name"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -243,6 +244,7 @@
           >
             <div class="relative h-52 overflow-hidden bg-slate-100">
               <NuxtImg
+                v-skeleton
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"
@@ -321,6 +323,7 @@
             </div>
             <div class="relative h-52 overflow-hidden bg-slate-100">
               <NuxtImg
+                v-skeleton
                 v-if="tour.featured_image"
                 :src="getImageUrl(tour.featured_image)"
                 :alt="tour.title"

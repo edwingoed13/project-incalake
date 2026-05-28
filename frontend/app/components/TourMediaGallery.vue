@@ -255,6 +255,7 @@ function getImageUrl(path: string) {
       <!-- Hero Image (primera imagen grande) -->
       <div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
         <NuxtImg
+          v-skeleton
           :src="images[0].url"
           :alt="images[0].alt"
           format="webp"
