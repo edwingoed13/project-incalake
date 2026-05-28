@@ -603,40 +603,47 @@ class TourController extends Controller
             // Inject the language into the request so TourDetailResource can use it
             $request->merge(['language' => $langCode]);
 
-            $tour = Tour::query()
-                ->with([
-                    'translations.language',
-                    'city',
-                    'prices.ageStage',
-                    'prices.nationality',
-                    'mediaGallery',
-                    'categories.translations',
-                    'mapPoints'
-                ])
-                // Filter by tour slug in translation
-                ->whereHas('translations', function($q) use ($tourSlug, $langCode) {
-                    $q->where('slug', $tourSlug)
-                      ->whereHas('language', fn($q2) => $q2->where('code', $langCode));
-                })
-                // Filter by city slug (using city name as fallback since slug might not exist yet)
-                ->whereHas('city', function($q) use ($citySlug) {
-                    // Try to match by slug first, fallback to name
-                    $q->where(function($query) use ($citySlug) {
-                        if (Schema::hasColumn('cities', 'slug')) {
-                            $query->where('slug', $citySlug);
-                        } else {
-                            // Fallback: match city name (case insensitive)
-                            $cityName = str_replace('-', ' ', $citySlug);
-                            $query->where('name', 'like', "%{$cityName}%");
-                        }
-                    });
-                })
-                ->where('active', true)
-                ->firstOrFail();
+            // Cached (versioned key, invalidated on tour/translation/price/media
+            // change). The slow part is the query (full relations) + serialization;
+            // caching the resolved payload makes cold loads + SPA navigations fast.
+            $data = $this->cacheService->getPublicTourDetail($langCode, $citySlug, $tourSlug, function () use ($tourSlug, $langCode, $citySlug, $request) {
+                $tour = Tour::query()
+                    ->with([
+                        'translations.language',
+                        'city',
+                        'prices.ageStage',
+                        'prices.nationality',
+                        'mediaGallery',
+                        'categories.translations',
+                        'mapPoints'
+                    ])
+                    // Filter by tour slug in translation
+                    ->whereHas('translations', function($q) use ($tourSlug, $langCode) {
+                        $q->where('slug', $tourSlug)
+                          ->whereHas('language', fn($q2) => $q2->where('code', $langCode));
+                    })
+                    // Filter by city slug (using city name as fallback since slug might not exist yet)
+                    ->whereHas('city', function($q) use ($citySlug) {
+                        // Try to match by slug first, fallback to name
+                        $q->where(function($query) use ($citySlug) {
+                            if (Schema::hasColumn('cities', 'slug')) {
+                                $query->where('slug', $citySlug);
+                            } else {
+                                // Fallback: match city name (case insensitive)
+                                $cityName = str_replace('-', ' ', $citySlug);
+                                $query->where('name', 'like', "%{$cityName}%");
+                            }
+                        });
+                    })
+                    ->where('active', true)
+                    ->firstOrFail();
+
+                return (new TourDetailResource($tour))->resolve($request);
+            });
 
             return response()->json([
                 'success' => true,
-                'data' => new TourDetailResource($tour),
+                'data' => $data,
             ], 200);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {

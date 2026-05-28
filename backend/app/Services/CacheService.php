@@ -132,6 +132,21 @@ class CacheService
         }
     }
 
+    /**
+     * Public tour DETAIL cache (the /api/tours/{lang}/{city}/{slug} page).
+     * Same versioned-key scheme as the listing — the model observers bump the
+     * version on any tour/translation/price/media change, so edits show
+     * immediately. The builder's ModelNotFoundException (404) propagates and is
+     * NOT cached (Cache::remember only stores successful returns).
+     */
+    public function getPublicTourDetail(string $lang, string $citySlug, string $tourSlug, \Closure $builder): array
+    {
+        $key = 'tours:detail:c' . self::LISTING_CODE_VERSION . ':v' . self::toursVersion()
+            . ':' . md5($lang . '|' . $citySlug . '|' . $tourSlug);
+
+        return Cache::remember($key, 1800, $builder);
+    }
+
     // Static so model observers can bump the version without resolving the whole
     // service (which would pull in TourService + its sub-services on every save).
     public static function toursVersion(): int
