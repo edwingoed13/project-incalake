@@ -62,6 +62,22 @@ class TourController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        // TEMP cache diagnostic (remove after). Confirms the new code is live,
+        // which cache store prod uses, and whether it persists across requests.
+        if ($request->get('_diag') === 'ical-cache-2026') {
+            $out = ['code_version' => 'cache-listing-v1'];
+            try {
+                $out['cache_default'] = config('cache.default');
+                $out['cache_store_class'] = get_class(\Illuminate\Support\Facades\Cache::store()->getStore());
+                $out['probe_before'] = \Illuminate\Support\Facades\Cache::get('diag_probe');
+                \Illuminate\Support\Facades\Cache::put('diag_probe', now()->toIso8601String(), 300);
+                $out['tours_version'] = \App\Services\CacheService::toursVersion();
+            } catch (\Throwable $e) {
+                $out['cache_error'] = $e->getMessage();
+            }
+            return response()->json($out);
+        }
+
         try {
             $query = Tour::query();
 
