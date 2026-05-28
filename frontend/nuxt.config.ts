@@ -11,6 +11,16 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: true,
 
+  // Inline the SSR payload in the HTML instead of a separate _payload.json.
+  // On Vercel SWR, nested routes (tour detail /*/*/*) served a cached HTML that
+  // referenced a payload hash the edge didn't have → 404 → the client re-fetched
+  // the tour on hydration → content collapsed to the spinner (footer jumped up)
+  // and hard refresh felt slow. Inlining means the client always has the data:
+  // no re-fetch, no layout shift. getCachedData/prefetch still read payload.data.
+  experimental: {
+    payloadExtraction: false,
+  },
+
   vite: {
     server: {
       allowedHosts: true,
