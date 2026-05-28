@@ -62,18 +62,37 @@ class TourController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        // TEMP cache diagnostic (remove after). Confirms the new code is live,
-        // which cache store prod uses, and whether it persists across requests.
+        // TEMP cache diagnostic (remove after). Pinpoints why the listing cache
+        // doesn't hit: large-value persistence + the real getPublicTourListing path.
         if ($request->get('_diag') === 'ical-cache-2026') {
-            $out = ['code_version' => 'cache-listing-v1'];
+            $out = ['code_version' => 'cache-listing-v2'];
             try {
                 $out['cache_default'] = config('cache.default');
                 $out['cache_store_class'] = get_class(\Illuminate\Support\Facades\Cache::store()->getStore());
-                $out['probe_before'] = \Illuminate\Support\Facades\Cache::get('diag_probe');
-                \Illuminate\Support\Facades\Cache::put('diag_probe', now()->toIso8601String(), 300);
+
+                // Large value (~400KB) round-trip — the listing payload is ~370KB.
+                $big = str_repeat('x', 400000);
+                \Illuminate\Support\Facades\Cache::put('diag_big', $big, 120);
+                $back = \Illuminate\Support\Facades\Cache::get('diag_big');
+                $out['big_ok'] = ($back !== null && strlen((string) $back) === strlen($big));
+                $out['big_len_back'] = $back !== null ? strlen((string) $back) : null;
+
+                // Exercise the REAL listing-cache path twice (timed). call2 ~0ms => cached.
+                $mk = function () {
+                    usleep(300000);
+                    return ['data' => array_fill(0, 200, str_repeat('z', 1500)), 'meta' => [], 'links' => []];
+                };
+                $t1 = microtime(true);
+                $this->cacheService->getPublicTourListing(['diag' => 'listing'], $mk);
+                $out['call1_ms'] = (int) ((microtime(true) - $t1) * 1000);
+                $t2 = microtime(true);
+                $this->cacheService->getPublicTourListing(['diag' => 'listing'], $mk);
+                $out['call2_ms'] = (int) ((microtime(true) - $t2) * 1000);
+                $out['listing_cache_hit'] = $out['call2_ms'] < 50;
+
                 $out['tours_version'] = \App\Services\CacheService::toursVersion();
             } catch (\Throwable $e) {
-                $out['cache_error'] = $e->getMessage();
+                $out['error'] = $e->getMessage();
             }
             return response()->json($out);
         }
