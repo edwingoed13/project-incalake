@@ -545,19 +545,41 @@ const purchaseTours = computed(() => {
 })
 const isMultiTour = computed(() => purchaseTours.value.length > 1)
 
+// Decode HTML entities (&uacute;, &nbsp;, …). The confirmation page is
+// client-only, so the DOM is available; keep a fallback for the common ones.
+function decodeEntities(s: string): string {
+  if (!s) return ''
+  if (import.meta.client && typeof document !== 'undefined') {
+    const ta = document.createElement('textarea')
+    ta.innerHTML = s
+    return ta.value
+  }
+  return s
+    .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/g, "'")
+    .replace(/&aacute;/g, 'á').replace(/&eacute;/g, 'é').replace(/&iacute;/g, 'í')
+    .replace(/&oacute;/g, 'ó').replace(/&uacute;/g, 'ú').replace(/&ntilde;/g, 'ñ')
+    .replace(/&Aacute;/g, 'Á').replace(/&Eacute;/g, 'É').replace(/&Iacute;/g, 'Í')
+    .replace(/&Oacute;/g, 'Ó').replace(/&Uacute;/g, 'Ú').replace(/&Ntilde;/g, 'Ñ')
+}
+
+// Turn rich-text/HTML (or newline text) into clean bullet lines: treat block
+// tags as line breaks, strip the rest, decode entities, drop blank lines.
+function htmlToLines(raw: any): string[] {
+  let s = String(raw ?? '')
+  if (!s.trim()) return []
+  s = s.replace(/<\/(p|li|div|h[1-6]|tr)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')
+  s = decodeEntities(s).replace(/ /g, ' ')
+  return s.split('\n').map(x => x.trim()).filter(Boolean)
+}
+
 // Normalize what_includes/what_not_includes to a string[] regardless of shape
-// (array of strings/objects, an HTML <ul>, or newline-separated text).
+// (array of strings/objects, an HTML <ul>/<p> blob, or newline-separated text).
 function toItems(val: any): string[] {
   if (!val) return []
   if (Array.isArray(val)) {
-    return val.map((x: any) => typeof x === 'string' ? x : (x?.text || x?.item || x?.name || '')).map((s: string) => String(s).trim()).filter(Boolean)
+    return val.flatMap((x: any) => htmlToLines(typeof x === 'string' ? x : (x?.text || x?.item || x?.name || '')))
   }
-  const s = String(val).trim()
-  if (!s) return []
-  if (/<li[\s>]/i.test(s)) {
-    return s.replace(/<\/li>/gi, '\n').replace(/<[^>]*>/g, '').split('\n').map(x => x.trim()).filter(Boolean)
-  }
-  return s.split('\n').map(x => x.trim()).filter(Boolean)
+  return htmlToLines(val)
 }
 
 // Payment summary from the API: how much was charged now vs the balance due
