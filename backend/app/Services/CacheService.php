@@ -104,6 +104,56 @@ class CacheService
     }
 
     /**
+     * Public tour-listing cache (the /api/tours light grid).
+     *
+     * The expensive part is the query (178 tours + joins + min_price), not the
+     * payload. We cache the already-built response array keyed by a VERSION +
+     * the request params. The `database` cache driver has no tags/wildcards, so
+     * invalidation is done by bumping the version (bumpToursVersion) on any
+     * card-visible change — see the model observers in AppServiceProvider. That
+     * makes edits show up immediately; the TTL is only a backstop.
+     */
+    public function getPublicTourListing(array $params, \Closure $builder): array
+    {
+        $key = 'tours:public:v' . self::toursVersion() . ':' . md5(serialize($params));
+
+        try {
+            return Cache::remember($key, 1800, $builder);
+        } catch (\Exception $e) {
+            Log::error('Error caching public tour listing', ['error' => $e->getMessage()]);
+            return $builder();
+        }
+    }
+
+    // Static so model observers can bump the version without resolving the whole
+    // service (which would pull in TourService + its sub-services on every save).
+    public static function toursVersion(): int
+    {
+        return (int) Cache::get('tours:version', 1);
+    }
+
+    /**
+     * Invalidate every cached public listing at once by moving the version
+     * forward. Old keys orphan and expire by TTL. Guarded so a single admin
+     * save that touches many child rows only bumps once per request.
+     */
+    public static function bumpToursVersion(): void
+    {
+        static $bumped = false;
+        if ($bumped) {
+            return;
+        }
+        $bumped = true;
+
+        try {
+            Cache::forever('tours:version', self::toursVersion() + 1);
+            Log::info('Public tour listing cache invalidated (version bumped)');
+        } catch (\Exception $e) {
+            Log::error('Error bumping tours cache version', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Get categories from cache (caches for 48 hours)
      */
     public function getCategories(?string $languageCode = null): \Illuminate\Database\Eloquent\Collection

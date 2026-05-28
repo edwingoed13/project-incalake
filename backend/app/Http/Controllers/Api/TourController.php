@@ -11,6 +11,7 @@ use App\Http\Resources\TourDetailResource;
 use App\Models\Tour;
 use App\Services\TourService;
 use App\Services\PriceCalculatorService;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -23,13 +24,16 @@ class TourController extends Controller
 {
     protected TourService $tourService;
     protected PriceCalculatorService $priceCalculator;
+    protected CacheService $cacheService;
 
     public function __construct(
         TourService $tourService,
-        PriceCalculatorService $priceCalculator
+        PriceCalculatorService $priceCalculator,
+        CacheService $cacheService
     ) {
         $this->tourService = $tourService;
         $this->priceCalculator = $priceCalculator;
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -192,13 +196,68 @@ class TourController extends Controller
             }
 
             $perPage = $request->get('per_page', 15);
+
+            // Public light listing → cached. The query (178 tours + joins +
+            // min_price) is the slow part (~1.5s on cPanel); cache the built
+            // payload keyed by a version that bumps on any card-visible change,
+            // so edits show up immediately. See CacheService::getPublicTourListing.
+            if ($light) {
+                $params = [
+                    'lang' => strtoupper((string) $request->get('language', '')),
+                    'active' => $request->boolean('active'),
+                    'service_type' => (string) $request->get('service_type', ''),
+                    'difficulty' => (string) $request->get('difficulty', ''),
+                    'city_id' => (string) $request->get('city_id', ''),
+                    'city_slug' => (string) $request->get('city_slug', ''),
+                    'category_id' => (string) $request->get('category_id', ''),
+                    'tag' => (string) $request->get('tag', ''),
+                    'search' => (string) $request->get('search', ''),
+                    'min_price' => (string) $request->get('min_price', ''),
+                    'max_price' => (string) $request->get('max_price', ''),
+                    'sort_by' => $sortBy,
+                    'sort_order' => $sortOrder,
+                    'per_page' => (int) $perPage,
+                    'page' => (int) $request->get('page', 1),
+                ];
+
+                $cached = $this->cacheService->getPublicTourListing($params, function () use ($query, $perPage) {
+                    $tours = $query->paginate($perPage);
+                    return [
+                        'data' => collect($tours->items())
+                            ->map(fn ($tour) => (new TourCardResource($tour))->resolve())
+                            ->all(),
+                        'meta' => [
+                            'current_page' => $tours->currentPage(),
+                            'from' => $tours->firstItem(),
+                            'last_page' => $tours->lastPage(),
+                            'per_page' => $tours->perPage(),
+                            'to' => $tours->lastItem(),
+                            'total' => $tours->total(),
+                        ],
+                        'links' => [
+                            'first' => $tours->url(1),
+                            'last' => $tours->url($tours->lastPage()),
+                            'prev' => $tours->previousPageUrl(),
+                            'next' => $tours->nextPageUrl(),
+                        ],
+                    ];
+                });
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $cached['data'],
+                    'status_counts' => null,
+                    'meta' => $cached['meta'],
+                    'links' => $cached['links'],
+                ], 200);
+            }
+
+            // Admin / full listing — always fresh (no cache).
             $tours = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,
-                'data' => $light
-                    ? TourCardResource::collection($tours)
-                    : TourResource::collection($tours),
+                'data' => TourResource::collection($tours),
                 'status_counts' => $statusCounts,
                 'meta' => [
                     'current_page' => $tours->currentPage(),
