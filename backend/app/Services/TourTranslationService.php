@@ -14,6 +14,11 @@ class TourTranslationService
         try {
             foreach ($translationsData as $languageId => $translationData) {
                 if (!empty($translationData['h1_title'])) {
+                    // SEO keywords live in a separate table (tour_keywords), not a
+                    // translation column — pull them out before updateOrCreate.
+                    $keywords = $translationData['keywords'] ?? null;
+                    unset($translationData['keywords']);
+
                     // Ensure slug is unique (exclude current tour's translation)
                     if (!empty($translationData['slug'])) {
                         $slug = $translationData['slug'];
@@ -30,10 +35,25 @@ class TourTranslationService
                         }
                     }
 
-                    $tour->translations()->updateOrCreate(
+                    $translation = $tour->translations()->updateOrCreate(
                         ['language_id' => $languageId],
                         $translationData
                     );
+
+                    // Sync SEO keywords for this translation (replace the set).
+                    if (is_array($keywords)) {
+                        $translation->keywords()->delete();
+                        foreach ($keywords as $kw) {
+                            $word = trim(is_array($kw) ? ($kw['keyword'] ?? '') : (string) $kw);
+                            if ($word === '') {
+                                continue;
+                            }
+                            $translation->keywords()->create([
+                                'keyword' => $word,
+                                'is_primary' => is_array($kw) ? (bool) ($kw['is_primary'] ?? false) : false,
+                            ]);
+                        }
+                    }
                 }
             }
 

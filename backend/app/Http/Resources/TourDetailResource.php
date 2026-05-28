@@ -220,6 +220,9 @@ class TourDetailResource extends JsonResource
                     'media_texts' => $trans->media_texts ?? [],
                     'booking_texts' => $trans->booking_texts ?? [],
                     'custom_sections' => $trans->custom_sections ?? [],
+                    'keywords' => $trans->relationLoaded('keywords')
+                        ? $trans->keywords->map(fn ($k) => ['keyword' => $k->keyword, 'is_primary' => (bool) $k->is_primary])->values()->all()
+                        : [],
                 ];
             }),
 

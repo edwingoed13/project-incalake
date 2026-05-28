@@ -309,6 +309,7 @@ class TourController extends Controller
         try {
             $tour = Tour::with([
                 'translations.language',
+                'translations.keywords',
                 'primaryLanguage',
                 'prices.ageStage',
                 'prices.nationality',
@@ -610,6 +611,7 @@ class TourController extends Controller
                 $tour = Tour::query()
                     ->with([
                         'translations.language',
+                        'translations.keywords',
                         'city',
                         'prices.ageStage',
                         'prices.nationality',
