@@ -144,7 +144,14 @@ class CacheService
         $key = 'tours:detail:c' . self::LISTING_CODE_VERSION . ':v' . self::toursVersion()
             . ':' . md5($lang . '|' . $citySlug . '|' . $tourSlug);
 
-        return Cache::remember($key, 1800, $builder);
+        try {
+            return Cache::remember($key, 1800, $builder);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e; // 404 must propagate, not be cached or swallowed
+        } catch (\Exception $e) {
+            Log::error('Error caching tour detail', ['error' => $e->getMessage()]);
+            return $builder();
+        }
     }
 
     // Static so model observers can bump the version without resolving the whole
@@ -155,21 +162,16 @@ class CacheService
     }
 
     /**
-     * Invalidate every cached public listing at once by moving the version
-     * forward. Old keys orphan and expire by TTL. Guarded so a single admin
-     * save that touches many child rows only bumps once per request.
+     * Invalidate every cached public listing/detail at once by moving the
+     * version forward. Old keys orphan and expire by TTL. Called from model
+     * observers on every save/delete — we deliberately bump every time (no
+     * process-lifetime static guard, which would skip later changes inside a
+     * long-lived queue worker); a few extra cache writes per bulk save is cheap.
      */
     public static function bumpToursVersion(): void
     {
-        static $bumped = false;
-        if ($bumped) {
-            return;
-        }
-        $bumped = true;
-
         try {
             Cache::forever('tours:version', self::toursVersion() + 1);
-            Log::info('Public tour listing cache invalidated (version bumped)');
         } catch (\Exception $e) {
             Log::error('Error bumping tours cache version', ['error' => $e->getMessage()]);
         }
