@@ -367,11 +367,14 @@
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <Icon name="material-symbols:chevron-left" class="text-base" />
         </button>
-        <button v-for="page in visiblePages" :key="page" @click="handlePageChange(page)"
-          :class="page === currentPage ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-          class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all">
-          {{ page }}
-        </button>
+        <template v-for="(page, idx) in visiblePages" :key="idx">
+          <span v-if="page === '…'" class="w-10 h-10 flex items-center justify-center text-slate-400 font-bold select-none">…</span>
+          <button v-else @click="handlePageChange(Number(page))"
+            :class="page === currentPage ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            class="w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all">
+            {{ page }}
+          </button>
+        </template>
         <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage" :aria-label="t('next')"
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
           <Icon name="material-symbols:chevron-right" class="text-base" />
@@ -572,10 +575,16 @@ const paginatedTours = computed(() => {
   return { data, total: filteredTours.value.length, lastPage: Math.ceil(filteredTours.value.length / perPage) }
 })
 
-const visiblePages = computed(() => {
-  const pages: number[] = [], c = currentPage.value, l = paginatedTours.value.lastPage
-  for (let i = Math.max(1, c - 2); i <= Math.min(l, c + 2); i++) pages.push(i)
-  return pages
+// Pagination with first/last + ellipsis: "1 2 3 … 15", "1 … 6 7 8 … 15", etc.
+const visiblePages = computed<(number | string)[]>(() => {
+  const l = paginatedTours.value.lastPage, c = currentPage.value
+  if (l <= 1) return [1]
+  const out: (number | string)[] = []
+  const start = Math.max(1, c - 2), end = Math.min(l, c + 2)
+  if (start > 1) { out.push(1); if (start > 2) out.push('…') }
+  for (let i = start; i <= end; i++) out.push(i)
+  if (end < l) { if (end < l - 1) out.push('…'); out.push(l) }
+  return out
 })
 
 // Mobile "load more": show the first N, grow by perPage.
