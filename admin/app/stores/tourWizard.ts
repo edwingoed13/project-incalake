@@ -91,6 +91,11 @@ export interface TourSeoKeyword {
   is_primary: boolean
 }
 
+export interface TourSeoFaq {
+  question: string
+  answer: string
+}
+
 export interface TourStep2Content {
   title: string
   shortDescription: string
@@ -98,6 +103,7 @@ export interface TourStep2Content {
   metaDescription: string
   slug: string
   keywords?: TourSeoKeyword[]
+  faqs?: TourSeoFaq[]
 }
 
 export interface ItineraryDay {
@@ -307,12 +313,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
 
     // Step 2 Data (Multi-language)
     contentSEO: {
-      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.en, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.es, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.fr, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.de, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      pt: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.pt, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
-      it: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.it, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      en: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.en, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      es: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.es, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      fr: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.fr, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      de: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.de, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      pt: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.pt, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
+      it: { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [], bookingTexts: { policyDescription: STANDARD_POLICY.it, policyDescriptionCustom: '', meetingPointDescription: '', pickupLocationDescription: '', dropoffLocationDescription: '' } },
     } as Record<string, any>,
 
     // Step 3 Data (Multi-language)
@@ -593,7 +599,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
               const langCode = trans.language?.code?.toLowerCase() || 'es'
               // Initialize language key if it doesn't exist
               if (!this.contentSEO[langCode]) {
-                this.contentSEO[langCode] = { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], mediaTexts: [] }
+                this.contentSEO[langCode] = { title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '', youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [] }
               }
               if (!this.detailedContent[langCode]) {
                 this.detailedContent[langCode] = { itinerary: [], itineraryText: '', inclusions: '', exclusions: '', detailedDescription: '', recommendations: '', thingsToBring: '', generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [] }
@@ -606,6 +612,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
                   metaDescription: trans.meta_description || '',
                   slug: trans.slug || '',
                   keywords: trans.keywords || [],
+                  faqs: trans.faqs || [],
                   youtubeUrl: trans.youtube_url || '',
                   mediaTexts: trans.media_texts || [],
                   bookingTexts: trans.booking_texts || {
@@ -1014,6 +1021,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
             meta_description: seoData.metaDescription,
             slug: seoData.slug || payload.translations[langId]?.slug || fallbackSlug,
             keywords: (seoData.keywords || []).filter((k: any) => (k?.keyword || '').trim()),
+            faqs: (seoData.faqs || []).filter((f: any) => (f?.question || '').trim() && (f?.answer || '').trim()),
 
             // Step 3 data
             long_description: detailed?.detailedDescription,

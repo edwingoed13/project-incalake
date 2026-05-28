@@ -19,6 +19,10 @@ class TourTranslationService
                     $keywords = $translationData['keywords'] ?? null;
                     unset($translationData['keywords']);
 
+                    // FAQs also live in their own table (tour_faqs), per translation.
+                    $faqs = $translationData['faqs'] ?? null;
+                    unset($translationData['faqs']);
+
                     // Ensure slug is unique (exclude current tour's translation)
                     if (!empty($translationData['slug'])) {
                         $slug = $translationData['slug'];
@@ -51,6 +55,25 @@ class TourTranslationService
                             $translation->keywords()->create([
                                 'keyword' => $word,
                                 'is_primary' => is_array($kw) ? (bool) ($kw['is_primary'] ?? false) : false,
+                            ]);
+                        }
+                    }
+
+                    // Sync FAQs for this translation (replace the set, keep order).
+                    if (is_array($faqs)) {
+                        $translation->faqs()->delete();
+                        $faqOrder = 0;
+                        foreach ($faqs as $f) {
+                            $q = trim((string) ($f['question'] ?? ''));
+                            $a = trim((string) ($f['answer'] ?? ''));
+                            if ($q === '' || $a === '') {
+                                continue;
+                            }
+                            $translation->faqs()->create([
+                                'question' => $q,
+                                'answer' => $a,
+                                'order' => $faqOrder++,
+                                'active' => true,
                             ]);
                         }
                     }

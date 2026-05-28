@@ -92,6 +92,10 @@ class TourDetailResource extends JsonResource
             'media_texts' => $translation?->media_texts ?? [],
             // Booking texts per translation (policies, meeting point, pickup descriptions)
             'booking_texts' => $translation?->booking_texts ?? [],
+            // Authored FAQs for the active language (drives the FAQ section + FAQPage schema)
+            'faqs' => ($translation && $translation->relationLoaded('faqs'))
+                ? $translation->faqs->map(fn ($f) => ['question' => $f->question, 'answer' => $f->answer])->values()->all()
+                : [],
 
             'currency' => $this->currency ?? 'USD',
             'min_price' => $this->min_price,
@@ -222,6 +226,9 @@ class TourDetailResource extends JsonResource
                     'custom_sections' => $trans->custom_sections ?? [],
                     'keywords' => $trans->relationLoaded('keywords')
                         ? $trans->keywords->map(fn ($k) => ['keyword' => $k->keyword, 'is_primary' => (bool) $k->is_primary])->values()->all()
+                        : [],
+                    'faqs' => $trans->relationLoaded('faqs')
+                        ? $trans->faqs->map(fn ($f) => ['question' => $f->question, 'answer' => $f->answer])->values()->all()
                         : [],
                 ];
             }),

@@ -103,6 +103,34 @@
             </div>
           </UFormField>
 
+          <UFormField
+            label="Preguntas frecuentes (FAQ)"
+            hint="Mejoran el SEO (resultados enriquecidos) y ayudan a que el tour aparezca en respuestas de IA (ChatGPT/Perplexity/AI Overviews). Se editan por idioma."
+          >
+            <div class="space-y-3">
+              <div
+                v-for="(faq, i) in (currentLangData.faqs || [])"
+                :key="i"
+                class="rounded-lg border border-default p-3 space-y-2 bg-elevated/40"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-black uppercase tracking-wider text-muted">Pregunta {{ i + 1 }}</span>
+                  <div class="flex items-center gap-1">
+                    <UButton icon="i-lucide-arrow-up" size="xs" color="neutral" variant="ghost" :disabled="i === 0" @click="moveFaq(i, -1)" />
+                    <UButton icon="i-lucide-arrow-down" size="xs" color="neutral" variant="ghost" :disabled="i === (currentLangData.faqs.length - 1)" @click="moveFaq(i, 1)" />
+                    <UButton icon="i-lucide-trash-2" size="xs" color="error" variant="ghost" @click="removeFaq(i)" />
+                  </div>
+                </div>
+                <UInput v-model="faq.question" placeholder="¿Pregunta? ej. ¿Cuánto dura el tour?" class="w-full" />
+                <UTextarea v-model="faq.answer" :rows="2" placeholder="Respuesta clara y directa (ideal para snippets e IA)." class="w-full" />
+              </div>
+              <UButton icon="i-lucide-plus" color="neutral" variant="subtle" size="sm" @click="addFaq">
+                Agregar pregunta
+              </UButton>
+              <p v-if="!(currentLangData.faqs?.length)" class="text-[11px] text-muted">Sin FAQ aún. Recomendado: 4-6 (duración, ubicación, qué llevar, cancelación, precio…).</p>
+            </div>
+          </UFormField>
+
           <UAlert
             v-if="fullMultilangUrl"
             color="primary"
@@ -232,6 +260,35 @@ function setPrimaryKeyword(i: number) {
   const list = ensureKeywords()
   if (!list) return
   list.forEach((k, idx) => { k.is_primary = idx === i })
+}
+
+// --- FAQs (per language) ---
+function ensureFaqs(): Array<{ question: string; answer: string }> | undefined {
+  const d = store.contentSEO[store.currentLanguage]
+  if (!d) return undefined
+  if (!Array.isArray(d.faqs)) d.faqs = []
+  return d.faqs
+}
+
+function addFaq() {
+  const list = ensureFaqs()
+  if (!list) return
+  list.push({ question: '', answer: '' })
+}
+
+function removeFaq(i: number) {
+  const list = ensureFaqs()
+  if (!list) return
+  list.splice(i, 1)
+}
+
+function moveFaq(i: number, dir: number) {
+  const list = ensureFaqs()
+  if (!list) return
+  const j = i + dir
+  if (j < 0 || j >= list.length) return
+  const [item] = list.splice(i, 1)
+  list.splice(j, 0, item)
 }
 
 // Fetch city data to get slug

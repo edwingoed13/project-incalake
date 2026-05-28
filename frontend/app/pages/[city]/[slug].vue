@@ -1081,89 +1081,23 @@ const durationLabel = computed(() => {
   return ''
 })
 
-// --- Derived FAQ (visible accordion + FAQPage JSON-LD) --------------------
-// Q&As are GENERATED from existing tour fields — no manual authoring — so every
-// tour gets an FAQ. The visible section and the FAQPage structured data render
-// from the SAME `faqItems` source, so they stay identical (Google requires the
-// schema answer to match the on-page answer). Price uses the tour's base
-// currency (not the user-selected one) to stay deterministic across SSR/hydration
-// and consistent with the Product Offer schema. Labels follow the active locale;
-// partially-translated locales (pt/fr/de/it) fall back to English.
-const FAQ_LABELS: Record<string, any> = {
-  es: {
-    title: 'Preguntas frecuentes',
-    durationQ: (title: string) => `¿Cuánto dura ${title}?`,
-    durationA: (dur: string) => `Este tour tiene una duración aproximada de ${dur}.`,
-    locationQ: '¿Dónde se realiza este tour?',
-    locationA: (city: string) => `El tour se realiza en ${city}, Perú. El punto exacto de encuentro se confirma al momento de reservar.`,
-    pickupQ: '¿Incluye recojo desde el hotel?',
-    pickupA: 'Sí, este tour incluye servicio de recojo desde tu hotel dentro de la zona de cobertura.',
-    cancelQ: '¿Puedo cancelar mi reserva?',
-    cancelAFree: 'Sí, ofrecemos cancelación gratuita: puedes cancelar hasta 24 horas antes del inicio del tour y recibir un reembolso completo.',
-    priceQ: '¿Cuánto cuesta este tour?',
-    priceA: (price: string) => `El precio comienza desde ${price} por persona. El monto final depende del número de viajeros y la temporada.`,
-    bookQ: '¿Cómo reservo este tour?',
-    bookA: 'Puedes reservar en línea seleccionando la fecha y el número de personas. Recibirás la confirmación de tu reserva de inmediato por correo electrónico.',
-  },
-  en: {
-    title: 'Frequently asked questions',
-    durationQ: (title: string) => `How long does ${title} last?`,
-    durationA: (dur: string) => `This tour lasts approximately ${dur}.`,
-    locationQ: 'Where does this tour take place?',
-    locationA: (city: string) => `The tour takes place in ${city}, Peru. The exact meeting point is confirmed when you book.`,
-    pickupQ: 'Is hotel pickup included?',
-    pickupA: 'Yes, this tour includes hotel pickup within the coverage area.',
-    cancelQ: 'Can I cancel my booking?',
-    cancelAFree: 'Yes, we offer free cancellation: you can cancel up to 24 hours before the tour starts for a full refund.',
-    priceQ: 'How much does this tour cost?',
-    priceA: (price: string) => `Prices start from ${price} per person. The final amount depends on the number of travelers and the season.`,
-    bookQ: 'How do I book this tour?',
-    bookA: 'You can book online by choosing your date and the number of travelers. You will receive your booking confirmation by email right away.',
-  },
+// --- FAQ (authored in the admin, per language) ---------------------------
+// The visible accordion and the FAQPage JSON-LD render from the SAME faqItems
+// source so they stay identical (Google requires the schema answer to match
+// the on-page text). Only admin-authored FAQs are shown — no auto-generation —
+// so a tour with no FAQs renders no section and no schema.
+const FAQ_TITLES: Record<string, string> = {
+  es: 'Preguntas frecuentes', en: 'Frequently asked questions',
+  pt: 'Perguntas frequentes', fr: 'Questions fréquentes',
+  de: 'Häufige Fragen', it: 'Domande frequenti',
 }
+const faqL = computed(() => ({ title: FAQ_TITLES[locale.value] || FAQ_TITLES.en }))
 
-const faqL = computed(() => FAQ_LABELS[locale.value] || FAQ_LABELS.en)
-
-function stripHtml(html: string): string {
-  return String(html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-const faqItems = computed<Array<{ q: string; a: string }>>(() => {
-  const t = tour.value
-  if (!t) return []
-  const L = faqL.value
-  const items: Array<{ q: string; a: string }> = []
-
-  if (durationLabel.value) {
-    items.push({ q: L.durationQ(t.title), a: L.durationA(durationLabel.value) })
-  }
-
-  const city = cityLabel(t)
-  if (city) {
-    items.push({ q: L.locationQ, a: L.locationA(city) })
-  }
-
-  if (t.enable_hotel_pickup) {
-    items.push({ q: L.pickupQ, a: L.pickupA })
-  }
-
-  if (t.free_cancellation) {
-    items.push({ q: L.cancelQ, a: L.cancelAFree })
-  } else {
-    const cp = stripHtml(t.cancellation_policy)
-    if (cp) items.push({ q: L.cancelQ, a: cp.length > 300 ? cp.slice(0, 297) + '…' : cp })
-  }
-
-  const price = Number(t.min_price)
-  if (Number.isFinite(price) && price > 0) {
-    const priceStr = `${t.currency || 'USD'} ${price.toFixed(0)}`
-    items.push({ q: L.priceQ, a: L.priceA(priceStr) })
-  }
-
-  items.push({ q: L.bookQ, a: L.bookA })
-
-  return items
-})
+const faqItems = computed<Array<{ q: string; a: string }>>(() =>
+  (tour.value?.faqs || [])
+    .map((f: any) => ({ q: String(f?.question || '').trim(), a: String(f?.answer || '').trim() }))
+    .filter((f: { q: string; a: string }) => f.q && f.a)
+)
 
 const tzInfo = computed(() => {
   const tz = tour.value?.timezone
