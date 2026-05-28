@@ -98,42 +98,12 @@ function toggleNotIncluded() {
   notIncludedOpen.value = !notIncludedOpen.value
 }
 
-// Parse includes/excludes from HTML lists or text
-const includesList = computed(() => {
-  if (!props.tour.what_includes) return []
-
-  // Check if we're in browser environment
-  if (typeof document === 'undefined') {
-    // Server-side: return empty or basic parsing
-    return []
-  }
-
-  const div = document.createElement('div')
-  div.innerHTML = props.tour.what_includes
-  const listItems = div.querySelectorAll('li')
-  if (listItems.length > 0) {
-    return Array.from(listItems).map(li => li.textContent?.trim() || '')
-  }
-  return props.tour.what_includes.split('\n').filter((item: string) => item.trim())
-})
-
-const excludesList = computed(() => {
-  if (!props.tour.what_not_includes) return []
-
-  // Check if we're in browser environment
-  if (typeof document === 'undefined') {
-    // Server-side: return empty or basic parsing
-    return []
-  }
-
-  const div = document.createElement('div')
-  div.innerHTML = props.tour.what_not_includes
-  const listItems = div.querySelectorAll('li')
-  if (listItems.length > 0) {
-    return Array.from(listItems).map(li => li.textContent?.trim() || '')
-  }
-  return props.tour.what_not_includes.split('\n').filter((item: string) => item.trim())
-})
+// Normalize the legacy includes/excludes content via the shared helper:
+// decodes entities, strips tags, drops the "INCLUYE" header and splits the
+// "NO INCLUYE" section that migrated tours embed inside what_includes.
+// Deterministic (no DOM) so SSR and client render the same list.
+const includesList = computed(() => tourIncludesList(props.tour.what_includes))
+const excludesList = computed(() => tourExcludesList(props.tour.what_includes, props.tour.what_not_includes))
 </script>
 
 <style scoped>

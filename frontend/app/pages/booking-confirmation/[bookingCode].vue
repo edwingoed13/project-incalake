@@ -105,7 +105,7 @@
 
               <!-- What's included for THIS tour (grouped with it) -->
               <details
-                v-if="toItems(tr.what_includes).length || toItems(tr.what_not_includes).length"
+                v-if="tourIncludesList(tr.what_includes).length || tourExcludesList(tr.what_includes, tr.what_not_includes).length"
                 class="group border-t border-dashed border-slate-100"
               >
                 <summary class="flex items-center justify-between px-3 md:px-4 py-2 cursor-pointer list-none">
@@ -116,19 +116,19 @@
                   <Icon name="material-symbols:expand-more" class="text-slate-400 text-base transition-transform group-open:rotate-180" />
                 </summary>
                 <div class="px-3 md:px-4 pb-3 space-y-2.5">
-                  <div v-if="toItems(tr.what_includes).length">
+                  <div v-if="tourIncludesList(tr.what_includes).length">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">Incluye</p>
                     <ul class="space-y-1">
-                      <li v-for="(it, k) in toItems(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-[13px] text-slate-700">
+                      <li v-for="(it, k) in tourIncludesList(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-[13px] text-slate-700">
                         <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-sm shrink-0 mt-0.5" />
                         <span>{{ it }}</span>
                       </li>
                     </ul>
                   </div>
-                  <div v-if="toItems(tr.what_not_includes).length">
+                  <div v-if="tourExcludesList(tr.what_includes, tr.what_not_includes).length">
                     <p class="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">No incluye</p>
                     <ul class="space-y-1">
-                      <li v-for="(it, k) in toItems(tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-[13px] text-slate-500">
+                      <li v-for="(it, k) in tourExcludesList(tr.what_includes, tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-[13px] text-slate-500">
                         <Icon name="material-symbols:cancel-outline" class="text-red-400 text-sm shrink-0 mt-0.5" />
                         <span>{{ it }}</span>
                       </li>
@@ -544,43 +544,6 @@ const purchaseTours = computed(() => {
   }]
 })
 const isMultiTour = computed(() => purchaseTours.value.length > 1)
-
-// Decode HTML entities (&uacute;, &nbsp;, …). The confirmation page is
-// client-only, so the DOM is available; keep a fallback for the common ones.
-function decodeEntities(s: string): string {
-  if (!s) return ''
-  if (import.meta.client && typeof document !== 'undefined') {
-    const ta = document.createElement('textarea')
-    ta.innerHTML = s
-    return ta.value
-  }
-  return s
-    .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/g, "'")
-    .replace(/&aacute;/g, 'á').replace(/&eacute;/g, 'é').replace(/&iacute;/g, 'í')
-    .replace(/&oacute;/g, 'ó').replace(/&uacute;/g, 'ú').replace(/&ntilde;/g, 'ñ')
-    .replace(/&Aacute;/g, 'Á').replace(/&Eacute;/g, 'É').replace(/&Iacute;/g, 'Í')
-    .replace(/&Oacute;/g, 'Ó').replace(/&Uacute;/g, 'Ú').replace(/&Ntilde;/g, 'Ñ')
-}
-
-// Turn rich-text/HTML (or newline text) into clean bullet lines: treat block
-// tags as line breaks, strip the rest, decode entities, drop blank lines.
-function htmlToLines(raw: any): string[] {
-  let s = String(raw ?? '')
-  if (!s.trim()) return []
-  s = s.replace(/<\/(p|li|div|h[1-6]|tr)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')
-  s = decodeEntities(s).replace(/ /g, ' ')
-  return s.split('\n').map(x => x.trim()).filter(Boolean)
-}
-
-// Normalize what_includes/what_not_includes to a string[] regardless of shape
-// (array of strings/objects, an HTML <ul>/<p> blob, or newline-separated text).
-function toItems(val: any): string[] {
-  if (!val) return []
-  if (Array.isArray(val)) {
-    return val.flatMap((x: any) => htmlToLines(typeof x === 'string' ? x : (x?.text || x?.item || x?.name || '')))
-  }
-  return htmlToLines(val)
-}
 
 // Payment summary from the API: how much was charged now vs the balance due
 // (for tours paid with a deposit/advance).
