@@ -69,38 +69,73 @@
             <div
               v-for="(tr, i) in purchaseTours"
               :key="tr.booking_code + i"
-              class="flex items-center gap-3 p-3 md:p-4"
               :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : 'border-b border-slate-50'"
             >
-              <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center">
-                <img
-                  v-if="tr.tour_image"
-                  :src="getImageUrl(tr.tour_image)"
-                  :alt="tr.tour_title"
-                  class="w-full h-full object-cover"
-                />
-                <Icon name="material-symbols:image-outline" v-else class="text-slate-300 text-2xl" />
+              <div class="flex items-center gap-3 p-3 md:p-4">
+                <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center">
+                  <img
+                    v-if="tr.tour_image"
+                    :src="getImageUrl(tr.tour_image)"
+                    :alt="tr.tour_title"
+                    class="w-full h-full object-cover"
+                  />
+                  <Icon name="material-symbols:image-outline" v-else class="text-slate-300 text-2xl" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ tr.tour_title }}</h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span class="inline-flex items-center gap-1">
+                      <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
+                      {{ formatDate(tr.tour_date) }}
+                    </span>
+                    <span v-if="formatTime(tr.tour_time)" class="inline-flex items-center gap-1">
+                      <Icon name="material-symbols:schedule-outline" class="text-xs" />
+                      {{ formatTime(tr.tour_time) }}
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                      <Icon name="material-symbols:group-outline" class="text-xs" />
+                      {{ (tr.adults || 0) + (tr.children || 0) }}
+                    </span>
+                  </p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-sm font-bold text-primary">{{ currencyStore.formatConverted(tr.total || 0) }}</p>
+                </div>
               </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ tr.tour_title }}</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span class="inline-flex items-center gap-1">
-                    <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
-                    {{ formatDate(tr.tour_date) }}
+
+              <!-- What's included for THIS tour (grouped with it) -->
+              <details
+                v-if="toItems(tr.what_includes).length || toItems(tr.what_not_includes).length"
+                class="group border-t border-dashed border-slate-100"
+              >
+                <summary class="flex items-center justify-between px-3 md:px-4 py-2 cursor-pointer list-none">
+                  <span class="text-xs font-semibold text-primary inline-flex items-center gap-1.5">
+                    <Icon name="material-symbols:fact-check-outline" class="text-sm" />
+                    Qué incluye
                   </span>
-                  <span v-if="formatTime(tr.tour_time)" class="inline-flex items-center gap-1">
-                    <Icon name="material-symbols:schedule-outline" class="text-xs" />
-                    {{ formatTime(tr.tour_time) }}
-                  </span>
-                  <span class="inline-flex items-center gap-1">
-                    <Icon name="material-symbols:group-outline" class="text-xs" />
-                    {{ (tr.adults || 0) + (tr.children || 0) }}
-                  </span>
-                </p>
-              </div>
-              <div class="text-right shrink-0">
-                <p class="text-sm font-bold text-primary">{{ currencyStore.formatConverted(tr.total || 0) }}</p>
-              </div>
+                  <Icon name="material-symbols:expand-more" class="text-slate-400 text-base transition-transform group-open:rotate-180" />
+                </summary>
+                <div class="px-3 md:px-4 pb-3 space-y-2.5">
+                  <div v-if="toItems(tr.what_includes).length">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">Incluye</p>
+                    <ul class="space-y-1">
+                      <li v-for="(it, k) in toItems(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-[13px] text-slate-700">
+                        <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-sm shrink-0 mt-0.5" />
+                        <span>{{ it }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div v-if="toItems(tr.what_not_includes).length">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">No incluye</p>
+                    <ul class="space-y-1">
+                      <li v-for="(it, k) in toItems(tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-[13px] text-slate-500">
+                        <Icon name="material-symbols:cancel-outline" class="text-red-400 text-sm shrink-0 mt-0.5" />
+                        <span>{{ it }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </details>
             </div>
 
             <!-- Purchase totals -->
@@ -133,44 +168,6 @@
               </span>
             </div>
           </div>
-
-          <!-- What's included / not included (collapsible, one per tour) -->
-          <template v-for="(tr, i) in purchaseTours" :key="'inc-' + i">
-            <details
-              v-if="toItems(tr.what_includes).length || toItems(tr.what_not_includes).length"
-              class="bg-white rounded-xl border border-slate-100 shadow-sm group"
-            >
-              <summary class="flex items-center justify-between p-3 md:p-4 cursor-pointer list-none">
-                <div class="flex items-center gap-2 min-w-0">
-                  <Icon name="material-symbols:fact-check-outline" class="text-primary text-lg shrink-0" />
-                  <span class="text-sm font-bold text-slate-800 truncate">
-                    Qué incluye<span v-if="isMultiTour" class="text-slate-400 font-medium"> · {{ tr.tour_title }}</span>
-                  </span>
-                </div>
-                <Icon name="material-symbols:expand-more" class="text-slate-400 text-lg transition-transform group-open:rotate-180 shrink-0" />
-              </summary>
-              <div class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3 space-y-3">
-                <div v-if="toItems(tr.what_includes).length">
-                  <p class="text-[11px] font-bold uppercase tracking-wider text-green-600 mb-1.5">Incluye</p>
-                  <ul class="space-y-1">
-                    <li v-for="(it, k) in toItems(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-sm text-slate-700">
-                      <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base shrink-0 mt-0.5" />
-                      <span>{{ it }}</span>
-                    </li>
-                  </ul>
-                </div>
-                <div v-if="toItems(tr.what_not_includes).length">
-                  <p class="text-[11px] font-bold uppercase tracking-wider text-red-500 mb-1.5">No incluye</p>
-                  <ul class="space-y-1">
-                    <li v-for="(it, k) in toItems(tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-sm text-slate-500">
-                      <Icon name="material-symbols:cancel-outline" class="text-red-400 text-base shrink-0 mt-0.5" />
-                      <span>{{ it }}</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </details>
-          </template>
 
           <!-- Customer info (collapsible on mobile) -->
           <details class="bg-white rounded-xl border border-slate-100 shadow-sm group">
