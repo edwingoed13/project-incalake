@@ -1,6 +1,9 @@
 export default defineI18nConfig(() => ({
   legacy: false,
   locale: 'es',
+  // pt/fr/de/it are only ~30% translated; missing keys fall back to English
+  // (complete) instead of rendering the raw key (e.g. "loading_tours").
+  fallbackLocale: 'en',
   messages: {
     es: {
       welcome: 'Bienvenido',
