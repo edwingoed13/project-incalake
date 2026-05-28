@@ -1,5 +1,8 @@
 <template>
   <div>
+    <!-- Top progress bar on every route change so SPA navigation (e.g. clicking
+         a tour from the home/listing) gives immediate feedback while data loads. -->
+    <NuxtLoadingIndicator color="#4f46e5" :height="3" />
     <CommonNavbar />
     <NuxtPage />
     <CommonFooter />
