@@ -655,16 +655,14 @@ function toggleWishlist(tour: any) {
   })
 }
 
+// The card now gets a precomputed `offer` ({ label }) from the API instead of
+// the full availability_data (which was ~53% of the listing payload).
 function hasActiveOffer(tour: any) {
-  const today = new Date().toISOString().split('T')[0]
-  return (tour.availability_data?.offers || []).some((o: any) => o.endDate >= today)
+  return !!tour.offer
 }
 
 function getOfferLabel(tour: any) {
-  const today = new Date().toISOString().split('T')[0]
-  const offer = (tour.availability_data?.offers || []).find((o: any) => o.endDate >= today)
-  if (!offer) return ''
-  return offer.discountType === 'percentage' ? `${offer.discount}% OFF` : `$${offer.discount} OFF`
+  return tour.offer?.label || ''
 }
 </script>
 

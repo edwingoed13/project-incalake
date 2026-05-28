@@ -47,6 +47,29 @@ class TourCardResource extends JsonResource
             }
         }
 
+        // Active-offer badge only. Shipping the full availability_data (calendar,
+        // blocks, every offer with dates/colors) was ~53% of the listing payload,
+        // yet the card just needs "is there an active offer + its label". Mirrors
+        // the old frontend logic: first offer with endDate >= today (UTC).
+        $offer = null;
+        $av = $this->availability_data;
+        if (is_string($av)) {
+            $av = json_decode($av, true) ?: [];
+        }
+        $offers = is_array($av) ? ($av['offers'] ?? []) : [];
+        $today = gmdate('Y-m-d');
+        foreach ($offers as $o) {
+            if (($o['endDate'] ?? '') >= $today) {
+                $discount = $o['discount'] ?? 0;
+                $offer = [
+                    'label' => (($o['discountType'] ?? '') === 'percentage')
+                        ? $discount . '% OFF'
+                        : '$' . $discount . ' OFF',
+                ];
+                break;
+            }
+        }
+
         return [
             'id' => $this->id,
             'title' => $tr?->h1_title ?? $this->code,
@@ -63,7 +86,7 @@ class TourCardResource extends JsonResource
             'featured_image' => $imgUrl,
             'thumbnail' => $imgUrl,
             'min_price' => $minPrice !== null ? (float) $minPrice : 0,
-            'availability_data' => $this->availability_data,
+            'offer' => $offer,
         ];
     }
 }
