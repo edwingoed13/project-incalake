@@ -211,17 +211,19 @@ export default defineNuxtConfig({
     // SPA — páginas privadas (instant load, no SEO). Localized too: with i18n
     // strategy 'prefix' the real paths are /{locale}/cart, /{locale}/payment/…
     // so the unprefixed rules alone never matched. robots:false = noindex.
-    // swr:false is REQUIRED: payment (/es/payment/culqi) and booking-confirmation
-    // (/es/booking-confirmation/{code}) are 3-segment paths, so the `/*/*/*`
-    // swr(600) rule below also matches and — being merged in — would SSR-render
-    // and cache them by PATH, dropping the per-user `?token=`/`?email=` query.
-    // That made confirmation links always hit the no-token path → "verificación
-    // de email requerida", and would also cache personal data. Forcing swr:false
-    // keeps them client-only so the token is read in the browser.
+    // payment (/es/payment/culqi) and booking-confirmation (/es/booking-confirmation/{code})
+    // are 3-segment paths. The `/*/*/*` swr(600) rule below ALSO matches them, and in
+    // Nitro/radix3 a param segment (`*`) outranks a wildcard (`**`), so a `/**/…`
+    // rule LOSES to `/*/*/*` — that's why ssr:false never applied and the page was
+    // SSR-cached by PATH, dropping the per-user `?token=`/`?email=` query (links
+    // always hit the no-token branch → "verificación de email requerida", plus
+    // personal data got cached). Use a STATIC 2nd segment (`/*/booking-confirmation/**`),
+    // which DOES outrank `/*/*/*`, and swr:false to drop the inherited swr(600) so
+    // they stay pure client-side SPA and read the token in the browser.
     '/**/cart': { ssr: false, robots: false, swr: false },
     '/**/checkout': { ssr: false, robots: false, swr: false },
-    '/**/payment/**': { ssr: false, robots: false, swr: false },
-    '/**/booking-confirmation/**': { ssr: false, robots: false, swr: false },
+    '/*/payment/**': { ssr: false, robots: false, swr: false },
+    '/*/booking-confirmation/**': { ssr: false, robots: false, swr: false },
     '/**/saved': { ssr: false, robots: false, swr: false },
 
     // SWR — páginas públicas con cache (revalida en background). Prod-only.
