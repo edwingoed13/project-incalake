@@ -57,6 +57,52 @@
             </div>
           </UFormField>
 
+          <UFormField
+            label="Palabras clave (SEO)"
+            hint="La principal (★) define el foco del tour; las demás son secundarias. Útiles para el contenido y futuras integraciones."
+          >
+            <div class="space-y-2">
+              <div class="flex gap-2">
+                <UInput
+                  v-model="newKeyword"
+                  placeholder="ej. tour islas uros puno"
+                  class="flex-1"
+                  @keydown.enter.prevent="addKeyword"
+                />
+                <UButton
+                  icon="i-lucide-plus"
+                  color="neutral"
+                  variant="subtle"
+                  :disabled="!newKeyword.trim()"
+                  @click="addKeyword"
+                >
+                  Agregar
+                </UButton>
+              </div>
+              <div v-if="currentLangData.keywords?.length" class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="(kw, i) in currentLangData.keywords"
+                  :key="i"
+                  class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-full text-xs border"
+                  :class="kw.is_primary ? 'bg-primary/10 border-primary/40 text-primary font-semibold' : 'bg-elevated border-default text-default'"
+                >
+                  <button
+                    type="button"
+                    :title="kw.is_primary ? 'Palabra clave principal' : 'Marcar como principal'"
+                    @click="setPrimaryKeyword(i)"
+                  >
+                    <UIcon :name="kw.is_primary ? 'i-lucide-star' : 'i-lucide-star-off'" class="size-3.5" :class="kw.is_primary ? '' : 'opacity-50'" />
+                  </button>
+                  {{ kw.keyword }}
+                  <button type="button" class="hover:text-red-500 opacity-60 hover:opacity-100" title="Quitar" @click="removeKeyword(i)">
+                    <UIcon name="i-lucide-x" class="size-3.5" />
+                  </button>
+                </span>
+              </div>
+              <p v-else class="text-[11px] text-muted">Sin palabras clave aún. Recomendado: 3-6 (una principal).</p>
+            </div>
+          </UFormField>
+
           <UAlert
             v-if="fullMultilangUrl"
             color="primary"
@@ -153,6 +199,40 @@ const tourLanguages = computed(() => {
 const currentLangData = computed(() => {
   return store.contentSEO[store.currentLanguage]
 })
+
+// --- SEO keywords (per language) ---
+const newKeyword = ref('')
+
+function ensureKeywords(): Array<{ keyword: string; is_primary: boolean }> | undefined {
+  const d = store.contentSEO[store.currentLanguage]
+  if (!d) return undefined
+  if (!Array.isArray(d.keywords)) d.keywords = []
+  return d.keywords
+}
+
+function addKeyword() {
+  const word = newKeyword.value.trim()
+  if (!word) return
+  const list = ensureKeywords()
+  if (!list) return
+  if (list.some(k => k.keyword.toLowerCase() === word.toLowerCase())) { newKeyword.value = ''; return }
+  list.push({ keyword: word, is_primary: list.length === 0 }) // first one is primary by default
+  newKeyword.value = ''
+}
+
+function removeKeyword(i: number) {
+  const list = ensureKeywords()
+  if (!list) return
+  const wasPrimary = list[i]?.is_primary
+  list.splice(i, 1)
+  if (wasPrimary && list.length && !list.some(k => k.is_primary)) list[0].is_primary = true
+}
+
+function setPrimaryKeyword(i: number) {
+  const list = ensureKeywords()
+  if (!list) return
+  list.forEach((k, idx) => { k.is_primary = idx === i })
+}
 
 // Fetch city data to get slug
 const fetchCityData = async () => {
