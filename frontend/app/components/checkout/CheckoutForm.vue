@@ -166,7 +166,7 @@ const modalTitle = computed(() => {
     <div class="mb-5 sm:mb-6">
       <h2 class="text-lg sm:text-xl font-black">{{ t('checkout.customer_info') }}</h2>
       <p class="mt-1.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-        <span class="material-symbols-outlined text-sm">info</span>
+        <Icon name="material-symbols:info-outline" class="text-sm" />
         {{ t('checkout.customer_info_note') }}
       </p>
     </div>
@@ -290,7 +290,7 @@ const modalTitle = computed(() => {
             :class="paymentMethod === 'culqi' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
           >
             <input type="radio" v-model="paymentMethod" value="culqi" class="sr-only" />
-            <span class="material-symbols-outlined text-2xl" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'">credit_card</span>
+            <Icon name="material-symbols:credit-card-outline" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'" class="text-2xl" />
             <span class="text-sm font-bold" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">{{ t('checkout.card') }}</span>
             <span class="text-[10px] text-slate-500">Visa, Mastercard, Amex</span>
           </label>
@@ -299,7 +299,7 @@ const modalTitle = computed(() => {
             :class="paymentMethod === 'paypal' ? 'border-[#0070ba] bg-[#0070ba]/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
           >
             <input type="radio" v-model="paymentMethod" value="paypal" class="sr-only" />
-            <span class="material-symbols-outlined text-2xl" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-400'">account_balance_wallet</span>
+            <Icon name="material-symbols:account-balance-wallet-outline" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-400'" class="text-2xl" />
             <span class="text-sm font-bold" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-700 dark:text-slate-300'">PayPal</span>
             <span class="text-[10px] text-slate-500">{{ t('checkout.paypal_or_card') }}</span>
           </label>
@@ -337,7 +337,7 @@ const modalTitle = computed(() => {
         class="w-full font-black py-4 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
         :class="acceptedTerms ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/20' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'"
       >
-        <span class="material-symbols-outlined">payment</span>
+        <Icon name="material-symbols:credit-card-outline" class="text-2xl" />
         <span>{{ t('checkout.continue_payment') }}</span>
       </button>
     </form>
@@ -353,7 +353,7 @@ const modalTitle = computed(() => {
         <div class="space-y-4">
           <div v-if="tour.policies">
             <h5 class="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-              <span class="material-symbols-outlined text-blue-500">description</span>
+              <Icon name="material-symbols:description-outline" class="text-blue-500 text-2xl" />
               {{ t('tour_policies') }}
             </h5>
             <div class="prose prose-sm max-w-none text-sm text-slate-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800" v-html="sanitizeHtml(tour.policies)"></div>
@@ -361,7 +361,7 @@ const modalTitle = computed(() => {
 
           <div v-if="tour.cancellationPolicy">
             <h5 class="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-              <span class="material-symbols-outlined text-red-500">report</span>
+              <Icon name="material-symbols:report-outline" class="text-red-500 text-2xl" />
               {{ t('cancellation_policy') }}
             </h5>
             <div class="prose prose-sm max-w-none text-sm text-slate-700 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800" v-html="sanitizeHtml(tour.cancellationPolicy)"></div>

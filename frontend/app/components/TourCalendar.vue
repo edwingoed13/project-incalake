@@ -5,10 +5,10 @@
       @click="open = !open"
       class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all"
     >
-      <span class="material-symbols-outlined text-slate-400 text-lg">calendar_today</span>
+      <Icon name="material-symbols:calendar-today-outline" class="text-slate-400 text-lg" />
       <span v-if="modelValue" class="text-sm font-semibold text-slate-800 dark:text-white">{{ formatSelected }}</span>
       <span v-else class="text-sm text-slate-400">{{ t('select_date') }}</span>
-      <span class="material-symbols-outlined text-slate-400 text-sm ml-auto" :class="{ 'rotate-180': open }">expand_more</span>
+      <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm ml-auto" />
     </div>
 
     <!-- Calendar dropdown -->
@@ -17,14 +17,14 @@
         <!-- Header: navigation -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <button @click="prevMonth" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-            <span class="material-symbols-outlined text-xl">chevron_left</span>
+            <Icon name="material-symbols:chevron-left" class="text-xl" />
           </button>
           <div class="flex gap-12">
             <h4 class="text-base font-bold text-slate-800 dark:text-white capitalize">{{ monthName(currentMonth, currentYear) }}</h4>
             <h4 class="text-base font-bold text-slate-800 dark:text-white capitalize hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
           </div>
           <button @click="nextMonthNav" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-            <span class="material-symbols-outlined text-xl">chevron_right</span>
+            <Icon name="material-symbols:chevron-right" class="text-xl" />
           </button>
         </div>
 

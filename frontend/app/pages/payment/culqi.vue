@@ -10,7 +10,7 @@
 
       <!-- Error -->
       <div v-else-if="error" class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8 text-center">
-        <span class="material-symbols-outlined text-red-400 text-5xl mb-4">error</span>
+        <Icon name="material-symbols:error-outline" class="text-red-400 text-5xl mb-4" />
         <h3 class="text-lg font-bold text-slate-800 mb-2">{{ t('payment_error') }}</h3>
         <p class="text-sm text-slate-500 mb-6">{{ error }}</p>
         <button @click="router.push('/cart')" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">
@@ -27,7 +27,7 @@
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
             <div class="flex items-center gap-3 mb-1">
               <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <span class="material-symbols-outlined text-primary">receipt_long</span>
+                <Icon name="material-symbols:receipt-long-outline" class="text-primary text-2xl" />
               </div>
               <div>
                 <h2 class="text-lg font-bold text-slate-800">{{ t('order_summary') }}</h2>
@@ -55,11 +55,11 @@
                   <!-- Date & Participants -->
                   <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-3">
                     <span class="flex items-center gap-1">
-                      <span class="material-symbols-outlined text-xs">calendar_today</span>
+                      <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
                       {{ formatDate(b.tour_date) }}
                     </span>
                     <span class="flex items-center gap-1">
-                      <span class="material-symbols-outlined text-xs">group</span>
+                      <Icon name="material-symbols:group-outline" class="text-xs" />
                       {{ b.participants?.adults || 0 }} adults
                       <template v-if="b.participants?.children">, {{ b.participants.children }} children</template>
                     </span>
@@ -116,7 +116,7 @@
               <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
             </div>
             <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+              <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
               <div class="flex-1">
                 <p class="text-[11px] text-amber-800 leading-tight font-semibold">{{ t('payment_usd_notice') }}</p>
                 <p class="text-[10px] text-amber-700 mt-0.5">≈ ${{ grandTotal.toFixed(2) }} USD</p>
@@ -178,7 +178,7 @@
               </ClientOnly>
 
               <div class="flex items-center justify-center gap-2 text-xs text-slate-400 mt-4">
-                <span class="material-symbols-outlined text-sm">shield</span>
+                <Icon name="material-symbols:shield-outline" class="text-sm" />
                 <span>{{ t('secure_powered') }}</span>
               </div>
             </div>

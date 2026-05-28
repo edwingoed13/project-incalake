@@ -10,9 +10,7 @@
 
       <!-- Icon -->
       <div class="mb-6">
-        <span class="material-symbols-outlined text-slate-300 dark:text-slate-600" style="font-size: 120px;">
-          {{ errorIcon }}
-        </span>
+        <Icon :name="msIcon(errorIcon)" class="text-slate-300 dark:text-slate-600" style="font-size: 120px;" />
       </div>
 
       <!-- Title -->
@@ -31,14 +29,14 @@
           @click="handleError"
           class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors"
         >
-          <span class="material-symbols-outlined">refresh</span>
+          <Icon name="material-symbols:refresh" class="text-2xl" />
           Try Again
         </button>
         <NuxtLink
           to="/"
           class="inline-flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-primary-light dark:text-primary-dark font-bold py-3 px-6 rounded-lg transition-colors"
         >
-          <span class="material-symbols-outlined">home</span>
+          <Icon name="material-symbols:home-outline" class="text-2xl" />
           Go Home
         </NuxtLink>
       </div>
@@ -78,6 +76,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { msIcon } from '~/utils/icons'
 
 interface Props {
   error: {

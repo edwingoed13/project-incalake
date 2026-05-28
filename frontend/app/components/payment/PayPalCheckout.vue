@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-        <span class="material-symbols-outlined text-primary text-2xl">account_balance_wallet</span>
+        <Icon name="material-symbols:account-balance-wallet-outline" class="text-primary text-2xl" />
       </div>
       <div>
         <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">
@@ -25,7 +25,7 @@
 
     <!-- Trust Badge -->
     <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary-light dark:text-secondary-dark">
-      <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-base">verified_user</span>
+      <Icon name="material-symbols:verified-user-outline" class="text-green-600 dark:text-green-400 text-base" />
       <span>PayPal buyer protection included</span>
     </div>
   </div>

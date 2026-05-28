@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { msIcon } from '~/utils/icons'
 // Tap-toggle popover/tooltip — works on touch (unlike CSS :hover tooltips).
 // Trigger: an info icon by default, or override via the #trigger slot.
 // Content: default slot. Closes on outside tap and Escape.
@@ -25,7 +26,7 @@ onBeforeUnmount(() => { if (import.meta.client) window.removeEventListener('keyd
       :aria-expanded="open"
     >
       <slot name="trigger">
-        <span class="material-symbols-outlined text-slate-400 text-sm">{{ icon }}</span>
+        <Icon :name="msIcon(icon)" class="text-slate-400 text-sm" />
       </slot>
     </button>
 

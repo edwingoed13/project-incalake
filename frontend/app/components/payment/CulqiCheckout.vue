@@ -318,7 +318,7 @@ onMounted(async () => {
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-        <span class="material-symbols-outlined text-primary text-2xl">credit_card</span>
+        <Icon name="material-symbols:credit-card-outline" class="text-primary text-2xl" />
       </div>
       <div>
         <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">
@@ -333,7 +333,7 @@ onMounted(async () => {
     <!-- Error Message -->
     <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
       <div class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-xl">error</span>
+        <Icon name="material-symbols:error-outline" class="text-red-600 dark:text-red-400 text-xl" />
         <div>
           <p class="text-sm font-semibold text-red-900 dark:text-red-100">Payment Error</p>
           <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ errorMessage }}</p>
@@ -345,16 +345,16 @@ onMounted(async () => {
       <!-- Payment Methods Available -->
       <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
         <h4 class="text-sm font-bold text-primary-light dark:text-primary-dark mb-3 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+          <Icon name="material-symbols:check-circle-outline" class="text-primary text-lg" />
           Available Payment Methods
         </h4>
         <ul class="space-y-2 text-sm text-secondary-light dark:text-secondary-dark">
           <li class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-base">done</span>
+            <Icon name="material-symbols:done" class="text-green-600 dark:text-green-400 text-base" />
             <span><strong>Cards:</strong> Visa, Mastercard, Amex, Diners</span>
           </li>
           <li class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-base">done</span>
+            <Icon name="material-symbols:done" class="text-green-600 dark:text-green-400 text-base" />
             <span><strong>Yape:</strong> Quick payment from your phone</span>
           </li>
         </ul>
@@ -364,7 +364,7 @@ onMounted(async () => {
       <!-- Security Badge -->
       <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-800">
         <div class="flex items-start gap-2">
-          <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-xl">verified_user</span>
+          <Icon name="material-symbols:verified-user-outline" class="text-green-600 dark:text-green-400 text-xl" />
           <div>
             <p class="text-xs font-semibold text-green-900 dark:text-green-100">100% Secure Payments</p>
             <ul class="text-xs text-green-700 dark:text-green-300 mt-1 space-y-0.5">
@@ -384,8 +384,8 @@ onMounted(async () => {
         class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 transform hover:scale-[1.02] disabled:transform-none disabled:hover:scale-100"
       >
         <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-        <span v-else-if="!culqiLoaded" class="material-symbols-outlined text-xl animate-pulse">hourglass_empty</span>
-        <span v-else class="material-symbols-outlined text-xl">lock</span>
+        <Icon name="material-symbols:hourglass-empty" v-else-if="!culqiLoaded" class="text-xl animate-pulse" />
+        <Icon name="material-symbols:lock-outline" v-else class="text-xl" />
         <span v-if="processing">Processing...</span>
         <span v-else-if="!culqiLoaded">Loading payment system...</span>
         <span v-else>Pay {{ currency }} {{ amount.toFixed(2) }}</span>
@@ -393,7 +393,7 @@ onMounted(async () => {
 
       <!-- Trust Badge -->
       <div class="flex items-center justify-center gap-2 text-xs text-secondary-light dark:text-secondary-dark">
-        <span class="material-symbols-outlined text-base">shield</span>
+        <Icon name="material-symbols:shield-outline" class="text-base" />
         <span>Secure payment powered by Culqi</span>
       </div>
     </div>

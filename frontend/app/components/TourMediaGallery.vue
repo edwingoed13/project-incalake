@@ -205,7 +205,7 @@ function getImageUrl(path: string) {
               <img :src="youtubeThumbnail" :alt="tour.title" loading="eager" decoding="async" class="w-full h-full object-cover" />
               <span class="absolute inset-0 flex items-center justify-center bg-black/25">
                 <span class="flex items-center justify-center size-16 rounded-full bg-black/55 backdrop-blur-sm text-white shadow-lg">
-                  <span class="material-symbols-outlined text-4xl">play_arrow</span>
+                  <Icon name="material-symbols:play-arrow-outline" class="text-4xl" />
                 </span>
               </span>
             </button>
@@ -233,7 +233,7 @@ function getImageUrl(path: string) {
           class="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold"
           @click="openLightbox(0)"
         >
-          <span class="material-symbols-outlined text-sm">photo_library</span>
+          <Icon name="material-symbols:photo-library" class="text-sm" />
           {{ mobileSlideIndex + 1 }}/{{ mobileSlides.length }}
         </button>
 
@@ -348,7 +348,7 @@ function getImageUrl(path: string) {
               <NuxtImg :src="displayImages[2].url" :alt="displayImages[2].alt" format="webp" width="380" height="200" densities="x1" loading="lazy" decoding="async" class="w-full h-full object-cover" />
               <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors">
                 <div class="flex flex-col items-center">
-                  <span class="material-symbols-outlined text-white text-3xl mb-2">photo_library</span>
+                  <Icon name="material-symbols:photo-library" class="text-white text-3xl mb-2" />
                   <span class="text-white text-sm font-semibold">Ver todas</span>
                   <span class="text-white text-xs">{{ images.length }} fotos</span>
                 </div>
@@ -399,7 +399,7 @@ function getImageUrl(path: string) {
                 class="flex items-center gap-2 bg-white/90 hover:bg-white backdrop-blur-sm text-slate-900 px-4 py-2 rounded-lg shadow-lg transition-all transform hover:scale-105 font-semibold text-sm"
                 @click.stop="openLightbox(0)"
               >
-                <span class="material-symbols-outlined text-lg">photo_library</span>
+                <Icon name="material-symbols:photo-library" class="text-lg" />
                 <span>Ver fotos ({{ images.length }})</span>
               </button>
             </div>
@@ -419,7 +419,7 @@ function getImageUrl(path: string) {
           @click.stop="closeVideoModal"
           class="absolute top-4 right-4 z-20 w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg"
         >
-          <span class="material-symbols-outlined text-2xl">close</span>
+          <Icon name="material-symbols:close" class="text-2xl" />
         </button>
 
         <div class="relative w-full h-full flex items-center justify-center p-3" @click.stop>
@@ -453,7 +453,7 @@ function getImageUrl(path: string) {
           @click.stop="closeLightbox"
           class="absolute top-4 right-4 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
         >
-          <span class="material-symbols-outlined text-3xl">close</span>
+          <Icon name="material-symbols:close" class="text-3xl" />
         </button>
 
         <button
@@ -461,7 +461,7 @@ function getImageUrl(path: string) {
           @click.stop="prevImage"
           class="absolute left-4 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
         >
-          <span class="material-symbols-outlined text-3xl">chevron_left</span>
+          <Icon name="material-symbols:chevron-left" class="text-3xl" />
         </button>
 
         <NuxtImg
@@ -480,7 +480,7 @@ function getImageUrl(path: string) {
           @click.stop="nextImage"
           class="absolute right-4 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors z-10"
         >
-          <span class="material-symbols-outlined text-3xl">chevron_right</span>
+          <Icon name="material-symbols:chevron-right" class="text-3xl" />
         </button>
 
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">

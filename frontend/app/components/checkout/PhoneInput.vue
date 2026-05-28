@@ -88,7 +88,7 @@ watch(open, (val) => {
       >
         <img :src="countryFlagUrl(country)" :alt="country" class="w-5 h-4 object-cover rounded-sm" />
         <span class="text-slate-700 dark:text-slate-300">{{ dialCode }}</span>
-        <span class="material-symbols-outlined text-slate-400 text-sm transition-transform" :class="{ 'rotate-180': open }">expand_more</span>
+        <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm transition-transform" />
       </button>
 
       <!-- Phone number input -->
@@ -113,7 +113,7 @@ watch(open, (val) => {
         <!-- Search -->
         <div class="p-2 border-b border-slate-100 dark:border-slate-800">
           <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
             <input
               ref="inputRef"
               v-model="search"
@@ -140,7 +140,7 @@ watch(open, (val) => {
               {{ c.name }}
             </span>
             <span class="text-xs text-slate-400 font-mono">{{ c.dial }}</span>
-            <span v-if="c.code === country" class="material-symbols-outlined text-primary text-sm">check</span>
+            <Icon name="material-symbols:check" v-if="c.code === country" class="text-primary text-sm" />
           </button>
 
           <div v-if="filteredCountries.length === 0" class="px-4 py-6 text-center text-sm text-slate-400">

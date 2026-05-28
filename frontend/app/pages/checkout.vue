@@ -19,7 +19,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-8">
         <div class="flex items-start gap-3">
-          <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">error</span>
+          <Icon name="material-symbols:error-outline" class="text-red-600 dark:text-red-400 text-2xl" />
           <div>
             <h3 class="font-bold text-red-900 dark:text-red-100 mb-1">Error</h3>
             <p class="text-red-700 dark:text-red-300">{{ error }}</p>
@@ -35,9 +35,7 @@
 
       <!-- Empty Cart State -->
       <div v-else-if="cartStore.isEmpty" class="bg-white dark:bg-slate-900 rounded-xl p-12 text-center shadow-lg">
-        <span class="material-symbols-outlined text-slate-300 dark:text-slate-600 mb-4 block" style="font-size: 96px;">
-          shopping_cart
-        </span>
+        <Icon name="material-symbols:shopping-cart-outline" style="font-size: 96px;" class="text-slate-300 dark:text-slate-600 mb-4 block" />
         <h2 class="text-2xl font-black text-primary-light dark:text-primary-dark mb-2">
           {{ t('checkout.empty_cart') }}
         </h2>
@@ -48,7 +46,7 @@
           @click="router.push('/tours')"
           class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-all duration-200"
         >
-          <span class="material-symbols-outlined">explore</span>
+          <Icon name="material-symbols:explore-outline" class="text-2xl" />
           {{ t('checkout.explore_tours') }}
         </button>
       </div>

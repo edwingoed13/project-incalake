@@ -32,7 +32,7 @@
       <div class="relative w-full max-w-3xl px-4 sm:px-6" style="z-index: 60;">
         <div class="bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex items-center gap-1.5 sm:gap-2">
           <div class="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3">
-            <span class="material-symbols-outlined text-primary text-lg sm:text-xl">search</span>
+            <Icon name="material-symbols:search" class="text-primary text-lg sm:text-xl" />
             <input
               ref="searchInputRef"
               v-model="searchQuery"
@@ -50,7 +50,7 @@
             class="bg-primary text-white px-4 sm:px-8 min-h-[48px] py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
             :aria-label="c('search_btn', '', 'home_search_btn')"
           >
-            <span class="material-symbols-outlined text-lg">search</span>
+            <Icon name="material-symbols:search" class="text-lg" />
             <span class="hidden sm:inline">{{ c('search_btn', '', 'home_search_btn') }}</span>
           </button>
         </div>
@@ -71,7 +71,7 @@
               class="flex items-center gap-3 px-5 py-2.5 hover:bg-primary/5 transition-colors"
             >
               <div class="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">location_on</span>
+                <Icon name="material-symbols:location-on-outline" class="text-base" />
               </div>
               <div>
                 <p class="text-sm font-bold text-slate-800">{{ city.name }}</p>
@@ -84,7 +84,7 @@
           <template v-else>
             <!-- Loading -->
             <div v-if="searching" class="px-5 py-4 flex items-center gap-3">
-              <span class="material-symbols-outlined text-slate-400 animate-spin text-lg">progress_activity</span>
+              <Icon name="material-symbols:progress-activity" class="text-slate-400 animate-spin text-lg" />
               <span class="text-sm text-slate-400">Buscando...</span>
             </div>
 
@@ -106,7 +106,7 @@
                   class="w-10 h-10 rounded-lg object-cover shrink-0"
                 />
                 <div v-else class="size-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                  <span class="material-symbols-outlined text-slate-300 text-sm">tour</span>
+                  <Icon name="material-symbols:tour-outline" class="text-slate-300 text-sm" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-bold text-slate-800 truncate">{{ result.title }}</p>
@@ -123,13 +123,13 @@
                 class="w-full px-5 py-3 text-sm font-bold text-primary hover:bg-primary/5 transition-colors border-t border-slate-100 flex items-center justify-center gap-1"
               >
                 Ver todos los resultados para "{{ searchQuery }}"
-                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </button>
             </template>
 
             <!-- No results -->
             <div v-else class="px-5 py-6 text-center">
-              <span class="material-symbols-outlined text-slate-300 text-3xl mb-1">search_off</span>
+              <Icon name="material-symbols:search-off" class="text-slate-300 text-3xl mb-1" />
               <p class="text-sm font-semibold text-slate-500">{{ t('no_tours_found') }}</p>
             </div>
           </template>
@@ -148,13 +148,13 @@
           <div v-for="(signal, idx) in trustSignals" :key="idx"
             class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-full shrink-0"
           >
-            <span class="material-symbols-outlined text-sm"
+            <Icon :name="msIcon(signal.icon)" class="text-sm"
               :class="[idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-green-500' : 'text-blue-500']"
-            >{{ signal.icon }}</span>
+            />
             <span class="text-[10px] font-bold text-slate-700 whitespace-nowrap">{{ signal.title }}</span>
           </div>
           <div class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
-            <span class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+            <Icon name="material-symbols:star" class="text-yellow-500 text-sm" />
             <span class="text-[10px] font-black text-slate-700">4.9/5</span>
           </div>
         </div>
@@ -167,7 +167,7 @@
             <div v-for="(signal, idx) in trustSignals" :key="idx" class="flex items-center gap-3 group">
               <div class="size-10 rounded-xl flex items-center justify-center group-hover:-translate-y-1 transition-transform"
                    :class="[idx === 0 ? 'bg-orange-50 text-orange-600' : idx === 1 ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600']">
-                <span class="material-symbols-outlined text-2xl font-bold">{{ signal.icon }}</span>
+                <Icon :name="msIcon(signal.icon)" class="text-2xl font-bold" />
               </div>
               <div>
                 <h5 class="text-sm font-bold text-slate-900">{{ signal.title }}</h5>
@@ -175,7 +175,7 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <span v-for="i in 5" :key="i" class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+              <Icon name="material-symbols:star" v-for="i in 5" :key="i" class="text-yellow-500 text-sm" />
               <span class="text-[10px] font-black text-slate-400 ml-1">4.9/5</span>
             </div>
           </div>
@@ -222,7 +222,7 @@
           </div>
           <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-primary/50 transition-all font-bold text-xs sm:text-sm shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
-            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-lg">arrow_forward</span>
+            <Icon name="material-symbols:arrow-forward" class="group-hover:translate-x-1 transition-transform text-lg" />
           </NuxtLink>
         </div>
 
@@ -247,7 +247,7 @@
                 sizes="78vw sm:45vw md:30vw lg:25vw"
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-4xl" />
               </div>
               <div v-if="tour.difficulty" class="absolute top-3 left-3">
                 <span
@@ -264,7 +264,7 @@
             </div>
             <div class="p-4">
               <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-                <span class="material-symbols-outlined text-xs">location_on</span>
+                <Icon name="material-symbols:location-on-outline" class="text-xs" />
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h4>
@@ -275,7 +275,7 @@
                 </div>
                 <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                   {{ t('view') }}
-                  <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                  <Icon name="material-symbols:arrow-forward" class="text-sm" />
                 </span>
               </div>
             </div>
@@ -290,14 +290,14 @@
         <div class="flex items-end justify-between gap-3 mb-6 md:mb-8">
           <div class="min-w-0">
             <p class="text-green-600 font-black uppercase tracking-[0.2em] text-[11px] mb-1.5">
-              <span class="material-symbols-outlined text-xs align-middle">local_offer</span>
+              <Icon name="material-symbols:sell-outline" class="text-xs align-middle" />
               Special Deals
             </p>
             <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Our Offers</h3>
           </div>
           <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-green-500/50 transition-all font-bold text-xs sm:text-sm text-green-700 shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
-            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-lg">arrow_forward</span>
+            <Icon name="material-symbols:arrow-forward" class="group-hover:translate-x-1 transition-transform text-lg" />
           </NuxtLink>
         </div>
 
@@ -310,7 +310,7 @@
           >
             <!-- Offer badge -->
             <div class="absolute top-3 right-3 z-10 px-2.5 py-1 bg-green-500 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1">
-              <span class="material-symbols-outlined text-xs">local_offer</span>
+              <Icon name="material-symbols:sell-outline" class="text-xs" />
               {{ getOfferLabel(tour) }}
             </div>
             <div class="relative h-52 overflow-hidden bg-slate-100">
@@ -323,12 +323,12 @@
                 sizes="78vw sm:45vw md:30vw lg:25vw"
               />
               <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-slate-300 text-4xl">image</span>
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-4xl" />
               </div>
             </div>
             <div class="p-4">
               <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-                <span class="material-symbols-outlined text-xs">location_on</span>
+                <Icon name="material-symbols:location-on-outline" class="text-xs" />
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors leading-snug">{{ tour.title }}</h4>
@@ -339,7 +339,7 @@
                 </div>
                 <span class="text-xs font-bold text-green-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                   {{ t('view') }}
-                  <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                  <Icon name="material-symbols:arrow-forward" class="text-sm" />
                 </span>
               </div>
             </div>
@@ -358,10 +358,10 @@
           </div>
           <div class="hidden sm:flex gap-2">
             <button @click="scrollReviews(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-              <span class="material-symbols-outlined text-lg">chevron_left</span>
+              <Icon name="material-symbols:chevron-left" class="text-lg" />
             </button>
             <button @click="scrollReviews(1)" :aria-label="t('next')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-              <span class="material-symbols-outlined text-lg">chevron_right</span>
+              <Icon name="material-symbols:chevron-right" class="text-lg" />
             </button>
           </div>
         </div>
@@ -374,7 +374,7 @@
               class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow shrink-0 snap-start w-[85%] sm:w-[60%] md:w-[calc(33.333%-16px)]"
             >
               <div class="flex items-center gap-0.5 mb-3">
-                <span v-for="i in review.rating" :key="i" class="material-symbols-outlined text-yellow-400 text-sm" style="font-variation-settings: 'FILL' 1">star</span>
+                <Icon name="material-symbols:star" v-for="i in review.rating" :key="i" class="text-yellow-400 text-sm" />
               </div>
               <p v-if="review.title" class="text-sm font-bold text-slate-800 mb-2 line-clamp-1">{{ review.title }}</p>
               <p class="text-xs text-slate-500 leading-relaxed line-clamp-4 mb-4">{{ review.comment }}</p>
@@ -389,7 +389,7 @@
                   class="text-[9px] text-primary font-semibold truncate max-w-[140px] hover:underline flex items-center gap-0.5"
                 >
                   {{ review.opinion || review.tour.translations[0].h1_title }}
-                  <span class="material-symbols-outlined text-[10px]">arrow_forward</span>
+                  <Icon name="material-symbols:arrow-forward" class="text-[10px]" />
                 </NuxtLink>
               </div>
             </div>
@@ -404,7 +404,7 @@
         <div class="flex md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <div v-for="(item, idx) in whyUsItems" :key="idx" class="flex flex-col items-center text-center shrink-0 w-[80%] sm:w-[55%] md:w-auto snap-start bg-slate-50 md:bg-transparent rounded-2xl md:rounded-none p-6 md:p-0">
             <div class="size-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-6 shadow-xl">
-              <span class="material-symbols-outlined text-3xl">{{ item.icon }}</span>
+              <Icon :name="msIcon(item.icon)" class="text-3xl" />
             </div>
             <h4 class="text-lg font-black mb-3">{{ item.title }}</h4>
             <p class="text-slate-500 font-medium text-sm leading-relaxed">{{ item.description }}</p>
@@ -417,6 +417,7 @@
 </template>
 
 <script setup lang="ts">
+import { msIcon } from '~/utils/icons'
 const { api } = useApi()
 const config = useRuntimeConfig()
 const { t, te, locale } = useI18n()

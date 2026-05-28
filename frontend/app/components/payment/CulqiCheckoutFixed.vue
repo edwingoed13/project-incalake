@@ -244,8 +244,8 @@ const openPayment = () => {
       class="w-full bg-primary hover:brightness-110 disabled:bg-slate-400 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-[0.98]"
     >
       <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-      <span v-else-if="!culqiReady" class="material-symbols-outlined text-lg animate-pulse">hourglass_empty</span>
-      <span v-else class="material-symbols-outlined text-lg">lock</span>
+      <Icon name="material-symbols:hourglass-empty" v-else-if="!culqiReady" class="text-lg animate-pulse" />
+      <Icon name="material-symbols:lock-outline" v-else class="text-lg" />
       <span v-if="processing">Processing...</span>
       <span v-else-if="!culqiReady">Loading...</span>
       <span v-else>Pay {{ currency }} {{ amount.toFixed(2) }}</span>

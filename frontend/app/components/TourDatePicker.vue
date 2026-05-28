@@ -2,7 +2,7 @@
   <div class="relative">
     <!-- Input Field -->
     <div class="relative">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">calendar_today</span>
+      <Icon name="material-symbols:calendar-today-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
       <input
         :value="formattedDate"
         @click="toggleCalendar"
@@ -28,7 +28,7 @@
             @click="previousMonth"
             class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
-            <span class="material-symbols-outlined text-lg">chevron_left</span>
+            <Icon name="material-symbols:chevron-left" class="text-lg" />
           </button>
 
           <h3 class="text-sm font-bold">
@@ -39,7 +39,7 @@
             @click="nextMonth"
             class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
-            <span class="material-symbols-outlined text-lg">chevron_right</span>
+            <Icon name="material-symbols:chevron-right" class="text-lg" />
           </button>
         </div>
 

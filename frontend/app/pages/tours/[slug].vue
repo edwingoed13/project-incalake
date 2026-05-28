@@ -10,14 +10,14 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 text-xs text-slate-600">
               <template v-if="tour.rating && tour.reviews_count > 0">
-                <span class="material-symbols-outlined text-yellow-500 fill-1 text-sm">star</span>
+                <Icon name="material-symbols:star" class="text-yellow-500 text-sm" />
                 <span class="font-bold">{{ Number(tour.rating).toFixed(1) }}</span>
                 <span class="text-slate-300">-</span>
               </template>
-              <span class="material-symbols-outlined text-slate-400 text-sm">location_on</span>
+              <Icon name="material-symbols:location-on-outline" class="text-slate-400 text-sm" />
               <span>{{ tour.city?.name || 'Puno' }}</span>
               <span class="text-slate-300">-</span>
-              <span class="material-symbols-outlined text-slate-400 text-sm">schedule</span>
+              <Icon name="material-symbols:schedule-outline" class="text-slate-400 text-sm" />
               <span>{{ formatDurationShort(tour) }}</span>
             </div>
             <div class="flex items-center gap-1">
@@ -26,14 +26,14 @@
                 class="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                 aria-label="Share"
               >
-                <span class="material-symbols-outlined text-slate-500 text-lg">share</span>
+                <Icon name="material-symbols:share-outline" class="text-slate-500 text-lg" />
               </button>
               <button
                 @click="toggleFavorite"
                 class="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                 aria-label="Save"
               >
-                <span class="material-symbols-outlined text-lg" :class="isFavorite ? 'text-red-500 fill-1' : 'text-slate-500'">favorite</span>
+                <Icon :name="isFavorite ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" :class="isFavorite ? 'text-red-500' : 'text-slate-500'" />
               </button>
             </div>
           </div>
@@ -46,19 +46,19 @@
             <div class="flex flex-wrap items-center gap-3 text-sm font-medium">
               <template v-if="tour.rating && tour.reviews_count > 0">
                 <div class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-yellow-500 fill-1 text-base">star</span>
+                  <Icon name="material-symbols:star" class="text-yellow-500 text-base" />
                   <span>{{ Number(tour.rating).toFixed(1) }}</span>
                   <span class="text-slate-500 underline cursor-pointer hover:text-slate-700">({{ tour.reviews_count }} {{ t('reviews') }})</span>
                 </div>
                 <span class="text-slate-300">•</span>
               </template>
               <div class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-slate-500 text-base">location_on</span>
+                <Icon name="material-symbols:location-on-outline" class="text-slate-500 text-base" />
                 <span>{{ tour.city?.name || 'Puno' }}, Peru</span>
               </div>
               <span class="text-slate-300">•</span>
               <div class="flex items-center gap-1">
-                <span class="material-symbols-outlined text-slate-500 text-base">schedule</span>
+                <Icon name="material-symbols:schedule-outline" class="text-slate-500 text-base" />
                 <span>{{ formatDuration(tour) }}</span>
               </div>
             </div>
@@ -69,7 +69,7 @@
               class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
               aria-label="Share tour"
             >
-              <span class="material-symbols-outlined text-lg">share</span>
+              <Icon name="material-symbols:share-outline" class="text-lg" />
               <span>{{ t('share') }}</span>
             </button>
             <button
@@ -77,7 +77,7 @@
               class="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 transition-colors"
               aria-label="Save to favorites"
             >
-              <span class="material-symbols-outlined text-lg" :class="isFavorite ? 'text-red-500 fill-1' : ''">favorite</span>
+              <Icon :name="isFavorite ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" :class="isFavorite ? 'text-red-500' : ''" />
               <span>{{ t('save') }}</span>
             </button>
           </div>
@@ -125,7 +125,7 @@
                 :to="localePath(`/tours?tag=${tag.slug}`)"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 text-violet-700 dark:text-violet-300 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
               >
-                <span class="material-symbols-outlined text-sm">label</span>
+                <Icon name="material-symbols:label-outline" class="text-sm" />
                 {{ tag.name }}
               </NuxtLink>
             </div>
@@ -151,7 +151,7 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-lg">
               <!-- Active Offer Banner -->
               <div v-if="activeOffer" class="mb-4 p-3 rounded-xl flex items-center gap-3" :style="{ backgroundColor: activeOffer.color + '12' }">
-                <span class="material-symbols-outlined text-xl" :style="{ color: activeOffer.color }">sell</span>
+                <Icon name="material-symbols:sell-outline" :style="{ color: activeOffer.color }" class="text-xl" />
                 <div class="flex-1">
                   <p class="text-sm font-bold" :style="{ color: activeOffer.color }">
                     {{ activeOffer.discount }}{{ activeOffer.discountType === 'percentage' ? '%' : ' USD' }} OFF
@@ -173,7 +173,7 @@
                 </div>
                 <p class="text-sm text-slate-500 mt-1">{{ t('per_person_label') }}</p>
                 <p v-if="currencyStore.isForeignCurrency" class="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
-                  <span class="material-symbols-outlined text-xs">info</span>
+                  <Icon name="material-symbols:info-outline" class="text-xs" />
                   {{ t('payment_usd_notice') }}
                 </p>
               </div>
@@ -195,7 +195,7 @@
                 <!-- Available Dates Info — only when offers are active -->
                 <div v-if="hasOffers && !isDateBlocked && !dateHasOffer && !selectedDate" class="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                   <p class="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">info</span>
+                    <Icon name="material-symbols:info-outline" class="text-sm" />
                     {{ t('offers_available') }}
                   </p>
                 </div>
@@ -206,14 +206,14 @@
                 <div class="flex items-baseline justify-between gap-2 mb-2">
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">{{ t('departure_time') }}</label>
                   <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                    <span class="material-symbols-outlined text-xs">public</span>
+                    <Icon name="material-symbols:public" class="text-xs" />
                     <span class="hidden sm:inline">{{ tzInfo.name }} ·</span>
                     <span class="sm:hidden">{{ tzInfo.code }} ·</span>
                     {{ tzInfo.gmt }}
                   </span>
                 </div>
                 <div class="relative">
-                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">schedule</span>
+                  <Icon name="material-symbols:schedule-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
                   <select
                     v-model="selectedTime"
                     class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary appearance-none"
@@ -235,7 +235,7 @@
                     type="button"
                     class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
                   >
-                    <span class="material-symbols-outlined text-lg">remove</span>
+                    <Icon name="material-symbols:remove" class="text-lg" />
                   </button>
                   <span class="font-bold text-sm">{{ adults }} {{ adults === 1 ? t('adult') : t('adults') }}</span>
                   <button
@@ -243,7 +243,7 @@
                     type="button"
                     class="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition border border-slate-200 dark:border-slate-600"
                   >
-                    <span class="material-symbols-outlined text-lg">add</span>
+                    <Icon name="material-symbols:add" class="text-lg" />
                   </button>
                 </div>
               </div>
@@ -267,7 +267,7 @@
                   <span class="text-primary">{{ currencyStore.formatConverted(total || 0) }} {{ currencyStore.selectedCurrency }}</span>
                 </div>
                 <div v-if="currencyStore.isForeignCurrency" class="flex items-start gap-1.5 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <span class="material-symbols-outlined text-amber-500 text-sm mt-0.5">info</span>
+                  <Icon name="material-symbols:info-outline" class="text-amber-500 text-sm mt-0.5" />
                   <span class="text-[11px] text-slate-500 leading-tight">{{ t('payment_usd_notice') }}</span>
                 </div>
               </div>
@@ -278,7 +278,7 @@
                 :disabled="isDateBlocked"
                 class="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 mb-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span class="material-symbols-outlined">{{ isDateBlocked ? 'block' : 'check_circle' }}</span>
+                <Icon :name="isDateBlocked ? 'material-symbols:block-outline' : 'material-symbols:check-circle-outline'" class="text-2xl" />
                 {{ isDateBlocked ? t('date_unavailable') : t('book_now') }}
               </button>
 
@@ -308,13 +308,13 @@
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <button class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md text-white">
-                <span class="material-symbols-outlined text-xl">favorite</span>
+                <Icon name="material-symbols:favorite-outline" class="text-xl" />
               </button>
             </div>
             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ relatedTour.city?.name || 'Puno' }}</p>
             <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
             <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
-              <span class="material-symbols-outlined text-yellow-500 fill-1 text-xs">star</span>
+              <Icon name="material-symbols:star" class="text-yellow-500 text-xs" />
               <span class="text-sm font-bold">{{ Number(relatedTour.rating).toFixed(1) }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count }})</span>
             </div>
@@ -338,7 +338,7 @@
           @click="mobileBookingOpen = true"
           class="bg-primary active:bg-primary/80 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-1.5 text-xs active:scale-[0.98] transition-transform"
         >
-          <span class="material-symbols-outlined text-base">calendar_today</span>
+          <Icon name="material-symbols:calendar-today-outline" class="text-base" />
           {{ t('book_now') }}
         </button>
       </div>
@@ -365,7 +365,7 @@
                   <span class="text-xs text-slate-500">{{ currencyStore.selectedCurrency }} / person</span>
                 </div>
                 <div v-if="activeOffer" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 border border-green-200 rounded-lg">
-                  <span class="material-symbols-outlined text-green-600 text-sm">local_offer</span>
+                  <Icon name="material-symbols:sell-outline" class="text-green-600 text-sm" />
                   <span class="text-xs font-bold text-green-700">
                     {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
                   </span>
@@ -400,11 +400,11 @@
                   <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ t('travelers') }}</label>
                   <div class="flex items-center justify-between border border-slate-200 rounded-xl px-3 py-2 bg-slate-50">
                     <button @click="decrementAdults" type="button" class="w-7 h-7 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                      <span class="material-symbols-outlined text-base">remove</span>
+                      <Icon name="material-symbols:remove" class="text-base" />
                     </button>
                     <span class="font-bold text-sm">{{ adults }}</span>
                     <button @click="incrementAdults" type="button" class="w-7 h-7 flex items-center justify-center bg-white rounded-full border border-slate-200">
-                      <span class="material-symbols-outlined text-base">add</span>
+                      <Icon name="material-symbols:add" class="text-base" />
                     </button>
                   </div>
                 </div>
@@ -415,12 +415,12 @@
             <div class="flex-shrink-0 border-t border-slate-100 px-5 pt-3 safe-bottom-drawer">
               <!-- Error -->
               <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 mb-3 bg-red-50 border border-red-200 rounded-xl">
-                <span class="material-symbols-outlined text-red-500 text-sm">error</span>
+                <Icon name="material-symbols:error-outline" class="text-red-500 text-sm" />
                 <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
               </div>
 
               <div v-if="currencyStore.isForeignCurrency" class="flex items-start gap-1.5 mb-2 px-1">
-                <span class="material-symbols-outlined text-amber-500 text-xs mt-0.5">info</span>
+                <Icon name="material-symbols:info-outline" class="text-amber-500 text-xs mt-0.5" />
                 <span class="text-[10px] text-slate-500 leading-tight">{{ t('payment_usd_notice') }}</span>
               </div>
 
@@ -433,7 +433,7 @@
                   @click="mobileHandleBooking"
                   class="flex-1 bg-primary active:bg-primary/80 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-sm active:scale-[0.98] transition-transform"
                 >
-                  <span class="material-symbols-outlined text-lg">check_circle</span>
+                  <Icon name="material-symbols:check-circle-outline" class="text-lg" />
                   {{ t('book_now') }}
                 </button>
               </div>
@@ -455,7 +455,7 @@
   <!-- Error State -->
   <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
-      <span class="material-symbols-outlined text-6xl text-slate-300 mb-4 block">search_off</span>
+      <Icon name="material-symbols:search-off" class="text-6xl text-slate-300 mb-4 block" />
       <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
       <NuxtLink to="/tours" class="text-primary hover:underline font-bold">
         {{ t('view_all_tours') }}

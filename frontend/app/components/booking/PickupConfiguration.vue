@@ -10,7 +10,7 @@
       <div v-if="bothEnabled && !selectedMethod" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-5 border-b border-slate-100">
           <h4 class="text-base font-bold text-slate-800 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">directions_bus</span>
+            <Icon name="material-symbols:directions-bus-outline" class="text-primary text-2xl" />
             ¿Cómo prefieres llegar al tour?
           </h4>
           <p class="text-xs text-slate-500 mt-1">Este tour ofrece dos opciones. Elige la que más te convenga.</p>
@@ -21,7 +21,7 @@
             @click="chooseMethod('hotel')"
             class="text-left border-2 border-slate-200 hover:border-primary rounded-2xl p-4 transition-all active:bg-primary/5"
           >
-            <span class="material-symbols-outlined text-primary text-2xl">hotel</span>
+            <Icon name="material-symbols:hotel-outline" class="text-primary text-2xl" />
             <p class="text-sm font-bold text-slate-800 mt-2">Recojo en mi hotel</p>
             <p class="text-xs text-slate-500 mt-0.5">Te recogemos en la puerta de tu alojamiento.</p>
           </button>
@@ -30,7 +30,7 @@
             @click="chooseMethod('meeting')"
             class="text-left border-2 border-slate-200 hover:border-primary rounded-2xl p-4 transition-all active:bg-primary/5"
           >
-            <span class="material-symbols-outlined text-primary text-2xl">location_on</span>
+            <Icon name="material-symbols:location-on-outline" class="text-primary text-2xl" />
             <p class="text-sm font-bold text-slate-800 mt-2">Ir al punto de encuentro</p>
             <p class="text-xs text-slate-500 mt-0.5">Te esperamos en el punto de encuentro indicado.</p>
           </button>
@@ -44,7 +44,7 @@
         @click="resetMethod"
         class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70"
       >
-        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        <Icon name="material-symbols:arrow-back" class="text-sm" />
         Cambiar método de recojo
       </button>
 
@@ -52,7 +52,7 @@
       <div v-if="selectedMethod === 'hotel'" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-5 border-b border-slate-100">
           <h4 class="text-base font-bold text-slate-800 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">hotel</span>
+            <Icon name="material-symbols:hotel-outline" class="text-primary text-2xl" />
             Recojo en tu hotel
           </h4>
           <p class="text-xs text-slate-500 mt-1">Busca tu hotel para verificar si el recojo está incluido</p>
@@ -63,7 +63,7 @@
           <div>
             <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Busca tu hotel</label>
             <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+              <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
               <input
                 ref="hotelSearchInput"
                 type="text"
@@ -80,7 +80,7 @@
           <!-- Within Radius Result -->
           <div v-if="hotelValidation && isWithinRadius" class="bg-green-50 border border-green-200 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <span class="material-symbols-outlined text-green-600 text-xl">check_circle</span>
+              <Icon name="material-symbols:check-circle-outline" class="text-green-600 text-xl" />
               <div class="flex-1">
                 <h5 class="text-sm font-bold text-green-800">¡Recojo incluido!</h5>
                 <p class="text-xs text-green-700 mt-0.5">Tu hotel está dentro de la zona de recojo gratuito</p>
@@ -99,7 +99,7 @@
           <!-- Outside Radius Result -->
           <div v-else-if="hotelValidation && !isWithinRadius" class="bg-amber-50 border border-amber-200 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <span class="material-symbols-outlined text-amber-600 text-xl">warning</span>
+              <Icon name="material-symbols:warning-outline" class="text-amber-600 text-xl" />
               <div class="flex-1">
                 <h5 class="text-sm font-bold text-amber-800">Fuera de la zona de recojo gratuito</h5>
                 <p class="text-xs text-amber-700 mt-0.5">A {{ hotelValidation.distance?.toFixed(1) }} km de la zona incluida</p>
@@ -153,7 +153,7 @@
                 target="_blank"
                 class="flex items-center gap-2 px-3 py-2 bg-green-500/10 text-green-700 rounded-xl text-xs font-semibold hover:bg-green-500/20 transition-colors"
               >
-                <span class="material-symbols-outlined text-base">chat</span>
+                <Icon name="material-symbols:chat-outline" class="text-base" />
                 Escríbenos por WhatsApp para coordinar un caso especial
               </a>
             </div>
@@ -177,7 +177,7 @@
       <!-- Meeting Point -->
       <div v-else-if="selectedMethod === 'meeting'" class="bg-white rounded-2xl border border-slate-200 p-5">
         <h4 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
-          <span class="material-symbols-outlined text-primary">location_on</span>
+          <Icon name="material-symbols:location-on-outline" class="text-primary text-2xl" />
           Punto de encuentro
         </h4>
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -195,7 +195,7 @@
 
       <!-- No options -->
       <div v-else-if="!tourConfig.enable_hotel_pickup && !tourConfig.enable_meeting_point" class="bg-slate-50 rounded-2xl p-6 text-center">
-        <span class="material-symbols-outlined text-slate-300 text-4xl mb-2">info</span>
+        <Icon name="material-symbols:info-outline" class="text-slate-300 text-4xl mb-2" />
         <p class="text-sm text-slate-500">Este tour no tiene opciones de recojo configuradas. Nos pondremos en contacto contigo con los detalles.</p>
         <button @click="emit('completed', {})" class="mt-4 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold">Continuar</button>
       </div>

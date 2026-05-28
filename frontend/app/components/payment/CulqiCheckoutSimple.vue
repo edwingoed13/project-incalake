@@ -179,7 +179,7 @@ const openPayment = () => {
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-        <span class="material-symbols-outlined text-primary text-2xl">credit_card</span>
+        <Icon name="material-symbols:credit-card-outline" class="text-primary text-2xl" />
       </div>
       <div>
         <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">
@@ -204,8 +204,8 @@ const openPayment = () => {
       class="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
     >
       <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-      <span v-else-if="!culqiReady" class="material-symbols-outlined text-xl animate-pulse">hourglass_empty</span>
-      <span v-else class="material-symbols-outlined text-xl">lock</span>
+      <Icon name="material-symbols:hourglass-empty" v-else-if="!culqiReady" class="text-xl animate-pulse" />
+      <Icon name="material-symbols:lock-outline" v-else class="text-xl" />
       <span v-if="processing">Processing...</span>
       <span v-else-if="!culqiReady">Loading...</span>
       <span v-else>Pay {{ currency }} {{ amount.toFixed(2) }}</span>

@@ -7,11 +7,9 @@
       :aria-expanded="isOpen"
       aria-haspopup="true"
     >
-      <span class="material-symbols-outlined text-lg">payments</span>
+      <Icon name="material-symbols:payments-outline" class="text-lg" />
       <span class="font-bold text-sm">{{ currencyStore.currentCurrency.code }}</span>
-      <span class="material-symbols-outlined text-lg transition-transform" :class="{ 'rotate-180': isOpen }">
-        expand_more
-      </span>
+      <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': isOpen }" class="text-lg transition-transform" />
     </button>
 
     <!-- Dropdown Menu -->
@@ -51,12 +49,7 @@
                 </p>
               </div>
             </div>
-            <span
-              v-if="currency.code === currencyStore.selectedCurrency"
-              class="material-symbols-outlined text-primary"
-            >
-              check_circle
-            </span>
+            <Icon name="material-symbols:check-circle-outline" v-if="currency.code === currencyStore.selectedCurrency" class="text-primary text-2xl" />
           </button>
         </div>
 
@@ -71,7 +64,7 @@
         <!-- Error State -->
         <div v-else-if="currencyStore.error" class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
           <p class="text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">error</span>
+            <Icon name="material-symbols:error-outline" class="text-sm" />
             {{ currencyStore.error }}
           </p>
         </div>

@@ -2,13 +2,9 @@
   <div class="flex flex-col items-center justify-center text-center" :class="containerClass">
     <!-- Icon -->
     <div class="mb-4" :class="iconSizeClass">
-      <span v-if="icon" class="material-symbols-outlined" :class="iconColorClass" :style="{ fontSize: iconSize }">
-        {{ icon }}
-      </span>
+      <Icon v-if="icon" :name="msIcon(icon)" :class="iconColorClass" :style="{ fontSize: iconSize }" />
       <slot v-else name="icon">
-        <span class="material-symbols-outlined text-slate-300 dark:text-slate-600" :style="{ fontSize: iconSize }">
-          inbox
-        </span>
+        <Icon name="material-symbols:inbox-outline" :style="{ fontSize: iconSize }" class="text-slate-300 dark:text-slate-600 text-2xl" />
       </slot>
     </div>
 
@@ -33,7 +29,7 @@
         @click="$emit('action')"
         class="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
       >
-        <span class="material-symbols-outlined" v-if="actionIcon">{{ actionIcon }}</span>
+        <Icon v-if="actionIcon" :name="msIcon(actionIcon)" class="text-2xl" />
         {{ actionText }}
       </button>
     </slot>
@@ -42,6 +38,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { msIcon } from '~/utils/icons'
 
 interface Props {
   icon?: string

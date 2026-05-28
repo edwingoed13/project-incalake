@@ -36,7 +36,7 @@
   <!-- Error -->
   <div v-else-if="error && !tours?.length" class="min-h-screen flex items-center justify-center bg-white pt-20">
     <div class="text-center px-4">
-      <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">wifi_off</span>
+      <Icon name="material-symbols:wifi-off" class="text-5xl text-slate-300 mb-4" />
       <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h2>
       <button @click="refresh()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">{{ t('retry') }}</button>
     </div>
@@ -60,7 +60,7 @@
       <div class="px-3 py-2">
         <!-- Search -->
         <div class="relative mb-2">
-          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+          <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
           <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
             class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs" />
         </div>
@@ -70,23 +70,23 @@
             :class="selectedCitySlug ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
             class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedCitySlug ? formatCityName(selectedCitySlug) : t('destination') }}
-            <span class="material-symbols-outlined text-[10px]">expand_more</span>
+            <Icon name="material-symbols:expand-more" class="text-[10px]" />
           </button>
           <button @click="mobileSheet = 'duration'"
             :class="selectedDuration ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
             class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}
-            <span class="material-symbols-outlined text-[10px]">expand_more</span>
+            <Icon name="material-symbols:expand-more" class="text-[10px]" />
           </button>
           <button @click="mobileSheet = 'price'"
             :class="selectedPrice ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
             class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
             {{ selectedPrice ? priceLabels[selectedPrice] : t('price') }}
-            <span class="material-symbols-outlined text-[10px]">expand_more</span>
+            <Icon name="material-symbols:expand-more" class="text-[10px]" />
           </button>
           <button @click="mobileSheet = 'sort'"
             class="flex items-center gap-1 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            <span class="material-symbols-outlined text-xs">sort</span>
+            <Icon name="material-symbols:sort" class="text-xs" />
             {{ sortLabels[sortBy]?.split(':')[0] || t('sort_by') }}
           </button>
           <button v-if="hasActiveFilters" @click="clearFilters" class="text-red-500 text-[11px] font-bold whitespace-nowrap shrink-0 px-2 py-2">{{ t('clear_all') }}</button>
@@ -99,7 +99,7 @@
       <div class="max-w-7xl mx-auto px-6 lg:px-10 py-2.5 overflow-visible">
         <div class="flex items-center gap-2">
           <div class="relative shrink-0">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base">search</span>
+            <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
               class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:ring-2 focus:ring-primary/30 w-48 focus:w-64 transition-all" />
           </div>
@@ -109,9 +109,9 @@
             <button @click="openFilter = openFilter === filter.key ? '' : filter.key"
               :class="filter.isActive ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
               class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all">
-              <span class="material-symbols-outlined text-sm">{{ filter.icon }}</span>
+              <Icon :name="msIcon(filter.icon)" class="text-sm" />
               {{ filter.label }}
-              <span class="material-symbols-outlined text-xs">expand_more</span>
+              <Icon name="material-symbols:expand-more" class="text-xs" />
             </button>
             <div v-if="openFilter === filter.key" class="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1" :class="filter.key === 'sort' ? 'right-0 left-auto w-48' : 'w-48'">
               <button v-for="opt in filter.options" :key="opt.value" @click="filter.select(opt.value); openFilter = ''"
@@ -123,7 +123,7 @@
           </div>
           <div class="flex-1"></div>
           <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-semibold text-red-500 flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">close</span> {{ t('clear_all') }}
+            <Icon name="material-symbols:close" class="text-sm" /> {{ t('clear_all') }}
           </button>
           <span class="text-xs font-bold text-slate-400 mr-2">{{ t('tours_found', { count: filteredTours.length }) }}</span>
           <div class="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
@@ -132,14 +132,14 @@
               class="p-1.5 transition-colors"
               :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
             >
-              <span class="material-symbols-outlined text-base">grid_view</span>
+              <Icon name="material-symbols:grid-view-outline" class="text-base" />
             </button>
             <button
               @click="viewMode = 'list'"
               class="p-1.5 transition-colors"
               :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
             >
-              <span class="material-symbols-outlined text-base">view_list</span>
+              <Icon name="material-symbols:view-list-outline" class="text-base" />
             </button>
           </div>
         </div>
@@ -193,26 +193,26 @@
       <div v-if="selectedCitySlug || selectedTagSlug || selectedDuration || selectedPrice" class="flex flex-wrap items-center gap-1.5 mb-3">
         <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
-          <button @click="selectedCitySlug = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
+          <button @click="selectedCitySlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
         <span v-if="selectedTagSlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-500/10 text-violet-600 text-[10px] font-semibold rounded-full">
-          <span class="material-symbols-outlined text-[10px]">label</span>
+          <Icon name="material-symbols:label-outline" class="text-[10px]" />
           {{ activeTagInfo?.name || selectedTagSlug }}
-          <button @click="selectedTagSlug = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
+          <button @click="selectedTagSlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
         <span v-if="selectedDuration" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ durationLabels[selectedDuration] }}
-          <button @click="selectedDuration = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
+          <button @click="selectedDuration = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
         <span v-if="selectedPrice" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ priceLabels[selectedPrice] }}
-          <button @click="selectedPrice = ''" class="material-symbols-outlined text-[10px] hover:text-red-500">close</button>
+          <button @click="selectedPrice = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
       </div>
 
       <!-- Empty -->
       <div v-if="filteredTours.length === 0" class="text-center py-16">
-        <span class="material-symbols-outlined text-5xl text-slate-300 mb-3">search_off</span>
+        <Icon name="material-symbols:search-off" class="text-5xl text-slate-300 mb-3" />
         <h3 class="text-base font-bold text-slate-800 mb-2">{{ t('no_tours_found') }}</h3>
         <button @click="clearFilters" class="px-5 py-2 bg-primary text-white font-bold rounded-xl text-sm">{{ t('clear_filters') }}</button>
       </div>
@@ -235,18 +235,18 @@
             <!-- Content -->
             <div class="flex-1 min-w-0 flex flex-col py-0.5 pr-8">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 inline-flex items-center gap-0.5">
-                <span class="material-symbols-outlined text-[12px]">location_on</span>{{ cityLabel(tour) }}
+                <Icon name="material-symbols:location-on-outline" class="text-[12px]" />{{ cityLabel(tour) }}
               </p>
               <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug mb-1.5">{{ tour.title }}</h3>
               <!-- Attributes -->
               <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-slate-500 mb-auto">
                 <span v-if="formatDuration(tour)" class="inline-flex items-center gap-0.5">
-                  <span class="material-symbols-outlined text-[12px]">schedule</span>{{ formatDuration(tour) }}
+                  <Icon name="material-symbols:schedule-outline" class="text-[12px]" />{{ formatDuration(tour) }}
                 </span>
                 <!-- Data-driven: only shows when the tour actually offers it
                      (set `free_cancellation` on the tour from the admin later). -->
                 <span v-if="tour.free_cancellation" class="inline-flex items-center gap-0.5 text-trust font-semibold">
-                  <span class="material-symbols-outlined text-[12px]">verified_user</span>{{ t('free_cancellation') }}
+                  <Icon name="material-symbols:verified-user-outline" class="text-[12px]" />{{ t('free_cancellation') }}
                 </span>
               </div>
               <!-- Price -->
@@ -257,7 +257,7 @@
                   <span class="text-[9px] text-slate-400">{{ t('per_person') }}</span>
                 </div>
                 <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 shrink-0">
-                  {{ t('view') }}<span class="material-symbols-outlined text-sm">arrow_forward</span>
+                  {{ t('view') }}<Icon name="material-symbols:arrow-forward" class="text-sm" />
                 </span>
               </div>
             </div>
@@ -270,7 +270,7 @@
             :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
             :aria-pressed="wishlistStore.has(tour.id)"
           >
-            <span class="material-symbols-outlined text-lg" :style="wishlistStore.has(tour.id) ? 'font-variation-settings: \'FILL\' 1' : ''">favorite</span>
+            <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
           </button>
         </div>
       </div>
@@ -288,15 +288,15 @@
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
               format="webp" width="400" height="300" sizes="50vw lg:33vw xl:25vw" />
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
-              <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
+              <Icon name="material-symbols:schedule-outline" class="text-sm" />{{ formatDuration(tour) }}
             </div>
             <div v-if="hasActiveOffer(tour)" class="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
-              <span class="material-symbols-outlined text-xs">local_offer</span>{{ getOfferLabel(tour) }}
+              <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
             </div>
           </div>
           <div class="p-4">
             <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-              <span class="material-symbols-outlined text-xs">location_on</span>{{ cityLabel(tour) }}
+              <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
             </div>
             <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
             <div class="flex items-end justify-between pt-3 border-t border-slate-100">
@@ -305,7 +305,7 @@
                 <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
               <span class="text-xs font-bold text-primary opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </span>
             </div>
           </div>
@@ -325,22 +325,22 @@
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
               format="webp" width="256" height="176" sizes="256px" />
             <div v-if="hasActiveOffer(tour)" class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
-              <span class="material-symbols-outlined text-xs">local_offer</span>{{ getOfferLabel(tour) }}
+              <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
             </div>
           </div>
           <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
             <div>
               <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
-                <span class="material-symbols-outlined text-xs">location_on</span>{{ cityLabel(tour) }}
+                <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
               </div>
               <h3 class="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
               <p v-if="tour.short_description" class="text-xs text-slate-500 line-clamp-2 mb-3">{{ tour.short_description }}</p>
               <div class="flex items-center gap-3 text-xs text-slate-500">
                 <span v-if="formatDuration(tour)" class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">schedule</span>{{ formatDuration(tour) }}
+                  <Icon name="material-symbols:schedule-outline" class="text-sm" />{{ formatDuration(tour) }}
                 </span>
                 <span class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-sm">location_on</span>{{ cityLabel(tour) }}
+                  <Icon name="material-symbols:location-on-outline" class="text-sm" />{{ cityLabel(tour) }}
                 </span>
               </div>
             </div>
@@ -350,7 +350,7 @@
                 <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
               </div>
               <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                {{ t('view') }} <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </span>
             </div>
           </div>
@@ -368,7 +368,7 @@
           class="w-full min-h-[48px] bg-white border-2 border-primary text-primary font-bold rounded-xl text-sm active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2"
         >
           {{ t('load_more') }}
-          <span class="material-symbols-outlined text-lg">expand_more</span>
+          <Icon name="material-symbols:expand-more" class="text-lg" />
         </button>
       </div>
 
@@ -376,7 +376,7 @@
       <div v-if="paginatedTours.lastPage > 1" class="hidden md:flex items-center justify-center gap-2 mt-8 mb-4">
         <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage <= 1" :aria-label="t('previous')"
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
-          <span class="material-symbols-outlined text-base">chevron_left</span>
+          <Icon name="material-symbols:chevron-left" class="text-base" />
         </button>
         <button v-for="page in visiblePages" :key="page" @click="handlePageChange(page)"
           :class="page === currentPage ? 'bg-primary text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
@@ -385,7 +385,7 @@
         </button>
         <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage >= paginatedTours.lastPage" :aria-label="t('next')"
           class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-30">
-          <span class="material-symbols-outlined text-base">chevron_right</span>
+          <Icon name="material-symbols:chevron-right" class="text-base" />
         </button>
       </div>
     </div>
@@ -393,6 +393,7 @@
 </template>
 
 <script setup lang="ts">
+import { msIcon } from '~/utils/icons'
 const { api } = useApi()
 const config = useRuntimeConfig()
 const { t, locale } = useI18n()

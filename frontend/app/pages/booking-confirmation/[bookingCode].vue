@@ -4,7 +4,7 @@
 
       <!-- Error -->
       <div v-if="error" class="bg-white rounded-2xl shadow-sm p-6 text-center mt-4">
-        <span class="material-symbols-outlined text-red-400 text-4xl mb-3 block">error</span>
+        <Icon name="material-symbols:error-outline" class="text-red-400 text-4xl mb-3 block" />
         <h2 class="text-base font-bold text-slate-800 mb-1">{{ t('booking_not_found') }}</h2>
         <p class="text-sm text-slate-500">{{ errorMessage }}</p>
       </div>
@@ -19,7 +19,7 @@
         <!-- Success Header -->
         <div class="text-center mb-5 md:mb-8">
           <div class="inline-flex items-center justify-center size-12 md:size-16 bg-green-100 rounded-full mb-2">
-            <span class="material-symbols-outlined text-green-600 text-3xl md:text-4xl">check_circle</span>
+            <Icon name="material-symbols:check-circle-outline" class="text-green-600 text-3xl md:text-4xl" />
           </div>
           <h1 class="text-lg md:text-2xl font-black text-slate-800">{{ t('booking_confirmed') }}</h1>
           <p class="text-xs text-slate-500 mt-0.5">{{ t('code') }}: <span class="font-mono font-bold text-primary">{{ booking.booking_code }}</span></p>
@@ -40,7 +40,7 @@
                     ? 'bg-green-100 text-green-700'
                     : 'bg-slate-100 text-slate-400'"
               >
-                <span v-if="completedSteps.has(idx)" class="material-symbols-outlined text-sm">check</span>
+                <Icon name="material-symbols:check" v-if="completedSteps.has(idx)" class="text-sm" />
                 <span v-else>{{ idx + 1 }}</span>
               </div>
               <span
@@ -62,7 +62,7 @@
           <!-- Tour(s) of this purchase — one card per tour, single code -->
           <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             <div v-if="isMultiTour" class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-primary text-base">confirmation_number</span>
+              <Icon name="material-symbols:confirmation-number-outline" class="text-primary text-base" />
               <span class="text-xs font-bold text-slate-700">{{ purchaseTours.length }} tours en esta compra</span>
             </div>
 
@@ -79,21 +79,21 @@
                   :alt="tr.tour_title"
                   class="w-full h-full object-cover"
                 />
-                <span v-else class="material-symbols-outlined text-slate-300 text-2xl">image</span>
+                <Icon name="material-symbols:image-outline" v-else class="text-slate-300 text-2xl" />
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{{ tr.tour_title }}</h3>
                 <p class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                   <span class="inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">calendar_today</span>
+                    <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
                     {{ formatDate(tr.tour_date) }}
                   </span>
                   <span v-if="formatTime(tr.tour_time)" class="inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">schedule</span>
+                    <Icon name="material-symbols:schedule-outline" class="text-xs" />
                     {{ formatTime(tr.tour_time) }}
                   </span>
                   <span class="inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">group</span>
+                    <Icon name="material-symbols:group-outline" class="text-xs" />
                     {{ (tr.adults || 0) + (tr.children || 0) }}
                   </span>
                 </p>
@@ -124,7 +124,7 @@
             <!-- Partial payment breakdown -->
             <div v-if="paymentSummary?.is_partial" class="border-t border-slate-100 px-3 py-2.5 bg-amber-50/60 flex items-center justify-between gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
-                <span class="material-symbols-outlined text-amber-600 text-sm">payments</span>
+                <Icon name="material-symbols:payments-outline" class="text-amber-600 text-sm" />
                 Pagaste <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
               </span>
               <span class="text-xs text-right">
@@ -138,10 +138,10 @@
           <details class="bg-white rounded-xl border border-slate-100 shadow-sm group">
             <summary class="flex items-center justify-between p-3 md:p-4 cursor-pointer list-none">
               <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-lg">person</span>
+                <Icon name="material-symbols:person-outline" class="text-primary text-lg" />
                 <span class="text-sm font-bold text-slate-800">{{ t('customer_info') }}</span>
               </div>
-              <span class="material-symbols-outlined text-slate-400 text-lg transition-transform group-open:rotate-180">expand_more</span>
+              <Icon name="material-symbols:expand-more" class="text-slate-400 text-lg transition-transform group-open:rotate-180" />
             </summary>
             <div class="px-3 md:px-4 pb-3 md:pb-4 space-y-2 text-sm border-t border-slate-50 pt-3">
               <div class="flex justify-between">
@@ -162,13 +162,13 @@
           <!-- Voucher: prints / saves the confirmation as PDF (works on mobile
                via the browser's print dialog; no backend PDF needed). -->
           <button @click="downloadVoucher" class="w-full flex items-center justify-center gap-2 p-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-semibold text-sm active:bg-slate-50 transition-colors">
-            <span class="material-symbols-outlined text-lg">download</span>
+            <Icon name="material-symbols:download" class="text-lg" />
             {{ t('voucher') }}
           </button>
 
           <button @click="currentStep = 1" class="w-full bg-primary active:bg-primary/80 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
             {{ t('continue_pickup') }}
-            <span class="material-symbols-outlined text-lg">arrow_forward</span>
+            <Icon name="material-symbols:arrow-forward" class="text-lg" />
           </button>
         </div>
 
@@ -178,7 +178,7 @@
           <template v-if="isMultiTour">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
               <div class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-primary text-base">directions_bus</span>
+                <Icon name="material-symbols:directions-bus-outline" class="text-primary text-base" />
                 <span class="text-xs font-bold text-slate-700">Punto de recojo por tour ({{ configuredCount }}/{{ purchaseTours.length }})</span>
               </div>
               <div
@@ -193,7 +193,7 @@
                     {{ formatDate(tr.tour_date) }}<span v-if="formatTime(tr.tour_time)"> · {{ formatTime(tr.tour_time) }}</span>
                   </p>
                   <p v-if="isTourPickupDone(tr)" class="text-[11px] text-green-600 font-semibold mt-0.5 inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                    <Icon name="material-symbols:check-circle-outline" class="text-xs" />
                     {{ tr.pickup_type === 'hotel_pickup' ? `Recojo en hotel${tr.pickup_hotel ? ': ' + tr.pickup_hotel : ''}` : 'Punto de encuentro confirmado' }}
                   </p>
                   <p v-else class="text-[11px] text-amber-600 font-semibold mt-0.5">Pendiente de configurar</p>
@@ -230,7 +230,7 @@
                       <p class="text-[11px] text-slate-500">{{ formatDate(activePickupTour.tour_date) }}</p>
                     </div>
                     <button @click="activePickupTour = null" class="p-1.5 text-slate-400 active:text-slate-700">
-                      <span class="material-symbols-outlined">close</span>
+                      <Icon name="material-symbols:close" class="text-2xl" />
                     </button>
                   </div>
                   <div class="p-4">
@@ -266,7 +266,7 @@
           <template v-if="isMultiTour">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
               <div class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-primary text-base">group</span>
+                <Icon name="material-symbols:group-outline" class="text-primary text-base" />
                 <span class="text-xs font-bold text-slate-700">Viajeros por tour ({{ toursTravelersDone }}/{{ purchaseTours.length }})</span>
               </div>
               <div
@@ -281,11 +281,11 @@
                   <div class="min-w-0">
                     <p class="text-sm font-bold text-slate-800 truncate">{{ tr.tour_title }}</p>
                     <p class="text-[11px] mt-0.5 font-semibold inline-flex items-center gap-1" :class="isTourTravelersDone(tr) ? 'text-green-600' : 'text-amber-600'">
-                      <span class="material-symbols-outlined text-xs">{{ isTourTravelersDone(tr) ? 'check_circle' : 'group' }}</span>
+                      <Icon :name="isTourTravelersDone(tr) ? 'material-symbols:check-circle-outline' : 'material-symbols:group-outline'" class="text-xs" />
                       {{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros
                     </p>
                   </div>
-                  <span class="material-symbols-outlined text-slate-400 transition-transform shrink-0" :class="openTourId === tr.id ? 'rotate-180' : ''">expand_more</span>
+                  <Icon name="material-symbols:expand-more" :class="openTourId === tr.id ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
                 </button>
                 <div v-show="openTourId === tr.id" class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3">
                   <button
@@ -294,7 +294,7 @@
                     @click="copyFromPrevious(i)"
                     class="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70"
                   >
-                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                    <Icon name="material-symbols:content-copy-outline" class="text-sm" />
                     Copiar viajeros del tour anterior
                   </button>
                   <BookingTravelersForm v-model="travelersByTour[tr.id]" :max-travelers="tourMax(tr)" />
@@ -308,7 +308,7 @@
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm">
               <div class="flex items-center justify-between p-3 md:p-4 border-b border-slate-50">
                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-lg">group</span>
+                  <Icon name="material-symbols:group-outline" class="text-primary text-lg" />
                   {{ t('step_travelers') }}
                   <span class="text-xs font-normal text-slate-400">({{ travelers.length }}/{{ maxTravelers }})</span>
                 </h3>
@@ -326,7 +326,7 @@
           <div class="flex gap-2 mt-3">
             <button @click="currentStep = 1" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
             <button @click="saveTravelers" :disabled="savingTravelers" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:bg-primary/80 active:scale-[0.98] transition-transform">
-              <span v-if="savingTravelers" class="material-symbols-outlined animate-spin text-base">progress_activity</span>
+              <Icon name="material-symbols:progress-activity" v-if="savingTravelers" class="animate-spin text-base" />
               {{ savingTravelers ? t('saving') : t('save_continue') }}
             </button>
           </div>
@@ -336,7 +336,7 @@
         <div v-else-if="currentStep === 3" class="text-center">
           <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 md:p-8">
             <div class="inline-flex items-center justify-center size-14 bg-green-100 rounded-full mb-3">
-              <span class="material-symbols-outlined text-green-600 text-3xl">celebration</span>
+              <Icon name="material-symbols:celebration-outline" class="text-green-600 text-3xl" />
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-1">{{ t('all_set') }}</h3>
             <p class="text-xs text-slate-500 mb-5">We'll send you a confirmation email with all the details.<br />See you on {{ formatDate(booking.tour_date) }}!</p>
@@ -347,11 +347,11 @@
                 target="_blank"
                 class="flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-xl font-bold text-sm active:bg-green-600 transition-colors"
               >
-                <span class="material-symbols-outlined text-lg">chat</span>
+                <Icon name="material-symbols:chat-outline" class="text-lg" />
                 {{ t('whatsapp_contact') }}
               </a>
               <NuxtLink to="/" class="flex items-center justify-center gap-2 py-3 bg-slate-100 rounded-xl font-semibold text-sm text-slate-600 active:bg-slate-200 transition-colors">
-                <span class="material-symbols-outlined text-lg">home</span>
+                <Icon name="material-symbols:home-outline" class="text-lg" />
                 {{ t('back_home') }}
               </NuxtLink>
             </div>

@@ -11,7 +11,7 @@
       <!-- Logo -->
       <NuxtLink :to="localePath('/')" class="group flex items-center gap-2.5 active:scale-95 transition-transform">
         <div class="size-9 bg-primary group-hover:rotate-[15deg] transition-transform rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/30">
-          <span class="material-symbols-outlined font-bold text-xl">explore</span>
+          <Icon name="material-symbols:explore-outline" class="font-bold text-xl" />
         </div>
         <div class="flex flex-col">
           <h1 class="text-lg font-black tracking-tighter uppercase italic leading-none text-slate-900">Incalake</h1>
@@ -43,11 +43,10 @@
           >
             <img :src="flagSrc(locale, 20)" :alt="locale" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
             <span class="hidden lg:inline">{{ langShortLabels[locale] || locale.toUpperCase() }}</span>
-            <!-- chevron only on desktop (lg+). It's wrapped in a plain span because
-                 the global `.material-symbols-outlined { display:inline-block }` rule
-                 overrides Tailwind's `hidden`; hiding the wrapper hides the icon too. -->
+            <!-- chevron only on desktop (lg+); wrapper span carries the
+                 responsive `hidden lg:inline-block` + rotate-on-open transform. -->
             <span class="hidden lg:inline-block transition-transform" :class="{ 'rotate-180': langOpen }">
-              <span class="material-symbols-outlined text-xs">expand_more</span>
+              <Icon name="material-symbols:expand-more" class="text-xs" />
             </span>
           </button>
           <div v-if="langOpen" class="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -64,7 +63,7 @@
                 <img :src="flagSrc(loc.code, 24)" :alt="loc.code" class="w-6 h-auto rounded-sm shadow-sm" loading="lazy" />
                 <span class="text-xs font-semibold">{{ loc.name }}</span>
               </span>
-              <span v-if="locale === loc.code" class="material-symbols-outlined text-sm text-primary">check</span>
+              <Icon name="material-symbols:check" v-if="locale === loc.code" class="text-sm text-primary" />
             </NuxtLink>
           </div>
           <div v-if="langOpen" class="fixed inset-0 z-40" @click="langOpen = false" />
@@ -78,7 +77,7 @@
           >
             <span class="text-xs font-semibold">{{ currencyStore.currentCurrency.symbol }}</span>
             <span>{{ currencyStore.selectedCurrency }}</span>
-            <span class="material-symbols-outlined text-xs transition-transform" :class="{ 'rotate-180': currOpen }">expand_more</span>
+            <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': currOpen }" class="text-xs transition-transform" />
           </button>
           <div v-if="currOpen" class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
             <div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Currency</div>
@@ -98,7 +97,7 @@
 
         <!-- Wishlist Icon -->
         <NuxtLink :to="localePath('/saved')" class="relative p-2 text-slate-600 hover:text-red-500 transition-colors" aria-label="Mis guardados">
-          <span class="material-symbols-outlined text-xl" :class="{ 'text-red-500': wishlistStore.count > 0 }" :style="wishlistStore.count > 0 ? 'font-variation-settings: \'FILL\' 1' : ''">favorite</span>
+          <Icon :name="wishlistStore.count > 0 ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-xl" :class="{ 'text-red-500': wishlistStore.count > 0 }" />
           <span
             v-if="wishlistStore.count > 0"
             class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
@@ -109,7 +108,7 @@
 
         <!-- Cart Icon -->
         <NuxtLink :to="localePath('/cart')" class="relative p-2 text-slate-600 hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-xl">shopping_cart</span>
+          <Icon name="material-symbols:shopping-cart-outline" class="text-xl" />
           <span
             v-if="cartStore.itemCount > 0"
             class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
@@ -124,8 +123,8 @@
           class="md:hidden p-2 text-slate-600 hover:text-primary transition-colors"
           aria-label="Menu"
         >
-          <span v-if="!mobileOpen" class="material-symbols-outlined text-xl">menu</span>
-          <span v-else class="material-symbols-outlined text-xl">close</span>
+          <Icon name="material-symbols:menu" v-if="!mobileOpen" class="text-xl" />
+          <Icon name="material-symbols:close" v-else class="text-xl" />
         </button>
       </div>
     </div>

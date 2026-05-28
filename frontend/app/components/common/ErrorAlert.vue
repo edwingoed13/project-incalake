@@ -9,9 +9,7 @@
   >
     <div class="flex items-start gap-3">
       <!-- Icon -->
-      <span class="material-symbols-outlined flex-shrink-0" :class="iconClass">
-        {{ iconName }}
-      </span>
+      <Icon :name="msIcon(iconName)" class="flex-shrink-0 text-2xl" :class="iconClass" />
 
       <div class="flex-1">
         <!-- Title -->
@@ -45,7 +43,7 @@
         :class="dismissClass"
         aria-label="Dismiss"
       >
-        <span class="material-symbols-outlined text-xl">close</span>
+        <Icon name="material-symbols:close" class="text-xl" />
       </button>
     </div>
   </div>
@@ -53,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { msIcon } from '~/utils/icons'
 
 interface Props {
   type?: 'error' | 'warning' | 'success' | 'info'

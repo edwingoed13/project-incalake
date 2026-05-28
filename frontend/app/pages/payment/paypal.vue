@@ -20,7 +20,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-8">
         <div class="flex items-start gap-3">
-          <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">error</span>
+          <Icon name="material-symbols:error-outline" class="text-red-600 dark:text-red-400 text-2xl" />
           <div>
             <h3 class="font-bold text-red-900 dark:text-red-100 mb-1">Error Loading Payment</h3>
             <p class="text-red-700 dark:text-red-300">{{ error }}</p>
@@ -150,13 +150,13 @@
           <!-- Recoverable payment error (cancellation, declined card, etc.) -->
           <div v-if="paymentError" class="mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-xl">info</span>
+              <Icon name="material-symbols:info-outline" class="text-amber-600 dark:text-amber-400 text-xl" />
               <div class="flex-1">
                 <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ paymentError }}</p>
                 <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">Puedes intentarlo de nuevo abajo.</p>
               </div>
               <button @click="paymentError = null" class="text-amber-600 hover:text-amber-700">
-                <span class="material-symbols-outlined text-lg">close</span>
+                <Icon name="material-symbols:close" class="text-lg" />
               </button>
             </div>
           </div>
@@ -179,7 +179,7 @@
             <template v-else>
               <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
                 <div class="flex items-start gap-3">
-                  <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-2xl">warning</span>
+                  <Icon name="material-symbols:warning-outline" class="text-yellow-600 dark:text-yellow-400 text-2xl" />
                   <div>
                     <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-1">Configuration Error</h3>
                     <p class="text-yellow-700 dark:text-yellow-300">Payment gateway is not configured properly.</p>

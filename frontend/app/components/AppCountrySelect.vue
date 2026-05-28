@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
       <span class="flex-1 truncate" :class="selected ? 'text-slate-800' : 'text-slate-400'">
         {{ selected ? selected.name : (modelValue || placeholder) }}
       </span>
-      <span class="material-symbols-outlined text-slate-400 text-lg transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+      <Icon name="material-symbols:expand-more" :class="open ? 'rotate-180' : ''" class="text-slate-400 text-lg transition-transform" />
     </button>
 
     <!-- Dropdown -->
@@ -96,7 +96,7 @@ onBeforeUnmount(() => {
           >
             <img :src="countryFlagUrl(n.code, 24)" :alt="n.name" class="w-5 h-auto rounded-sm shrink-0" loading="lazy" />
             <span class="flex-1 truncate">{{ n.name }}</span>
-            <span v-if="selected?.code === n.code" class="material-symbols-outlined text-primary text-base">check</span>
+            <Icon name="material-symbols:check" v-if="selected?.code === n.code" class="text-primary text-base" />
           </button>
         </li>
         <li v-if="filtered.length === 0" class="px-3 py-3 text-sm text-slate-400 text-center">Sin resultados</li>

@@ -21,7 +21,7 @@
         :class="{ 'hover:border-primary': hasPrev }"
         aria-label="Previous page"
       >
-        <span class="material-symbols-outlined text-xl">chevron_left</span>
+        <Icon name="material-symbols:chevron-left" class="text-xl" />
       </button>
 
       <!-- Page Numbers -->
@@ -61,7 +61,7 @@
         :class="{ 'hover:border-primary': hasNext }"
         aria-label="Next page"
       >
-        <span class="material-symbols-outlined text-xl">chevron_right</span>
+        <Icon name="material-symbols:chevron-right" class="text-xl" />
       </button>
     </nav>
   </div>

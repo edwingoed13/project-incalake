@@ -61,7 +61,7 @@ onBeforeUnmount(() => {
               class="-mr-1 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
               aria-label="Cerrar"
             >
-              <span class="material-symbols-outlined">close</span>
+              <Icon name="material-symbols:close" class="text-2xl" />
             </button>
           </div>
 

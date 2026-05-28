@@ -37,7 +37,7 @@ const sortedItems = computed(() =>
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-black">{{ t('booking_summary') }}</h3>
       <NuxtLink :to="localePath('/cart')" class="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
-        <span class="material-symbols-outlined text-xs">edit</span> {{ t('edit') }}
+        <Icon name="material-symbols:edit-outline" class="text-xs" /> {{ t('edit') }}
       </NuxtLink>
     </div>
 
@@ -47,21 +47,21 @@ const sortedItems = computed(() =>
         <h4 class="text-sm font-bold text-slate-800 leading-snug">{{ item.tourTitle }}</h4>
 
         <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '15', color: item.offerColor || '#22c55e' }">
-          <span class="material-symbols-outlined text-[10px]">sell</span>
+          <Icon name="material-symbols:sell-outline" class="text-[10px]" />
           {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
         </div>
 
         <div class="space-y-0.5 text-[11px] text-slate-500">
           <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-xs">calendar_today</span>
+            <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
             {{ formatDate(item.selectedDate) }} · {{ formatTime(item.selectedTime) }}{{ item.durationLabel ? ` · ${item.durationLabel}` : '' }}
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-xs">group</span>
+            <Icon name="material-symbols:group-outline" class="text-xs" />
             {{ item.adults }} {{ item.adults === 1 ? t('adult') : t('adults') }}
           </div>
           <div v-if="item.guideType && item.guideType !== 'none'" class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-xs">record_voice_over</span>
+            <Icon name="material-symbols:record-voice-over-outline" class="text-xs" />
             {{ guideTypeLabels[item.guideType as string] || item.guideType }}{{ item.guideLanguages?.length ? ` [ ${item.guideLanguages.join(', ')} ]` : '' }}
           </div>
         </div>
@@ -100,17 +100,17 @@ const sortedItems = computed(() =>
     </div>
 
     <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-      <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+      <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
       <span class="text-[10px] text-amber-800 leading-tight">{{ t('payment_usd_notice') }}</span>
     </div>
 
     <!-- Trust -->
     <div class="mt-4 pt-4 border-t border-slate-100 space-y-1">
       <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-        <span class="material-symbols-outlined text-green-500 text-xs">shield</span> {{ t('secure_payment') }}
+        <Icon name="material-symbols:shield-outline" class="text-green-500 text-xs" /> {{ t('secure_payment') }}
       </div>
       <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-        <span class="material-symbols-outlined text-yellow-500 text-xs">bolt</span> {{ t('instant_confirmation') }}
+        <Icon name="material-symbols:bolt-outline" class="text-yellow-500 text-xs" /> {{ t('instant_confirmation') }}
       </div>
     </div>
   </div>

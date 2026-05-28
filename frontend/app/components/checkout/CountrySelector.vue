@@ -89,7 +89,7 @@ watch(open, (val) => {
         <span class="text-slate-400 ml-1">({{ selectedCountry.dial }})</span>
       </span>
       <span v-else class="flex-1 text-sm text-slate-400">{{ placeholder }}</span>
-      <span class="material-symbols-outlined text-slate-400 text-lg transition-transform" :class="{ 'rotate-180': open }">expand_more</span>
+      <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-lg transition-transform" />
     </button>
 
     <!-- Dropdown -->
@@ -101,7 +101,7 @@ watch(open, (val) => {
         <!-- Search -->
         <div class="p-2 border-b border-slate-100 dark:border-slate-800">
           <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
             <input
               ref="inputRef"
               v-model="search"
@@ -130,7 +130,7 @@ watch(open, (val) => {
               {{ country.name }}
             </span>
             <span class="text-xs text-slate-400 font-mono">{{ country.dial }}</span>
-            <span v-if="country.code === modelValue" class="material-symbols-outlined text-primary text-sm">check</span>
+            <Icon name="material-symbols:check" v-if="country.code === modelValue" class="text-primary text-sm" />
           </button>
 
           <div v-if="filteredCountries.length === 0" class="px-4 py-6 text-center text-sm text-slate-400">

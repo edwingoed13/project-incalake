@@ -5,7 +5,7 @@
       @click="toggleMobileFilters"
       class="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
     >
-      <span class="material-symbols-outlined text-xl">tune</span>
+      <Icon name="material-symbols:tune" class="text-xl" />
       Filters
       <span v-if="activeFiltersCount" class="ml-2 px-2 py-0.5 bg-primary text-white text-xs font-bold rounded-full">
         {{ activeFiltersCount }}
@@ -32,7 +32,7 @@
       <div class="sticky top-0 bg-white dark:bg-slate-900 md:hidden px-4 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
         <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">Filters</h3>
         <button @click="isOpen = false" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-          <span class="material-symbols-outlined text-2xl">close</span>
+          <Icon name="material-symbols:close" class="text-2xl" />
         </button>
       </div>
 

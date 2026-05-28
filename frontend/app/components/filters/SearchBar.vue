@@ -2,7 +2,7 @@
   <div class="relative w-full">
     <!-- Search Icon -->
     <div class="absolute inset-y-0 left-0 pl-3 md:pl-4 flex items-center pointer-events-none">
-      <span class="material-symbols-outlined text-slate-400 text-xl">search</span>
+      <Icon name="material-symbols:search" class="text-slate-400 text-xl" />
     </div>
 
     <!-- Search Input -->
@@ -21,7 +21,7 @@
       class="absolute inset-y-0 right-0 pr-3 md:pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       aria-label="Clear search"
     >
-      <span class="material-symbols-outlined text-xl">close</span>
+      <Icon name="material-symbols:close" class="text-xl" />
     </button>
   </div>
 </template>

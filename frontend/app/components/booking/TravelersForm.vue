@@ -43,7 +43,7 @@ function remove(idx: number) {
           @click="remove(idx)"
           class="p-1 text-slate-400 active:text-red-500"
         >
-          <span class="material-symbols-outlined text-sm">close</span>
+          <Icon name="material-symbols:close" class="text-sm" />
         </button>
       </div>
 
@@ -85,7 +85,7 @@ function remove(idx: number) {
       @click="add"
       class="w-full flex items-center justify-center gap-1 py-2 border border-dashed border-primary/40 text-primary text-xs font-bold rounded-lg active:bg-primary/5"
     >
-      <span class="material-symbols-outlined text-sm">add</span>
+      <Icon name="material-symbols:add" class="text-sm" />
       {{ t('add_traveler') }}
     </button>
   </div>

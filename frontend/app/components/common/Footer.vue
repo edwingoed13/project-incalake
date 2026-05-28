@@ -7,7 +7,7 @@
         <div class="md:col-span-4 max-w-sm">
           <NuxtLink :to="localePath('/')" class="flex items-center gap-3 mb-6 group">
             <div class="size-12 bg-white text-slate-900 rounded-2xl flex items-center justify-center shadow-2xl transition-transform group-hover:rotate-12 shrink-0">
-               <span class="material-symbols-outlined font-bold text-3xl">explore</span>
+               <Icon name="material-symbols:explore-outline" class="font-bold text-3xl" />
             </div>
             <div class="flex flex-col">
               <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</h2>
@@ -27,7 +27,7 @@
                :aria-label="s.label"
                class="size-11 rounded-full border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-primary hover:border-primary transition-all"
              >
-                <span class="material-symbols-outlined text-lg">{{ s.icon }}</span>
+                <Icon :name="msIcon(s.icon)" class="text-lg" />
              </a>
           </div>
         </div>
@@ -70,7 +70,7 @@
               />
               <button class="w-full bg-primary text-white min-h-[48px] rounded-2xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 group transition-all active:scale-95 shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
                  {{ t('footer_subscribe') }}
-                 <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">trending_flat</span>
+                 <Icon name="material-symbols:trending-flat" class="text-sm group-hover:translate-x-1 transition-transform" />
               </button>
            </form>
         </div>
@@ -89,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import { msIcon } from '~/utils/icons'
 const localePath = useLocalePath()
 const { t } = useI18n()
 

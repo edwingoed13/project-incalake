@@ -139,7 +139,7 @@ function getImageUrl(path: string) {
 
       <!-- Empty -->
       <div v-if="cartStore.isEmpty" class="bg-white rounded-2xl p-12 text-center shadow-sm">
-        <span class="material-symbols-outlined text-slate-300 text-6xl mb-4">shopping_cart</span>
+        <Icon name="material-symbols:shopping-cart-outline" class="text-slate-300 text-6xl mb-4" />
         <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('your_cart_empty') }}</h2>
         <p class="text-sm text-slate-500 mb-6">{{ t('explore_tours_hint') }}</p>
         <NuxtLink :to="localePath('/tours')" class="bg-primary text-white font-bold px-6 py-3 rounded-xl text-sm">
@@ -165,7 +165,7 @@ function getImageUrl(path: string) {
                 class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-xl shrink-0"
               />
               <div v-else class="w-20 h-20 sm:w-28 sm:h-28 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-slate-300 text-3xl">image</span>
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-3xl" />
               </div>
 
               <!-- Details -->
@@ -174,33 +174,33 @@ function getImageUrl(path: string) {
 
                 <!-- Offer badge -->
                 <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mb-2" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
-                  <span class="material-symbols-outlined text-xs">sell</span>
+                  <Icon name="material-symbols:sell-outline" class="text-xs" />
                   {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
                 </div>
 
                 <!-- Info rows -->
                 <div class="space-y-1 text-xs text-slate-500">
                   <div class="flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">calendar_today</span>
+                    <Icon name="material-symbols:calendar-today-outline" class="text-sm" />
                     {{ formatDate(item.selectedDate) }}
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">schedule</span>
+                    <Icon name="material-symbols:schedule-outline" class="text-sm" />
                     {{ formatTime(item.selectedTime) }}{{ item.durationLabel ? ` · ${item.durationLabel}` : '' }}
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">group</span>
+                    <Icon name="material-symbols:group-outline" class="text-sm" />
                     {{ item.adults }} {{ item.adults === 1 ? t('adult') : t('adults') }}{{ item.children > 0 ? `, ${item.children} ${t('children_label')}` : '' }}
                   </div>
                   <div v-if="item.guideType && item.guideType !== 'none'" class="flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-sm">record_voice_over</span>
+                    <Icon name="material-symbols:record-voice-over-outline" class="text-sm" />
                     {{ guideTypeLabels[item.guideType] || item.guideType }}{{ item.guideLanguages?.length ? ` [ ${item.guideLanguages.join(', ')} ]` : '' }}
                   </div>
                   <button
                     @click="openPolicies(item)"
                     class="flex items-center gap-1 text-primary hover:underline font-semibold mt-0.5"
                   >
-                    <span class="material-symbols-outlined text-sm">description</span>
+                    <Icon name="material-symbols:description-outline" class="text-sm" />
                     {{ t('terms_conditions') }}
                   </button>
                 </div>
@@ -209,10 +209,10 @@ function getImageUrl(path: string) {
                 <div class="flex items-end justify-between mt-3 pt-3 border-t border-slate-100">
                   <div class="flex items-center gap-0.5 -ml-1.5">
                     <button @click="openEdit(item)" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" :title="t('edit')">
-                      <span class="material-symbols-outlined text-base">edit</span>
+                      <Icon name="material-symbols:edit-outline" class="text-base" />
                     </button>
                     <button @click="removeItem(item.id)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Eliminar">
-                      <span class="material-symbols-outlined text-base">delete</span>
+                      <Icon name="material-symbols:delete-outline" class="text-base" />
                     </button>
                   </div>
                   <div class="text-right">
@@ -243,11 +243,11 @@ function getImageUrl(path: string) {
                     <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('adults') }}</label>
                     <div class="flex items-center gap-2">
                       <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <span class="material-symbols-outlined text-sm">remove</span>
+                        <Icon name="material-symbols:remove" class="text-sm" />
                       </button>
                       <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
                       <button @click="editForm.adults = Math.min(99, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <span class="material-symbols-outlined text-sm">add</span>
+                        <Icon name="material-symbols:add" class="text-sm" />
                       </button>
                     </div>
                   </div>
@@ -255,11 +255,11 @@ function getImageUrl(path: string) {
                     <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('children_label') }}</label>
                     <div class="flex items-center gap-2">
                       <button @click="editForm.children = Math.max(0, editForm.children - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <span class="material-symbols-outlined text-sm">remove</span>
+                        <Icon name="material-symbols:remove" class="text-sm" />
                       </button>
                       <span class="text-sm font-bold w-6 text-center">{{ editForm.children }}</span>
                       <button @click="editForm.children = Math.min(99, editForm.children + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <span class="material-symbols-outlined text-sm">add</span>
+                        <Icon name="material-symbols:add" class="text-sm" />
                       </button>
                     </div>
                   </div>
@@ -274,7 +274,7 @@ function getImageUrl(path: string) {
 
           <!-- Continue Shopping -->
           <NuxtLink :to="localePath('/tours')" class="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-            <span class="material-symbols-outlined text-base">arrow_back</span>
+            <Icon name="material-symbols:arrow-back" class="text-base" />
             {{ t('continue_shopping') }}
           </NuxtLink>
         </div>
@@ -309,7 +309,7 @@ function getImageUrl(path: string) {
             </div>
 
             <div v-if="currencyStore.isForeignCurrency" class="mb-4 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <span class="material-symbols-outlined text-amber-600 text-sm mt-0.5">info</span>
+              <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
               <span class="text-[11px] text-amber-800 leading-tight">{{ t('payment_usd_notice') }}</span>
             </div>
 
@@ -325,17 +325,17 @@ function getImageUrl(path: string) {
               class="w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
               :class="acceptedTerms ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
             >
-              <span class="material-symbols-outlined text-lg">lock</span>
+              <Icon name="material-symbols:lock-outline" class="text-lg" />
               {{ t('proceed_checkout') }}
             </button>
 
             <!-- Trust -->
             <div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5">
               <div class="flex items-center gap-2 text-[10px] text-slate-400">
-                <span class="material-symbols-outlined text-green-500 text-sm">shield</span> {{ t('secure_payment') }}
+                <Icon name="material-symbols:shield-outline" class="text-green-500 text-sm" /> {{ t('secure_payment') }}
               </div>
               <div class="flex items-center gap-2 text-[10px] text-slate-400">
-                <span class="material-symbols-outlined text-yellow-500 text-sm">bolt</span> {{ t('instant_confirmation') }}
+                <Icon name="material-symbols:bolt-outline" class="text-yellow-500 text-sm" /> {{ t('instant_confirmation') }}
               </div>
             </div>
           </div>
@@ -354,7 +354,7 @@ function getImageUrl(path: string) {
         <!-- Custom policies from admin -->
         <div v-if="policiesItem.policies">
           <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
-            <span class="material-symbols-outlined text-blue-500 text-base">policy</span>
+            <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
             {{ t('tour_policies') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
@@ -362,7 +362,7 @@ function getImageUrl(path: string) {
 
         <div v-if="policiesItem.cancellationPolicy">
           <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
-            <span class="material-symbols-outlined text-red-500 text-base">cancel</span>
+            <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
             {{ t('cancellation_policy') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
@@ -371,7 +371,7 @@ function getImageUrl(path: string) {
         <!-- Standard policy (default when nothing configured) -->
         <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
           <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
-            <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+            <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base" />
             {{ t('standard_policy') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
@@ -385,7 +385,7 @@ function getImageUrl(path: string) {
         <!-- Custom type selected but no content yet -->
         <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
           <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
-            <span class="material-symbols-outlined text-amber-500 text-base">info</span>
+            <Icon name="material-symbols:info-outline" class="text-amber-500 text-base" />
             {{ t('custom_policy') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3">
