@@ -26,6 +26,8 @@
           :key="link.key"
           :to="localePath(link.path)"
           class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group text-slate-600"
+          @mouseenter="prefetchLink(link)"
+          @focus="prefetchLink(link)"
         >
           {{ t(link.key) }}
           <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
@@ -203,6 +205,24 @@ const navLinks = [
   { key: 'about', path: '/about' },
   { key: 'contact', path: '/contact' },
 ]
+
+// Prefetch the tours listing data on hover/focus so the click feels instant.
+// We warm the exact useAsyncData key the listing reads (getCachedData uses
+// nuxtApp.payload.data[key]); on navigation it finds the data and skips the
+// fetch + skeleton. Cheap and self-healing (clears the guard on error).
+const { api } = useApi()
+const nuxtApp = useNuxtApp()
+const prefetched = new Set<string>()
+function prefetchLink(link: { key: string; path: string }) {
+  if (link.key !== 'tours') return
+  const lang = locale.value.toUpperCase()
+  const key = `tours-${lang}-all`
+  if (prefetched.has(key) || (nuxtApp.payload.data && nuxtApp.payload.data[key])) return
+  prefetched.add(key)
+  api(`/tours?per_page=500&active=1&light=1&language=${lang}`)
+    .then((d: any) => { nuxtApp.payload.data[key] = d })
+    .catch(() => { prefetched.delete(key) })
+}
 
 function selectCurrency(code: string) {
   currencyStore.setCurrency(code)
