@@ -139,7 +139,6 @@
             <div class="px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div class="flex items-end justify-between gap-3 flex-wrap">
                 <div>
-                  <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">Desde</p>
                   <div class="flex items-baseline gap-2">
                     <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
                       {{ currencyStore.formatConverted(basePrice || 0) }}
@@ -267,6 +266,17 @@
                 RESERVAR AHORA
                 <ArrowRightIcon class="size-5" aria-hidden="true" />
               </button>
+              <button
+                @click="handleAddToCart"
+                class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
+              >
+                <ShoppingCartIcon class="size-5" aria-hidden="true" />
+                Agregar al carrito
+              </button>
+              <div v-if="addedToCart" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
+                <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
+                Agregado al carrito — puedes seguir navegando
+              </div>
 
               <!-- Trust signals (compact 3-row stack) -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
@@ -401,7 +411,6 @@
               <!-- Price Header — dominant, OTA pattern -->
               <div class="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div class="flex items-baseline gap-1.5 flex-wrap">
-                  <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
                   <span class="text-[32px] leading-none font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
                     {{ currencyStore.formatConverted(basePrice || 0) }}
                   </span>
@@ -552,6 +561,17 @@
                   RESERVAR AHORA
                   <ArrowRightIcon class="size-5" aria-hidden="true" />
                 </button>
+                <button
+                  @click="handleAddToCart"
+                  class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                >
+                  <ShoppingCartIcon class="size-5" aria-hidden="true" />
+                  Agregar al carrito
+                </button>
+                <div v-if="addedToCart" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
+                  <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
+                  Agregado al carrito — puedes seguir navegando
+                </div>
               </div>
             </div>
 
@@ -665,8 +685,7 @@
     <div v-show="showStickyBar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
       <div class="flex items-center justify-between gap-3">
         <div class="leading-tight shrink-0">
-          <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Desde</span>
-          <div class="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">
+          <div class="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none">
             {{ currencyStore.formatConverted(basePrice || 0) }}
           </div>
           <span class="text-[11px] text-slate-500">por persona</span>
@@ -724,6 +743,7 @@ import {
   UsersIcon,
   ArrowRightIcon,
   ShieldCheckIcon,
+  ShoppingCartIcon,
 } from '@heroicons/vue/24/outline'
 import {
   StarIcon as StarSolidIcon,
@@ -1192,30 +1212,21 @@ const guideTypeLabels: Record<string, string> = {
   none: 'None'
 }
 
-function handleBooking() {
-  console.log('=== handleBooking called from [slug].vue ===')
-  
-  // Validate required fields
-  if (!selectedDate.value) {
-    alert('Please select a tour date')
-    return
-  }
+// Add the current configuration (date/time/pax) to the cart and stay on the
+// page. Returns false on missing required fields so the caller can bail out.
+const addedToCart = ref(false)
+let addedToCartTimer: any = null
+function handleAddToCart(): boolean {
+  if (!selectedDate.value) { alert('Please select a tour date'); return false }
+  if (!selectedTime.value) { alert('Please select a departure time'); return false }
 
-  if (!selectedTime.value) {
-    alert('Please select a departure time')
-    return
-  }
-
-  console.log('Validation passed, preparing to add to cart...')
-
-  // Get tour image
   const tourImage = tour.value?.media_gallery && tour.value.media_gallery.length > 0
     ? getImageUrl(tour.value.media_gallery[0].url)
     : ''
 
-  // Add to cart — `total` already accounts for adults, children and any
-  // active offer discount (tax is added downstream by the cart store).
-  const cartItem = {
+  // `total` already accounts for adults, children and any active offer
+  // discount (tax is added downstream by the cart store).
+  cartStore.addItem({
     tourId: tour.value?.id,
     tourTitle: tour.value?.title,
     tourSlug: slug,
@@ -1236,14 +1247,19 @@ function handleBooking() {
     guideType: tour.value?.guide_type || '',
     guideLanguages: getGuideLanguageNames(tour.value?.guide_languages || []),
     durationLabel: durationLabel.value,
+  })
+
+  addedToCart.value = true
+  if (import.meta.client) {
+    clearTimeout(addedToCartTimer)
+    addedToCartTimer = setTimeout(() => { addedToCart.value = false }, 2500)
   }
+  return true
+}
 
-  console.log('Adding to cart:', cartItem)
-  cartStore.addItem(cartItem)
-  console.log('Cart items after add:', cartStore.items.length)
-
-  // Navigate to cart
-  navigateTo('/cart')
+// "Reservar ahora": add to cart and go to checkout.
+function handleBooking() {
+  if (handleAddToCart()) navigateTo('/cart')
 }
 
 
