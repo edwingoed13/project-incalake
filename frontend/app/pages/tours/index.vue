@@ -273,13 +273,12 @@
 
       <!-- DESKTOP: Grid cards -->
       <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div v-for="tour in paginatedTours.data" :key="'d-'+tour.id" class="relative">
         <NuxtLink
-          v-for="tour in paginatedTours.data"
-          :key="'d-'+tour.id"
           :to="getTourLink(tour)"
           @mouseenter="prefetchTour(tour)"
           @focus="prefetchTour(tour)"
-          class="group bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          class="group block bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
           <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
             <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
@@ -288,7 +287,7 @@
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
               <Icon name="material-symbols:schedule-outline" class="text-sm" />{{ formatDuration(tour) }}
             </div>
-            <div v-if="hasActiveOffer(tour)" class="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
+            <div v-if="hasActiveOffer(tour)" class="absolute top-3 left-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
               <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
             </div>
           </div>
@@ -315,13 +314,23 @@
             </div>
           </div>
         </NuxtLink>
+        <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
+        <button
+          @click.stop.prevent="toggleWishlist(tour)"
+          class="absolute top-3 right-3 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+          :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
+          :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
+          :aria-pressed="wishlistStore.has(tour.id)"
+        >
+          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
+        </button>
+        </div>
       </div>
 
       <!-- DESKTOP: List view -->
       <div v-if="filteredTours.length > 0 && viewMode === 'list'" class="hidden md:block space-y-4">
+        <div v-for="tour in paginatedTours.data" :key="'l-'+tour.id" class="relative">
         <NuxtLink
-          v-for="tour in paginatedTours.data"
-          :key="'l-'+tour.id"
           :to="getTourLink(tour)"
           @mouseenter="prefetchTour(tour)"
           @focus="prefetchTour(tour)"
@@ -331,7 +340,7 @@
             <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
               format="webp" width="256" height="176" sizes="256px" />
-            <div v-if="hasActiveOffer(tour)" class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
+            <div v-if="hasActiveOffer(tour)" class="absolute top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
               <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
             </div>
           </div>
@@ -369,6 +378,17 @@
             </div>
           </div>
         </NuxtLink>
+        <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
+        <button
+          @click.stop.prevent="toggleWishlist(tour)"
+          class="absolute top-5 right-5 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+          :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
+          :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
+          :aria-pressed="wishlistStore.has(tour.id)"
+        >
+          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
+        </button>
+        </div>
       </div>
 
       <!-- MOBILE: load more (fluid, no number tapping) -->

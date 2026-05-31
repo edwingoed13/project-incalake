@@ -99,6 +99,35 @@ function proceedToCheckout() {
   router.push(localePath('/checkout'))
 }
 
+// --- Bulk select + delete --------------------------------------------------
+const selectedIds = ref<string[]>([])
+const isSelected = (id: string) => selectedIds.value.includes(id)
+function toggleSelect(id: string) {
+  const i = selectedIds.value.indexOf(id)
+  if (i >= 0) selectedIds.value.splice(i, 1)
+  else selectedIds.value.push(id)
+}
+const allSelected = computed(() =>
+  cartStore.items.length > 0 && selectedIds.value.length === cartStore.items.length
+)
+function toggleSelectAll() {
+  selectedIds.value = allSelected.value ? [] : cartStore.items.map(i => i.id)
+}
+function bulkDelete() {
+  if (!selectedIds.value.length) return
+  if (!confirm(`¿Eliminar ${selectedIds.value.length} ${selectedIds.value.length === 1 ? 'tour' : 'tours'} del carrito?`)) return
+  for (const id of [...selectedIds.value]) cartStore.removeItem(id)
+  selectedIds.value = []
+}
+// Drop selected ids if their items are removed individually.
+watch(() => cartStore.items.map(i => i.id), (ids) => {
+  selectedIds.value = selectedIds.value.filter(id => ids.includes(id))
+})
+
+// --- All-tours policies modal (triggered from the resumen "términos" link) ---
+const showAllPolicies = ref(false)
+const allTourPolicies = computed(() => sortedCartItems.value.map(item => getItemPolicies(item)))
+
 const localeMap: Record<string, string> = {
   es: 'es-PE', en: 'en-US', pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', it: 'it-IT'
 }
@@ -151,11 +180,30 @@ function getImageUrl(path: string) {
       <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Items (2 cols) -->
         <div class="lg:col-span-2 space-y-4">
+          <!-- Bulk select toolbar (only with 2+ items) -->
+          <div v-if="cartStore.itemCount > 1" class="flex items-center justify-between gap-3 bg-white rounded-xl border border-slate-100 px-3 py-2">
+            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-600">
+              <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" class="w-4 h-4 accent-primary rounded" />
+              {{ allSelected ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+            </label>
+            <div v-if="selectedIds.length > 0" class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">{{ selectedIds.length }} {{ selectedIds.length === 1 ? 'seleccionado' : 'seleccionados' }}</span>
+              <button @click="bulkDelete" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <Icon name="material-symbols:delete-outline" class="text-base" /> Eliminar
+              </button>
+            </div>
+          </div>
+
           <div
             v-for="item in sortedCartItems"
             :key="item.id"
-            class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+            class="relative bg-white rounded-2xl shadow-sm border overflow-hidden transition-colors"
+            :class="isSelected(item.id) ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100'"
           >
+            <!-- Per-item selection checkbox -->
+            <label v-if="cartStore.itemCount > 1" class="absolute top-2.5 left-2.5 z-10 flex items-center justify-center w-6 h-6 bg-white/90 backdrop-blur rounded-md cursor-pointer">
+              <input type="checkbox" :checked="isSelected(item.id)" @change="toggleSelect(item.id)" class="w-4 h-4 accent-primary rounded" :aria-label="`Seleccionar ${item.tourTitle}`" />
+            </label>
             <div class="flex gap-4 p-4">
               <!-- Image -->
               <img
@@ -284,6 +332,20 @@ function getImageUrl(path: string) {
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-24">
             <h2 class="text-base font-black mb-4">{{ t('summary') }}</h2>
 
+            <!-- Per-tour mini list with offer badge -->
+            <div class="space-y-2.5 mb-4 pb-4 border-b border-slate-100">
+              <div v-for="item in sortedCartItems" :key="'r-'+item.id" class="flex items-start gap-2">
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-bold text-slate-700 truncate leading-snug">{{ item.tourTitle }}</p>
+                  <span v-if="item.hasOffer" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold mt-1" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
+                    <Icon name="material-symbols:sell-outline" class="text-[10px]" />
+                    {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
+                  </span>
+                </div>
+                <span class="text-xs font-semibold text-slate-700 shrink-0 tabular-nums">{{ currencyStore.formatConverted(item.total) }}</span>
+              </div>
+            </div>
+
             <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
               <div class="flex justify-between text-xs">
                 <span class="text-slate-500">{{ t('tours') }} ({{ cartStore.itemCount }})</span>
@@ -319,8 +381,11 @@ function getImageUrl(path: string) {
 
             <!-- Terms -->
             <label class="flex items-start gap-2 cursor-pointer mb-4 p-3 bg-slate-50 rounded-xl">
-              <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 w-4 h-4 text-primary rounded" />
-              <span class="text-[11px] text-slate-600">{{ t('terms_accept') }} <a href="#" class="text-primary font-semibold">{{ t('terms_link') }}</a> {{ t('terms_policies') }}</span>
+              <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 w-4 h-4 accent-primary rounded" />
+              <span class="text-[11px] text-slate-600">{{ t('terms_accept') }}
+                <button type="button" @click.stop.prevent="showAllPolicies = true" class="text-primary font-semibold hover:underline">{{ t('terms_link') }}</button>
+                {{ t('terms_policies') }}
+              </span>
             </label>
 
             <button
@@ -394,6 +459,44 @@ function getImageUrl(path: string) {
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3">
             <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>
+          </div>
+        </div>
+      </div>
+    </AppModal>
+
+    <!-- All-tours policies modal (triggered from the Resumen "términos" link) -->
+    <AppModal v-model="showAllPolicies" :title="t('terms_conditions')" max-width="max-w-2xl">
+      <div class="space-y-6">
+        <div v-for="(p, idx) in allTourPolicies" :key="idx" class="space-y-3 pb-4" :class="idx < allTourPolicies.length - 1 ? 'border-b border-slate-100' : ''">
+          <p class="text-xs font-bold text-primary uppercase tracking-wider">{{ p.tourTitle }}</p>
+
+          <div v-if="p.policies">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+              <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
+              {{ t('tour_policies') }}
+            </h4>
+            <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="p.policies"></div>
+          </div>
+
+          <div v-if="p.cancellationPolicy">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+              <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
+              {{ t('cancellation_policy') }}
+            </h4>
+            <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="p.cancellationPolicy"></div>
+          </div>
+
+          <div v-if="!p.policies && !p.cancellationPolicy && p.policyType !== 'custom'">
+            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+              <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base" />
+              {{ t('standard_policy') }}
+            </h4>
+            <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
+              <p><strong>Cancelación gratuita</strong> hasta 24 horas antes del inicio del tour, con reembolso completo.</p>
+              <p><strong>No se aceptan cambios</strong> dentro de las 24 horas previas al tour.</p>
+              <p><strong>No-shows</strong> se cobran completos.</p>
+              <p>Todos los tours están sujetos a condiciones climáticas y mínimo de participantes.</p>
+            </div>
           </div>
         </div>
       </div>
