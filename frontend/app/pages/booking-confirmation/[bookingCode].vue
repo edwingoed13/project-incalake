@@ -436,7 +436,11 @@
               <Icon name="material-symbols:celebration-outline" class="text-green-600 text-3xl" />
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-1">{{ t('all_set') }}</h3>
-            <p class="text-xs text-slate-500 mb-5">We'll send you a confirmation email with all the details.<br />See you on {{ formatDate(booking.tour_date) }}!</p>
+            <p class="text-xs text-slate-500 mb-3">We'll send you a confirmation email with all the details.<br />See you on {{ formatDate(booking.tour_date) }}!</p>
+            <div class="inline-flex items-center gap-1.5 mb-5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-semibold">
+              <Icon name="material-symbols:mark-email-read-outline" class="text-sm" />
+              Datos enviados a nuestro equipo
+            </div>
 
             <div class="flex flex-col gap-2">
               <a

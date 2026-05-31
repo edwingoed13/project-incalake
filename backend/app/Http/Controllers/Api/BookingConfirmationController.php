@@ -316,22 +316,35 @@ class BookingConfirmationController extends Controller
      */
     public function notifyTravelersCompleted($bookingId)
     {
-        $cacheKey = "notify:travelers-completed:{$bookingId}";
-        if (Cache::has($cacheKey)) {
-            return response()->json(['success' => true, 'already_sent' => true]);
-        }
-
         try {
             $booking = Booking::with(['tour', 'travelers', 'pickupDetail'])->findOrFail($bookingId);
+
+            // Persistent dedup: once notified, never re-send for this booking,
+            // even if the customer goes back and edits travelers (which they
+            // can — typo fixes, etc.). Cache is the short-term defense, the
+            // payment_data flag is the permanent one (survives deploys/flush).
+            $paymentData = is_array($booking->payment_data) ? $booking->payment_data : [];
+            $cacheKey = "notify:travelers-completed:{$bookingId}";
+            if (!empty($paymentData['travelers_notified_at']) || Cache::has($cacheKey)) {
+                return response()->json([
+                    'success' => true,
+                    'already_sent' => true,
+                    'sent_at' => $paymentData['travelers_notified_at'] ?? null,
+                ]);
+            }
+
             if (!$booking->travelers || $booking->travelers->isEmpty()) {
                 return response()->json(['success' => false, 'message' => 'Sin viajeros para notificar.'], 422);
             }
 
             Mail::to('reservas@incalake.com')->send(new BookingTravelersCompletedMail($booking));
+
+            $paymentData['travelers_notified_at'] = now()->toIso8601String();
+            $booking->forceFill(['payment_data' => $paymentData])->save();
             Cache::put($cacheKey, true, now()->addHour());
 
             Log::info('Travelers-completed notification sent', ['booking_id' => $bookingId]);
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true, 'sent_at' => $paymentData['travelers_notified_at']]);
         } catch (\Exception $e) {
             Log::error('Error sending travelers-completed mail', ['booking_id' => $bookingId, 'error' => $e->getMessage()]);
             // Don't block the customer flow: respond 200 so the frontend
