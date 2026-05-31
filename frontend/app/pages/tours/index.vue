@@ -689,24 +689,14 @@ function hasActiveOffer(tour: any) {
 }
 
 function getOfferLabel(tour: any) {
-  const o = tour?.offer
-  if (!o) return ''
-  // Upcoming offers carry the start date so the badge reads "15% OFF · 30 may"
-  // instead of pretending the discount is live right now.
-  if (o.is_upcoming && o.start_date) {
-    const dt = new Date(String(o.start_date) + 'T00:00')
-    if (!isNaN(dt.getTime())) {
-      const dateStr = dt.toLocaleDateString(locale.value || 'es', { day: 'numeric', month: 'short' })
-      return `${o.label} · ${dateStr}`
-    }
-  }
-  return o.label
+  return tour?.offer?.label || ''
 }
 
-// True only when the discount is live TODAY and a discounted min_price was
-// computed server-side. Drives the strikethrough+new-price block.
+// Strikethrough + discounted price applies to ANY non-past offer (the backend
+// already excludes past ones). Active offers show the live price drop today;
+// upcoming offers preview what the price will be when the promo kicks in.
 function showDiscountedPrice(tour: any): boolean {
-  return !!(tour?.offer?.is_active && tour?.offer?.discounted_min_price)
+  return !!(tour?.offer && tour?.offer?.discounted_min_price)
 }
 </script>
 
