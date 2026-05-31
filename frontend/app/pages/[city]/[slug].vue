@@ -154,40 +154,7 @@
             </div>
 
             <div class="p-4 space-y-3">
-              <!-- Calendar -->
-              <div>
-                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
-                  Fecha
-                </label>
-                <TourCalendar
-                  v-model="selectedDate"
-                  :min-date="minDate"
-                  :offers="tour?.offers_data || []"
-                  :blocks="tour?.blocks_data || []"
-                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                  :availability-start="tour?.availability_data?.start || ''"
-                  :availability-end="tour?.availability_data?.end || ''"
-                />
-              </div>
-
-              <!-- Time -->
-              <div>
-                <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
-                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    <ClockIcon class="size-4 text-primary" aria-hidden="true" />
-                    Horario
-                  </label>
-                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                    <GlobeAltIcon class="size-3" aria-hidden="true" />
-                    {{ tzInfo.code }} {{ tzInfo.gmt }}
-                  </span>
-                </div>
-                <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
-              </div>
-
-              <!-- Travelers -->
+              <!-- Travelers (first: cliente define el grupo antes de elegir fecha) -->
               <div>
                 <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                   <UsersIcon class="size-4 text-primary" aria-hidden="true" />
@@ -229,6 +196,39 @@
                 </div>
               </div>
 
+              <!-- Calendar -->
+              <div>
+                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                  <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
+                  Fecha
+                </label>
+                <TourCalendar
+                  v-model="selectedDate"
+                  :min-date="minDate"
+                  :offers="tour?.offers_data || []"
+                  :blocks="tour?.blocks_data || []"
+                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                  :availability-start="tour?.availability_data?.start || ''"
+                  :availability-end="tour?.availability_data?.end || ''"
+                />
+              </div>
+
+              <!-- Time -->
+              <div>
+                <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
+                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <ClockIcon class="size-4 text-primary" aria-hidden="true" />
+                    Horario
+                  </label>
+                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                    <GlobeAltIcon class="size-3" aria-hidden="true" />
+                    {{ tzInfo.code }} {{ tzInfo.gmt }}
+                  </span>
+                </div>
+                <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
+              </div>
+
               <!-- Price breakdown + total -->
               <div class="pt-3 border-t border-slate-100 space-y-1.5">
                 <div class="flex justify-between text-xs text-slate-600">
@@ -244,7 +244,7 @@
                   <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
                 </div>
                 <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-100">
-                  <span class="text-sm font-bold text-slate-800">Total</span>
+                  <span class="text-sm font-bold text-slate-800">Subtotal</span>
                   <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
                     {{ currencyStore.formatConverted(total || 0) }}
                     <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
@@ -273,9 +273,13 @@
                 <ShoppingCartIcon class="size-5" aria-hidden="true" />
                 Agregar al carrito
               </button>
-              <div v-if="addedToCart" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
+              <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
                 <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
                 Agregado al carrito — puedes seguir navegando
+              </div>
+              <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
+                <ExclamationCircleIcon class="size-4" aria-hidden="true" />
+                Ya está en tu carrito con esa fecha y hora
               </div>
 
               <!-- Trust signals (compact 3-row stack) -->
@@ -420,48 +424,7 @@
               </div>
 
               <div class="p-4 space-y-3">
-                <!-- Date Selector -->
-                <div>
-                  <label class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                    <span class="inline-flex items-center gap-1.5">
-                      <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
-                      Fecha
-                    </span>
-                  </label>
-                  <TourCalendar
-                    v-model="selectedDate"
-                    :min-date="minDate"
-                    :offers="tour?.offers_data || []"
-                    :blocks="tour?.blocks_data || []"
-                    :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                    :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                    :availability-start="tour?.availability_data?.start || ''"
-                    :availability-end="tour?.availability_data?.end || ''"
-                  />
-                  <div v-if="activeOffer" class="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-trust-soft text-trust">
-                    <TagIcon class="size-3.5" aria-hidden="true" />
-                    <span class="text-xs font-bold">
-                      {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Time Selector -->
-                <div>
-                  <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-                    <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      <ClockIcon class="size-4 text-primary" aria-hidden="true" />
-                      Horario
-                    </label>
-                    <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                      <GlobeAltIcon class="size-3" aria-hidden="true" />
-                      {{ tzInfo.code }} {{ tzInfo.gmt }}
-                    </span>
-                  </div>
-                  <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
-                </div>
-
-                <!-- Travelers -->
+                <!-- Travelers (first: cliente define el grupo antes de elegir fecha) -->
                 <div>
                   <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     <UsersIcon class="size-4 text-primary" aria-hidden="true" />
@@ -527,6 +490,47 @@
                   </div>
                 </div>
 
+                <!-- Date Selector -->
+                <div>
+                  <label class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    <span class="inline-flex items-center gap-1.5">
+                      <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
+                      Fecha
+                    </span>
+                  </label>
+                  <TourCalendar
+                    v-model="selectedDate"
+                    :min-date="minDate"
+                    :offers="tour?.offers_data || []"
+                    :blocks="tour?.blocks_data || []"
+                    :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+                    :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+                    :availability-start="tour?.availability_data?.start || ''"
+                    :availability-end="tour?.availability_data?.end || ''"
+                  />
+                  <div v-if="activeOffer" class="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-trust-soft text-trust">
+                    <TagIcon class="size-3.5" aria-hidden="true" />
+                    <span class="text-xs font-bold">
+                      {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Time Selector -->
+                <div>
+                  <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
+                    <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      <ClockIcon class="size-4 text-primary" aria-hidden="true" />
+                      Horario
+                    </label>
+                    <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
+                      <GlobeAltIcon class="size-3" aria-hidden="true" />
+                      {{ tzInfo.code }} {{ tzInfo.gmt }}
+                    </span>
+                  </div>
+                  <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
+                </div>
+
                 <!-- Compact total -->
                 <div v-if="adults" class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5">
                   <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
@@ -545,7 +549,7 @@
                     <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
                   </div>
                   <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-slate-700">
-                    <span class="text-sm font-bold">Total</span>
+                    <span class="text-sm font-bold">Subtotal</span>
                     <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
                       {{ currencyStore.formatConverted(total || 0) }}
                       <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
@@ -568,9 +572,13 @@
                   <ShoppingCartIcon class="size-5" aria-hidden="true" />
                   Agregar al carrito
                 </button>
-                <div v-if="addedToCart" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
+                <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
                   <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
                   Agregado al carrito — puedes seguir navegando
+                </div>
+                <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
+                  <ExclamationCircleIcon class="size-4" aria-hidden="true" />
+                  Ya está en tu carrito con esa fecha y hora
                 </div>
               </div>
             </div>
@@ -1213,9 +1221,13 @@ const guideTypeLabels: Record<string, string> = {
 }
 
 // Add the current configuration (date/time/pax) to the cart and stay on the
-// page. Returns false on missing required fields so the caller can bail out.
-const addedToCart = ref(false)
-let addedToCartTimer: any = null
+// page. cartFeedback drives a transient inline message: 'added' when the line
+// was created, 'duplicate' when the same tour+date+time is already in the
+// cart (cart store dedupes), or null while idle. Returns false only when
+// required fields are missing (the caller bails out).
+type CartFeedback = 'added' | 'duplicate' | null
+const cartFeedback = ref<CartFeedback>(null)
+let cartFeedbackTimer: any = null
 function handleAddToCart(): boolean {
   if (!selectedDate.value) { alert('Please select a tour date'); return false }
   if (!selectedTime.value) { alert('Please select a departure time'); return false }
@@ -1226,7 +1238,7 @@ function handleAddToCart(): boolean {
 
   // `total` already accounts for adults, children and any active offer
   // discount (tax is added downstream by the cart store).
-  cartStore.addItem({
+  const outcome = cartStore.addItem({
     tourId: tour.value?.id,
     tourTitle: tour.value?.title,
     tourSlug: slug,
@@ -1249,11 +1261,13 @@ function handleAddToCart(): boolean {
     durationLabel: durationLabel.value,
   })
 
-  addedToCart.value = true
+  cartFeedback.value = outcome
   if (import.meta.client) {
-    clearTimeout(addedToCartTimer)
-    addedToCartTimer = setTimeout(() => { addedToCart.value = false }, 2500)
+    clearTimeout(cartFeedbackTimer)
+    cartFeedbackTimer = setTimeout(() => { cartFeedback.value = null }, 3000)
   }
+  // 'added' and 'duplicate' both count as success for the caller (Reservar
+  // flow): in either case the desired tour+date is already in the cart.
   return true
 }
 

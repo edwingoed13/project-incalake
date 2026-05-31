@@ -70,13 +70,24 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
-    addItem(item: Omit<CartItem, 'id'>) {
+    // Returns 'added' when a new line was created, or 'duplicate' when the
+    // same tour for the same date+time is already in the cart (the caller can
+    // then surface "ya está en tu carrito" instead of stacking the same
+    // booking N times). Different date or time → different item, allowed.
+    addItem(item: Omit<CartItem, 'id'>): 'added' | 'duplicate' {
+      const exists = this.items.some(i =>
+        i.tourId === item.tourId
+        && i.selectedDate === item.selectedDate
+        && i.selectedTime === item.selectedTime
+      )
+      if (exists) return 'duplicate'
       const cartItem: CartItem = {
         ...item,
         id: `${item.tourId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       }
       this.items.push(cartItem)
       this.saveToLocalStorage()
+      return 'added'
     },
 
     removeItem(itemId: string) {
