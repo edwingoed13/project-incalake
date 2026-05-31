@@ -46,13 +46,35 @@
         </NuxtLink>
       </div>
 
-      <!-- Saved tours grid (tight OTA-style cards) -->
-      <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+      <!-- Saved tours (toolbar + grid) -->
+      <div v-else>
+        <!-- Bulk select toolbar (only with 2+ items) -->
+        <div v-if="items.length > 1" class="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 mb-3">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <input type="checkbox" :checked="allSelected" @change="toggleSelectAll" class="w-4 h-4 accent-primary rounded" />
+            {{ allSelected ? 'Deseleccionar todos' : 'Seleccionar todos' }}
+          </label>
+          <div v-if="selectedIds.length > 0" class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-500">{{ selectedIds.length }} {{ selectedIds.length === 1 ? 'seleccionado' : 'seleccionados' }}</span>
+            <button @click="bulkDelete" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <TrashIcon class="size-4" /> Quitar
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid (tight OTA-style cards) -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         <article
           v-for="item in items"
           :key="item.id"
-          class="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
+          class="group relative bg-white dark:bg-slate-900 rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
+          :class="isSelected(item.id) ? 'border-primary/50 ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-800'"
         >
+          <!-- Selection checkbox (only with 2+ items) -->
+          <label v-if="items.length > 1" class="absolute top-2 left-2 z-10 flex items-center justify-center w-6 h-6 bg-white/90 backdrop-blur rounded-md cursor-pointer">
+            <input type="checkbox" :checked="isSelected(item.id)" @change="toggleSelect(item.id)" class="w-4 h-4 accent-primary rounded" :aria-label="`Seleccionar ${item.title || 'tour'}`" />
+          </label>
+
           <NuxtLink :to="tourLink(item)" class="relative block aspect-[3/2] overflow-hidden bg-slate-100 dark:bg-slate-800">
             <img
               v-if="item.image"
@@ -64,6 +86,11 @@
             />
             <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
               <PhotoIcon class="size-10" aria-hidden="true" />
+            </div>
+            <!-- Offer badge (live from current listing) -->
+            <div v-if="item.offer" class="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
+              <HeartSolidIcon class="size-2.5" aria-hidden="true" />
+              {{ item.offer.label }}
             </div>
             <button
               @click.stop.prevent="wishlistStore.remove(item.id)"
@@ -86,10 +113,15 @@
             </NuxtLink>
 
             <div class="mt-auto pt-3 flex items-end justify-between gap-2">
-              <div v-if="item.min_price" class="min-w-0">
-                <span class="text-[9px] text-slate-400 font-medium block leading-none">Desde</span>
-                <span class="text-base font-black text-primary">
-                  {{ currencyStore.formatConverted(item.min_price) }}
+              <div v-if="item.min_price" class="min-w-0 leading-tight">
+                <span class="text-[9px] text-slate-400 font-medium block leading-none mb-0.5">Desde</span>
+                <span class="flex items-baseline gap-1 flex-wrap">
+                  <span v-if="showDiscountedPrice(item)" class="text-[10px] line-through text-slate-400">
+                    {{ currencyStore.formatConverted(item.min_price) }}
+                  </span>
+                  <span class="text-base font-black" :class="showDiscountedPrice(item) ? 'text-trust' : 'text-primary'">
+                    {{ currencyStore.formatConverted(showDiscountedPrice(item) ? item.offer.discounted_min_price : item.min_price) }}
+                  </span>
                 </span>
               </div>
               <NuxtLink
@@ -106,6 +138,7 @@
             </p>
           </div>
         </article>
+        </div>
       </div>
     </main>
   </div>
@@ -123,8 +156,62 @@ const wishlistStore = useWishlistStore()
 const currencyStore = useCurrencyStore()
 const localePath = useLocalePath()
 const config = useRuntimeConfig()
+const { locale } = useI18n()
+const { api } = useApi()
 
-const items = computed(() => wishlistStore.items)
+// Live-offer enrichment: the wishlist only persists minimal fields (no offer
+// info, because offers expire/change daily). Pull the current listing (already
+// cached server-side) and merge offer + current min_price by tour id.
+const liveById = ref<Record<number, any>>({})
+onMounted(async () => {
+  if (!wishlistStore.items.length) return
+  try {
+    const res: any = await api(`/tours?light=1&language=${(locale.value || 'es').toUpperCase()}&per_page=300`)
+    const list = Array.isArray(res?.data) ? res.data : []
+    const map: Record<number, any> = {}
+    for (const t of list) if (t?.id) map[Number(t.id)] = t
+    liveById.value = map
+  } catch { /* silent: page still works with the stored data */ }
+})
+
+const items = computed(() =>
+  wishlistStore.items.map((it: any) => {
+    const live = liveById.value[Number(it.id)]
+    if (!live) return it
+    return {
+      ...it,
+      min_price: live.min_price ?? it.min_price,
+      offer: live.offer || null,
+    }
+  })
+)
+
+const showDiscountedPrice = (item: any) => !!(item?.offer && item?.offer?.discounted_min_price)
+
+// --- Bulk select + delete --------------------------------------------------
+const selectedIds = ref<number[]>([])
+const isSelected = (id: number) => selectedIds.value.includes(id)
+function toggleSelect(id: number) {
+  const i = selectedIds.value.indexOf(id)
+  if (i >= 0) selectedIds.value.splice(i, 1)
+  else selectedIds.value.push(id)
+}
+const allSelected = computed(() =>
+  wishlistStore.items.length > 0 && selectedIds.value.length === wishlistStore.items.length
+)
+function toggleSelectAll() {
+  selectedIds.value = allSelected.value ? [] : wishlistStore.items.map(i => i.id)
+}
+function bulkDelete() {
+  if (!selectedIds.value.length) return
+  if (typeof window !== 'undefined' && !window.confirm(`¿Quitar ${selectedIds.value.length} ${selectedIds.value.length === 1 ? 'tour' : 'tours'} de tu lista?`)) return
+  for (const id of [...selectedIds.value]) wishlistStore.remove(id)
+  selectedIds.value = []
+}
+// Auto-prune selection when items disappear (individual remove).
+watch(() => wishlistStore.items.map(i => i.id), (ids) => {
+  selectedIds.value = selectedIds.value.filter(id => ids.includes(id))
+})
 
 function tourLink(item: any) {
   if (item.city_slug && item.slug) return localePath(`/${item.city_slug}/${item.slug}`)
