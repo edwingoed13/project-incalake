@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BookingTravelersCompletedMail;
 use App\Models\Booking;
 use App\Models\BookingPickupDetail;
 use App\Models\Tour;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class BookingConfirmationController extends Controller
 {
@@ -303,6 +306,38 @@ class BookingConfirmationController extends Controller
             'success' => true,
             'data' => $booking->travelers,
         ]);
+    }
+
+    /**
+     * Operator notification: fires once the customer commits the per-passenger
+     * data (Step "Viajeros" → Confirmar). Sends an internal email recapping
+     * pasajeros + recojo + pedidos especiales con un enlace al admin. Deduped
+     * via cache (1h TTL) so retries / SPA double-clicks don't spam the inbox.
+     */
+    public function notifyTravelersCompleted($bookingId)
+    {
+        $cacheKey = "notify:travelers-completed:{$bookingId}";
+        if (Cache::has($cacheKey)) {
+            return response()->json(['success' => true, 'already_sent' => true]);
+        }
+
+        try {
+            $booking = Booking::with(['tour', 'travelers', 'pickupDetail'])->findOrFail($bookingId);
+            if (!$booking->travelers || $booking->travelers->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Sin viajeros para notificar.'], 422);
+            }
+
+            Mail::to('reservas@incalake.com')->send(new BookingTravelersCompletedMail($booking));
+            Cache::put($cacheKey, true, now()->addHour());
+
+            Log::info('Travelers-completed notification sent', ['booking_id' => $bookingId]);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error sending travelers-completed mail', ['booking_id' => $bookingId, 'error' => $e->getMessage()]);
+            // Don't block the customer flow: respond 200 so the frontend
+            // doesn't surface an error. The internal email failure is logged.
+            return response()->json(['success' => false, 'logged' => true]);
+        }
     }
 
     /**

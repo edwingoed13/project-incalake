@@ -1,8 +1,9 @@
 <template>
   <div class="max-w-2xl mx-auto">
     <!-- Loading -->
-    <div v-if="isLoading" class="flex justify-center py-12">
-      <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-8 gap-3 text-center">
+      <div class="size-8 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      <p class="text-xs font-semibold text-slate-500">Cargando opciones de recojo…</p>
     </div>
 
     <div v-else class="space-y-5">
@@ -193,11 +194,28 @@
         </button>
       </div>
 
-      <!-- No options -->
-      <div v-else-if="!tourConfig.enable_hotel_pickup && !tourConfig.enable_meeting_point" class="bg-slate-50 rounded-2xl p-6 text-center">
-        <Icon name="material-symbols:info-outline" class="text-slate-300 text-4xl mb-2" />
-        <p class="text-sm text-slate-500">Este tour no tiene opciones de recojo configuradas. Nos pondremos en contacto contigo con los detalles.</p>
-        <button @click="emit('completed', {})" class="mt-4 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-bold">Continuar</button>
+      <!-- No options: tour without configured pickup/meeting. Surface a
+           direct WhatsApp CTA so the customer can coordinate logistics
+           directly with the operator instead of being told "we'll contact
+           you" with no next step. -->
+      <div v-else-if="!tourConfig.enable_hotel_pickup && !tourConfig.enable_meeting_point" class="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+        <div class="mx-auto size-12 rounded-full bg-green-50 flex items-center justify-center mb-3">
+          <Icon name="material-symbols:chat-outline" class="text-green-600 text-2xl" />
+        </div>
+        <h4 class="text-base font-bold text-slate-800 mb-1">Coordinemos por WhatsApp</h4>
+        <p class="text-sm text-slate-500 max-w-md mx-auto mb-4">Este tour no tiene punto de encuentro ni recojo predefinido. Escríbenos para coordinar el punto y la hora directamente con nuestro equipo.</p>
+        <a
+          :href="`https://wa.me/51982769453?text=${encodeURIComponent('Hola, mi reserva es ' + bookingId + ' y necesito coordinar el punto de encuentro del tour.')}`"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold transition-colors"
+        >
+          <Icon name="material-symbols:chat-outline" class="text-lg" />
+          Contactar por WhatsApp
+        </a>
+        <button @click="emit('completed', {})" class="block mx-auto mt-3 text-xs font-semibold text-slate-500 hover:text-slate-700">
+          Continuar sin coordinar ahora
+        </button>
       </div>
 
       <div v-if="saveError" class="bg-red-50 border border-red-200 rounded-xl p-3">

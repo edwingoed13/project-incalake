@@ -330,7 +330,7 @@
                 :class="i < purchaseTours.length - 1 ? 'border-b border-slate-100' : ''"
               >
                 <button
-                  @click="openTourId = openTourId === tr.id ? null : tr.id"
+                  @click="toggleOpenTour(tr.id)"
                   class="w-full flex items-center justify-between gap-2 p-3 md:p-4 text-left"
                 >
                   <div class="min-w-0">
@@ -341,18 +341,28 @@
                       <template v-else>{{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros</template>
                     </p>
                   </div>
-                  <Icon name="material-symbols:expand-more" :class="openTourId === tr.id ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
+                  <Icon name="material-symbols:expand-more" :class="isOpenTour(tr.id) ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
                 </button>
-                <div v-show="openTourId === tr.id" class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3">
+                <div v-show="isOpenTour(tr.id)" class="px-3 md:px-4 pb-4 border-t border-slate-50 pt-3">
                   <div v-if="purchaseTours.length > 1" class="flex flex-wrap gap-x-4 gap-y-2 mb-3">
+                    <button
+                      type="button"
+                      @click="applyTravelersToAllTours(tr.id)"
+                      :disabled="!(travelersByTour[tr.id]?.[0]?.full_name || '').trim()"
+                      class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Sobrescribe los viajeros de los otros tours con los de este"
+                    >
+                      <Icon name="material-symbols:groups-outline" class="text-sm" />
+                      Aplicar estos viajeros a los demás tours
+                    </button>
                     <button
                       type="button"
                       @click="applyLeaderToAll(tr.id)"
                       :disabled="!(travelersByTour[tr.id]?.[0]?.full_name || '').trim()"
                       class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <Icon name="material-symbols:groups-outline" class="text-sm" />
-                      Usar este responsable en todos los tours
+                      <Icon name="material-symbols:person-outline" class="text-sm" />
+                      Solo el responsable a los demás
                     </button>
                     <button
                       v-if="i > 0"
@@ -586,7 +596,16 @@ function onTourPickupSaved() {
 // Travelers form
 const travelers = ref<any[]>([])                       // single-tour purchase
 const travelersByTour = ref<Record<number, any[]>>({}) // multi-tour: keyed by booking id
-const openTourId = ref<number | null>(null)
+// Tours expandidos en el paso de viajeros. Set de IDs para permitir varios
+// abiertos a la vez (antes era single-selection, lo que obligaba a cerrar
+// uno para abrir otro y dificultaba comparar/copiar datos entre tours).
+const openTourIds = ref<number[]>([])
+const isOpenTour = (id: number) => openTourIds.value.includes(id)
+function toggleOpenTour(id: number) {
+  const i = openTourIds.value.indexOf(id)
+  if (i >= 0) openTourIds.value.splice(i, 1)
+  else openTourIds.value.push(id)
+}
 const savingTravelers = ref(false)
 const travelerError = ref<string | null>(null)
 const showErrors = ref(false)                              // flip on after a failed submit → inline field highlights
@@ -692,6 +711,25 @@ function applyLeaderToAll(sourceTourId: number) {
   }
 }
 
+// Copy EVERY traveler (not just the leader) from the source tour into every
+// other tour, slot by slot, trimmed to each tour's own pax cap. Useful when
+// the same group is doing multiple tours of the purchase.
+function applyTravelersToAllTours(sourceTourId: number) {
+  const src = travelersByTour.value[sourceTourId] || []
+  if (!src.length || !src[0]?.full_name?.trim()) return
+  if (typeof window !== 'undefined' && !window.confirm('¿Copiar todos los viajeros de este tour a los demás? Sobrescribirá los datos ya cargados en los otros.')) return
+  for (const tr of purchaseTours.value) {
+    if (tr.id === sourceTourId) continue
+    const cap = tourMax(tr)
+    const copy = src.slice(0, cap).map((x: any, idx: number) => ({
+      ...x,
+      extra_data: { ...(x.extra_data || {}) },
+      is_leader: idx === 0,
+    }))
+    if (copy.length) travelersByTour.value[tr.id] = copy
+  }
+}
+
 // Lead-traveler validation: the admin-configured fields are required only for
 // the leader (other pax stay optional). Returns the first missing field's
 // label, or null when complete.
@@ -712,7 +750,10 @@ watch(booking, async (b) => {
     for (const tr of purchaseTours.value) {
       travelersByTour.value[tr.id] = seedTravelers(tr.adults, tr.children, b.customer?.name)
     }
-    openTourId.value = purchaseTours.value[0]?.id ?? null
+    // Open all tours by default in multi-tour: customers tend to fill them
+    // in parallel rather than one-by-one, and they can collapse what they
+    // don't need.
+    openTourIds.value = purchaseTours.value.map((tr: any) => tr.id).filter(Boolean)
     let anySaved = false
     await Promise.all(purchaseTours.value.map(async (tr: any) => {
       try {
@@ -795,7 +836,8 @@ function skipStep(step: number) {
 // Open + scroll to the tour that failed validation, and turn on inline errors.
 function failTour(id: number) {
   showErrors.value = true
-  openTourId.value = id
+  // Ensure the failed tour is open (don't close others if they were already).
+  if (!openTourIds.value.includes(id)) openTourIds.value.push(id)
   if (import.meta.client) {
     nextTick(() => document.getElementById('traveler-tour-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
@@ -855,17 +897,27 @@ async function commitTravelers() {
   reviewOpen.value = false
   savingTravelers.value = true
   try {
+    const ids: number[] = []
     if (isMultiTour.value) {
       for (const tr of purchaseTours.value) {
         const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
         await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+        if (tr.id) ids.push(tr.id)
       }
     } else {
       const valid = travelers.value.filter(tr => tr.full_name?.trim())
       await api(`/bookings/${booking.value.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+      if (booking.value?.id) ids.push(booking.value.id)
     }
     completedSteps.value.add(2)
     currentStep.value = 3
+
+    // Operator notification (fire-and-forget — backend dedupes via cache so
+    // a retry or accidental double-click won't spam reservations@). We don't
+    // await it: the customer continues to step 3 even if the email fails.
+    for (const id of ids) {
+      api(`/bookings/${id}/notify-completed`, { method: 'POST' }).catch(() => {})
+    }
   } catch (e: any) {
     travelerError.value = t('error_saving')
   } finally {

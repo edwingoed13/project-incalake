@@ -159,6 +159,21 @@ function remove(idx: number) {
             <p v-if="fieldInvalid(traveler, key)" class="text-[10px] text-red-500 mt-1">Requerido</p>
           </div>
         </template>
+
+        <!-- Optional special-requests note. Always shown (not admin-config
+             driven): the customer can leave dietary/access/etc. requests so
+             the operator can prepare. Saved into extra_data.special_requests. -->
+        <div class="md:col-span-2">
+          <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+            Pedidos especiales <span class="font-normal normal-case text-slate-400">(opcional)</span>
+          </label>
+          <textarea
+            v-model="traveler.extra_data.special_requests"
+            rows="2"
+            placeholder="Ej: vegetariano, alérgico a frutos secos, silla extra…"
+            class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          ></textarea>
+        </div>
       </div>
     </div>
 

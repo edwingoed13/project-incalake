@@ -245,6 +245,8 @@ Route::prefix('bookings')->group(function () {
         ->name('api.bookings.travelers');
     Route::post('/{id}/travelers', [BookingConfirmationController::class, 'saveTravelers'])
         ->name('api.bookings.save-travelers');
+    Route::post('/{id}/notify-completed', [BookingConfirmationController::class, 'notifyTravelersCompleted'])
+        ->name('api.bookings.notify-completed');
     Route::get('/{id}/full-details', [BookingConfirmationController::class, 'getFullDetails'])
         ->name('api.bookings.full-details');
 });
