@@ -242,7 +242,14 @@
               <div class="flex items-end justify-between mt-2">
                 <div class="leading-tight">
                   <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
-                  <span class="text-base font-black text-slate-900">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
+                  <span class="flex items-baseline gap-1">
+                    <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-400">
+                      {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                    </span>
+                    <span class="text-base font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-slate-900'">
+                      {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                    </span>
+                  </span>
                   <span class="text-[9px] text-slate-400">{{ t('per_person') }}</span>
                 </div>
                 <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 shrink-0">
@@ -293,7 +300,14 @@
             <div class="flex items-end justify-between pt-3 border-t border-slate-100">
               <div>
                 <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
-                <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
+                <span class="flex items-baseline gap-1.5">
+                  <span v-if="showDiscountedPrice(tour)" class="text-xs line-through text-slate-400">
+                    {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                  </span>
+                  <span class="text-lg font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
+                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                  </span>
+                </span>
               </div>
               <span class="text-xs font-bold text-primary opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                 {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
@@ -340,7 +354,14 @@
             <div class="flex items-end justify-between mt-2">
               <div>
                 <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
-                <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0, false) }}</span>
+                <span class="flex items-baseline gap-2">
+                  <span v-if="showDiscountedPrice(tour)" class="text-sm line-through text-slate-400">
+                    {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                  </span>
+                  <span class="text-xl font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
+                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                  </span>
+                </span>
               </div>
               <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                 {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
@@ -660,14 +681,32 @@ function toggleWishlist(tour: any) {
   })
 }
 
-// The card now gets a precomputed `offer` ({ label }) from the API instead of
-// the full availability_data (which was ~53% of the listing payload).
+// The card now gets a precomputed `offer` ({ label, discount, discount_type,
+// start_date, end_date, is_active, is_upcoming, discounted_min_price }) from
+// the API instead of the full availability_data (~53% of the listing payload).
 function hasActiveOffer(tour: any) {
   return !!tour.offer
 }
 
 function getOfferLabel(tour: any) {
-  return tour.offer?.label || ''
+  const o = tour?.offer
+  if (!o) return ''
+  // Upcoming offers carry the start date so the badge reads "15% OFF · 30 may"
+  // instead of pretending the discount is live right now.
+  if (o.is_upcoming && o.start_date) {
+    const dt = new Date(String(o.start_date) + 'T00:00')
+    if (!isNaN(dt.getTime())) {
+      const dateStr = dt.toLocaleDateString(locale.value || 'es', { day: 'numeric', month: 'short' })
+      return `${o.label} · ${dateStr}`
+    }
+  }
+  return o.label
+}
+
+// True only when the discount is live TODAY and a discounted min_price was
+// computed server-side. Drives the strikethrough+new-price block.
+function showDiscountedPrice(tour: any): boolean {
+  return !!(tour?.offer?.is_active && tour?.offer?.discounted_min_price)
 }
 </script>
 

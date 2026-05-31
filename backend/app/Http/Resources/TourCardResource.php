@@ -47,13 +47,12 @@ class TourCardResource extends JsonResource
             }
         }
 
-        // Active-offer badge only. Shipping the full availability_data (calendar,
-        // blocks, every offer with dates/colors) was ~53% of the listing payload,
-        // yet the card just needs "is there an active offer + its label". The
-        // badge shows ONLY while today falls inside the offer window
-        // [startDate, endDate] (Lima time, matching how the admin enters dates),
-        // so an offer "for May 30" doesn't appear days early. The listing cache
-        // key carries this same date, so the badge flips on the right day.
+        // Offer badge. We surface BOTH currently-active offers and upcoming
+        // ones (anything whose endDate >= today in Lima time), so a tour with
+        // a promo coming up still flags it on the listing. Past offers are
+        // skipped. Among valid offers we prefer the one active right now;
+        // otherwise we take the soonest upcoming. The listing cache key
+        // carries today's date, so badges flip on the correct day.
         $offer = null;
         $av = $this->availability_data;
         if (is_string($av)) {
@@ -61,16 +60,51 @@ class TourCardResource extends JsonResource
         }
         $offers = is_array($av) ? ($av['offers'] ?? []) : [];
         $today = now('America/Lima')->toDateString();
-        foreach ($offers as $o) {
-            if (($o['startDate'] ?? '') <= $today && ($o['endDate'] ?? '') >= $today) {
-                $discount = $o['discount'] ?? 0;
-                $offer = [
-                    'label' => (($o['discountType'] ?? '') === 'percentage')
-                        ? $discount . '% OFF'
-                        : '$' . $discount . ' OFF',
-                ];
-                break;
+
+        $valid = array_values(array_filter(
+            $offers,
+            fn ($o) => ($o['endDate'] ?? '') >= $today
+        ));
+        usort($valid, fn ($a, $b) => ($a['startDate'] ?? '') <=> ($b['startDate'] ?? ''));
+
+        $picked = null;
+        foreach ($valid as $o) {
+            if (($o['startDate'] ?? '') <= $today) { $picked = $o; break; }
+        }
+        if (!$picked && !empty($valid)) {
+            $picked = $valid[0];
+        }
+
+        if ($picked) {
+            $rawDiscount = (float) ($picked['discount'] ?? 0);
+            $isPercentage = ($picked['discountType'] ?? '') === 'percentage';
+            $isActive = ($picked['startDate'] ?? '') <= $today;
+
+            // Round the discount to integer for the label (most offers are
+            // whole numbers; avoids "15.00% OFF").
+            $label = $isPercentage
+                ? (rtrim(rtrim(number_format($rawDiscount, 2, '.', ''), '0'), '.') . '% OFF')
+                : ('$' . rtrim(rtrim(number_format($rawDiscount, 2, '.', ''), '0'), '.') . ' OFF');
+
+            // Discounted min price (for the listing strikethrough). Computed
+            // server-side so every surface that consumes the resource agrees.
+            $discountedMinPrice = null;
+            if ($minPrice !== null && $minPrice > 0) {
+                $discountedMinPrice = $isPercentage
+                    ? round((float) $minPrice * (1 - $rawDiscount / 100), 2)
+                    : round(max(0.0, (float) $minPrice - $rawDiscount), 2);
             }
+
+            $offer = [
+                'label' => $label,
+                'discount' => $rawDiscount,
+                'discount_type' => $isPercentage ? 'percentage' : 'fixed',
+                'start_date' => $picked['startDate'] ?? null,
+                'end_date' => $picked['endDate'] ?? null,
+                'is_active' => $isActive,
+                'is_upcoming' => !$isActive,
+                'discounted_min_price' => $discountedMinPrice,
+            ];
         }
 
         return [
