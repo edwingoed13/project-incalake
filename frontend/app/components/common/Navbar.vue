@@ -110,10 +110,11 @@
 
         <!-- Cart Icon -->
         <NuxtLink :to="localePath('/cart')" class="relative p-2 text-slate-600 hover:text-primary transition-colors">
-          <Icon name="material-symbols:shopping-cart-outline" class="text-xl" />
+          <Icon name="material-symbols:shopping-cart-outline" class="text-xl inline-block origin-center" :class="{ 'cart-bump': bumpCart }" />
           <span
             v-if="cartStore.itemCount > 0"
-            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
+            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm origin-center"
+            :class="{ 'cart-bump': bumpCart }"
           >
             {{ cartStore.itemCount }}
           </span>
@@ -242,6 +243,24 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
+
+// "Cart bumped" feedback: bounces the cart icon + badge when the item count
+// goes up. Watches count instead of "addItem called" so it also fires from
+// flows that don't go through this component (cart restore on hydrate is
+// ignored because the first immediate value is captured as the baseline).
+const bumpCart = ref(false)
+let bumpTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => cartStore.itemCount, (next, prev) => {
+  if (next > (prev ?? 0)) {
+    bumpCart.value = false
+    if (bumpTimer) clearTimeout(bumpTimer)
+    // next tick so removing + re-adding the class restarts the animation
+    requestAnimationFrame(() => {
+      bumpCart.value = true
+      bumpTimer = setTimeout(() => { bumpCart.value = false }, 700)
+    })
+  }
+})
 </script>
 
 <style scoped>
@@ -253,5 +272,21 @@ onUnmounted(() => {
 .slide-down-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+/* Cart "bump" — fires when itemCount increases. Subtle scale + slight tilt,
+   600ms cubic-bezier with overshoot. Falls back to no-animation if the user
+   prefers reduced motion. */
+.cart-bump {
+  animation: cart-bump 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes cart-bump {
+  0%   { transform: scale(1) rotate(0deg); }
+  25%  { transform: scale(1.25) rotate(-8deg); }
+  55%  { transform: scale(0.92) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-bump { animation: none; }
 }
 </style>

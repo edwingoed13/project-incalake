@@ -221,15 +221,19 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
     const isHoliday = props.specialDays.includes(ddmm)
     const isBlocked = rangeBlocked || isHoliday || isBeforeRange || isAfterRange
     const isActiveDay = props.activeDays.includes(dayOfWeek)
+    const isDisabled = isPast || isBlocked || !isActiveDay
     const matchingOffer = props.offers.find(o => dateStr >= o.startDate && dateStr <= o.endDate)
 
     days.push({
       day: d,
       date: dateStr,
-      disabled: isPast || isBlocked || !isActiveDay,
+      disabled: isDisabled,
       isToday: dateStr === todayStr,
       isSelected: dateStr === props.modelValue,
-      hasOffer: !!matchingOffer && !isPast,
+      // Only badge offers on actually selectable days: a "%" on top of a
+      // blocked / past / inactive day reads as "available with discount" and
+      // confuses the user.
+      hasOffer: !!matchingOffer && !isDisabled,
       offerColor: matchingOffer?.color || '#f59e0b',
       isBlocked,
       isPast,
