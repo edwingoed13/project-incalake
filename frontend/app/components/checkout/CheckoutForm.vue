@@ -265,47 +265,39 @@ const modalTitle = computed(() => {
         </p>
       </div>
 
-      <!-- Customer Notes -->
-      <div>
-        <label for="customer_notes" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-          {{ t('checkout.notes') }}
-        </label>
-        <textarea
-          id="customer_notes"
-          v-model="customerNotes"
-          rows="3"
-          class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
-          :placeholder="t('checkout.notes_placeholder')"
-        ></textarea>
-      </div>
+      <!-- Customer notes intentionally removed from checkout: any per-traveler
+           notes (special needs, dietary restrictions, etc.) are collected on
+           the booking-confirmation page after payment, per passenger, where
+           they belong. `customerNotes` ref stays empty to keep the submit
+           payload contract intact. -->
 
       <!-- Payment Method -->
       <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
           {{ t('checkout.payment_method') }}
         </label>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label
-            class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all"
+            class="flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all"
             :class="paymentMethod === 'culqi' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
           >
             <input type="radio" v-model="paymentMethod" value="culqi" class="sr-only" />
-            <Icon name="material-symbols:credit-card-outline" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'" class="text-2xl" />
-            <span class="text-sm font-bold" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">{{ t('checkout.card') }}</span>
-            <div class="flex items-center gap-1">
+            <Icon name="material-symbols:credit-card-outline" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-400'" class="text-xl shrink-0" />
+            <span class="text-sm font-bold shrink-0" :class="paymentMethod === 'culqi' ? 'text-primary' : 'text-slate-700 dark:text-slate-300'">{{ t('checkout.card') }}</span>
+            <div class="flex items-center gap-1 ml-auto">
               <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#1a1f71]">VISA</span>
               <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#eb001b]">MC</span>
               <span class="px-1.5 py-0.5 rounded text-[8px] font-black tracking-wide bg-white border border-slate-200 text-[#006fcf]">AMEX</span>
             </div>
           </label>
           <label
-            class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all"
+            class="flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all"
             :class="paymentMethod === 'paypal' ? 'border-[#0070ba] bg-[#0070ba]/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
           >
             <input type="radio" v-model="paymentMethod" value="paypal" class="sr-only" />
-            <Icon name="material-symbols:account-balance-wallet-outline" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-400'" class="text-2xl" />
-            <span class="text-sm font-bold" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-700 dark:text-slate-300'">PayPal</span>
-            <span class="text-[10px] text-slate-500">{{ t('checkout.paypal_or_card') }}</span>
+            <Icon name="material-symbols:account-balance-wallet-outline" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-400'" class="text-xl shrink-0" />
+            <span class="text-sm font-bold shrink-0" :class="paymentMethod === 'paypal' ? 'text-[#0070ba]' : 'text-slate-700 dark:text-slate-300'">PayPal</span>
+            <span class="text-[10px] text-slate-500 ml-auto truncate">{{ t('checkout.paypal_or_card') }}</span>
           </label>
         </div>
       </div>
