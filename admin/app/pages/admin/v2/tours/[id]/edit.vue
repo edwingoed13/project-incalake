@@ -140,6 +140,14 @@ const autosaveColor = computed<'warning' | 'success' | 'info' | 'neutral'>(() =>
 const lastStepKey = computed(() => `wizard:lastStep:${route.params.id}`)
 
 onMounted(async () => {
+  // For /new, wipe any state inherited from a previously edited tour.
+  // Without this, opening "Nuevo tour" after editing tour 306 shows tour 306
+  // pre-filled, and the draft autosave would clone it as a new tour. Must run
+  // BEFORE the lang/step setup below so those settings aren't overwritten.
+  if (route.params.id === 'new') {
+    store.resetWizard()
+  }
+
   const langParam = (route.query.lang as string)?.toLowerCase()
   if (langParam) {
     store.currentLanguage = langParam
@@ -200,6 +208,10 @@ watch(() => store.isDirty, (dirty) => {
   const isNew = !store.tourId || store.tourId === 'new'
   if (isNew) {
     if (firstSaveInFlight) return
+    // Defense-in-depth: never create a draft from empty/leaked state. A real
+    // new tour starts with a title; if title is blank, this is either initial
+    // mount or stale state we shouldn't persist.
+    if (!String(store.basicInfo.title || '').trim()) return
     autosaveTimer = setTimeout(async () => {
       autosaveTimer = null
       firstSaveInFlight = true

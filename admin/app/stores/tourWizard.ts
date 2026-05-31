@@ -426,6 +426,22 @@ export const useTourWizardStore = defineStore('tourWizard', {
     setTourId(id: string) {
       this.tourId = id
     },
+
+    // Wipe wizard state so a "new tour" route doesn't inherit the previously
+    // edited tour. Pinia Options stores ship $reset() which re-runs state();
+    // also purge the per-route localStorage keys we set for /new.
+    resetWizard() {
+      this.$reset()
+      if (typeof window !== 'undefined') {
+        try {
+          for (const k of Object.keys(localStorage)) {
+            if (k.startsWith('wizard:focus:new:') || k === 'wizard:lastStep:new') {
+              localStorage.removeItem(k)
+            }
+          }
+        } catch { /* quota or storage disabled — non-fatal */ }
+      }
+    },
     
     nextStep() {
       if (this.currentStep < this.totalSteps) {
