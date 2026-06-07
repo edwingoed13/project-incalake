@@ -8,11 +8,10 @@ use App\Models\Booking;
 use App\Models\Tour;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use App\Mail\BookingConfirmationEmail;
-use App\Mail\GroupBookingConfirmationEmail;
-use App\Services\GoogleCalendarService;
+// SendPaymentConfirmationJob handles the post-payment Mail::send +
+// GoogleCalendarService::createBookingEvent calls now, so those classes are
+// no longer used directly from this controller.
 
 class BookingController extends Controller
 {
@@ -433,8 +432,11 @@ class BookingController extends Controller
             }
 
             // One successful charge covers the whole group. Mark every booking
-            // paid against the same charge and add a SEPARATE Google Calendar
-            // event per tour/date (per client request — calendar stays split).
+            // paid synchronously (atomic + customer-visible); push the side-
+            // effects (calendar event + customer email + admin email) to a
+            // background job so the API response returns in <500ms instead
+            // of ~8s. The job auto-runs on the queue worker (cron) when
+            // QUEUE_CONNECTION=database; on sync (dev) it inlines.
             foreach ($bookings as $b) {
                 $b->markAsPaid($chargeId, [
                     'token' => $culqiToken,
@@ -450,57 +452,14 @@ class BookingController extends Controller
                     'charge_id' => $chargeId,
                     'group_size' => $bookings->count(),
                 ]);
-
-                // Admin Google Calendar event — one per tour (non-blocking).
-                try {
-                    $calendarService = new GoogleCalendarService();
-                    $calendarService->createBookingEvent([
-                        'booking_code'    => $b->booking_code,
-                        'tour_title'      => $b->tour_title,
-                        'tour_date'       => \Carbon\Carbon::parse($b->tour_date)->format('Y-m-d'),
-                        'tour_time'       => \Carbon\Carbon::parse($b->tour_time)->format('H:i:s'),
-                        'adults'          => $b->adults,
-                        'children'        => $b->children,
-                        'customer_name'   => $b->customer_name,
-                        'customer_email'  => $b->customer_email,
-                        'customer_phone'  => $b->customer_phone,
-                        'total'           => $b->total,
-                        'currency'        => $b->currency,
-                        'payment_method'  => $b->payment_method ?? 'culqi',
-                    ]);
-                } catch (\Exception $calException) {
-                    \Log::error('Failed to create Google Calendar event', [
-                        'booking_id' => $b->id,
-                        'error' => $calException->getMessage()
-                    ]);
-                }
             }
 
-            // ONE confirmation email for the whole purchase (non-blocking).
-            // Single tour -> existing per-booking template (unchanged).
-            // Multi-tour -> one consolidated email listing every tour.
-            try {
-                $freshGroup = $bookings->map(fn ($b) => $b->fresh());
-                // Culqi charges the FULL group total (no advance split).
-                $paidNow = round($amountInCents / 100, 2);
-                if ($freshGroup->count() === 1) {
-                    $single = $freshGroup->first();
-                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $paidNow));
-                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $paidNow));
-                } else {
-                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false, $paidNow));
-                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true, $paidNow));
-                }
-                \Log::info('Confirmation email sent', [
-                    'group_size' => $freshGroup->count(),
-                    'booking_ids' => $freshGroup->pluck('id')->all(),
-                ]);
-            } catch (\Exception $mailException) {
-                \Log::error('Failed to send confirmation email', [
-                    'booking_ids' => $bookings->pluck('id')->all(),
-                    'error' => $mailException->getMessage()
-                ]);
-            }
+            // Culqi charges the FULL group total (no advance split).
+            \App\Jobs\SendPaymentConfirmationJob::dispatch(
+                $bookings->pluck('id')->all(),
+                'culqi',
+                round($amountInCents / 100, 2)
+            );
 
             return response()->json([
                 'success' => true,
@@ -639,7 +598,8 @@ class BookingController extends Controller
             $transactionId = $paypal->getTransactionId($captureResponse) ?? $orderId;
 
             // 4. One capture covers the whole group — mark every booking paid
-            // and add a SEPARATE Google Calendar event per tour/date.
+            // synchronously (atomic, customer-visible), then push calendar +
+            // emails to the queue. Same async pattern as the Culqi flow.
             foreach ($bookings as $b) {
                 $b->markAsPaid($transactionId, [
                     'order_id' => $orderId,
@@ -651,56 +611,15 @@ class BookingController extends Controller
                     'group_total_captured' => $capturedAmount,
                     'group_booking_ids' => $bookings->pluck('id')->all(),
                 ]);
-
-                try {
-                    $calendarService = new GoogleCalendarService();
-                    $calendarService->createBookingEvent([
-                        'booking_code'    => $b->booking_code,
-                        'tour_title'      => $b->tour_title,
-                        'tour_date'       => \Carbon\Carbon::parse($b->tour_date)->format('Y-m-d'),
-                        'tour_time'       => \Carbon\Carbon::parse($b->tour_time)->format('H:i:s'),
-                        'adults'          => $b->adults,
-                        'children'        => $b->children,
-                        'customer_name'   => $b->customer_name,
-                        'customer_email'  => $b->customer_email,
-                        'customer_phone'  => $b->customer_phone,
-                        'total'           => $b->total,
-                        'currency'        => $b->currency,
-                        'payment_method'  => 'paypal',
-                    ]);
-                } catch (\Exception $calException) {
-                    \Log::error('Failed to create Google Calendar event (PayPal)', [
-                        'booking_id' => $b->id,
-                        'error' => $calException->getMessage()
-                    ]);
-                }
             }
 
-            // ONE confirmation email for the whole purchase (non-blocking).
-            // Single tour -> existing template; multi-tour -> consolidated.
-            try {
-                $freshGroup = $bookings->map(fn ($b) => $b->fresh());
-                // PayPal captured the real amount (may be an advance if the
-                // tour uses advance_payment_percentage < 100).
-                $paidNow = round((float) $capturedAmount, 2);
-                if ($freshGroup->count() === 1) {
-                    $single = $freshGroup->first();
-                    Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $paidNow));
-                    Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $paidNow));
-                } else {
-                    Mail::to($freshGroup->first()->customer_email)->send(new GroupBookingConfirmationEmail($freshGroup, false, $paidNow));
-                    Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($freshGroup, true, $paidNow));
-                }
-                \Log::info('Confirmation email sent (PayPal)', [
-                    'group_size' => $freshGroup->count(),
-                    'booking_ids' => $freshGroup->pluck('id')->all(),
-                ]);
-            } catch (\Exception $mailException) {
-                \Log::error('Failed to send confirmation email (PayPal)', [
-                    'booking_ids' => $bookings->pluck('id')->all(),
-                    'error' => $mailException->getMessage()
-                ]);
-            }
+            // PayPal captured the real amount (may be an advance if the
+            // tour uses advance_payment_percentage < 100).
+            \App\Jobs\SendPaymentConfirmationJob::dispatch(
+                $bookings->pluck('id')->all(),
+                'paypal',
+                round((float) $capturedAmount, 2)
+            );
 
             return response()->json([
                 'success' => true,
