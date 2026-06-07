@@ -14,7 +14,13 @@
       </span>
     </header>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <!-- 3-or-fewer: equal-width grid. 4+: horizontal snap scroll (slider) so
+         users discover extra options with a left/right swipe — no overflow. -->
+    <div
+      :class="useSlider
+        ? 'flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 scrollbar-thin'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'"
+    >
       <button
         v-for="opt in options"
         :key="opt.id"
@@ -22,10 +28,13 @@
         @click="!opt.is_current && emit('select', opt)"
         :aria-pressed="opt.is_current"
         :disabled="opt.is_current"
-        class="relative group flex flex-col gap-2 p-3.5 rounded-xl border-2 text-left transition-all"
-        :class="opt.is_current
-          ? 'border-primary bg-primary/5 cursor-default'
-          : 'border-slate-200 hover:border-primary hover:shadow-md cursor-pointer bg-white active:scale-[0.99]'"
+        :class="[
+          'relative group flex flex-col gap-2.5 p-4 rounded-xl border-2 text-left transition-all',
+          useSlider ? 'shrink-0 basis-[200px] snap-start' : '',
+          opt.is_current
+            ? 'border-primary bg-primary/5 cursor-default'
+            : 'border-slate-200 hover:border-primary hover:shadow-md cursor-pointer bg-white active:scale-[0.99]'
+        ]"
       >
         <span v-if="opt.is_current"
           class="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary text-white text-[9px] font-black rounded-full">
@@ -33,26 +42,30 @@
           {{ t('options_selected') }}
         </span>
 
-        <div class="flex items-center gap-1.5">
+        <!-- Option label is the primary identifier — the activity name is
+             already on the page H1, so we don't repeat it inside each card. -->
+        <div>
           <span
-            class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+            class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider"
             :class="badgeClasses(opt.option_color)"
           >
             {{ opt.option_label || (opt.is_parent ? t('options_default') : t('options_variant')) }}
           </span>
         </div>
 
-        <h3 class="text-sm font-bold text-slate-800 line-clamp-2 leading-snug pr-12">{{ opt.h1_title }}</h3>
+        <p class="text-[11px] text-slate-500 leading-snug pr-10">
+          {{ optionDescription(opt) }}
+        </p>
 
-        <div class="mt-auto pt-2 border-t border-slate-100 flex items-end justify-between">
-          <div>
-            <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
-            <span class="text-lg font-black"
+        <div class="mt-auto pt-3 border-t border-slate-100 flex items-end justify-between gap-2">
+          <div class="leading-tight">
+            <span class="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">{{ t('from') }}</span>
+            <span class="text-xl font-black"
               :class="opt.is_current ? 'text-primary' : 'text-slate-900'">
               {{ opt.min_price ? currencyStore.formatConverted(opt.min_price, false) : '—' }}
             </span>
           </div>
-          <span v-if="!opt.is_current" class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
+          <span v-if="!opt.is_current" class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 group-hover:gap-1.5 transition-all shrink-0">
             {{ t('options_pick') }}
             <Icon name="material-symbols:arrow-forward" class="text-sm" />
           </span>
@@ -85,6 +98,21 @@ const { t } = useI18n()
 const currencyStore = useCurrencyStore()
 
 const hasOptions = computed(() => Array.isArray(props.options) && props.options.length >= 2)
+const useSlider = computed(() => (props.options?.length || 0) > 3)
+
+// Static, label-driven descriptions: the variant label already carries the
+// product intent (Compartido / +Guía / Privado), so we map it to a short
+// sentence that explains the differentiator instead of repeating the full
+// activity name (which is already on the page H1). Falls back to the h1
+// title shortened when the label is unknown, so unconfigured options
+// degrade gracefully.
+function optionDescription(opt: TourOption): string {
+  const label = (opt.option_label || '').toLowerCase()
+  if (label.includes('privado') && !label.includes('guía') && !label.includes('guia')) return t('options_desc_private')
+  if (label.includes('guía') || label.includes('guia')) return t('options_desc_guided')
+  if (label.includes('compartido') || label.includes('shared')) return t('options_desc_shared')
+  return (opt.h1_title || '').replace(/^Tour\s+/i, '')
+}
 
 // Map admin-friendly color tokens to Tailwind classes for the option badge.
 // Falls back to slate when the token isn't recognized so a typo doesn't
@@ -101,3 +129,10 @@ function badgeClasses(color?: string | null): string {
   }
 }
 </script>
+
+<style scoped>
+/* Slim scrollbar on the slider — visible but unobtrusive */
+.scrollbar-thin::-webkit-scrollbar { height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgb(203 213 225); border-radius: 999px; }
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgb(203 213 225) transparent; }
+</style>
