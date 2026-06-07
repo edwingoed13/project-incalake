@@ -120,7 +120,7 @@
                     <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">Incluye</p>
                     <ul class="space-y-1">
                       <li v-for="(it, k) in tourIncludesList(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-[13px] text-slate-700">
-                        <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-sm shrink-0 mt-0.5" />
+                        <span class="inline-block size-1.5 rounded-full bg-green-500 shrink-0 mt-[7px]" aria-hidden="true"></span>
                         <span>{{ it }}</span>
                       </li>
                     </ul>
@@ -129,7 +129,7 @@
                     <p class="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">No incluye</p>
                     <ul class="space-y-1">
                       <li v-for="(it, k) in tourExcludesList(tr.what_includes, tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-[13px] text-slate-500">
-                        <Icon name="material-symbols:cancel-outline" class="text-red-400 text-sm shrink-0 mt-0.5" />
+                        <span class="inline-block size-1.5 rounded-full bg-red-400 shrink-0 mt-[7px]" aria-hidden="true"></span>
                         <span>{{ it }}</span>
                       </li>
                     </ul>

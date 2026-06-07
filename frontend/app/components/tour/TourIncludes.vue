@@ -28,8 +28,8 @@
           class="p-4 bg-white dark:bg-slate-900"
         >
           <ul class="space-y-2 text-secondary-light dark:text-secondary-dark">
-            <li v-for="(item, index) in includesList" :key="index" class="flex items-start gap-2">
-              <CheckIcon class="size-4 text-green-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <li v-for="(item, index) in includesList" :key="index" class="flex items-start gap-2.5">
+              <span class="inline-block size-2 rounded-full bg-green-500 mt-[7px] flex-shrink-0" aria-hidden="true"></span>
               <span>{{ item }}</span>
             </li>
           </ul>
@@ -58,8 +58,8 @@
           class="p-4 bg-white dark:bg-slate-900"
         >
           <ul class="space-y-2 text-secondary-light dark:text-secondary-dark">
-            <li v-for="(item, index) in excludesList" :key="index" class="flex items-start gap-2">
-              <XMarkIcon class="size-4 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <li v-for="(item, index) in excludesList" :key="index" class="flex items-start gap-2.5">
+              <span class="inline-block size-2 rounded-full bg-red-500 mt-[7px] flex-shrink-0" aria-hidden="true"></span>
               <span>{{ item }}</span>
             </li>
           </ul>
@@ -75,9 +75,7 @@ import {
   ClipboardDocumentCheckIcon,
   CheckCircleIcon,
   ChevronDownIcon,
-  CheckIcon,
   XCircleIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 const { t } = useI18n()
 
