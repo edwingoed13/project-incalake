@@ -10,7 +10,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <component
-        :is="opt.is_current ? 'div' : 'NuxtLink'"
+        :is="opt.is_current ? 'div' : NuxtLinkComp"
         v-for="opt in options"
         :key="opt.id"
         :to="opt.is_current ? undefined : localePath(`/${opt.city_slug}/${opt.slug}`)"
@@ -75,6 +75,12 @@ const props = defineProps<{ options: TourOption[] }>()
 const { t } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
+
+// Resolve NuxtLink as a component reference, not a string. Passing the
+// literal "NuxtLink" string to <component :is="..."> renders an unknown
+// element with no router behavior, so the cards looked clickable but did
+// nothing.
+const NuxtLinkComp = resolveComponent('NuxtLink')
 
 const hasOptions = computed(() => Array.isArray(props.options) && props.options.length >= 2)
 
