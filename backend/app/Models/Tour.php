@@ -71,6 +71,9 @@ class Tour extends Model
         'attachments_path',
         'youtube_url',
         'active',
+        'parent_tour_id',
+        'option_label',
+        'option_color',
     ];
 
     protected $casts = [
@@ -139,6 +142,19 @@ class Tour extends Model
     public function mapPoints(): HasMany
     {
         return $this->hasMany(TourMapPoint::class)->orderBy('order');
+    }
+
+    // Variant grouping: a parent tour exposes its children as bookable options
+    // on the detail page (Compartido / +Guía / Privado). Self FK on
+    // parent_tour_id — null on the canonical parent, set on every sibling.
+    public function parentTour(): BelongsTo
+    {
+        return $this->belongsTo(Tour::class, 'parent_tour_id');
+    }
+
+    public function childOptions(): HasMany
+    {
+        return $this->hasMany(Tour::class, 'parent_tour_id')->where('active', true);
     }
 
     // ==================== HELPER METHODS ====================

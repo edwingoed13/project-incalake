@@ -98,6 +98,13 @@ class TourController extends Controller
                 $query->where('active', $request->boolean('active'));
             }
 
+            // Public listing hides child variants by default: only the canonical
+            // parent of each option group surfaces in /tours. Children are still
+            // reachable by direct slug. Admin (light=0) sees everything.
+            if ($light) {
+                $query->whereNull('parent_tour_id');
+            }
+
             if ($request->has('service_type')) {
                 $query->where('service_type', $request->service_type);
             }
@@ -325,6 +332,26 @@ class TourController extends Controller
                 'categories.translations',
                 'tags',
                 'city',
+                // Variant grouping: when this tour is a child, load the parent
+                // + the parent's siblings + their slim card-level relations
+                // so TourDetailResource can build the option-selector group
+                // in one query batch (no per-card refetch).
+                'parentTour:id,parent_tour_id',
+                'parentTour.translations:id,tour_id,language_id,slug,h1_title',
+                'parentTour.translations.language:id,code',
+                'parentTour.city:id,slug',
+                'parentTour.prices:id,tour_id,age_stage_id,amount,active',
+                'parentTour.childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                'parentTour.childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                'parentTour.childOptions.translations.language:id,code',
+                'parentTour.childOptions.city:id,slug',
+                'parentTour.childOptions.prices:id,tour_id,age_stage_id,amount,active',
+                // When this tour IS the parent, load its own children.
+                'childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                'childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                'childOptions.translations.language:id,code',
+                'childOptions.city:id,slug',
+                'childOptions.prices:id,tour_id,age_stage_id,amount,active',
             ])->findOrFail($id);
 
             return response()->json([
@@ -360,6 +387,21 @@ class TourController extends Controller
                 'categories.translations',
                 'tags',
                 'city',
+                'parentTour:id,parent_tour_id',
+                'parentTour.translations:id,tour_id,language_id,slug,h1_title',
+                'parentTour.translations.language:id,code',
+                'parentTour.city:id,slug',
+                'parentTour.prices:id,tour_id,age_stage_id,amount,active',
+                'parentTour.childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                'parentTour.childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                'parentTour.childOptions.translations.language:id,code',
+                'parentTour.childOptions.city:id,slug',
+                'parentTour.childOptions.prices:id,tour_id,age_stage_id,amount,active',
+                'childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                'childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                'childOptions.translations.language:id,code',
+                'childOptions.city:id,slug',
+                'childOptions.prices:id,tour_id,age_stage_id,amount,active',
             ])
             ->whereHas('translations', function ($query) use ($slug) {
                 $query->where('slug', $slug);

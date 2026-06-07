@@ -300,6 +300,9 @@
             </div>
           </section>
 
+          <!-- Variant options — siblings share one activity (Compartido / +Guía / Privado) -->
+          <TourOptionsSelector v-if="tour.options?.length" :options="tour.options" />
+
           <!-- Content Sections -->
           <!-- Tour Description -->
           <TourDescription v-if="tour.long_description || tour.description" :tour="tour" />
@@ -1293,10 +1296,15 @@ watchEffect(() => {
 
 // Dynamic SEO + Schema.org — locale & city aware, on incalake.com.
 // Canonical + hreflang are emitted globally by useLocaleHead (app.vue) using
-// i18n.baseUrl, so we don't set a per-page canonical here (avoids duplicates).
+// i18n.baseUrl, so we don't set a per-page canonical here (avoids duplicates)
+// — EXCEPT on child variant pages, where the canonical must point at the
+// parent activity to consolidate ranking signals (and the page is noindex'd).
 const siteUrl = 'https://incalake.com'
 const canonicalUrl = computed(() =>
   `${siteUrl}/${locale.value}/${tour.value?.city?.slug || citySlug}/${slug}`)
+const parentCanonicalUrl = computed(() =>
+  tour.value?.parent_canonical ? `${siteUrl}/${locale.value}${tour.value.parent_canonical}` : null)
+const isChildVariant = computed(() => !!tour.value?.parent_canonical)
 
 watchEffect(() => {
   if (!tour.value) return
@@ -1310,7 +1318,9 @@ watchEffect(() => {
     title: () => tour.value.title,
     description: () => tour.value.short_description || tour.value.title,
     keywords: () => `${tour.value.title}, tours ${cityName}, lago titicaca, peru`,
-    robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    robots: () => isChildVariant.value
+      ? 'noindex, follow'
+      : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
     author: 'Incalake Tours',
     ogTitle: () => tour.value.title,
     ogDescription: () => tour.value.short_description || tour.value.title,
@@ -1329,6 +1339,12 @@ watchEffect(() => {
   })
 
   useHead({
+    // On child variants, override the global canonical (emitted by
+    // useLocaleHead) so it points to the parent activity instead of the
+    // variant URL — consolidates ranking on the indexable page.
+    link: isChildVariant.value && parentCanonicalUrl.value
+      ? [{ rel: 'canonical', href: parentCanonicalUrl.value }]
+      : [],
     script: [
       {
         type: 'application/ld+json',

@@ -233,9 +233,99 @@ class TourDetailResource extends JsonResource
                 ];
             }),
 
+            // Variant options. Builds the list of bookable variants for the
+            // detail-page selector ("Compartido / +Guía / Privado"). When this
+            // tour IS a child, we include itself + its siblings (children of
+            // the same parent) PLUS the parent (so the user can switch back).
+            // When this tour IS a parent, we include itself + its children.
+            // A tour with no parent and no children returns [] (selector hides).
+            'options' => $this->buildOptions($language),
+            'parent_canonical' => $this->parent_tour_id && $this->relationLoaded('parentTour') && $this->parentTour
+                ? $this->resolveCanonicalUrlFor($this->parentTour, $language)
+                : null,
+
             'is_bookable' => $this->isBookable(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    /**
+     * Slim payload for the option-selector cards on the detail page.
+     * Reads ONLY from eager-loaded relations so a single API call holds the
+     * whole option group (no per-card refetch).
+     */
+    private function buildOptions(string $language): array
+    {
+        $group = collect();
+
+        if ($this->parent_tour_id) {
+            if ($this->relationLoaded('parentTour') && $this->parentTour) {
+                $group->push($this->parentTour);
+                if ($this->parentTour->relationLoaded('childOptions')) {
+                    foreach ($this->parentTour->childOptions as $c) {
+                        $group->push($c);
+                    }
+                }
+            }
+        } else {
+            $group->push($this->resource);
+            if ($this->relationLoaded('childOptions')) {
+                foreach ($this->childOptions as $c) {
+                    $group->push($c);
+                }
+            }
+        }
+
+        if ($group->count() <= 1) {
+            return [];
+        }
+
+        return $group->unique('id')->values()->map(function ($t) use ($language) {
+            $tr = $t->relationLoaded('translations')
+                ? ($t->translations->first(fn ($x) => optional($x->language)->code === $language)
+                    ?? $t->translations->first())
+                : null;
+            $minPrice = null;
+            if ($t->relationLoaded('prices')) {
+                $active = $t->prices->where('active', true);
+                if ($active->count()) {
+                    $firstStage = $active->sortBy('age_stage_id')->first()?->age_stage_id;
+                    $stage = $firstStage ? $active->where('age_stage_id', $firstStage) : $active;
+                    $minPrice = $stage->min('amount');
+                }
+            }
+            $citySlug = $t->relationLoaded('city') ? optional($t->city)->slug : null;
+            return [
+                'id' => $t->id,
+                'is_current' => $t->id === $this->id,
+                'slug' => $tr?->slug,
+                'city_slug' => $citySlug,
+                'h1_title' => $tr?->h1_title,
+                'option_label' => $t->option_label,
+                'option_color' => $t->option_color,
+                'is_parent' => is_null($t->parent_tour_id),
+                'min_price' => $minPrice !== null ? (float) $minPrice : null,
+            ];
+        })->all();
+    }
+
+    /**
+     * Build a canonical path for the given tour in the given language,
+     * falling back to the tour's primary translation. Used to set the
+     * <link rel="canonical"> on child variant pages.
+     */
+    private function resolveCanonicalUrlFor(Tour $tour, string $language): ?string
+    {
+        if (!$tour->relationLoaded('translations')) {
+            return null;
+        }
+        $tr = $tour->translations->first(fn ($x) => optional($x->language)->code === $language)
+            ?? $tour->translations->first();
+        if (!$tr) {
+            return null;
+        }
+        $citySlug = $tour->relationLoaded('city') ? optional($tour->city)->slug : null;
+        return $citySlug && $tr->slug ? "/{$citySlug}/{$tr->slug}" : null;
     }
 }

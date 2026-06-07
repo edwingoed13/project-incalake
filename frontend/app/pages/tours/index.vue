@@ -11,148 +11,92 @@
       </div>
     </section>
 
-    <!-- MOBILE: Sticky filter bar with text pills -->
-    <div class="md:hidden sticky top-[56px] z-30 bg-white border-b border-slate-200 shadow-sm">
+    <!-- MOBILE/TABLET: search-only sticky bar — filters live in the bottom sheet -->
+    <div class="lg:hidden sticky top-[56px] z-30 bg-white border-b border-slate-200 shadow-sm">
       <div class="px-3 py-2">
-        <!-- Search -->
-        <div class="relative mb-2">
+        <div class="relative">
           <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
           <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
-            class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs" />
-        </div>
-        <!-- Filter pills -->
-        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-          <button @click="mobileSheet = 'city'"
-            :class="selectedCitySlug ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            {{ selectedCitySlug ? formatCityName(selectedCitySlug) : t('destination') }}
-            <Icon name="material-symbols:expand-more" class="text-[10px]" />
-          </button>
-          <button @click="mobileSheet = 'duration'"
-            :class="selectedDuration ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            {{ selectedDuration ? durationLabels[selectedDuration] : t('duration') }}
-            <Icon name="material-symbols:expand-more" class="text-[10px]" />
-          </button>
-          <button @click="mobileSheet = 'price'"
-            :class="selectedPrice ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            {{ selectedPrice ? priceLabels[selectedPrice] : t('price') }}
-            <Icon name="material-symbols:expand-more" class="text-[10px]" />
-          </button>
-          <button @click="mobileSheet = 'place'"
-            :class="selectedPlace ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
-            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            <Icon name="material-symbols:location-on" class="text-xs" />
-            {{ selectedPlace || t('places') }}
-            <Icon name="material-symbols:expand-more" class="text-[10px]" />
-          </button>
-          <button v-if="hasActiveFilters" @click="clearFilters" class="text-red-500 text-[11px] font-bold whitespace-nowrap shrink-0 px-2 py-2">{{ t('clear_all') }}</button>
+            class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
       </div>
     </div>
 
-    <!-- DESKTOP: Sticky filter bar with full pills -->
-    <div class="hidden md:block sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm overflow-visible">
-      <div class="max-w-7xl mx-auto px-6 lg:px-10 py-2.5 overflow-visible">
-        <div class="flex items-center gap-2">
-          <div class="relative shrink-0">
+    <!-- DESKTOP (>=lg): search + view-mode bar; filters live in the right sidebar -->
+    <div class="hidden lg:block sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 lg:px-10 py-2.5">
+        <div class="flex items-center gap-3">
+          <div class="relative w-72">
             <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
-              class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:ring-2 focus:ring-primary/30 w-48 focus:w-64 transition-all" />
-          </div>
-          <div class="w-px h-6 bg-slate-200 shrink-0"></div>
-          <!-- Desktop dropdowns -->
-          <div v-for="filter in desktopFilters" :key="filter.key" class="relative shrink-0">
-            <button @click="openFilter = openFilter === filter.key ? '' : filter.key"
-              :class="filter.isActive ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'"
-              class="flex items-center gap-1.5 px-3.5 py-2 border rounded-full text-xs font-semibold transition-all">
-              <Icon :name="msIcon(filter.icon)" class="text-sm" />
-              {{ filter.label }}
-              <Icon name="material-symbols:expand-more" class="text-xs" />
-            </button>
-            <div v-if="openFilter === filter.key" class="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-[40] py-1" :class="filter.key === 'sort' ? 'right-0 left-auto w-48' : 'w-48'">
-              <button v-for="opt in filter.options" :key="opt.value" @click="filter.select(opt.value); openFilter = ''"
-                class="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-primary/5 transition-colors"
-                :class="filter.current === opt.value ? 'text-primary bg-primary/5' : 'text-slate-600'">
-                {{ opt.label }}
-              </button>
-            </div>
+              class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
           <div class="flex-1"></div>
-          <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-semibold text-red-500 flex items-center gap-1">
-            <Icon name="material-symbols:close" class="text-sm" /> {{ t('clear_all') }}
-          </button>
-          <span v-if="tours.length" class="text-xs font-bold text-slate-400 mr-2">{{ t('tours_found', { count: filteredTours.length }) }}</span>
-          <div class="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-            <button
-              @click="viewMode = 'grid'"
-              class="p-1.5 transition-colors"
-              :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
-            >
+          <span v-if="tours.length" class="text-xs font-bold text-slate-400">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+            <button @click="viewMode = 'grid'" class="p-1.5 transition-colors"
+              :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
               <Icon name="material-symbols:grid-view-outline" class="text-base" />
             </button>
-            <button
-              @click="viewMode = 'list'"
-              class="p-1.5 transition-colors"
-              :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'"
-            >
+            <button @click="viewMode = 'list'" class="p-1.5 transition-colors"
+              :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
               <Icon name="material-symbols:view-list-outline" class="text-base" />
             </button>
           </div>
         </div>
       </div>
-      <div v-if="openFilter" class="fixed inset-0" @click="openFilter = ''"></div>
     </div>
 
     <!-- Mobile Bottom Sheets -->
     <Teleport to="body">
       <Transition name="sheet">
-        <div v-if="mobileSheet" class="md:hidden fixed inset-0 z-50">
-          <div class="absolute inset-0 bg-black/50" @click="mobileSheet = ''"></div>
-          <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[60vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-center pt-3 pb-1"><div class="w-10 h-1 bg-slate-300 rounded-full"></div></div>
-            <div class="p-5">
-              <h3 class="text-base font-bold text-slate-800 mb-4">
-                {{ mobileSheet === 'city' ? t('destination') : mobileSheet === 'duration' ? t('duration') : mobileSheet === 'price' ? t('price') : t('places') }}
+        <div v-if="mobileFiltersOpen" class="lg:hidden fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" @click="mobileFiltersOpen = false"></div>
+          <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[90vh] shadow-2xl flex flex-col">
+            <div class="flex justify-center pt-3 pb-1 shrink-0"><div class="w-10 h-1 bg-slate-300 rounded-full"></div></div>
+            <div class="flex items-center justify-between px-5 py-2.5 shrink-0 border-b border-slate-100">
+              <h3 class="text-base font-bold text-slate-800">
+                {{ t('filters') }}
+                <span v-if="activeFilterCount" class="text-primary">({{ activeFilterCount }})</span>
               </h3>
-              <div class="space-y-1">
-                <template v-if="mobileSheet === 'city'">
-                  <button @click="selectedCitySlug = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedCitySlug ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all_destinations') }}</button>
-                  <button v-for="city in cities" :key="city.slug" @click="selectedCitySlug = city.slug; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedCitySlug === city.slug ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">
-                    {{ city.name }} <span class="text-slate-400">({{ city.count }})</span>
-                  </button>
-                </template>
-                <template v-else-if="mobileSheet === 'duration'">
-                  <button @click="selectedDuration = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedDuration ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all') }}</button>
-                  <button @click="selectedDuration = 'short'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'short' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('duration_short') }}</button>
-                  <button @click="selectedDuration = 'full'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'full' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('full_day') }}</button>
-                  <button @click="selectedDuration = 'two'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'two' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('duration_two_day') }}</button>
-                  <button @click="selectedDuration = 'multi'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'multi' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('multi_day') }}</button>
-                </template>
-                <template v-else-if="mobileSheet === 'price'">
-                  <button @click="selectedPrice = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedPrice ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all_prices') }}</button>
-                  <button v-for="(label, key) in priceLabels" :key="key" @click="selectedPrice = key; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedPrice === key ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ label }}</button>
-                </template>
-                <template v-else-if="mobileSheet === 'place'">
-                  <button @click="selectedPlace = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedPlace ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all_places') }}</button>
-                  <button v-for="place in placeOptions" :key="place.name" @click="selectedPlace = place.name; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedPlace === place.name ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">
-                    {{ place.name }} <span class="text-slate-400">({{ place.count }})</span>
-                  </button>
-                </template>
-              </div>
-              <p class="text-center text-xs text-slate-400 font-semibold mt-4">{{ t('tours_found', { count: filteredTours.length }) }}</p>
+              <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-bold text-red-500">{{ t('clear_all') }}</button>
+            </div>
+            <div class="flex-1 overflow-y-auto px-5 py-4">
+              <FiltersToursFilterPanel
+                :cities="cities"
+                :place-options="placeOptions"
+                v-model:city="selectedCitySlug"
+                v-model:duration="selectedDuration"
+                v-model:price="selectedPrice"
+                v-model:places="selectedPlaces"
+              />
+            </div>
+            <div class="shrink-0 p-4 border-t border-slate-100">
+              <button @click="mobileFiltersOpen = false" class="w-full py-3 bg-primary text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform">
+                {{ t('show_results', { count: filteredTours.length }) }}
+              </button>
             </div>
           </div>
         </div>
       </Transition>
     </Teleport>
 
-    <!-- Tour List -->
-    <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-3 md:py-6">
+    <!-- MOBILE: floating filters button (FAB) -->
+    <button v-if="!mobileFiltersOpen" @click="mobileFiltersOpen = true"
+      class="lg:hidden fixed bottom-4 right-4 z-30 bg-primary text-white shadow-lg rounded-full pl-4 pr-5 py-3 flex items-center gap-2 font-bold text-sm active:scale-95 transition-transform">
+      <Icon name="material-symbols:tune" class="text-base" />
+      {{ t('filters') }}
+      <span v-if="activeFilterCount" class="bg-white text-primary rounded-full px-1.5 text-[10px] min-w-[18px] text-center font-black">{{ activeFilterCount }}</span>
+    </button>
+
+    <!-- Tour List + Desktop Sidebar -->
+    <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-3 md:py-6 lg:flex lg:gap-6 lg:items-start">
+
+      <!-- Main column -->
+      <div class="flex-1 min-w-0 order-2">
 
       <!-- Active filters badges -->
-      <div v-if="selectedCitySlug || selectedTagSlug || selectedDuration || selectedPrice || selectedPlace" class="flex flex-wrap items-center gap-1.5 mb-3">
+      <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5 mb-3">
         <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
           <button @click="selectedCitySlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
@@ -170,11 +114,12 @@
           {{ priceLabels[selectedPrice] }}
           <button @click="selectedPrice = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
-        <span v-if="selectedPlace" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
+        <span v-for="name in selectedPlaces" :key="name" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           <Icon name="material-symbols:location-on-outline" class="text-[10px]" />
-          {{ selectedPlace }}
-          <button @click="selectedPlace = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          {{ name }}
+          <button @click="selectedPlaces = selectedPlaces.filter(n => n !== name)" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
+        <button @click="clearFilters" class="ml-1 text-[10px] font-bold text-red-500 hover:underline">{{ t('clear_all') }}</button>
       </div>
 
       <!-- Loading: skeleton SOLO para las tarjetas (el título y los filtros de arriba ya están visibles) -->
@@ -189,7 +134,7 @@
             </div>
           </div>
         </div>
-        <div class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div class="hidden md:grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
           <div v-for="i in 8" :key="'lg-'+i" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
             <div class="aspect-[4/3] bg-slate-200 animate-pulse"></div>
             <div class="p-4 space-y-2.5">
@@ -283,7 +228,7 @@
       </div>
 
       <!-- DESKTOP: Grid cards -->
-      <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
         <div v-for="tour in paginatedTours.data" :key="'d-'+tour.id" class="relative">
         <NuxtLink
           :to="getTourLink(tour)"
@@ -437,12 +382,36 @@
         </button>
       </div>
       </template>
+      </div>
+
+      <!-- DESKTOP LEFT SIDEBAR (>=lg) — filters live here -->
+      <aside class="hidden lg:block w-[280px] shrink-0 order-1">
+        <div class="sticky top-[120px]">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4">
+            <header class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h2 class="text-sm font-black text-slate-900">
+                {{ t('filters') }}
+                <span v-if="activeFilterCount" class="text-primary">({{ activeFilterCount }})</span>
+              </h2>
+              <button v-if="hasActiveFilters" @click="clearFilters" class="text-[11px] font-bold text-red-500 hover:underline">{{ t('clear_all') }}</button>
+            </header>
+            <FiltersToursFilterPanel
+              :cities="cities"
+              :place-options="placeOptions"
+              v-model:city="selectedCitySlug"
+              v-model:duration="selectedDuration"
+              v-model:price="selectedPrice"
+              v-model:places="selectedPlaces"
+            />
+          </div>
+        </div>
+      </aside>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { msIcon } from '~/utils/icons'
 const { api } = useApi()
 const { prefetchTour } = useTourPrefetch()
 const config = useRuntimeConfig()
@@ -468,13 +437,13 @@ const viewMode = ref<'grid' | 'list'>('grid')
 
 // Filter state
 const route = useRoute()
-const openFilter = ref('')
-const mobileSheet = ref('')
+const mobileFiltersOpen = ref(false)
 const searchQuery = ref((route.query.search as string) || '')
 const selectedCitySlug = ref((route.query.city as string) || '')
 const selectedTagSlug = ref((route.query.tag as string) || '')
 const selectedDuration = ref('')
 const selectedPrice = ref('')
+const selectedPlaces = ref<string[]>([])
 const currentPage = ref(1)
 const perPage = 12
 // Mobile uses a "load more" pattern (more fluid than numbered pages).
@@ -515,49 +484,6 @@ const priceLabels = computed<Record<string, string>>(() => ({
   premium: t('price_premium'),
   top: t('price_top'),
 }))
-const selectedPlace = ref('')
-
-// Desktop filter configs (computed)
-const desktopFilters = computed(() => [
-  {
-    key: 'city', icon: 'location_on',
-    label: selectedCitySlug.value ? formatCityName(selectedCitySlug.value) : t('destination'),
-    isActive: !!selectedCitySlug.value,
-    current: selectedCitySlug.value,
-    options: [{ value: '', label: t('all_destinations') }, ...cities.value.map(c => ({ value: c.slug, label: `${c.name} (${c.count})` }))],
-    select: (v: string) => { selectedCitySlug.value = v },
-  },
-  {
-    key: 'duration', icon: 'schedule',
-    label: selectedDuration.value ? durationLabels.value[selectedDuration.value] : t('duration'),
-    isActive: !!selectedDuration.value,
-    current: selectedDuration.value,
-    options: [
-      { value: '', label: t('all') },
-      { value: 'short', label: t('duration_short') },
-      { value: 'full', label: t('full_day') },
-      { value: 'two', label: t('duration_two_day') },
-      { value: 'multi', label: t('multi_day') },
-    ],
-    select: (v: string) => { selectedDuration.value = v },
-  },
-  {
-    key: 'price', icon: 'payments',
-    label: selectedPrice.value ? priceLabels.value[selectedPrice.value] : t('price'),
-    isActive: !!selectedPrice.value,
-    current: selectedPrice.value,
-    options: [{ value: '', label: t('all_prices') }, ...Object.entries(priceLabels.value).map(([k, l]) => ({ value: k, label: l }))],
-    select: (v: string) => { selectedPrice.value = v },
-  },
-  {
-    key: 'place', icon: 'location_on',
-    label: selectedPlace.value || t('places'),
-    isActive: !!selectedPlace.value,
-    current: selectedPlace.value,
-    options: [{ value: '', label: t('all_places') }, ...placeOptions.value.map(p => ({ value: p.name, label: `${p.name} (${p.count})` }))],
-    select: (v: string) => { selectedPlace.value = v },
-  },
-])
 
 // Cities — single cheap call with server-side `withCount`. No more pulling all
 // 500 tours just to count badges. useAsyncData transfers the SSR payload to the
@@ -695,11 +621,11 @@ const filteredTours = computed(() => {
   if (selectedCitySlug.value) {
     result = result.filter(tour => tour.city?.slug === selectedCitySlug.value)
   }
-  if (selectedPlace.value) {
-    const want = selectedPlace.value
+  if (selectedPlaces.value.length) {
+    const wanted = new Set(selectedPlaces.value)
     result = result.filter(tour => {
       const places: any[] = Array.isArray(tour?.places) ? tour.places : []
-      return places.some(p => p?.name === want)
+      return places.some(p => wanted.has(p?.name))
     })
   }
   if (selectedDuration.value) {
@@ -748,12 +674,24 @@ const visiblePages = computed<(number | string)[]>(() => {
 const mobileVisibleTours = computed(() => filteredTours.value.slice(0, mobileShown.value))
 function loadMore() { mobileShown.value += perPage }
 
-const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || selectedPlace.value)
+const hasActiveFilters = computed(() => !!(searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || selectedPlaces.value.length))
 
-watch([searchQuery, selectedDuration, selectedPrice, selectedPlace, selectedCitySlug], () => { currentPage.value = 1; mobileShown.value = perPage })
+// Distinct filter-group count (places counts as one group regardless of N selected)
+// — drives the badge on the FAB and sidebar header.
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (selectedCitySlug.value) n++
+  if (selectedTagSlug.value) n++
+  if (selectedDuration.value) n++
+  if (selectedPrice.value) n++
+  if (selectedPlaces.value.length) n++
+  return n
+})
+
+watch([searchQuery, selectedDuration, selectedPrice, selectedPlaces, selectedCitySlug], () => { currentPage.value = 1; mobileShown.value = perPage }, { deep: true })
 
 function clearFilters() {
-  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; selectedPlace.value = ''; currentPage.value = 1; mobileShown.value = perPage
+  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; selectedPlaces.value = []; currentPage.value = 1; mobileShown.value = perPage
 }
 
 function handlePageChange(page: number) {
