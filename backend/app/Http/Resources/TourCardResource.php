@@ -107,6 +107,19 @@ class TourCardResource extends JsonResource
             ];
         }
 
+        // Sightseeing places only — the listing's "Lugares" filter and the
+        // search scoring use these. Restaurants / airports / meeting points
+        // are filtered out because they're never something a user searches
+        // for to find a tour.
+        $places = [];
+        if ($this->relationLoaded('mapPoints')) {
+            $places = $this->mapPoints
+                ->whereIn('type', ['lugar_turistico', 'museo', 'punto_parada'])
+                ->map(fn ($p) => ['name' => $p->name, 'type' => $p->type])
+                ->values()
+                ->all();
+        }
+
         return [
             'id' => $this->id,
             'title' => $tr?->h1_title ?? $this->code,
@@ -124,6 +137,7 @@ class TourCardResource extends JsonResource
             'thumbnail' => $imgUrl,
             'min_price' => $minPrice !== null ? (float) $minPrice : 0,
             'offer' => $offer,
+            'places' => $places,
         ];
     }
 }

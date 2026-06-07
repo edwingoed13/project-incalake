@@ -118,7 +118,9 @@ class CacheService
     // not code deploys — without this, a deploy keeps serving the old shape from
     // cache until the TTL. v2: dropped availability_data for a small `offer` field.
     // v4: offer exposes discount/dates/is_active/is_upcoming/discounted_min_price.
-    private const LISTING_CODE_VERSION = 4;
+    // v5: card includes slim `places` (map_points filtered to sightseeing types)
+    //     so the listing's Lugares filter + search ranking work without a refetch.
+    private const LISTING_CODE_VERSION = 5;
 
     // 24h backstop TTL. Real freshness comes from bumpToursVersion (fires on every
     // tour/translation/price/media save), so a long TTL just avoids cold rebuilds

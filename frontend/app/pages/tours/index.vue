@@ -40,10 +40,12 @@
             {{ selectedPrice ? priceLabels[selectedPrice] : t('price') }}
             <Icon name="material-symbols:expand-more" class="text-[10px]" />
           </button>
-          <button @click="mobileSheet = 'sort'"
-            class="flex items-center gap-1 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
-            <Icon name="material-symbols:sort" class="text-xs" />
-            {{ sortLabels[sortBy]?.split(':')[0] || t('sort_by') }}
+          <button @click="mobileSheet = 'place'"
+            :class="selectedPlace ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-slate-200'"
+            class="flex items-center gap-1 px-3.5 py-2 border rounded-full text-xs font-semibold whitespace-nowrap shrink-0">
+            <Icon name="material-symbols:location-on" class="text-xs" />
+            {{ selectedPlace || t('places') }}
+            <Icon name="material-symbols:expand-more" class="text-[10px]" />
           </button>
           <button v-if="hasActiveFilters" @click="clearFilters" class="text-red-500 text-[11px] font-bold whitespace-nowrap shrink-0 px-2 py-2">{{ t('clear_all') }}</button>
         </div>
@@ -112,7 +114,7 @@
             <div class="flex justify-center pt-3 pb-1"><div class="w-10 h-1 bg-slate-300 rounded-full"></div></div>
             <div class="p-5">
               <h3 class="text-base font-bold text-slate-800 mb-4">
-                {{ mobileSheet === 'city' ? t('destination') : mobileSheet === 'duration' ? t('duration') : mobileSheet === 'price' ? t('price') : t('sort_by') }}
+                {{ mobileSheet === 'city' ? t('destination') : mobileSheet === 'duration' ? t('duration') : mobileSheet === 'price' ? t('price') : t('places') }}
               </h3>
               <div class="space-y-1">
                 <template v-if="mobileSheet === 'city'">
@@ -123,16 +125,20 @@
                 </template>
                 <template v-else-if="mobileSheet === 'duration'">
                   <button @click="selectedDuration = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedDuration ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all') }}</button>
-                  <button @click="selectedDuration = 'half'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'half' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('half_day') }}</button>
+                  <button @click="selectedDuration = 'short'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'short' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('duration_short') }}</button>
                   <button @click="selectedDuration = 'full'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'full' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('full_day') }}</button>
+                  <button @click="selectedDuration = 'two'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'two' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('duration_two_day') }}</button>
                   <button @click="selectedDuration = 'multi'; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedDuration === 'multi' ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('multi_day') }}</button>
                 </template>
                 <template v-else-if="mobileSheet === 'price'">
                   <button @click="selectedPrice = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedPrice ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all_prices') }}</button>
                   <button v-for="(label, key) in priceLabels" :key="key" @click="selectedPrice = key; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedPrice === key ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ label }}</button>
                 </template>
-                <template v-else-if="mobileSheet === 'sort'">
-                  <button v-for="(label, key) in sortLabels" :key="key" @click="sortBy = key; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="sortBy === key ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ label }}</button>
+                <template v-else-if="mobileSheet === 'place'">
+                  <button @click="selectedPlace = ''; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="!selectedPlace ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">{{ t('all_places') }}</button>
+                  <button v-for="place in placeOptions" :key="place.name" @click="selectedPlace = place.name; mobileSheet = ''" class="w-full text-left px-4 py-3 rounded-xl text-sm font-medium" :class="selectedPlace === place.name ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-slate-50'">
+                    {{ place.name }} <span class="text-slate-400">({{ place.count }})</span>
+                  </button>
                 </template>
               </div>
               <p class="text-center text-xs text-slate-400 font-semibold mt-4">{{ t('tours_found', { count: filteredTours.length }) }}</p>
@@ -146,7 +152,7 @@
     <div class="max-w-7xl mx-auto px-3 md:px-6 lg:px-10 py-3 md:py-6">
 
       <!-- Active filters badges -->
-      <div v-if="selectedCitySlug || selectedTagSlug || selectedDuration || selectedPrice" class="flex flex-wrap items-center gap-1.5 mb-3">
+      <div v-if="selectedCitySlug || selectedTagSlug || selectedDuration || selectedPrice || selectedPlace" class="flex flex-wrap items-center gap-1.5 mb-3">
         <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
           <button @click="selectedCitySlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
@@ -163,6 +169,11 @@
         <span v-if="selectedPrice" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
           {{ priceLabels[selectedPrice] }}
           <button @click="selectedPrice = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+        </span>
+        <span v-if="selectedPlace" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
+          <Icon name="material-symbols:location-on-outline" class="text-[10px]" />
+          {{ selectedPlace }}
+          <button @click="selectedPlace = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
         </span>
       </div>
 
@@ -464,7 +475,6 @@ const selectedCitySlug = ref((route.query.city as string) || '')
 const selectedTagSlug = ref((route.query.tag as string) || '')
 const selectedDuration = ref('')
 const selectedPrice = ref('')
-const sortBy = ref('featured')
 const currentPage = ref(1)
 const perPage = 12
 // Mobile uses a "load more" pattern (more fluid than numbered pages).
@@ -485,9 +495,27 @@ watch(selectedTagSlug, async (slug) => {
 
 const apiBase = () => useRuntimeConfig().public.apiBase
 
-const durationLabels = computed<Record<string, string>>(() => ({ half: t('half_day'), full: t('full_day'), multi: t('multi_day') }))
-const priceLabels = computed<Record<string, string>>(() => ({ budget: t('price_under_50'), mid: '$50-$99', premium: '$100-$199', luxury: '$200+' }))
-const sortLabels = computed<Record<string, string>>(() => ({ featured: t('sort_popularity'), price_asc: t('sort_price_asc'), price_desc: t('sort_price_desc') }))
+// Duration buckets aligned with the actual catalog:
+//   short  – up to 4 hours (Uros morning, city tour)
+//   full   – more than 4 hours, same day (full-day classics)
+//   two    – overnight (e.g. 2D1N Uros-Taquile-Amantani)
+//   multi  – 3 days or more (south route, multi-day packages)
+const durationLabels = computed<Record<string, string>>(() => ({
+  short: t('duration_short'),
+  full: t('full_day'),
+  two: t('duration_two_day'),
+  multi: t('multi_day'),
+}))
+// Price tiers reflect Incalake's real distribution: most tours are <$40
+// short experiences and $40-100 full-day classics; multi-day / premium
+// pickup tours move into the $100-250 and $250+ buckets.
+const priceLabels = computed<Record<string, string>>(() => ({
+  budget: t('price_budget'),
+  mid: t('price_mid'),
+  premium: t('price_premium'),
+  top: t('price_top'),
+}))
+const selectedPlace = ref('')
 
 // Desktop filter configs (computed)
 const desktopFilters = computed(() => [
@@ -504,7 +532,13 @@ const desktopFilters = computed(() => [
     label: selectedDuration.value ? durationLabels.value[selectedDuration.value] : t('duration'),
     isActive: !!selectedDuration.value,
     current: selectedDuration.value,
-    options: [{ value: '', label: t('all') }, { value: 'half', label: t('half_day') }, { value: 'full', label: t('full_day') }, { value: 'multi', label: t('multi_day') }],
+    options: [
+      { value: '', label: t('all') },
+      { value: 'short', label: t('duration_short') },
+      { value: 'full', label: t('full_day') },
+      { value: 'two', label: t('duration_two_day') },
+      { value: 'multi', label: t('multi_day') },
+    ],
     select: (v: string) => { selectedDuration.value = v },
   },
   {
@@ -516,12 +550,12 @@ const desktopFilters = computed(() => [
     select: (v: string) => { selectedPrice.value = v },
   },
   {
-    key: 'sort', icon: 'sort',
-    label: sortLabels.value[sortBy.value] || t('sort_by'),
-    isActive: false,
-    current: sortBy.value,
-    options: Object.entries(sortLabels.value).map(([k, l]) => ({ value: k, label: l })),
-    select: (v: string) => { sortBy.value = v },
+    key: 'place', icon: 'location_on',
+    label: selectedPlace.value || t('places'),
+    isActive: !!selectedPlace.value,
+    current: selectedPlace.value,
+    options: [{ value: '', label: t('all_places') }, ...placeOptions.value.map(p => ({ value: p.name, label: `${p.name} (${p.count})` }))],
+    select: (v: string) => { selectedPlace.value = v },
   },
 ])
 
@@ -581,37 +615,114 @@ const cityCounts = computed<Record<string, number>>(() => {
   return counts
 })
 
+// Place options: aggregate `places` from every tour, count occurrences,
+// then sort by frequency. Keeps only places that appear in at least one
+// tour, so the dropdown reflects what's actually filterable.
+const placeOptions = computed<{ name: string; count: number }[]>(() => {
+  const counts: Record<string, number> = {}
+  for (const t of tours.value) {
+    const places: any[] = Array.isArray(t.places) ? t.places : []
+    const seenInTour = new Set<string>()
+    for (const p of places) {
+      const name = (p?.name || '').trim()
+      if (!name || seenInTour.has(name)) continue
+      seenInTour.add(name)
+      counts[name] = (counts[name] || 0) + 1
+    }
+  }
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+})
+
+// Duration bucket helper: derives the bucket from whichever fields the tour
+// has populated. New schema uses `duration_quantity`+`duration_unit`; legacy
+// rows fall back to `duration_days`+`duration_hours`. Returns one of
+// 'short' | 'full' | 'two' | 'multi' or '' if unknown.
+function tourDurationBucket(tour: any): string {
+  const qty = Number(tour?.duration_quantity || 0)
+  const unit = tour?.duration_unit
+  if (qty > 0 && unit) {
+    if (unit === 'days') {
+      if (qty <= 1) return 'full'
+      if (qty === 2) return 'two'
+      return 'multi'
+    }
+    if (unit === 'hours') {
+      if (qty <= 4) return 'short'
+      return 'full'
+    }
+    if (unit === 'minutes') return 'short'
+  }
+  const d = Number(tour?.duration_days || 0)
+  const h = Number(tour?.duration_hours || 0)
+  if (d >= 3) return 'multi'
+  if (d === 2) return 'two'
+  if (d === 1) return d * 24 + h > 24 ? 'two' : 'full'
+  if (h > 4) return 'full'
+  if (h > 0) return 'short'
+  return ''
+}
+
+// Search scoring: H1 title beats everything else. Place names (Taquile,
+// Uros, Sillustani) come next because those are exactly the queries the
+// new placeholder advertises. Description and city tie at the bottom.
+// A score of 0 drops the tour from results.
+function searchScore(tour: any, q: string): number {
+  if (!q) return 1
+  const needle = q.toLowerCase()
+  const title = (tour?.title || '').toLowerCase()
+  if (title.startsWith(needle)) return 100
+  if (title.includes(needle)) return 50
+
+  const places: any[] = Array.isArray(tour?.places) ? tour.places : []
+  let placeHit = 0
+  for (const p of places) {
+    const n = (p?.name || '').toLowerCase()
+    if (n.startsWith(needle)) { placeHit = Math.max(placeHit, 40); break }
+    if (n.includes(needle)) placeHit = Math.max(placeHit, 25)
+  }
+  if (placeHit) return placeHit
+
+  if ((tour?.short_description || '').toLowerCase().includes(needle)) return 10
+  if ((tour?.city?.name || '').toLowerCase().includes(needle)) return 5
+  return 0
+}
+
 // Client-side filters
 const filteredTours = computed(() => {
   let result = [...tours.value]
   if (selectedCitySlug.value) {
     result = result.filter(tour => tour.city?.slug === selectedCitySlug.value)
   }
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    result = result.filter(tour => tour.title?.toLowerCase().includes(q) || tour.short_description?.toLowerCase().includes(q) || tour.city?.name?.toLowerCase().includes(q))
+  if (selectedPlace.value) {
+    const want = selectedPlace.value
+    result = result.filter(tour => {
+      const places: any[] = Array.isArray(tour?.places) ? tour.places : []
+      return places.some(p => p?.name === want)
+    })
   }
   if (selectedDuration.value) {
-    result = result.filter(tour => {
-      const h = tour.duration_hours || 0, d = tour.duration_days || 0
-      if (d > 0) return selectedDuration.value === 'multi'
-      if (selectedDuration.value === 'half') return h > 0 && h <= 4
-      if (selectedDuration.value === 'full') return h > 4
-      return selectedDuration.value !== 'multi'
-    })
+    result = result.filter(tour => tourDurationBucket(tour) === selectedDuration.value)
   }
   if (selectedPrice.value) {
     result = result.filter(tour => {
       const p = tour.min_price || 0
-      if (selectedPrice.value === 'budget') return p < 50
-      if (selectedPrice.value === 'mid') return p >= 50 && p < 100
-      if (selectedPrice.value === 'premium') return p >= 100 && p < 200
-      if (selectedPrice.value === 'luxury') return p >= 200
+      if (selectedPrice.value === 'budget') return p > 0 && p < 40
+      if (selectedPrice.value === 'mid') return p >= 40 && p < 100
+      if (selectedPrice.value === 'premium') return p >= 100 && p < 250
+      if (selectedPrice.value === 'top') return p >= 250
       return true
     })
   }
-  if (sortBy.value === 'price_asc') result.sort((a, b) => (a.min_price || 0) - (b.min_price || 0))
-  else if (sortBy.value === 'price_desc') result.sort((a, b) => (b.min_price || 0) - (a.min_price || 0))
+  if (searchQuery.value) {
+    const q = searchQuery.value.trim()
+    const scored = result
+      .map(tour => ({ tour, score: searchScore(tour, q) }))
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+    result = scored.map(x => x.tour)
+  }
   return result
 })
 
@@ -637,12 +748,12 @@ const visiblePages = computed<(number | string)[]>(() => {
 const mobileVisibleTours = computed(() => filteredTours.value.slice(0, mobileShown.value))
 function loadMore() { mobileShown.value += perPage }
 
-const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || sortBy.value !== 'featured')
+const hasActiveFilters = computed(() => searchQuery.value || selectedCitySlug.value || selectedTagSlug.value || selectedDuration.value || selectedPrice.value || selectedPlace.value)
 
-watch([searchQuery, selectedDuration, selectedPrice, sortBy, selectedCitySlug], () => { currentPage.value = 1; mobileShown.value = perPage })
+watch([searchQuery, selectedDuration, selectedPrice, selectedPlace, selectedCitySlug], () => { currentPage.value = 1; mobileShown.value = perPage })
 
 function clearFilters() {
-  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; sortBy.value = 'featured'; currentPage.value = 1; mobileShown.value = perPage
+  searchQuery.value = ''; selectedCitySlug.value = ''; selectedTagSlug.value = ''; selectedDuration.value = ''; selectedPrice.value = ''; selectedPlace.value = ''; currentPage.value = 1; mobileShown.value = perPage
 }
 
 function handlePageChange(page: number) {

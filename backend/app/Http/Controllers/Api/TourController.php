@@ -77,6 +77,7 @@ class TourController extends Controller
                     'translations.language:id,code',
                     'prices:id,tour_id,age_stage_id,amount,active',
                     'mediaGallery:id,tour_id,image_path,order',
+                    'mapPoints:id,tour_id,name,type,order',
                 ]);
             } else {
                 $query->with([
