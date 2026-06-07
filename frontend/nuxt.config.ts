@@ -28,6 +28,14 @@ export default defineNuxtConfig({
     plugins: [
       tailwindcss(),
     ],
+    // Drop console.* and debugger statements in the production bundle.
+    // Several components left payment-flow and cart-state console.logs that
+    // leak request tokens and customer fields into the browser DevTools.
+    // Dev builds keep them so live debugging still works; Vercel builds with
+    // NODE_ENV=production so the drop only fires on the deployed bundle.
+    esbuild: {
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    },
   },
 
   srcDir: 'app',

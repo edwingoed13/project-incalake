@@ -26,10 +26,15 @@ use App\Http\Controllers\Api\AITranslationSettingsController;
 |
 */
 
-// Public routes - Authentication
+// Public routes - Authentication.
+// Throttled aggressively because login is the canonical credential-stuffing
+// target: 5 attempts per minute per IP+route is the OWASP-recommended floor
+// and still leaves room for legitimate fat-finger retries. Register is even
+// tighter (3/min) — there is no reason a single IP creates several accounts
+// in quick succession on a B2C tour-booking surface.
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->name('api.auth.register');
-    Route::post('/login', [AuthController::class, 'login'])->name('api.auth.login');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1')->name('api.auth.register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('api.auth.login');
 });
 
 // Public routes - Products (read-only)
@@ -92,11 +97,18 @@ Route::middleware(['throttle:60,1'])->prefix('coupons')->group(function () {
     Route::post('/validate', [CouponController::class, 'validate'])->name('api.coupons.validate');
 });
 
-// Public routes - Bookings (checkout) - Rate Limited
+// Public routes - Bookings (checkout) - Rate Limited.
+// Reads (GET show/showByToken) keep the original 60/min so SPA hydration on
+// the booking-confirmation page doesn't hit the limit when the user clicks
+// around. Writes (create, payment confirm, cancel, confirm) drop to 20/min
+// per IP — that's still ~1 every 3s, plenty for legit checkout flow, but
+// kills booking-enumeration scrapes and payment-spam attempts.
 Route::middleware(['throttle:60,1'])->prefix('bookings')->group(function () {
-    Route::post('/', [BookingController::class, 'create'])->name('api.bookings.create');
     Route::get('/token/{token}', [BookingController::class, 'showByToken'])->name('api.bookings.show.token');
     Route::get('/{bookingCode}', [BookingController::class, 'show'])->name('api.bookings.show');
+});
+Route::middleware(['throttle:20,1'])->prefix('bookings')->group(function () {
+    Route::post('/', [BookingController::class, 'create'])->name('api.bookings.create');
     Route::post('/{id}/payment/culqi', [BookingController::class, 'confirmCulqiPayment'])->name('api.bookings.payment.culqi');
     Route::post('/{id}/payment/paypal', [BookingController::class, 'confirmPayPalPayment'])->name('api.bookings.payment.paypal');
     Route::post('/{id}/cancel', [BookingController::class, 'cancel'])->name('api.bookings.cancel');

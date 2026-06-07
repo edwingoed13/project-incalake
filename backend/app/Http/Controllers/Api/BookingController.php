@@ -24,12 +24,20 @@ class BookingController extends Controller
      */
     public function create(Request $request)
     {
-        // Debug: Log all incoming data
+        // Trace metadata only — never the full payload. The raw request body
+        // carries customer PII (name/email/phone) and may carry payment
+        // tokens; logging it landed those fields in storage/logs/laravel.log
+        // unfiltered. The fields below give enough signal to debug a failed
+        // create without writing identifying data to disk.
         \Log::info('Booking request received', [
-            'all_data' => $request->all(),
-            'headers' => $request->headers->all(),
+            'tour_id' => $request->input('tour_id'),
+            'tour_date' => $request->input('tour_date'),
+            'adults' => $request->input('adults'),
+            'children' => $request->input('children'),
+            'has_pickup' => $request->filled('pickup_location'),
             'method' => $request->method(),
-            'url' => $request->fullUrl()
+            'path' => $request->path(),
+            'ip' => $request->ip(),
         ]);
 
         $validator = Validator::make($request->all(), [

@@ -4,19 +4,25 @@ import tailwindcss from "@tailwindcss/vite"
 export default defineNuxtConfig({
   ssr: false,
 
-  vite: {
-    server: {
-      allowedHosts: true,
-    },
-  },
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
 
+  // Two separate `vite:` blocks lived here before; the second silently
+  // overrode the first (so server.allowedHosts never actually applied).
+  // Merged into one. esbuild.drop strips console.* + debugger from the
+  // production bundle so admin-side debugging logs don't leak in the
+  // built JS (admin handles bookings / customer data).
   vite: {
+    server: {
+      allowedHosts: true,
+    },
     plugins: [
-      tailwindcss()
-    ]
+      tailwindcss(),
+    ],
+    esbuild: {
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    },
   },
 
   modules: [
