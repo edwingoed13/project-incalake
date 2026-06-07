@@ -641,6 +641,78 @@ class TourController extends Controller
     }
 
     /**
+     * Admin-only: list tours that can be set as the canonical "parent" of a
+     * variant group (Compartido / +Guía / Privado). Drives the Step6 admin
+     * dropdown. Excludes children (no nested groups) and the current tour
+     * itself. Optionally filtered by city so the operator sees only the
+     * activities in the same destination.
+     *
+     * Query params:
+     *   ?city_id=NN     limit to one city (recommended)
+     *   ?exclude_id=NN  exclude this tour from results (use for edit screen)
+     *   ?search=foo     fuzzy match on translated h1_title
+     */
+    public function eligibleParents(Request $request): JsonResponse
+    {
+        try {
+            $langCode = strtoupper((string) $request->query('language', 'ES'));
+
+            $query = Tour::query()
+                ->whereNull('parent_tour_id')
+                ->where('active', true);
+
+            if ($request->filled('city_id')) {
+                $query->where('city_id', (int) $request->query('city_id'));
+            }
+            if ($request->filled('exclude_id')) {
+                $query->where('id', '!=', (int) $request->query('exclude_id'));
+            }
+
+            $search = (string) $request->query('search', '');
+            if ($search !== '') {
+                $query->whereHas('translations', function ($q) use ($search) {
+                    $q->where('h1_title', 'like', "%{$search}%");
+                });
+            }
+
+            $tours = $query
+                ->with([
+                    'translations:id,tour_id,language_id,h1_title,slug',
+                    'translations.language:id,code',
+                    'city:id,name,slug',
+                    'childOptions:id,parent_tour_id',
+                ])
+                ->orderBy('id', 'desc')
+                ->limit(50)
+                ->get();
+
+            $data = $tours->map(function ($t) use ($langCode) {
+                $tr = $t->translations->first(fn ($x) => optional($x->language)->code === $langCode)
+                    ?? $t->translations->first();
+                return [
+                    'id' => $t->id,
+                    'h1_title' => $tr?->h1_title ?? $t->code,
+                    'slug' => $tr?->slug,
+                    'city_id' => $t->city_id,
+                    'city_name' => optional($t->city)->name,
+                    'child_count' => $t->childOptions->count(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar tours candidatos.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Show tour by multilang URL structure: /{lang}/{city}/{slug}
      * Example: /es/puno/tour-uros-amantani-taquile-sillustani-2d1n
      */

@@ -58,6 +58,7 @@ Route::prefix('cities')->group(function () {
 
 // Public utility routes for tour creation form
 Route::get('/admin/tours/generate-code', [TourController::class, 'generateCodeApi'])->name('api.admin.tours.generate-code');
+Route::get('/admin/tours/eligible-parents', [TourController::class, 'eligibleParents'])->name('api.admin.tours.eligible-parents');
 
 // Public routes - Reviews
 use App\Http\Controllers\Api\ReviewController;

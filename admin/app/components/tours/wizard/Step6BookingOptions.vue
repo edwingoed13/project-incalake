@@ -488,8 +488,130 @@
       </div>
     </WizardSection>
 
+    <!-- 6. Opciones de la actividad — variant grouping (Compartido / +Guía / Privado) -->
+    <WizardSection
+      collapsible
+      title="Opciones de la actividad"
+      icon="i-lucide-layers"
+      :open="isSectionExpanded('variant')"
+      @update:open="toggleSection('variant')"
+    >
+      <template #actions>
+        <UBadge :color="wantVariant ? 'primary' : 'neutral'" variant="subtle" size="xs">
+          {{ wantVariant ? 'Opción de actividad' : 'Tour independiente' }}
+        </UBadge>
+      </template>
+
+      <div class="space-y-4">
+        <p class="text-xs text-muted">
+          Si esta reserva es una <strong>variante</strong> de otra actividad (e.g. la versión <em>Privado</em> del tour Uros + Taquile),
+          vincúlala con el tour "padre". Las variantes aparecen como cards de opción en la página del padre y se ocultan del listado público.
+        </p>
+
+        <!-- Tipo: independiente vs variante -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            type="button"
+            :class="[
+              'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
+              !wantVariant
+                ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                : 'border-default hover:border-muted',
+            ]"
+            @click="clearVariant"
+          >
+            <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', !wantVariant ? 'border-primary bg-primary' : 'border-default']">
+              <div v-if="!wantVariant" class="size-2 bg-white rounded-full" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-bold" :class="!wantVariant ? 'text-primary' : ''">Tour independiente</span>
+              <span class="text-[11px] text-muted">Aparece como tour propio en el listado público.</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            :class="[
+              'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
+              wantVariant
+                ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                : 'border-default hover:border-muted',
+            ]"
+            @click="enableVariantMode"
+          >
+            <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', wantVariant ? 'border-primary bg-primary' : 'border-default']">
+              <div v-if="wantVariant" class="size-2 bg-white rounded-full" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-bold" :class="wantVariant ? 'text-primary' : ''">Es opción de otra actividad</span>
+              <span class="text-[11px] text-muted">Se muestra como card en la página del padre. Oculto del listado.</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Config visible sólo cuando es variante -->
+        <div v-if="wantVariant" class="space-y-4 pt-2 border-t border-default">
+          <!-- Padre (typeahead) -->
+          <UFormField label="Actividad padre" hint="Tour canónico que agrupa esta y otras variantes" required>
+            <USelectMenu
+              v-model="selectedParent"
+              :items="parentCandidates"
+              value-key="id"
+              label-key="h1_title"
+              :search-input="{ placeholder: 'Buscar por nombre del tour…' }"
+              :loading="parentSearching"
+              placeholder="Selecciona el tour padre"
+              size="md"
+              @update:search-term="onParentSearch"
+            >
+              <template #item="{ item }">
+                <div class="flex flex-col">
+                  <span class="text-sm font-semibold">{{ item.h1_title }}</span>
+                  <span class="text-[11px] text-muted">{{ item.city_name }} · {{ item.child_count }} variante(s) ya</span>
+                </div>
+              </template>
+            </USelectMenu>
+          </UFormField>
+
+          <!-- Etiqueta -->
+          <UFormField label="Etiqueta de esta opción" hint="Texto corto que verá el cliente en el badge (e.g. Compartido, Privado, + Guía Privado)" required>
+            <UInput v-model="store.bookingOptions.optionLabel" placeholder="Ej: + Guía Privado" maxlength="50" />
+          </UFormField>
+
+          <!-- Color -->
+          <UFormField label="Color del badge">
+            <div class="grid grid-cols-6 gap-2">
+              <button
+                v-for="c in availableColors"
+                :key="c.token"
+                type="button"
+                :class="[
+                  'flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all',
+                  store.bookingOptions.optionColor === c.token ? 'border-primary' : 'border-default hover:border-muted'
+                ]"
+                @click="store.bookingOptions.optionColor = c.token"
+              >
+                <span :class="['inline-block size-6 rounded-full', c.swatch]"></span>
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-muted">{{ c.token }}</span>
+              </button>
+            </div>
+          </UFormField>
+
+          <!-- Preview -->
+          <div class="rounded-xl border border-default bg-elevated p-3">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Vista previa del badge</p>
+            <span
+              class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider"
+              :class="previewBadgeClass"
+            >
+              {{ store.bookingOptions.optionLabel || 'Sin etiqueta' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </WizardSection>
+
     <!-- Map Modal -->
-    <PickupMapModal 
+    <PickupMapModal
       :is-open="isMapModalOpen"
       :type="pickupModalType"
       :initial-data="pickupModalData"
@@ -742,6 +864,107 @@ const calculateExampleTime = () => {
     return `${q === 1 ? 'un día' : q + ' días'} antes del inicio`
   }
 }
+
+// ==== Variant grouping (Step 6 — Opciones de la actividad) =================
+// Parent typeahead is server-driven (debounced) so the admin can pick from a
+// fresh list even when the catalog grows. The list scopes to the same city
+// by default because activities almost always live in one destination.
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+
+type ParentCandidate = {
+  id: number
+  h1_title: string
+  slug: string | null
+  city_id: number | null
+  city_name: string | null
+  child_count: number
+}
+
+const parentCandidates = ref<ParentCandidate[]>([])
+const parentSearching = ref(false)
+const selectedParent = computed<ParentCandidate | undefined>({
+  get: () => parentCandidates.value.find(p => p.id === store.bookingOptions.parentTourId),
+  set: (val) => {
+    store.bookingOptions.parentTourId = val?.id ?? null
+    store.isDirty = true
+  },
+})
+
+const availableColors = [
+  { token: 'blue',    swatch: 'bg-blue-500' },
+  { token: 'violet',  swatch: 'bg-violet-500' },
+  { token: 'amber',   swatch: 'bg-amber-500' },
+  { token: 'rose',    swatch: 'bg-rose-500' },
+  { token: 'emerald', swatch: 'bg-emerald-500' },
+  { token: 'sky',     swatch: 'bg-sky-500' },
+] as const
+
+const previewBadgeClass = computed(() => {
+  switch (store.bookingOptions.optionColor) {
+    case 'violet':  return 'bg-violet-100 text-violet-700'
+    case 'amber':   return 'bg-amber-100 text-amber-700'
+    case 'rose':    return 'bg-rose-100 text-rose-700'
+    case 'emerald': return 'bg-emerald-100 text-emerald-700'
+    case 'sky':     return 'bg-sky-100 text-sky-700'
+    case 'blue':    return 'bg-blue-100 text-blue-700'
+    default:        return 'bg-slate-100 text-slate-700'
+  }
+})
+
+let parentSearchTimer: any = null
+async function fetchParentCandidates(search = '') {
+  parentSearching.value = true
+  try {
+    const params = new URLSearchParams({ language: store.currentLanguage || 'ES' })
+    if (store.tourId) params.set('exclude_id', String(store.tourId))
+    // Scope to the same city by default — operators almost always group
+    // variants within one destination. Drop city_id to widen the search.
+    if (store.basicInfo?.cityId) params.set('city_id', String(store.basicInfo.cityId))
+    if (search) params.set('search', search)
+    const res = await $fetch<{ data: ParentCandidate[] }>(`${apiBase}/admin/tours/eligible-parents?${params.toString()}`)
+    parentCandidates.value = res.data || []
+  } catch (e) {
+    console.error('eligible-parents failed', e)
+    parentCandidates.value = []
+  } finally {
+    parentSearching.value = false
+  }
+}
+
+function onParentSearch(term: string) {
+  clearTimeout(parentSearchTimer)
+  parentSearchTimer = setTimeout(() => fetchParentCandidates(term), 250)
+}
+
+// Separate "intent" flag so we can reveal the config block before the user
+// has picked a parent, without poisoning parent_tour_id (which the backend
+// validates must `exists:tours,id`). Mirror sync: if the user picks a
+// parent, intent is true; if they hit "Tour independiente", clear both.
+const wantVariant = ref<boolean>(!!store.bookingOptions.parentTourId)
+
+watch(() => store.bookingOptions.parentTourId, (v) => {
+  if (v) wantVariant.value = true
+})
+
+function enableVariantMode() {
+  wantVariant.value = true
+  if (parentCandidates.value.length === 0) fetchParentCandidates()
+}
+
+function clearVariant() {
+  wantVariant.value = false
+  store.bookingOptions.parentTourId = null
+  store.bookingOptions.optionLabel = ''
+  store.bookingOptions.optionColor = 'blue'
+  store.isDirty = true
+}
+
+// On open of the section in edit mode, prefill the candidate list so the
+// currently-selected parent shows by name (not just by id).
+onMounted(() => {
+  if (store.bookingOptions.parentTourId) fetchParentCandidates()
+})
 </script>
 
 <style scoped>

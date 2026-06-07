@@ -227,6 +227,10 @@ export interface TourStep6 {
   dropoffLocationDescription: string
   guideType: 'live_guide' | 'audio_guide' | 'informative_brochures' | 'no_guide' | 'none'
   guideLanguages: number[]
+  // Variant grouping — Compartido / +Guía / Privado config (Phase 1)
+  parentTourId: number | null
+  optionLabel: string
+  optionColor: string
 }
 
 export interface TourStep4 {
@@ -404,7 +408,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
       pickupCenterLng: null,
       dropoffLocationDescription: '',
       guideType: 'live_guide',
-      guideLanguages: [1, 2] // Spanish, English
+      guideLanguages: [1, 2], // Spanish, English
+      parentTourId: null,
+      optionLabel: '',
+      optionColor: 'blue',
     } as TourStep6,
 
     selectedCategories: [] as number[],
@@ -760,6 +767,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
             guideType: data.guide_type || 'live_guide',
             guideLanguages: (data.guide_languages || [1, 2]).map((id: any) => Number(id)),
             meetingPoints: this.normalizeMeetingPoints(data),
+            parentTourId: data.parent_tour_id ? Number(data.parent_tour_id) : null,
+            optionLabel: data.option_label || '',
+            optionColor: data.option_color || 'blue',
           }
 
           // Map Step 7 Categories
@@ -952,6 +962,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
         dropoff_location_description: this.bookingOptions.dropoffLocationDescription,
         guide_type: this.bookingOptions.guideType,
         guide_languages: this.bookingOptions.guideLanguages,
+
+        // Variant grouping. Send NULL when not linked so the backend stores
+        // null instead of an empty string (DB column is FK, must be int or null).
+        parent_tour_id: this.bookingOptions.parentTourId || null,
+        option_label: this.bookingOptions.optionLabel || null,
+        option_color: this.bookingOptions.optionColor || null,
 
         // Step 7 Categories
         categories: this.selectedCategories,

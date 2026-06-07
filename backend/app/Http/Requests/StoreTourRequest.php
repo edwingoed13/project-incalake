@@ -24,6 +24,10 @@ class StoreTourRequest extends FormRequest
             'code' => 'nullable|string|max:100|unique:tours,code',
             'service_type' => 'required|in:tour,package,experience,transport',
             'status' => 'nullable|in:draft,published,archived',
+            // Variant grouping (Phase 1 — manual link, see Step6BookingOptions)
+            'parent_tour_id' => 'nullable|integer|exists:tours,id|different:id',
+            'option_label' => 'nullable|string|max:50',
+            'option_color' => 'nullable|string|max:20|in:blue,violet,amber,rose,emerald,sky,slate',
             'difficulty' => 'required|in:easy,moderate,hard',
             'target_audience' => 'required|in:all,families,adults,adventure,seniors',
             'capacity' => 'required|integer|min:1|max:999',

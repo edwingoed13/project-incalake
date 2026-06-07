@@ -24,6 +24,12 @@ class UpdateTourRequest extends FormRequest
             'code' => 'nullable|string|max:100|unique:tours,code,' . $this->route('id'),
             'service_type' => 'sometimes|required|in:tour,package,experience,transport',
             'status' => 'nullable|in:draft,published,archived',
+            // Variant grouping. parent_tour_id MUST differ from this tour id
+            // (a tour can't be its own parent); deeper-cycle prevention lives
+            // server-side in the controller (no nested chains).
+            'parent_tour_id' => 'nullable|integer|exists:tours,id',
+            'option_label' => 'nullable|string|max:50',
+            'option_color' => 'nullable|string|max:20|in:blue,violet,amber,rose,emerald,sky,slate',
             'difficulty' => 'sometimes|required|in:easy,moderate,hard',
             'target_audience' => 'sometimes|required|in:all,families,adults,adventure,seniors',
             'capacity' => 'sometimes|required|integer|min:1|max:999',
