@@ -213,7 +213,7 @@
                         <table width="100%" cellpadding="0" cellspacing="0">
                           @foreach($lists['includes'] as $inc)
                           <tr>
-                            <td style="vertical-align:top; width:16px; padding:2px 0; color:#16a34a; font-size:13px; font-weight:700; line-height:1.4;">&#10003;</td>
+                            <td style="vertical-align:top; width:12px; padding:2px 0; color:#16a34a; font-size:15px; line-height:1.4;">&bull;</td>
                             <td style="padding:2px 0 2px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
                           </tr>
                           @endforeach
@@ -224,7 +224,7 @@
                         <table width="100%" cellpadding="0" cellspacing="0">
                           @foreach($lists['excludes'] as $exc)
                           <tr>
-                            <td style="vertical-align:top; width:16px; padding:2px 0; color:#dc2626; font-size:13px; font-weight:700; line-height:1.4;">&#10007;</td>
+                            <td style="vertical-align:top; width:12px; padding:2px 0; color:#dc2626; font-size:15px; line-height:1.4;">&bull;</td>
                             <td style="padding:2px 0 2px 6px; font-size:12px; color:#94a3b8; line-height:1.5;">{{ $exc }}</td>
                           </tr>
                           @endforeach

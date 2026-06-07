@@ -264,7 +264,7 @@
                     <table width="100%" cellpadding="0" cellspacing="0">
                       @foreach($includes as $inc)
                       <tr>
-                        <td style="vertical-align:top; width:18px; padding:3px 0; color:#16a34a; font-size:14px; font-weight:700; line-height:1.4;">&#10003;</td>
+                        <td style="vertical-align:top; width:14px; padding:3px 0; color:#16a34a; font-size:16px; line-height:1.4;">&bull;</td>
                         <td style="padding:3px 0 3px 6px; font-size:12px; color:#334155; line-height:1.5;">{{ $inc }}</td>
                       </tr>
                       @endforeach
@@ -277,7 +277,7 @@
                       @endif
                       @foreach($excludes as $exc)
                       <tr>
-                        <td style="vertical-align:top; width:18px; padding:3px 0; color:#dc2626; font-size:14px; font-weight:700; line-height:1.4;">&#10007;</td>
+                        <td style="vertical-align:top; width:14px; padding:3px 0; color:#dc2626; font-size:16px; line-height:1.4;">&bull;</td>
                         <td style="padding:3px 0 3px 6px; font-size:12px; color:#94a3b8; line-height:1.5;">{{ $exc }}</td>
                       </tr>
                       @endforeach
