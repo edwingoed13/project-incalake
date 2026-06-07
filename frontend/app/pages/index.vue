@@ -9,13 +9,21 @@
           alt="Lake Titicaca"
           width="1920"
           height="1080"
-          densities="x1"
+          sizes="100vw"
           format="webp"
           quality="68"
           loading="eager"
           fetchpriority="high"
-          preload
         />
+        <!--
+          Removed the non-standard `preload` prop — NuxtImg doesn't know it,
+          so it serialized as preload="true" on the <img>, which the browser
+          ignores. fetchpriority="high" + loading="eager" is the standard
+          combo to prioritize an LCP image and is already set. `densities`
+          dropped in favor of `sizes` so the browser picks the right
+          responsive variant (the hero is 100vw at every breakpoint).
+        -->
+
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
       </div>
 

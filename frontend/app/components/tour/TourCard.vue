@@ -3,12 +3,20 @@
   <div v-if="layout === 'grid'" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
     <NuxtLink :to="tourLink" class="block">
       <!-- Image -->
-      <div class="relative h-48 md:h-56 overflow-hidden">
-        <img
+      <!-- aspect ratio reserves the box dimensions before the image loads
+           so the row below doesn't jump down (CLS). Explicit width/height
+           on the <img> tell the browser the intrinsic ratio even before
+           the bytes arrive. -->
+      <div class="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[3/2] overflow-hidden">
+        <NuxtImg
           :src="imageUrl"
           :alt="tour.title"
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
+          format="webp"
+          width="400"
+          height="267"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
 
         <!-- Badges Overlay -->
@@ -89,12 +97,19 @@
   <div v-else class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
     <NuxtLink :to="tourLink" class="flex flex-col md:flex-row">
       <!-- Image -->
-      <div class="relative w-full md:w-72 h-48 md:h-full flex-shrink-0 overflow-hidden">
-        <img
+      <!-- Same height-reservation strategy as the grid variant. h-48 on
+           mobile (stacked), 288px width on desktop (list row) — fixed
+           dimensions kill CLS, sizes hints right asset to fetch. -->
+      <div class="relative w-full md:w-72 h-48 md:h-44 flex-shrink-0 overflow-hidden">
+        <NuxtImg
           :src="imageUrl"
           :alt="tour.title"
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           loading="lazy"
+          format="webp"
+          width="288"
+          height="176"
+          sizes="(max-width: 768px) 100vw, 288px"
         />
 
         <!-- Badges -->

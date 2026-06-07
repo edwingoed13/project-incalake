@@ -73,11 +73,16 @@
             >
               <div class="flex items-center gap-3 p-3 md:p-4">
                 <div class="size-14 md:size-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center">
-                  <img
+                  <NuxtImg
                     v-if="tr.tour_image"
                     :src="getImageUrl(tr.tour_image)"
                     :alt="tr.tour_title"
                     class="w-full h-full object-cover"
+                    loading="lazy"
+                    format="webp"
+                    width="64"
+                    height="64"
+                    sizes="64px"
                   />
                   <Icon name="material-symbols:image-outline" v-else class="text-slate-300 text-2xl" />
                 </div>

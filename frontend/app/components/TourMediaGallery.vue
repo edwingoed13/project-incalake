@@ -252,7 +252,9 @@ function getImageUrl(path: string) {
 
     <!-- LAYOUT 1: MOSAICO (1 grande + 4 pequeñas) - DESKTOP ONLY -->
     <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[500px] overflow-hidden rounded-xl">
-      <!-- Hero Image (primera imagen grande) -->
+      <!-- Hero Image (primera imagen grande). LCP candidate on the tour
+           detail page — `sizes` lets the browser pick the right responsive
+           variant instead of always pulling the 800w copy on mobile. -->
       <div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
         <NuxtImg
           v-skeleton
@@ -261,7 +263,7 @@ function getImageUrl(path: string) {
           format="webp"
           width="800"
           height="600"
-          densities="x1"
+          sizes="(max-width: 1024px) 100vw, 50vw"
           fetchpriority="high"
           loading="eager"
           decoding="async"
@@ -317,19 +319,15 @@ function getImageUrl(path: string) {
     <!-- LAYOUT 2: VIDEO VERTICAL (SHORT) + 3 IMÁGENES CURADAS - DESKTOP ONLY -->
     <div v-else-if="galleryLayout === 'video_image' && youtubeVideoId && images.length > 0" class="hidden md:block">
       <div class="grid grid-cols-[300px_1fr] gap-2 rounded-xl overflow-hidden h-[500px]">
-        <!-- Video Column (Left) -->
+        <!-- Video Column (Left). Shorts player loads YouTube JS (~600 KB)
+             on first interaction only — until then we render a thumbnail
+             facade that costs ~30 KB total. -->
         <div class="relative bg-black rounded-l-xl overflow-hidden h-[500px] w-[300px]">
-          <iframe
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            style="width: 300px; height: 533px;"
-            :src="getYouTubeEmbedUrl"
-            :title="`Video: ${tour.title}`"
-            frameborder="0"
-            loading="lazy"
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-            referrerpolicy="strict-origin-when-cross-origin"
-          ></iframe>
+          <CommonYouTubeFacade
+            :video-id="youtubeVideoId.id"
+            :title="tour.title"
+            :extra-params="{ loop: '1', playlist: youtubeVideoId.id }"
+          />
         </div>
 
         <!-- Curated Images Column (Right) -->
@@ -363,19 +361,14 @@ function getImageUrl(path: string) {
     <!-- LAYOUT 3: VIDEO HORIZONTAL + IMAGEN DESTACADA - DESKTOP ONLY -->
     <div v-else-if="galleryLayout === 'video_horizontal_mosaic' && youtubeVideoId && images.length > 0" class="hidden md:block">
       <div class="grid grid-cols-[1.5fr_1fr] gap-2 rounded-xl overflow-hidden">
-        <!-- Video Column -->
+        <!-- Video Column (horizontal). Same facade swap — no YouTube JS
+             until the user actually clicks play. -->
         <div class="relative bg-black rounded-l-xl overflow-hidden">
           <div style="padding-bottom: 56.25%; position: relative;">
-            <iframe
-              :src="getYouTubeEmbedUrl"
-              :title="`Video: ${tour.title}`"
-              class="absolute top-0 left-0 w-full h-full"
-              frameborder="0"
-              loading="lazy"
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              referrerpolicy="strict-origin-when-cross-origin"
-            ></iframe>
+            <CommonYouTubeFacade
+              :video-id="youtubeVideoId.id"
+              :title="tour.title"
+            />
           </div>
         </div>
 
