@@ -1,32 +1,38 @@
 <template>
-  <section v-if="hasOptions" class="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 mb-5">
-    <header class="mb-3">
-      <h2 class="text-base md:text-lg font-black text-slate-900 flex items-center gap-2">
-        <Icon name="material-symbols:tune" class="text-primary text-xl" />
-        {{ t('options_title') }}
-      </h2>
-      <p class="text-xs text-slate-500 mt-0.5">{{ t('options_subtitle') }}</p>
+  <section v-if="hasOptions" class="bg-white rounded-2xl border border-slate-200 p-4 md:p-5 mb-5" :class="loading ? 'opacity-70 pointer-events-none' : ''">
+    <header class="mb-3 flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-base md:text-lg font-black text-slate-900 flex items-center gap-2">
+          <Icon name="material-symbols:tune" class="text-primary text-xl" />
+          {{ t('options_title') }}
+        </h2>
+        <p class="text-xs text-slate-500 mt-0.5">{{ t('options_subtitle') }}</p>
+      </div>
+      <span v-if="loading" class="inline-flex items-center gap-1 text-[11px] font-bold text-primary shrink-0 mt-1">
+        <Icon name="material-symbols:progress-activity" class="text-base animate-spin" />
+        {{ t('options_loading') }}
+      </span>
     </header>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <component
-        :is="opt.is_current ? 'div' : NuxtLinkComp"
+      <button
         v-for="opt in options"
         :key="opt.id"
-        :to="opt.is_current ? undefined : localePath(`/${opt.city_slug}/${opt.slug}`)"
-        class="relative group flex flex-col gap-2 p-3.5 rounded-xl border-2 transition-all"
+        type="button"
+        @click="!opt.is_current && emit('select', opt)"
+        :aria-pressed="opt.is_current"
+        :disabled="opt.is_current"
+        class="relative group flex flex-col gap-2 p-3.5 rounded-xl border-2 text-left transition-all"
         :class="opt.is_current
           ? 'border-primary bg-primary/5 cursor-default'
-          : 'border-slate-200 hover:border-primary hover:shadow-md cursor-pointer bg-white'"
+          : 'border-slate-200 hover:border-primary hover:shadow-md cursor-pointer bg-white active:scale-[0.99]'"
       >
-        <!-- Active badge -->
         <span v-if="opt.is_current"
           class="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary text-white text-[9px] font-black rounded-full">
           <Icon name="material-symbols:check" class="text-[10px]" />
           {{ t('options_selected') }}
         </span>
 
-        <!-- Option label badge -->
         <div class="flex items-center gap-1.5">
           <span
             class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
@@ -36,10 +42,8 @@
           </span>
         </div>
 
-        <!-- Title -->
         <h3 class="text-sm font-bold text-slate-800 line-clamp-2 leading-snug pr-12">{{ opt.h1_title }}</h3>
 
-        <!-- Price -->
         <div class="mt-auto pt-2 border-t border-slate-100 flex items-end justify-between">
           <div>
             <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
@@ -49,11 +53,11 @@
             </span>
           </div>
           <span v-if="!opt.is_current" class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
-            {{ t('options_view') }}
+            {{ t('options_pick') }}
             <Icon name="material-symbols:arrow-forward" class="text-sm" />
           </span>
         </div>
-      </component>
+      </button>
     </div>
   </section>
 </template>
@@ -71,16 +75,14 @@ type TourOption = {
   min_price: number | null
 }
 
-const props = defineProps<{ options: TourOption[] }>()
-const { t } = useI18n()
-const localePath = useLocalePath()
-const currencyStore = useCurrencyStore()
+const props = defineProps<{
+  options: TourOption[]
+  loading?: boolean
+}>()
+const emit = defineEmits<{ (e: 'select', opt: TourOption): void }>()
 
-// Resolve NuxtLink as a component reference, not a string. Passing the
-// literal "NuxtLink" string to <component :is="..."> renders an unknown
-// element with no router behavior, so the cards looked clickable but did
-// nothing.
-const NuxtLinkComp = resolveComponent('NuxtLink')
+const { t } = useI18n()
+const currencyStore = useCurrencyStore()
 
 const hasOptions = computed(() => Array.isArray(props.options) && props.options.length >= 2)
 

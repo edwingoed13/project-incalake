@@ -300,8 +300,11 @@
             </div>
           </section>
 
-          <!-- Variant options — siblings share one activity (Compartido / +Guía / Privado) -->
-          <TourOptionsSelector v-if="tour.options?.length" :options="tour.options" />
+          <!-- Variant options — siblings share one activity (Compartido / +Guía / Privado).
+               Picking an option swaps the page content inline (no navigation) and
+               updates the URL via history.replaceState so shareable links land
+               on the chosen option. -->
+          <TourOptionsSelector v-if="tour.options?.length" :options="tour.options" :loading="swapping" @select="switchOption" />
 
           <!-- Content Sections -->
           <!-- Tour Description -->
@@ -854,7 +857,50 @@ const { data: response, pending, error } = await useAsyncData(
   { getCachedData }
 )
 
-const tour = computed(() => response.value?.data || null)
+// Inline option swap: when the user picks an option on the selector we
+// fetch that sibling's full payload and overwrite this ref instead of
+// navigating. SSR keeps the per-URL HTML (Google/Perplexity see the
+// content matching whatever URL they crawled); the client-side swap is
+// purely UX so picking an option doesn't reload the page or scroll-jump.
+const swappedTour = ref<any>(null)
+const swapping = ref(false)
+const tour = computed(() => swappedTour.value || response.value?.data || null)
+
+async function switchOption(opt: { id: number; slug: string; city_slug: string }) {
+  if (!opt || opt.id === tour.value?.id || swapping.value) return
+  swapping.value = true
+  try {
+    // Reuse Nuxt's payload cache for siblings already opened in this session.
+    const cacheKey = `tour-${langCode.value}-${opt.city_slug}-${opt.slug}`
+    const nuxtApp = useNuxtApp()
+    const cached: any = nuxtApp.payload?.data?.[cacheKey] ?? nuxtApp.static?.data?.[cacheKey]
+    let data: any
+    if (cached?.data) {
+      data = cached.data
+    } else {
+      const res: any = await api(`/tours/${langCode.value.toLowerCase()}/${opt.city_slug}/${opt.slug}`)
+      data = res?.data
+      if (data) {
+        try { (nuxtApp.payload as any).data[cacheKey] = res } catch { /* read-only in some contexts */ }
+      }
+    }
+    if (!data) return
+    // Re-tag is_current across options so every component (selector, badge,
+    // booking widget) reads from the same source of truth.
+    if (Array.isArray(data.options)) {
+      data.options = data.options.map((o: any) => ({ ...o, is_current: o.id === opt.id }))
+    }
+    swappedTour.value = data
+    if (import.meta.client) {
+      try {
+        const newUrl = localePath(`/${opt.city_slug}/${opt.slug}`)
+        history.replaceState(history.state, '', newUrl)
+      } catch { /* HMR / edge cases — non-fatal */ }
+    }
+  } finally {
+    swapping.value = false
+  }
+}
 
 // Custom additional sections — pulled from the active language's translation
 const customSections = computed(() => {
@@ -1365,6 +1411,22 @@ watchEffect(() => {
             priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
             seller: { '@type': 'Organization', name: 'Incalake Tours' },
           },
+          // Variant grouping: surface every option of this activity so AI
+          // crawlers (Perplexity, ChatGPT, Bard) see all variants from a
+          // single page request. Each variant carries its own price + URL.
+          ...(Array.isArray(tour.value.options) && tour.value.options.length >= 2 ? {
+            hasVariant: tour.value.options.map((o: any) => ({
+              '@type': 'Product',
+              name: `${tour.value.title} — ${o.option_label || (o.is_parent ? 'Estándar' : 'Variante')}`,
+              url: `${siteUrl}/${locale.value}/${o.city_slug}/${o.slug}`,
+              offers: o.min_price ? {
+                '@type': 'Offer',
+                price: o.min_price,
+                priceCurrency: tour.value.currency || 'USD',
+                availability: 'https://schema.org/InStock',
+              } : undefined,
+            })),
+          } : {}),
           // Only emit aggregateRating from REAL fetched reviews — never a
           // fabricated rating (Google penalizes fake review rich snippets).
           ...(tourReviews.value.length > 0 ? {
