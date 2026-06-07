@@ -122,7 +122,10 @@ class CacheService
     //     so the listing's Lugares filter + search ranking work without a refetch.
     // v6: listing hides child variants (parent_tour_id IS NOT NULL) so option
     //     groups collapse to one card on /tours.
-    private const LISTING_CODE_VERSION = 6;
+    // v7: detail endpoint (showMultilang) now eager-loads parent + childOptions
+    //     so tour.options[] reaches the page payload; bump to invalidate the
+    //     detail cache built between v6 deploy and this fix.
+    private const LISTING_CODE_VERSION = 7;
 
     // 24h backstop TTL. Real freshness comes from bumpToursVersion (fires on every
     // tour/translation/price/media save), so a long TTL just avoids cold rebuilds

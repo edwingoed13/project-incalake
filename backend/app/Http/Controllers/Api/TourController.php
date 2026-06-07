@@ -667,7 +667,25 @@ class TourController extends Controller
                         'prices.nationality',
                         'mediaGallery',
                         'categories.translations',
-                        'mapPoints'
+                        'mapPoints',
+                        // Variant grouping for the inline option-selector — load the
+                        // whole group up front so the detail response carries every
+                        // sibling's card data (no per-card refetch).
+                        'parentTour:id,parent_tour_id',
+                        'parentTour.translations:id,tour_id,language_id,slug,h1_title',
+                        'parentTour.translations.language:id,code',
+                        'parentTour.city:id,slug',
+                        'parentTour.prices:id,tour_id,age_stage_id,amount,active',
+                        'parentTour.childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                        'parentTour.childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                        'parentTour.childOptions.translations.language:id,code',
+                        'parentTour.childOptions.city:id,slug',
+                        'parentTour.childOptions.prices:id,tour_id,age_stage_id,amount,active',
+                        'childOptions:id,parent_tour_id,city_id,option_label,option_color,active',
+                        'childOptions.translations:id,tour_id,language_id,slug,h1_title',
+                        'childOptions.translations.language:id,code',
+                        'childOptions.city:id,slug',
+                        'childOptions.prices:id,tour_id,age_stage_id,amount,active',
                     ])
                     // Filter by tour slug in translation
                     ->whereHas('translations', function($q) use ($tourSlug, $langCode) {
