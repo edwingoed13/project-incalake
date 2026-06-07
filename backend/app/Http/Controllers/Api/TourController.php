@@ -336,7 +336,7 @@ class TourController extends Controller
                 // + the parent's siblings + their slim card-level relations
                 // so TourDetailResource can build the option-selector group
                 // in one query batch (no per-card refetch).
-                'parentTour:id,parent_tour_id',
+                'parentTour:id,parent_tour_id,city_id,option_label,option_color,active',
                 'parentTour.translations:id,tour_id,language_id,slug,h1_title',
                 'parentTour.translations.language:id,code',
                 'parentTour.city:id,slug',
@@ -387,7 +387,7 @@ class TourController extends Controller
                 'categories.translations',
                 'tags',
                 'city',
-                'parentTour:id,parent_tour_id',
+                'parentTour:id,parent_tour_id,city_id,option_label,option_color,active',
                 'parentTour.translations:id,tour_id,language_id,slug,h1_title',
                 'parentTour.translations.language:id,code',
                 'parentTour.city:id,slug',
@@ -670,8 +670,13 @@ class TourController extends Controller
                         'mapPoints',
                         // Variant grouping for the inline option-selector — load the
                         // whole group up front so the detail response carries every
-                        // sibling's card data (no per-card refetch).
-                        'parentTour:id,parent_tour_id',
+                        // sibling's card data (no per-card refetch). The parent's
+                        // column projection MUST include city_id (FK for the
+                        // belongsTo city() relation) and option_label/option_color
+                        // (read directly by the resource); leaving them off the
+                        // SELECT made parent options return city_slug=null and
+                        // label=null, which broke the "back to Compartido" click.
+                        'parentTour:id,parent_tour_id,city_id,option_label,option_color,active',
                         'parentTour.translations:id,tour_id,language_id,slug,h1_title',
                         'parentTour.translations.language:id,code',
                         'parentTour.city:id,slug',

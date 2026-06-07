@@ -125,7 +125,11 @@ class CacheService
     // v7: detail endpoint (showMultilang) now eager-loads parent + childOptions
     //     so tour.options[] reaches the page payload; bump to invalidate the
     //     detail cache built between v6 deploy and this fix.
-    private const LISTING_CODE_VERSION = 7;
+    // v8: parentTour column projection now includes city_id + option_label +
+    //     option_color; the previous projection broke the city belongsTo
+    //     relation (FK missing) and dropped the parent's label/color from
+    //     the option-selector payload.
+    private const LISTING_CODE_VERSION = 8;
 
     // 24h backstop TTL. Real freshness comes from bumpToursVersion (fires on every
     // tour/translation/price/media save), so a long TTL just avoids cold rebuilds
