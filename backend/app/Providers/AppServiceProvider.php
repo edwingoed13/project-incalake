@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\City;
+use App\Models\Tag;
 use App\Models\Tour;
 use App\Models\TourTranslation;
 use App\Models\TourPrice;
@@ -38,6 +40,17 @@ class AppServiceProvider extends ServiceProvider
         foreach ([Tour::class, TourTranslation::class, TourPrice::class, TourMediaGallery::class] as $model) {
             $model::saved($bump);
             $model::deleted($bump);
+        }
+
+        // Cities and Tags drive their own support cache (header dropdown,
+        // /tours tag filter). They change far less often than tours but a
+        // rename / active toggle still needs to invalidate within seconds,
+        // so the same observer pattern applies — bumpSupportVersion is a
+        // single Cache::forever write, cheap.
+        $bumpSupport = static fn () => CacheService::bumpSupportVersion();
+        foreach ([City::class, Tag::class] as $model) {
+            $model::saved($bumpSupport);
+            $model::deleted($bumpSupport);
         }
     }
 }

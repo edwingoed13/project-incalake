@@ -4,44 +4,84 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\City;
+use App\Services\CacheService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class CityController extends Controller
 {
+    public function __construct(private CacheService $cacheService) {}
+
     /**
      * Display a listing of cities.
+     *
+     * The list is rendered in every public-site header (city dropdown) AND
+     * in the /tours filter sidebar with optional ?with_tour_counts=1. Both
+     * variants go through CacheService:
+     *  - default (no counts) -> support cache, 24h TTL, busted by City save
+     *  - with_tour_counts    -> versions with toursVersion so an active tour
+     *                            toggle invalidates counts automatically
+     *
+     * Admin or non-public callers (active=0 or a search term) bypass the
+     * cache so they always see fresh state — the public surface never asks
+     * for those, so the cache hit rate stays high.
      */
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = City::query();
+            $isAdminQuery = $request->has('search')
+                || ($request->has('active') && !$request->boolean('active'));
 
-            if ($request->has('active')) {
-                $query->where('active', $request->boolean('active'));
-            } else {
-                $query->where('active', true);
+            // Public read with counts — the hottest path. Cache key versions
+            // with the tours dataset so any tour toggle invalidates.
+            if (!$isAdminQuery && $request->boolean('with_tour_counts')) {
+                $lang = (string) $request->query('language', 'ES');
+                $data = $this->cacheService->getCityCounts($lang, function () {
+                    $cities = City::query()
+                        ->where('active', true)
+                        ->withCount(['tours as tours_count' => function ($q) {
+                            $q->where('active', true)->where('status', 'published');
+                        }])
+                        ->orderBy('name')
+                        ->limit(20)
+                        ->get();
+                    return $cities->toArray();
+                });
+                return response()->json(['success' => true, 'data' => $data]);
             }
 
+            // Public read without counts — header dropdown, footer, etc.
+            if (!$isAdminQuery) {
+                $lang = (string) $request->query('language', 'ES');
+                $data = $this->cacheService->getPublicCities($lang, function () {
+                    return City::query()
+                        ->where('active', true)
+                        ->orderBy('name')
+                        ->limit(20)
+                        ->get()
+                        ->toArray();
+                });
+                return response()->json(['success' => true, 'data' => $data]);
+            }
+
+            // Admin / filtered query — never cached.
+            $query = City::query();
+            if ($request->has('active')) {
+                $query->where('active', $request->boolean('active'));
+            }
             if ($request->has('search')) {
                 $query->where('name', 'like', '%' . $request->search . '%');
             }
-
-            // Frontend listing page asks for tour counts so it can show "Puno (12)" etc.
-            // Doing this server-side via withCount is a single GROUP BY query — way
-            // cheaper than the previous client-side approach of fetching all 500 tours
-            // just to count them.
             if ($request->boolean('with_tour_counts')) {
                 $query->withCount(['tours as tours_count' => function ($q) {
                     $q->where('active', true)->where('status', 'published');
                 }]);
             }
-
             $cities = $query->orderBy('name')->limit(20)->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $cities
+                'data' => $cities,
             ]);
         } catch (\Exception $e) {
             return response()->json([

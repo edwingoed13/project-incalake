@@ -171,6 +171,72 @@ class CacheService
         }
     }
 
+    // ===== Lightweight surfaces (P1) — cities / tags / city counts =========
+    //
+    // These three endpoints are hit on every public-page header + every load
+    // of /tours. They're cheap individually but together they're 3 DB queries
+    // per /tours page that the listing cache can't absorb (the listing
+    // already cached the tour set; these are sibling data the page needs).
+    // Shared TTL because they share the same invalidation triggers (any
+    // city/tag/tour active toggle).
+
+    private const SUPPORT_TTL = 86400; // 24h. Bumped instantly via bumpSupportVersion().
+
+    public function getPublicCities(string $lang, \Closure $builder): array
+    {
+        $key = 'support:cities:v' . self::supportVersion() . ':' . strtoupper($lang);
+        try {
+            return Cache::remember($key, self::SUPPORT_TTL, $builder);
+        } catch (\Exception $e) {
+            Log::error('Error caching public cities', ['error' => $e->getMessage()]);
+            return $builder();
+        }
+    }
+
+    public function getPublicTags(string $lang, \Closure $builder): array
+    {
+        $key = 'support:tags:v' . self::supportVersion() . ':' . strtoupper($lang);
+        try {
+            return Cache::remember($key, self::SUPPORT_TTL, $builder);
+        } catch (\Exception $e) {
+            Log::error('Error caching public tags', ['error' => $e->getMessage()]);
+            return $builder();
+        }
+    }
+
+    // city counts depend on the tour set, so they version together with tours
+    // (not the support version) — a tour active toggle bumps toursVersion and
+    // the count cache invalidates with it.
+    public function getCityCounts(string $lang, \Closure $builder): array
+    {
+        $key = 'support:city-counts:tv' . self::toursVersion() . ':' . strtoupper($lang);
+        try {
+            return Cache::remember($key, self::SUPPORT_TTL, $builder);
+        } catch (\Exception $e) {
+            Log::error('Error caching city counts', ['error' => $e->getMessage()]);
+            return $builder();
+        }
+    }
+
+    public static function supportVersion(): int
+    {
+        return (int) Cache::get('support:version', 1);
+    }
+
+    /**
+     * Invalidate cached cities / tags. Called from City + Tag model observers
+     * on save/delete. Tour counts version with toursVersion (already bumped
+     * by the existing observers), so no extra bump needed there.
+     */
+    public static function bumpSupportVersion(): void
+    {
+        try {
+            Cache::forever('support:version', self::supportVersion() + 1);
+        } catch (\Exception $e) {
+            Log::error('Error bumping support cache version', ['error' => $e->getMessage()]);
+        }
+    }
+
     // Static so model observers can bump the version without resolving the whole
     // service (which would pull in TourService + its sub-services on every save).
     public static function toursVersion(): int
