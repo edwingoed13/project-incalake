@@ -211,10 +211,37 @@ class Tour extends Model
      * Get minimum price (from active prices).
      * Uses the FIRST age_stage (lowest id = primary/adult stage)
      * to stay consistent with what the booking widget shows.
+     *
+     * N+1-safe: when the `prices` relation is already eager-loaded (which
+     * every Resource that needs min_price ALREADY does — TourCardResource,
+     * TourDetailResource, BookingResource), we read from the loaded
+     * collection in PHP instead of firing 2 fresh queries per tour. The
+     * listing endpoint (178+ tours) drops from O(2N) queries to O(0) for
+     * this attribute alone.
+     *
+     * Falls back to the query path when prices weren't preloaded so callers
+     * that just `Tour::find()->min_price` still work.
      */
     public function getMinPriceAttribute(): ?float
     {
-        // Get the first (primary) age_stage — this is what the booking widget defaults to
+        if ($this->relationLoaded('prices')) {
+            $active = $this->prices->where('active', true);
+            if ($active->isEmpty()) {
+                return null;
+            }
+            // Pick the primary age_stage (lowest id) from the loaded set;
+            // fall back to overall min if no stage is present.
+            $firstStage = $active->sortBy('age_stage_id')->first()?->age_stage_id;
+            $candidates = $firstStage
+                ? $active->where('age_stage_id', $firstStage)
+                : $active;
+            $min = $candidates->min('amount');
+            return $min !== null ? (float) $min : null;
+        }
+
+        // Cold path — prices weren't eager-loaded. Two queries, same shape
+        // as the original implementation so behavior is preserved for any
+        // caller that hits Tour::find()->min_price without a with('prices').
         $firstStage = $this->prices()
             ->where('active', true)
             ->orderBy('age_stage_id')

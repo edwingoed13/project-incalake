@@ -93,9 +93,15 @@ class Category extends Model
         return $translation ? $translation->slug : $this->code;
     }
 
-    // Accessor for tours count
+    // Accessor for tours count. Prefers the eager-loaded `tours` collection
+    // when present so the listing endpoint (which already does
+    // ->with('tours')) doesn't fire an extra COUNT(*) per category. Falls
+    // back to a fresh count query when the relation isn't loaded.
     public function getToursCountAttribute()
     {
+        if ($this->relationLoaded('tours')) {
+            return $this->tours->count();
+        }
         return $this->tours()->count();
     }
 }

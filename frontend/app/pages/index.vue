@@ -3,6 +3,15 @@
     <!-- Premium Hero Section -->
     <section class="relative w-full h-[430px] sm:h-[540px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
+        <!--
+          Hero is the LCP candidate — quality bumped from 68 to 82 because
+          users reported visible compression artifacts on the gradient sky.
+          `densities="1x 2x"` keeps retina/HiDPI displays sharp without
+          forcing every viewport to download the 1920w copy: at 1x, the
+          breakpoint-matched variant ships; at 2x, double resolution for
+          the same CSS pixels. `sizes` tells the browser how wide the
+          image renders so it can pick the right entry in srcset.
+        -->
         <NuxtImg
           :src="heroImage"
           class="absolute w-full h-full object-cover"
@@ -10,19 +19,12 @@
           width="1920"
           height="1080"
           sizes="100vw"
+          densities="1x 2x"
           format="webp"
-          quality="68"
+          quality="82"
           loading="eager"
           fetchpriority="high"
         />
-        <!--
-          Removed the non-standard `preload` prop — NuxtImg doesn't know it,
-          so it serialized as preload="true" on the <img>, which the browser
-          ignores. fetchpriority="high" + loading="eager" is the standard
-          combo to prioritize an LCP image and is already set. `densities`
-          dropped in favor of `sizes` so the browser picks the right
-          responsive variant (the hero is 100vw at every breakpoint).
-        -->
 
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
       </div>
