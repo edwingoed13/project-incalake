@@ -4,13 +4,15 @@
     <section class="relative w-full h-[430px] sm:h-[540px] md:h-[620px] flex flex-col items-center justify-center p-4 sm:p-12">
       <div class="absolute inset-0 z-0 overflow-hidden">
         <!--
-          Hero is the LCP candidate — quality bumped from 68 to 82 because
-          users reported visible compression artifacts on the gradient sky.
-          `densities="1x 2x"` keeps retina/HiDPI displays sharp without
-          forcing every viewport to download the 1920w copy: at 1x, the
-          breakpoint-matched variant ships; at 2x, double resolution for
-          the same CSS pixels. `sizes` tells the browser how wide the
-          image renders so it can pick the right entry in srcset.
+          Hero is the LCP candidate. The previous (sizes='100vw' +
+          densities='1x 2x') combo made @nuxt/image emit a broken srcset
+          ("&w=320 1w, &w=320 2w") on Vercel — both 1x and 2x descriptors
+          pointed at a 320-wide variant, which then got upscaled to the
+          1920px viewport and looked visibly blurry. Stripping back to
+          width-only restores a single high-quality variant for everyone;
+          mobile downloads a larger asset than strictly needed (~150 KB
+          more on 3G) but the hero is the LCP candidate and sharpness
+          matters more than that delta for the visual first impression.
         -->
         <NuxtImg
           :src="heroImage"
@@ -18,8 +20,6 @@
           alt="Lake Titicaca"
           width="1920"
           height="1080"
-          sizes="100vw"
-          densities="1x 2x"
           format="webp"
           quality="82"
           loading="eager"
