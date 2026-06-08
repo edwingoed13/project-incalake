@@ -179,7 +179,7 @@
             </div>
             <!-- Content -->
             <div class="flex-1 min-w-0 flex flex-col py-0.5 pr-8">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 inline-flex items-center gap-0.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 inline-flex items-center gap-0.5">
                 <Icon name="material-symbols:location-on-outline" class="text-[12px]" />{{ cityLabel(tour) }}
               </p>
               <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug mb-1.5">{{ tour.title }}</h3>
@@ -199,7 +199,7 @@
                 <div class="leading-tight">
                   <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
                   <span class="flex items-baseline gap-1">
-                    <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-400">
+                    <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-500">
                       {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
                     </span>
                     <span class="text-base font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-slate-900'">
@@ -248,13 +248,13 @@
             </div>
           </div>
           <div class="p-4">
-            <div class="flex items-center gap-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+            <div class="flex items-center gap-1 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
               <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
             </div>
             <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
             <div class="flex items-end justify-between pt-3 border-t border-slate-100">
               <div>
-                <span class="text-[10px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                <span class="text-[10px] text-slate-500 font-medium block">{{ t('from') }}</span>
                 <span class="flex items-baseline gap-1.5">
                   <span v-if="showDiscountedPrice(tour)" class="text-xs line-through text-slate-400">
                     {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
@@ -302,7 +302,7 @@
           </div>
           <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
             <div>
-              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
               </div>
               <h3 class="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
@@ -318,7 +318,7 @@
             </div>
             <div class="flex items-end justify-between mt-2">
               <div>
-                <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
+                <span class="text-[10px] text-slate-500 block">{{ t('from') }}</span>
                 <span class="flex items-baseline gap-2">
                   <span v-if="showDiscountedPrice(tour)" class="text-sm line-through text-slate-400">
                     {{ currencyStore.formatConverted(tour.min_price || 0, false) }}

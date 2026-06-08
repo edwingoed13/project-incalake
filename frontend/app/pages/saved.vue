@@ -116,7 +116,7 @@
               <div v-if="item.min_price" class="min-w-0 leading-tight">
                 <span class="text-[9px] text-slate-400 font-medium block leading-none mb-0.5">Desde</span>
                 <span class="flex items-baseline gap-1 flex-wrap">
-                  <span v-if="showDiscountedPrice(item)" class="text-[10px] line-through text-slate-400">
+                  <span v-if="showDiscountedPrice(item)" class="text-[10px] line-through text-slate-500">
                     {{ currencyStore.formatConverted(item.min_price) }}
                   </span>
                   <span class="text-base font-black" :class="showDiscountedPrice(item) ? 'text-trust' : 'text-primary'">

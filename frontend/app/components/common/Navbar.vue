@@ -43,7 +43,7 @@
             aria-label="Idioma"
             class="flex items-center gap-1.5 px-2 py-2 min-h-[40px] text-[10px] font-black uppercase border border-slate-200 rounded-lg hover:border-primary/40 transition-colors text-slate-600"
           >
-            <img :src="flagSrc(locale, 20)" :alt="locale" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
+            <img :src="flagSrc(locale, 40)" :srcset="`${flagSrc(locale, 40)} 1x, ${flagSrc(locale, 60)} 1.5x, ${flagSrc(locale, 80)} 2x`" :alt="locale" width="20" height="15" class="w-5 h-auto rounded-sm shadow-sm" loading="lazy" />
             <span class="hidden lg:inline">{{ langShortLabels[locale] || locale.toUpperCase() }}</span>
             <!-- chevron only on desktop (lg+); wrapper span carries the
                  responsive `hidden lg:inline-block` + rotate-on-open transform. -->
@@ -62,7 +62,7 @@
               :class="{ 'bg-primary/5 text-primary font-semibold': locale === loc.code }"
             >
               <span class="flex items-center gap-2.5">
-                <img :src="flagSrc(loc.code, 24)" :alt="loc.code" class="w-6 h-auto rounded-sm shadow-sm" loading="lazy" />
+                <img :src="flagSrc(loc.code, 48)" :srcset="`${flagSrc(loc.code, 48)} 1x, ${flagSrc(loc.code, 72)} 1.5x, ${flagSrc(loc.code, 96)} 2x`" :alt="loc.code" width="24" height="18" class="w-6 h-auto rounded-sm shadow-sm" loading="lazy" />
                 <span class="text-xs font-semibold">{{ loc.name }}</span>
               </span>
               <Icon name="material-symbols:check" v-if="locale === loc.code" class="text-sm text-primary" />

@@ -72,7 +72,7 @@
         >
           <!-- Suggestions: show destinations when input is empty -->
           <template v-if="searchQuery.length < 2">
-            <p class="px-5 pt-3 pb-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('home_destinations_label') }}</p>
+            <p class="px-5 pt-3 pb-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ t('home_destinations_label') }}</p>
             <NuxtLink
               v-for="city in featuredCities"
               :key="city.id"
@@ -85,7 +85,7 @@
               </div>
               <div>
                 <p class="text-sm font-bold text-slate-800">{{ city.name }}</p>
-                <p class="text-[10px] text-slate-400 font-medium">{{ city.country_code === 'PE' ? 'Peru' : 'Bolivia' }}</p>
+                <p class="text-[10px] text-slate-500 font-medium">{{ city.country_code === 'PE' ? 'Peru' : 'Bolivia' }}</p>
               </div>
             </NuxtLink>
           </template>
@@ -100,7 +100,7 @@
 
             <!-- Results -->
             <template v-else-if="searchResults.length > 0">
-              <p class="px-5 pt-3 pb-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <p class="px-5 pt-3 pb-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 {{ searchResults.length }}+ resultados
               </p>
               <NuxtLink
@@ -122,7 +122,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-bold text-slate-800 truncate">{{ result.title }}</p>
-                  <p class="text-[10px] text-slate-400 font-medium">
+                  <p class="text-[10px] text-slate-500 font-medium">
                     {{ result.city?.name || 'Puno' }}
                     <span v-if="result.min_price"> · {{ currencyStore.formatConverted(result.min_price || 0) }}</span>
                   </p>
@@ -188,7 +188,7 @@
             </div>
             <div class="flex items-center gap-1.5">
               <Icon name="material-symbols:star" v-for="i in 5" :key="i" class="text-yellow-500 text-sm" />
-              <span class="text-[10px] font-black text-slate-400 ml-1">4.9/5</span>
+              <span class="text-[10px] font-black text-slate-500 ml-1">4.9/5</span>
             </div>
           </div>
         </div>
@@ -279,14 +279,14 @@
               </div>
             </div>
             <div class="p-4">
-              <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <Icon name="material-symbols:location-on-outline" class="text-xs" />
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h4>
               <div class="flex items-end justify-between pt-3 border-t border-slate-100">
                 <div>
-                  <span class="text-[11px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                  <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
                   <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
                 </div>
                 <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
@@ -346,14 +346,14 @@
               </div>
             </div>
             <div class="p-4">
-              <div class="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+              <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <Icon name="material-symbols:location-on-outline" class="text-xs" />
                 {{ tour.city?.name || 'Puno' }}
               </div>
               <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors leading-snug">{{ tour.title }}</h4>
               <div class="flex items-end justify-between pt-3 border-t border-green-100">
                 <div>
-                  <span class="text-[11px] text-slate-400 font-medium block">{{ t('from') }}</span>
+                  <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
                   <span class="text-lg font-black text-green-600">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
                 </div>
                 <span class="text-xs font-bold text-green-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
@@ -400,7 +400,7 @@
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                 <div>
                   <p class="text-xs font-bold text-slate-700">{{ review.name }}</p>
-                  <p class="text-[10px] text-slate-400">{{ review.review_date }}</p>
+                  <p class="text-[10px] text-slate-500">{{ review.review_date }}</p>
                 </div>
                 <NuxtLink
                   v-if="review.tour_id && review.tour?.translations?.length"

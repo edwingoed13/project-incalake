@@ -4,7 +4,12 @@
          a tour from the home/listing) gives immediate feedback while data loads. -->
     <NuxtLoadingIndicator color="#4f46e5" :height="3" />
     <CommonNavbar />
-    <NuxtPage />
+    <!-- Wrap page content in <main> so assistive tech (and Lighthouse) detect
+         the primary landmark. id=main lets a "skip to content" link target it
+         later. -->
+    <main id="main">
+      <NuxtPage />
+    </main>
     <CommonFooter />
   </div>
 </template>

@@ -11,7 +11,7 @@
             </div>
             <div class="flex flex-col">
               <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</h2>
-              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{{ t('footer_tagline') }}</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">{{ t('footer_tagline') }}</span>
             </div>
           </NuxtLink>
           <p class="text-slate-400 mb-8 font-medium leading-relaxed text-sm">
@@ -78,10 +78,10 @@
 
       <!-- Bottom Bar -->
       <div class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-center">
-        <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">© {{ currentYear }} Incalake Tours</p>
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-300">© {{ currentYear }} Incalake Tours</p>
         <div class="flex gap-8">
-           <NuxtLink :to="localePath('/terms') + '#privacidad'" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">{{ t('footer_privacy') }}</NuxtLink>
-           <NuxtLink :to="localePath('/terms') + '#terminos'" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">{{ t('footer_terms') }}</NuxtLink>
+           <NuxtLink :to="localePath('/terms') + '#privacidad'" class="text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-colors">{{ t('footer_privacy') }}</NuxtLink>
+           <NuxtLink :to="localePath('/terms') + '#terminos'" class="text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-colors">{{ t('footer_terms') }}</NuxtLink>
         </div>
       </div>
     </div>
