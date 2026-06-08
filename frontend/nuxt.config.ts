@@ -64,7 +64,14 @@ export default defineNuxtConfig({
     serverBundle: { collections: ['material-symbols'] },
     clientBundle: {
       scan: true,
-      sizeLimitKb: 256,
+      // Bumped 256 → 384 KB after a hydration regression: the wishlist
+      // heart icon (material-symbols:favorite) was getting dropped from
+      // the client bundle when scan picked up new icons from recent
+      // feature work (tour options selector, filter panel, video facade)
+      // and pushed the total over 256 KB. The icon was listed explicitly
+      // below but the cap still wins. 384 KB keeps us well under the
+      // 3.8 MB web-font regression that prompted this strategy.
+      sizeLimitKb: 384,
       icons: [
         'material-symbols:account-balance-wallet-outline',
         'material-symbols:add',
