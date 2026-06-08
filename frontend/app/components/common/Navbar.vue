@@ -97,11 +97,18 @@
           <div v-if="currOpen" class="fixed inset-0 z-40" @click="currOpen = false" />
         </div>
 
-        <!-- Wishlist Icon — always tinted red so it stands out next to the
-             cart (gray slate empty heart was easy to miss). -->
+        <!-- Wishlist Icon — mirrors the cart pattern: ONE fixed icon name
+             (so SSR → client hydration doesn't swap the SVG inner content
+             and momentarily blank the heart while Iconify resolves the
+             new icon), and the "has items" state is signaled by:
+               (a) the count badge appearing,
+               (b) the link color shifting from rose-400 to red-500.
+             The earlier filled-vs-outline swap created a visible flicker
+             on first load because the wishlistStore hydrates from
+             localStorage AFTER first paint. -->
         <NuxtLink :to="localePath('/saved')" class="relative p-2 transition-colors" aria-label="Mis guardados"
           :class="wishlistStore.count > 0 ? 'text-red-500' : 'text-rose-400 hover:text-red-500'">
-          <Icon :name="wishlistStore.count > 0 ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-xl" />
+          <Icon name="material-symbols:favorite-outline" class="text-xl" />
           <span
             v-if="wishlistStore.count > 0"
             class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
