@@ -267,18 +267,24 @@ export default defineNuxtConfig({
     sources: ['/api/__sitemap__/urls'],
   },
 
-  // i18n configuration for multilang URLs
+  // i18n configuration for multilang URLs.
+  // Lazy-loaded since June 2026: each locale lives in its own file under
+  // i18n/locales/*.ts. Only the default locale (es) ships in the main
+  // bundle; en/pt/fr/de/it fetch on demand when the user switches locale
+  // or visits a /xx/* route. Cuts ~60-80KB from the homepage payload.
   i18n: {
-    // Absolute base for canonical + hreflang alternate links (useLocaleHead).
     baseUrl: 'https://incalake.com',
+    lazy: true,
+    langDir: 'locales',
     locales: [
       // v10 uses `language` (not `iso`) for hreflang/<html lang>.
-      { code: 'es', language: 'es-PE', name: 'Español' },
-      { code: 'en', language: 'en-US', name: 'English' },
-      { code: 'pt', language: 'pt-BR', name: 'Português' },
-      { code: 'fr', language: 'fr-FR', name: 'Français' },
-      { code: 'de', language: 'de-DE', name: 'Deutsch' },
-      { code: 'it', language: 'it-IT', name: 'Italiano' },
+      // `file` tells the lazy loader which module to import for this locale.
+      { code: 'es', language: 'es-PE', name: 'Español',    file: 'es.ts' },
+      { code: 'en', language: 'en-US', name: 'English',    file: 'en.ts' },
+      { code: 'pt', language: 'pt-BR', name: 'Português',  file: 'pt.ts' },
+      { code: 'fr', language: 'fr-FR', name: 'Français',   file: 'fr.ts' },
+      { code: 'de', language: 'de-DE', name: 'Deutsch',    file: 'de.ts' },
+      { code: 'it', language: 'it-IT', name: 'Italiano',   file: 'it.ts' },
     ],
     defaultLocale: 'es',
     strategy: 'prefix',
