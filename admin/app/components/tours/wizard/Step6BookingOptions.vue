@@ -570,14 +570,14 @@
                   <UButton color="neutral" variant="link" size="xs" icon="i-lucide-x" :padded="false" aria-label="Cerrar lista" @click="parentDropdownOpen = false" />
                 </template>
               </UInput>
-              <!-- Resultados dropdown. max-h sized to fit roughly 6 entries
-                   (each card ~ 52 px); the explicit pb-2 buys a few pixels
-                   so the LAST scrolled-into-view entry doesn't get clipped
-                   under the rounded corner / shadow. The footer caption
-                   below tells the user there are more if truncated. -->
+              <!-- Resultados dropdown. max-h fits roughly 6 entries
+                   (~52 px each); pb-4 gives the last scrolled-into-view
+                   row clear separation from the rounded bottom edge.
+                   scroll-pb-4 makes a Tab/keyboard scroll-into-view stop
+                   above the bottom padding instead of clipping. -->
               <div
                 v-if="parentDropdownOpen && (parentCandidates.length > 0 || parentSearching)"
-                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[360px] overflow-y-auto pb-2"
+                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[360px] overflow-y-auto pb-4 scroll-pb-4"
               >
                 <div v-if="parentSearching && parentCandidates.length === 0" class="px-3 py-2 text-xs text-muted">
                   Buscando…
@@ -592,7 +592,7 @@
                 >
                   <span class="text-sm font-semibold">{{ cand.h1_title }}</span>
                   <span class="text-[11px] text-muted">
-                    {{ cand.city_name }} · {{ cand.child_count }} variante(s) ya
+                    {{ cand.city_name }} · {{ formatChildCount(cand.child_count) }}
                   </span>
                 </button>
                 <p v-if="parentCandidates.length >= 50" class="px-3 py-2 text-[11px] text-muted italic border-t border-default">
@@ -1069,6 +1069,16 @@ function selectParent(cand: ParentCandidate) {
   parentSearchQuery.value = cand.h1_title
   parentDropdownOpen.value = false
   store.isDirty = true
+}
+
+// Human-friendly child count copy. The original "X variante(s) ya"
+// confused the operator: "ya" was meant as "already has" but read
+// ambiguous, and "variante(s)" mixed singular/plural in one string.
+// Branch by count instead.
+function formatChildCount(n: number): string {
+  if (!n || n <= 0) return 'sin variantes vinculadas'
+  if (n === 1) return '1 variante vinculada'
+  return `${n} variantes vinculadas`
 }
 
 // Ref to the search wrapper so the outside-click handler can scope to it.
