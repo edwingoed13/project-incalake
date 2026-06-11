@@ -679,11 +679,22 @@ class TourController extends Controller
                 $q->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
             });
 
-            $search = (string) $request->query('search', '');
+            $search = trim((string) $request->query('search', ''));
             if ($search !== '') {
-                $query->whereHas('translations', function ($q) use ($search, $langCode) {
-                    $q->where('h1_title', 'like', "%{$search}%")
-                      ->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
+                // Split on whitespace so a multi-word query ("taquile privado")
+                // matches titles regardless of word order. Each non-empty token
+                // adds its own LIKE constraint AND'd together — a tour matches
+                // only when every word appears somewhere in the (current-
+                // language) h1_title.
+                $tokens = array_values(array_filter(
+                    preg_split('/\s+/u', $search) ?: [],
+                    fn ($w) => trim((string) $w) !== ''
+                ));
+                $query->whereHas('translations', function ($q) use ($tokens, $langCode) {
+                    $q->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
+                    foreach ($tokens as $word) {
+                        $q->where('h1_title', 'like', '%' . $word . '%');
+                    }
                 });
             }
 

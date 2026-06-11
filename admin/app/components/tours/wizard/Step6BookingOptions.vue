@@ -570,10 +570,14 @@
                   <UButton color="neutral" variant="link" size="xs" icon="i-lucide-x" :padded="false" aria-label="Cerrar lista" @click="parentDropdownOpen = false" />
                 </template>
               </UInput>
-              <!-- Resultados dropdown -->
+              <!-- Resultados dropdown. max-h sized to fit roughly 6 entries
+                   (each card ~ 52 px); the explicit pb-2 buys a few pixels
+                   so the LAST scrolled-into-view entry doesn't get clipped
+                   under the rounded corner / shadow. The footer caption
+                   below tells the user there are more if truncated. -->
               <div
                 v-if="parentDropdownOpen && (parentCandidates.length > 0 || parentSearching)"
-                class="absolute z-20 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-80 overflow-y-auto"
+                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[360px] overflow-y-auto pb-2"
               >
                 <div v-if="parentSearching && parentCandidates.length === 0" class="px-3 py-2 text-xs text-muted">
                   Buscando…
@@ -591,6 +595,9 @@
                     {{ cand.city_name }} · {{ cand.child_count }} variante(s) ya
                   </span>
                 </button>
+                <p v-if="parentCandidates.length >= 50" class="px-3 py-2 text-[11px] text-muted italic border-t border-default">
+                  Mostrando los primeros 50. Refina tu búsqueda para acotar.
+                </p>
               </div>
             </div>
             <p v-if="store.bookingOptions.parentTourId && currentParentLabel" class="text-[11px] text-muted mt-1">
