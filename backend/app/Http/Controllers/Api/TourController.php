@@ -668,10 +668,22 @@ class TourController extends Controller
                 $query->where('id', '!=', (int) $request->query('exclude_id'));
             }
 
+            // Only surface tours that have a translation in the requested
+            // language. Without this scope the operator (editing in ES) saw
+            // English-only or Italian-only tours bubble up because the
+            // search hits ALL translations indiscriminately, and the result
+            // h1_title fell back to a non-ES copy. Keeping the search
+            // language-scoped means: title must contain the term in this
+            // language, and the result displays in this language.
+            $query->whereHas('translations', function ($q) use ($langCode) {
+                $q->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
+            });
+
             $search = (string) $request->query('search', '');
             if ($search !== '') {
-                $query->whereHas('translations', function ($q) use ($search) {
-                    $q->where('h1_title', 'like', "%{$search}%");
+                $query->whereHas('translations', function ($q) use ($search, $langCode) {
+                    $q->where('h1_title', 'like', "%{$search}%")
+                      ->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
                 });
             }
 
@@ -686,18 +698,24 @@ class TourController extends Controller
                 ->limit(50)
                 ->get();
 
+            // Drop the safety fallback to "first translation" — at this
+            // point we've guaranteed every tour has a translation in the
+            // current language, so picking by code is enough. If somehow
+            // no match (race condition with a concurrent translation
+            // delete), the entry skips itself rather than render a
+            // wrong-language title.
             $data = $tours->map(function ($t) use ($langCode) {
-                $tr = $t->translations->first(fn ($x) => optional($x->language)->code === $langCode)
-                    ?? $t->translations->first();
+                $tr = $t->translations->first(fn ($x) => optional($x->language)->code === $langCode);
+                if (!$tr) return null;
                 return [
                     'id' => $t->id,
-                    'h1_title' => $tr?->h1_title ?? $t->code,
-                    'slug' => $tr?->slug,
+                    'h1_title' => $tr->h1_title ?? $t->code,
+                    'slug' => $tr->slug,
                     'city_id' => $t->city_id,
                     'city_name' => optional($t->city)->name,
                     'child_count' => $t->childOptions->count(),
                 ];
-            });
+            })->filter()->values();
 
             return response()->json([
                 'success' => true,
