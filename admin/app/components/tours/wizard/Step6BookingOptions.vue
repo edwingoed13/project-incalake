@@ -894,7 +894,11 @@ const calculateExampleTime = () => {
 // fresh list even when the catalog grows. The list scopes to the same city
 // by default because activities almost always live in one destination.
 const config = useRuntimeConfig()
-const apiBase = config.public.apiBase
+// Admin uses public.apiUrl (NUXT_PUBLIC_API_URL); the rest of this app
+// reads it under that name. Using apiBase here was a copy from the
+// frontend repo and left this fetch with `undefined/admin/...`, which
+// failed silently and surfaced as "Sin resultados" for every search.
+const apiBase = config.public.apiUrl
 
 type ParentCandidate = {
   id: number
