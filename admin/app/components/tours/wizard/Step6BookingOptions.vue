@@ -570,34 +570,47 @@
                   <UButton color="neutral" variant="link" size="xs" icon="i-lucide-x" :padded="false" aria-label="Cerrar lista" @click="parentDropdownOpen = false" />
                 </template>
               </UInput>
-              <!-- Resultados dropdown. max-h fits roughly 6 entries
-                   (~52 px each); pb-4 gives the last scrolled-into-view
-                   row clear separation from the rounded bottom edge.
-                   scroll-pb-4 makes a Tab/keyboard scroll-into-view stop
-                   above the bottom padding instead of clipping. -->
+              <!-- Resultados dropdown. Search-first: empty/short query shows
+                   a hint, not the full catalog. max-h-[260px] keeps it short
+                   enough to sit under the input without reaching the wizard's
+                   sticky footer; the few visible rows scroll internally. -->
               <div
-                v-if="parentDropdownOpen && (parentCandidates.length > 0 || parentSearching)"
-                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[360px] overflow-y-auto pb-4 scroll-pb-4"
+                v-if="parentDropdownOpen"
+                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[260px] overflow-y-auto"
               >
-                <div v-if="parentSearching && parentCandidates.length === 0" class="px-3 py-2 text-xs text-muted">
+                <!-- Prompt: nothing typed yet -->
+                <div v-if="parentSearchQuery.trim().length < 2 && !parentSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
+                  <UIcon name="i-lucide-search" class="size-4 shrink-0" />
+                  Escribe al menos 2 letras del nombre del tour…
+                </div>
+                <!-- Loading -->
+                <div v-else-if="parentSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
+                  <UIcon name="i-lucide-loader-circle" class="size-4 shrink-0 animate-spin" />
                   Buscando…
                 </div>
-                <button
-                  v-for="cand in parentCandidates"
-                  :key="cand.id"
-                  type="button"
-                  class="w-full text-left px-3 py-2 hover:bg-elevated transition-colors flex flex-col gap-0.5 border-b border-default last:border-0"
-                  :class="store.bookingOptions.parentTourId === cand.id ? 'bg-primary/5' : ''"
-                  @click="selectParent(cand)"
-                >
-                  <span class="text-sm font-semibold">{{ cand.h1_title }}</span>
-                  <span class="text-[11px] text-muted">
-                    {{ cand.city_name }} · {{ formatChildCount(cand.child_count) }}
-                  </span>
-                </button>
-                <p v-if="parentCandidates.length >= 50" class="px-3 py-2 text-[11px] text-muted italic border-t border-default">
-                  Mostrando los primeros 50. Refina tu búsqueda para acotar.
-                </p>
+                <!-- No results -->
+                <div v-else-if="parentCandidates.length === 0" class="px-3 py-3 text-xs text-muted">
+                  Sin resultados para "{{ parentSearchQuery.trim() }}".
+                </div>
+                <!-- Results -->
+                <template v-else>
+                  <button
+                    v-for="cand in parentCandidates"
+                    :key="cand.id"
+                    type="button"
+                    class="w-full text-left px-3 py-2 hover:bg-elevated transition-colors flex flex-col gap-0.5 border-b border-default last:border-0"
+                    :class="store.bookingOptions.parentTourId === cand.id ? 'bg-primary/5' : ''"
+                    @click="selectParent(cand)"
+                  >
+                    <span class="text-sm font-semibold">{{ cand.h1_title }}</span>
+                    <span class="text-[11px] text-muted">
+                      {{ cand.city_name }} · {{ formatChildCount(cand.child_count) }}
+                    </span>
+                  </button>
+                  <p v-if="parentCandidates.length >= 50" class="px-3 py-2 text-[11px] text-muted italic border-t border-default">
+                    Hay más de 50. Escribe más para acotar.
+                  </p>
+                </template>
               </div>
             </div>
             <p v-if="store.bookingOptions.parentTourId && currentParentLabel" class="text-[11px] text-muted mt-1">
@@ -965,11 +978,6 @@ async function fetchParentCandidates(search = '') {
   }
 }
 
-function onParentSearch(term: string) {
-  clearTimeout(parentSearchTimer)
-  parentSearchTimer = setTimeout(() => fetchParentCandidates(term), 250)
-}
-
 // Three-mode UX (clearer than the old binary toggle, which hid the fact that
 // a tour can be a PARENT — option_label + color set, no parent_tour_id —
 // without being a child). Modes:
@@ -1048,25 +1056,40 @@ const variantBadgeLabel = computed(() => {
 // + custom results list: simpler, server-driven, behaves predictably.
 const parentSearchQuery = ref('')
 const parentDropdownOpen = ref(false)
-const currentParentLabel = computed(() => {
-  const found = parentCandidates.value.find(p => p.id === store.bookingOptions.parentTourId)
-  return found?.h1_title || ''
-})
+// Stable label for the currently-linked parent. Held separately from the
+// search results so it survives a follow-up search (which clears
+// parentCandidates) — otherwise "Padre seleccionado: X" would vanish the
+// moment the operator types a new query.
+const selectedParentLabel = ref('')
+const currentParentLabel = computed(() => selectedParentLabel.value)
+
+// Minimum characters before we hit the server. Below this we show a hint
+// instead of dumping all 50 tours — that giant list was overflowing past
+// the wizard's sticky footer and the operator never wants to scroll 50
+// unrelated tours anyway. Search-first keeps the dropdown short.
+const PARENT_SEARCH_MIN = 2
 
 function onParentInputFocus() {
   parentDropdownOpen.value = true
-  if (parentCandidates.value.length === 0) fetchParentCandidates()
 }
 
 function onParentSearchInput() {
   parentDropdownOpen.value = true
   clearTimeout(parentSearchTimer)
-  parentSearchTimer = setTimeout(() => fetchParentCandidates(parentSearchQuery.value), 250)
+  const q = parentSearchQuery.value.trim()
+  if (q.length < PARENT_SEARCH_MIN) {
+    // Clear stale results so the hint shows immediately, and don't fetch.
+    parentCandidates.value = []
+    parentSearching.value = false
+    return
+  }
+  parentSearchTimer = setTimeout(() => fetchParentCandidates(q), 250)
 }
 
 function selectParent(cand: ParentCandidate) {
   store.bookingOptions.parentTourId = cand.id
-  parentSearchQuery.value = cand.h1_title
+  selectedParentLabel.value = cand.h1_title
+  parentSearchQuery.value = ''   // reset the box so the next search starts clean
   parentDropdownOpen.value = false
   store.isDirty = true
 }
@@ -1101,9 +1124,19 @@ function closeDropdownOnOutsideClick(e: MouseEvent) {
 // `click` so the dropdown closes BEFORE a click on, say, the "Siguiente"
 // button reaches it — otherwise the wizard step changes while the dropdown
 // is still trying to handle the same event.
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('mousedown', closeDropdownOnOutsideClick)
-  if (store.bookingOptions.parentTourId) fetchParentCandidates()
+  // If this tour already points at a parent, resolve the parent's name once
+  // so "Padre seleccionado: X" shows on load. We fetch the unfiltered list
+  // (ordered id desc, limit 50) and look the parent up; parents tend to be
+  // recent high-id tours so they land in that window. The candidates are
+  // then cleared again by the next user keystroke (search-first UX).
+  if (store.bookingOptions.parentTourId) {
+    await fetchParentCandidates()
+    const found = parentCandidates.value.find(p => p.id === store.bookingOptions.parentTourId)
+    if (found) selectedParentLabel.value = found.h1_title
+    parentCandidates.value = []  // reset so the dropdown starts on the hint, not 50 rows
+  }
 })
 
 onBeforeUnmount(() => {
