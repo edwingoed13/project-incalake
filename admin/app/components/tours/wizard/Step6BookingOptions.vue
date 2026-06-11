@@ -570,21 +570,17 @@
                   <UButton color="neutral" variant="link" size="xs" icon="i-lucide-x" :padded="false" aria-label="Cerrar lista" @click="parentDropdownOpen = false" />
                 </template>
               </UInput>
-              <!-- Resultados dropdown. Search-first: empty/short query shows
-                   a hint, not the full catalog. max-h-[260px] keeps it short
-                   enough to sit under the input without reaching the wizard's
-                   sticky footer; the few visible rows scroll internally. -->
+              <!-- Resultados dropdown. Search-first: only renders once the
+                   operator types (>=2 chars) or while a fetch is in flight,
+                   so an idle focus shows nothing. max-h-[260px] keeps it
+                   short enough to sit under the input without reaching the
+                   wizard's sticky footer. -->
               <div
-                v-if="parentDropdownOpen"
+                v-if="parentDropdownOpen && (parentSearching || parentSearchQuery.trim().length >= 2)"
                 class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[260px] overflow-y-auto"
               >
-                <!-- Prompt: nothing typed yet -->
-                <div v-if="parentSearchQuery.trim().length < 2 && !parentSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
-                  <UIcon name="i-lucide-search" class="size-4 shrink-0" />
-                  Escribe al menos 2 letras del nombre del tour…
-                </div>
                 <!-- Loading -->
-                <div v-else-if="parentSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
+                <div v-if="parentSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
                   <UIcon name="i-lucide-loader-circle" class="size-4 shrink-0 animate-spin" />
                   Buscando…
                 </div>
@@ -627,7 +623,7 @@
           </UFormField>
 
           <!-- Color -->
-          <UFormField label="Color del badge">
+          <UFormField label="Color del badge" hint="Se asigna automáticamente según la etiqueta (Compartido=azul, +Guía=violeta, Privado=ámbar). Puedes cambiarlo.">
             <div class="grid grid-cols-6 gap-2">
               <button
                 v-for="c in availableColors"
@@ -637,7 +633,7 @@
                   'flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all',
                   store.bookingOptions.optionColor === c.token ? 'border-primary' : 'border-default hover:border-muted'
                 ]"
-                @click="store.bookingOptions.optionColor = c.token"
+                @click="pickColor(c.token)"
               >
                 <span :class="['inline-block size-6 rounded-full', c.swatch]"></span>
                 <span class="text-[10px] font-semibold uppercase tracking-wider text-muted">{{ c.token }}</span>
@@ -946,6 +942,33 @@ const availableColors = [
   { token: 'sky',     swatch: 'bg-sky-500' },
 ] as const
 
+// Site-wide color standard for the common variant labels — matches what the
+// public detail page already shows (Compartido=blue, +Guía=violet,
+// Privado=amber). Auto-applied when the operator types the label so every
+// tour is consistent without anyone having to remember the convention. The
+// operator can still override by clicking a swatch (sets colorManuallySet).
+function suggestColorForLabel(label: string): string | null {
+  const l = label.toLowerCase()
+  if (l.includes('privado') && !(l.includes('guía') || l.includes('guia'))) return 'amber'
+  if (l.includes('guía') || l.includes('guia')) return 'violet'
+  if (l.includes('compartido') || l.includes('grupal') || l.includes('shared')) return 'blue'
+  return null  // unknown label → leave whatever's set
+}
+
+const colorManuallySet = ref(false)
+
+watch(() => store.bookingOptions.optionLabel, (label) => {
+  if (colorManuallySet.value) return
+  const suggested = suggestColorForLabel(label || '')
+  if (suggested) store.bookingOptions.optionColor = suggested
+})
+
+function pickColor(token: string) {
+  store.bookingOptions.optionColor = token
+  colorManuallySet.value = true
+  store.isDirty = true
+}
+
 const previewBadgeClass = computed(() => {
   switch (store.bookingOptions.optionColor) {
     case 'violet':  return 'bg-violet-100 text-violet-700'
@@ -1007,6 +1030,9 @@ watch(
 
 function setMode(m: VariantMode) {
   variantMode.value = m
+  // Switching modes re-enables auto-color: a fresh variant should follow
+  // the site standard until the operator deliberately overrides again.
+  colorManuallySet.value = false
   if (m === 'standalone') {
     store.bookingOptions.parentTourId = null
     store.bookingOptions.optionLabel = ''
