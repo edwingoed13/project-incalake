@@ -556,15 +556,20 @@
 
           <!-- Padre selector (solo para 'child') -->
           <UFormField v-if="variantMode === 'child'" label="Actividad padre" hint="Busca el tour canónico que agrupa esta variante" required>
-            <div class="relative">
+            <div ref="parentSearchWrapperEl" class="relative" @keydown.esc="parentDropdownOpen = false">
               <UInput
                 v-model="parentSearchQuery"
                 placeholder="Escribe parte del nombre del tour…"
                 icon="i-lucide-search"
                 :loading="parentSearching"
+                :ui="{ trailing: 'pe-1' }"
                 @focus="onParentInputFocus"
                 @input="onParentSearchInput"
-              />
+              >
+                <template v-if="parentDropdownOpen" #trailing>
+                  <UButton color="neutral" variant="link" size="xs" icon="i-lucide-x" :padded="false" aria-label="Cerrar lista" @click="parentDropdownOpen = false" />
+                </template>
+              </UInput>
               <!-- Resultados dropdown -->
               <div
                 v-if="parentDropdownOpen && (parentCandidates.length > 0 || parentSearching)"
@@ -1059,21 +1064,33 @@ function selectParent(cand: ParentCandidate) {
   store.isDirty = true
 }
 
+// Ref to the search wrapper so the outside-click handler can scope to it.
+// The previous version used target.closest('.relative') which matches every
+// Tailwind .relative on the page — so any click closed nothing and the
+// dropdown stayed open over the wizard's Next/Back buttons.
+const parentSearchWrapperEl = ref<HTMLElement | null>(null)
+
 function closeDropdownOnOutsideClick(e: MouseEvent) {
-  const target = e.target as HTMLElement
-  if (!target.closest('.relative')) parentDropdownOpen.value = false
+  if (!parentDropdownOpen.value) return
+  const wrapper = parentSearchWrapperEl.value
+  if (wrapper && !wrapper.contains(e.target as Node)) {
+    parentDropdownOpen.value = false
+  }
 }
 
 // Init: bind outside-click handler + warm the candidate cache if this tour
 // already has a parent (so currentParentLabel can resolve the name on first
-// render instead of showing the bare id).
+// render instead of showing the bare id). Use `mousedown` rather than
+// `click` so the dropdown closes BEFORE a click on, say, the "Siguiente"
+// button reaches it — otherwise the wizard step changes while the dropdown
+// is still trying to handle the same event.
 onMounted(() => {
-  document.addEventListener('click', closeDropdownOnOutsideClick)
+  document.addEventListener('mousedown', closeDropdownOnOutsideClick)
   if (store.bookingOptions.parentTourId) fetchParentCandidates()
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeDropdownOnOutsideClick)
+  document.removeEventListener('mousedown', closeDropdownOnOutsideClick)
 })
 </script>
 
