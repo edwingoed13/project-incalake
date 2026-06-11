@@ -497,84 +497,108 @@
       @update:open="toggleSection('variant')"
     >
       <template #actions>
-        <UBadge :color="wantVariant ? 'primary' : 'neutral'" variant="subtle" size="xs">
-          {{ wantVariant ? 'Opción de actividad' : 'Tour independiente' }}
+        <UBadge :color="variantBadgeColor" variant="subtle" size="xs">
+          {{ variantBadgeLabel }}
         </UBadge>
       </template>
 
       <div class="space-y-4">
         <p class="text-xs text-muted">
-          Si esta reserva es una <strong>variante</strong> de otra actividad (e.g. la versión <em>Privado</em> del tour Uros + Taquile),
-          vincúlala con el tour "padre". Las variantes aparecen como cards de opción en la página del padre y se ocultan del listado público.
+          Si la actividad tiene varias modalidades (e.g. <em>Compartido</em>, <em>+Guía Privado</em>, <em>Privado</em>),
+          cada una vive como un tour aparte y se agrupan aquí. <strong>El cliente las ve como cards en la página del tour padre.</strong>
         </p>
 
-        <!-- Tipo: independiente vs variante -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Tipo: 3 modos -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button
             type="button"
-            :class="[
-              'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
-              !wantVariant
-                ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                : 'border-default hover:border-muted',
-            ]"
-            @click="clearVariant"
+            :class="modeBtnClass('standalone')"
+            @click="setMode('standalone')"
           >
-            <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', !wantVariant ? 'border-primary bg-primary' : 'border-default']">
-              <div v-if="!wantVariant" class="size-2 bg-white rounded-full" />
+            <div :class="modeRadioClass('standalone')">
+              <div v-if="variantMode === 'standalone'" class="size-2 bg-white rounded-full" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="!wantVariant ? 'text-primary' : ''">Tour independiente</span>
-              <span class="text-[11px] text-muted">Aparece como tour propio en el listado público.</span>
+              <span class="text-sm font-bold" :class="variantMode === 'standalone' ? 'text-primary' : ''">Tour independiente</span>
+              <span class="text-[11px] text-muted">Sin variantes. Aparece solo en el listado público.</span>
             </div>
           </button>
           <button
             type="button"
-            :class="[
-              'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
-              wantVariant
-                ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                : 'border-default hover:border-muted',
-            ]"
-            @click="enableVariantMode"
+            :class="modeBtnClass('parent')"
+            @click="setMode('parent')"
           >
-            <div :class="['size-5 rounded-full border-2 flex items-center justify-center shrink-0', wantVariant ? 'border-primary bg-primary' : 'border-default']">
-              <div v-if="wantVariant" class="size-2 bg-white rounded-full" />
+            <div :class="modeRadioClass('parent')">
+              <div v-if="variantMode === 'parent'" class="size-2 bg-white rounded-full" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="wantVariant ? 'text-primary' : ''">Es opción de otra actividad</span>
-              <span class="text-[11px] text-muted">Se muestra como card en la página del padre. Oculto del listado.</span>
+              <span class="text-sm font-bold" :class="variantMode === 'parent' ? 'text-primary' : ''">Opción principal de actividad</span>
+              <span class="text-[11px] text-muted">Es el tour "canónico" que ve el público. Otras variantes le apuntan a este.</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            :class="modeBtnClass('child')"
+            @click="setMode('child')"
+          >
+            <div :class="modeRadioClass('child')">
+              <div v-if="variantMode === 'child'" class="size-2 bg-white rounded-full" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-bold" :class="variantMode === 'child' ? 'text-primary' : ''">Variante de otra actividad</span>
+              <span class="text-[11px] text-muted">Se muestra como card dentro del padre. Oculto del listado.</span>
             </div>
           </button>
         </div>
 
-        <!-- Config visible sólo cuando es variante -->
-        <div v-if="wantVariant" class="space-y-4 pt-2 border-t border-default">
-          <!-- Padre (typeahead) -->
-          <UFormField label="Actividad padre" hint="Tour canónico que agrupa esta y otras variantes" required>
-            <USelectMenu
-              v-model="selectedParent"
-              :items="parentCandidates"
-              value-key="id"
-              label-key="h1_title"
-              :search-input="{ placeholder: 'Buscar por nombre del tour…' }"
-              :loading="parentSearching"
-              placeholder="Selecciona el tour padre"
-              size="md"
-              @update:search-term="onParentSearch"
-            >
-              <template #item="{ item }">
-                <div class="flex flex-col">
-                  <span class="text-sm font-semibold">{{ item.h1_title }}</span>
-                  <span class="text-[11px] text-muted">{{ item.city_name }} · {{ item.child_count }} variante(s) ya</span>
+        <!-- Config: padre/variante necesitan etiqueta y color; sólo variante necesita el padre -->
+        <div v-if="variantMode !== 'standalone'" class="space-y-4 pt-2 border-t border-default">
+
+          <!-- Padre selector (solo para 'child') -->
+          <UFormField v-if="variantMode === 'child'" label="Actividad padre" hint="Busca el tour canónico que agrupa esta variante" required>
+            <div class="relative">
+              <UInput
+                v-model="parentSearchQuery"
+                placeholder="Escribe parte del nombre del tour…"
+                icon="i-lucide-search"
+                :loading="parentSearching"
+                @focus="onParentInputFocus"
+                @input="onParentSearchInput"
+              />
+              <!-- Resultados dropdown -->
+              <div
+                v-if="parentDropdownOpen && (parentCandidates.length > 0 || parentSearching)"
+                class="absolute z-20 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-80 overflow-y-auto"
+              >
+                <div v-if="parentSearching && parentCandidates.length === 0" class="px-3 py-2 text-xs text-muted">
+                  Buscando…
                 </div>
-              </template>
-            </USelectMenu>
+                <button
+                  v-for="cand in parentCandidates"
+                  :key="cand.id"
+                  type="button"
+                  class="w-full text-left px-3 py-2 hover:bg-elevated transition-colors flex flex-col gap-0.5 border-b border-default last:border-0"
+                  :class="store.bookingOptions.parentTourId === cand.id ? 'bg-primary/5' : ''"
+                  @click="selectParent(cand)"
+                >
+                  <span class="text-sm font-semibold">{{ cand.h1_title }}</span>
+                  <span class="text-[11px] text-muted">
+                    {{ cand.city_name }} · {{ cand.child_count }} variante(s) ya
+                  </span>
+                </button>
+              </div>
+            </div>
+            <p v-if="store.bookingOptions.parentTourId && currentParentLabel" class="text-[11px] text-muted mt-1">
+              Padre seleccionado: <strong>{{ currentParentLabel }}</strong>
+            </p>
+            <p v-else-if="parentSearchQuery && !parentSearching && parentCandidates.length === 0" class="text-[11px] text-muted mt-1">
+              Sin resultados para "{{ parentSearchQuery }}".
+            </p>
           </UFormField>
 
           <!-- Etiqueta -->
           <UFormField label="Etiqueta de esta opción" hint="Texto corto que verá el cliente en el badge (e.g. Compartido, Privado, + Guía Privado)" required>
-            <UInput v-model="store.bookingOptions.optionLabel" placeholder="Ej: + Guía Privado" maxlength="50" />
+            <UInput v-model="store.bookingOptions.optionLabel" placeholder="Ej: Compartido / + Guía Privado / Privado" maxlength="50" />
           </UFormField>
 
           <!-- Color -->
@@ -883,13 +907,6 @@ type ParentCandidate = {
 
 const parentCandidates = ref<ParentCandidate[]>([])
 const parentSearching = ref(false)
-const selectedParent = computed<ParentCandidate | undefined>({
-  get: () => parentCandidates.value.find(p => p.id === store.bookingOptions.parentTourId),
-  set: (val) => {
-    store.bookingOptions.parentTourId = val?.id ?? null
-    store.isDirty = true
-  },
-})
 
 const availableColors = [
   { token: 'blue',    swatch: 'bg-blue-500' },
@@ -937,33 +954,122 @@ function onParentSearch(term: string) {
   parentSearchTimer = setTimeout(() => fetchParentCandidates(term), 250)
 }
 
-// Separate "intent" flag so we can reveal the config block before the user
-// has picked a parent, without poisoning parent_tour_id (which the backend
-// validates must `exists:tours,id`). Mirror sync: if the user picks a
-// parent, intent is true; if they hit "Tour independiente", clear both.
-const wantVariant = ref<boolean>(!!store.bookingOptions.parentTourId)
+// Three-mode UX (clearer than the old binary toggle, which hid the fact that
+// a tour can be a PARENT — option_label + color set, no parent_tour_id —
+// without being a child). Modes:
+//   standalone — independent tour, no variants. parent_tour_id=null,
+//                option_label=''.
+//   parent     — canonical option of an activity that has variants
+//                (e.g. tour 306 "Compartido"). parent_tour_id=null,
+//                option_label set.
+//   child      — secondary variant pointing at a parent.
+//                parent_tour_id set, option_label set.
+type VariantMode = 'standalone' | 'parent' | 'child'
 
-watch(() => store.bookingOptions.parentTourId, (v) => {
-  if (v) wantVariant.value = true
-})
-
-function enableVariantMode() {
-  wantVariant.value = true
-  if (parentCandidates.value.length === 0) fetchParentCandidates()
+function deriveMode(): VariantMode {
+  if (store.bookingOptions.parentTourId) return 'child'
+  if (store.bookingOptions.optionLabel) return 'parent'
+  return 'standalone'
 }
+const variantMode = ref<VariantMode>(deriveMode())
 
-function clearVariant() {
-  wantVariant.value = false
-  store.bookingOptions.parentTourId = null
-  store.bookingOptions.optionLabel = ''
-  store.bookingOptions.optionColor = 'blue'
+// Keep the mode in sync if the underlying fields change (e.g. parent picked
+// via the search dropdown). The setter is explicit (setMode) so toggling
+// modes resets the right fields without losing already-typed labels.
+watch(
+  () => [store.bookingOptions.parentTourId, store.bookingOptions.optionLabel],
+  () => { variantMode.value = deriveMode() },
+)
+
+function setMode(m: VariantMode) {
+  variantMode.value = m
+  if (m === 'standalone') {
+    store.bookingOptions.parentTourId = null
+    store.bookingOptions.optionLabel = ''
+    store.bookingOptions.optionColor = 'blue'
+  } else if (m === 'parent') {
+    store.bookingOptions.parentTourId = null
+    if (!store.bookingOptions.optionLabel) {
+      store.bookingOptions.optionLabel = 'Estándar'
+    }
+  } else if (m === 'child') {
+    // Reveal the search UI; parent_tour_id stays null until the user picks
+    // one (backend validates exists:tours,id on save).
+    if (parentCandidates.value.length === 0) fetchParentCandidates()
+  }
   store.isDirty = true
 }
 
-// On open of the section in edit mode, prefill the candidate list so the
-// currently-selected parent shows by name (not just by id).
+function modeBtnClass(m: VariantMode): string {
+  const active = variantMode.value === m
+  return [
+    'p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3',
+    active
+      ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+      : 'border-default hover:border-muted',
+  ].join(' ')
+}
+
+function modeRadioClass(m: VariantMode): string {
+  const active = variantMode.value === m
+  return [
+    'size-5 rounded-full border-2 flex items-center justify-center shrink-0',
+    active ? 'border-primary bg-primary' : 'border-default',
+  ].join(' ')
+}
+
+const variantBadgeColor = computed(() => variantMode.value === 'standalone' ? 'neutral' as const : 'primary' as const)
+const variantBadgeLabel = computed(() => {
+  if (variantMode.value === 'parent') return 'Actividad principal'
+  if (variantMode.value === 'child') return 'Variante'
+  return 'Tour independiente'
+})
+
+// ---- Parent search (replaces the broken USelectMenu integration) ----
+// USelectMenu in Nuxt UI v4 doesn't fire an `@update:search-term` event,
+// so the server-side debounced fetch never ran — typing in the dropdown
+// just filtered the initial 50 client-side. Replaced with a plain UInput
+// + custom results list: simpler, server-driven, behaves predictably.
+const parentSearchQuery = ref('')
+const parentDropdownOpen = ref(false)
+const currentParentLabel = computed(() => {
+  const found = parentCandidates.value.find(p => p.id === store.bookingOptions.parentTourId)
+  return found?.h1_title || ''
+})
+
+function onParentInputFocus() {
+  parentDropdownOpen.value = true
+  if (parentCandidates.value.length === 0) fetchParentCandidates()
+}
+
+function onParentSearchInput() {
+  parentDropdownOpen.value = true
+  clearTimeout(parentSearchTimer)
+  parentSearchTimer = setTimeout(() => fetchParentCandidates(parentSearchQuery.value), 250)
+}
+
+function selectParent(cand: ParentCandidate) {
+  store.bookingOptions.parentTourId = cand.id
+  parentSearchQuery.value = cand.h1_title
+  parentDropdownOpen.value = false
+  store.isDirty = true
+}
+
+function closeDropdownOnOutsideClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('.relative')) parentDropdownOpen.value = false
+}
+
+// Init: bind outside-click handler + warm the candidate cache if this tour
+// already has a parent (so currentParentLabel can resolve the name on first
+// render instead of showing the bare id).
 onMounted(() => {
+  document.addEventListener('click', closeDropdownOnOutsideClick)
   if (store.bookingOptions.parentTourId) fetchParentCandidates()
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeDropdownOnOutsideClick)
 })
 </script>
 
