@@ -129,8 +129,8 @@
       @update:open="toggleSection('layout')"
     >
       <template #actions>
-        <UBadge color="primary" variant="subtle" size="xs" class="capitalize">
-          {{ store.multimedia.galleryLayout }}
+        <UBadge color="primary" variant="subtle" size="xs">
+          {{ currentLayoutName }}
         </UBadge>
       </template>
 
@@ -953,6 +953,13 @@ const layouts = [
   { id: 'slider', name: 'Cinematic Slider' },
   { id: 'mosaic_vertical', name: 'Mosaic Vertical' },
 ] as const
+
+// Friendly label for the section badge. The store normalizes the loaded
+// value to one of the 4 ids, so this always resolves; the fallback is a
+// safety net only.
+const currentLayoutName = computed(() =>
+  layouts.find(l => l.id === store.multimedia.galleryLayout)?.name || 'Featured Hero'
+)
 
 const youtubeId = computed(() => {
   const url = currentLangSeo.value?.youtubeUrl || ''

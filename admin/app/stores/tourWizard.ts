@@ -764,10 +764,26 @@ export const useTourWizardStore = defineStore('tourWizard', {
           this.commercialRules.taxPercentage = data.tax_percentage ?? this.commercialRules.taxPercentage
           this.commercialRules.advancePaymentPercentage = data.advance_payment_percentage ?? this.commercialRules.advancePaymentPercentage
 
-          // Map Step 5: Multimedia
+          // Map Step 5: Multimedia.
+          // Normalize gallery_layout to one of the 4 admin options. Legacy /
+          // frontend values (hero_mosaic, video_image, …) don't match any
+          // admin card, which left the selector with no highlighted option
+          // and the badge showing a raw value. Map the known frontend names
+          // to their closest admin equivalent; anything unknown → featured.
+          const LAYOUT_ALIASES: Record<string, string> = {
+            hero_mosaic: 'featured',
+            video_image: 'featured',
+            video_horizontal_mosaic: 'mosaic_vertical',
+          }
+          const VALID_LAYOUTS = ['featured', 'grid', 'slider', 'mosaic_vertical']
+          const rawLayout = data.gallery_layout || 'featured'
+          const normalizedLayout = VALID_LAYOUTS.includes(rawLayout)
+            ? rawLayout
+            : (LAYOUT_ALIASES[rawLayout] || 'featured')
+
           this.multimedia = {
             youtubeUrl: data.youtube_url || '',
-            galleryLayout: data.gallery_layout || 'featured',
+            galleryLayout: normalizedLayout as any,
             images: (data.media_gallery || []).map((img: any) => ({
               id: img.id,
               url: img.url,

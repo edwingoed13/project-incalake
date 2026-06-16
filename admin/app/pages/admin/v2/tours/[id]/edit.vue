@@ -290,8 +290,17 @@ onBeforeUnmount(() => {
         </template>
 
         <template #right>
-          <UBadge :color="autosaveColor" variant="subtle" size="md" class="shrink-0" :icon="store.autosaving ? 'i-lucide-loader-circle' : (store.isDirty ? 'i-lucide-circle-dot' : 'i-lucide-circle-check')">
-            <span :class="{ 'animate-spin': store.autosaving }" class="inline-flex">{{ autosaveLabel }}</span>
+          <!-- spin the loader ICON, not the text — animate-spin on the label
+               span made the whole "Guardando…" text rotate. -->
+          <UBadge
+            :color="autosaveColor"
+            variant="subtle"
+            size="md"
+            class="shrink-0"
+            :icon="store.autosaving ? 'i-lucide-loader-circle' : (store.isDirty ? 'i-lucide-circle-dot' : 'i-lucide-circle-check')"
+            :ui="{ leadingIcon: store.autosaving ? 'animate-spin' : '' }"
+          >
+            {{ autosaveLabel }}
           </UBadge>
           <!-- Below 2xl the insights sidebar (which holds these) is hidden,
                so keep preview + publish + back reachable here as a fallback. -->
