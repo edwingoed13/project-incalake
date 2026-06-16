@@ -3,6 +3,13 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/* `can-hover:` only matches on devices with a real hover-capable pointer
+   (mouse/trackpad). Use it to gate "reveal row actions on hover" so the
+   actions stay ALWAYS visible on touch (tablets/phones), where group-hover
+   never fires. Pattern: base `opacity-100` + `can-hover:opacity-0
+   can-hover:group-hover:opacity-100`. */
+@custom-variant can-hover (@media (hover: hover));
+
 @theme {
   /* primary lo gestiona Nuxt UI v4 (app.config.ts -> palette sky) — auto-ajusta en dark mode. */
   --color-background-light: #f6f6f8;

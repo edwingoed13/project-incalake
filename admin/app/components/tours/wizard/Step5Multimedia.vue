@@ -113,7 +113,7 @@
             icon="i-lucide-trash-2"
             color="error"
             size="sm"
-            class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+            class="absolute top-3 right-3 opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity"
             @click="updateVideoUrl('')"
            />
         </div>
@@ -344,7 +344,7 @@
               'absolute top-2 left-2 z-20 size-6 rounded-md border-2 flex items-center justify-center transition-all',
               isImageSelected(image.id)
                 ? 'bg-primary border-primary text-white'
-                : 'bg-black/40 backdrop-blur-md border-white/40 text-transparent opacity-0 group-hover:opacity-100',
+                : 'bg-black/40 backdrop-blur-md border-white/40 text-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100',
             ]"
             :title="isImageSelected(image.id) ? 'Deseleccionar' : 'Seleccionar'"
             @click.stop.prevent="toggleImageSelection(image.id)"
@@ -394,7 +394,7 @@
           </div>
 
           <!-- Hover overlay with actions -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
             <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
               <UButton
                 size="xs"

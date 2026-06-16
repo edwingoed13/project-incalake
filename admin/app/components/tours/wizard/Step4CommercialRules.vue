@@ -261,7 +261,7 @@
                                 color="error"
                                 variant="ghost"
                                 size="xs"
-                                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity"
                                 title="Eliminar rango"
                                 @click="removeRange(nat, rIndex)"
                               />

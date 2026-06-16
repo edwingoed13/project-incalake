@@ -585,8 +585,10 @@ onMounted(() => {
                       </p>
                     </div>
 
-                    <!-- Always visible on touch (no hover); hover-reveal on desktop. -->
-                    <div class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
+                    <!-- Always visible on touch (no hover); hover-reveal only on
+                         real mouse devices via can-hover. The old lg: gate broke
+                         on landscape tablets (≥1024px but no hover). -->
+                    <div class="flex items-center gap-1 opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 can-hover:focus-within:opacity-100 transition-opacity">
                       <UButton
                         :to="getTranslationPreviewUrl(tour, tr) || undefined"
                         target="_blank"

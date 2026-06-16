@@ -202,7 +202,7 @@
                         <p v-if="point.description" class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ point.description }}</p>
                         <p class="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{{ point.coordinates }}</p>
                       </div>
-                      <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div class="flex items-center gap-0.5 shrink-0 opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity">
                         <UButton
                           icon="i-lucide-arrow-up"
                           color="neutral"

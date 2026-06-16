@@ -263,7 +263,7 @@
                 color="error"
                 variant="ghost"
                 size="xs"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                class="opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity"
                 @click="removeBlock(index)"
               />
             </div>
@@ -354,7 +354,7 @@
                 color="error"
                 variant="ghost"
                 size="xs"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                class="opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity"
                 @click="removeOffer(index)"
               />
             </div>
