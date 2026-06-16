@@ -7,6 +7,11 @@ export default {
       hero_description: 'Descubra experiências incríveis no lago navegável mais alto do mundo.',
       share: 'Compartilhar', save: 'Salvar', book_now: 'Reservar', per_person_label: 'por pessoa',
       tour_date: 'Data do Tour', select_date: 'Selecionar data', departure_time: 'Horário de Saída',
+      booking_err_date: 'Selecione uma data para o seu tour',
+      booking_err_time: 'Selecione um horário de saída',
+      booking_max_pax: 'Máximo de {n} pessoas por reserva',
+      booking_cancel_hint: 'Cancelamento gratuito até 24h antes',
+      done: 'Pronto',
       difficulty_easy: 'Fácil', difficulty_moderate: 'Moderado', difficulty_hard: 'Difícil',
       select_time: 'Selecionar', peruvian_time: 'Horário Peruano', bolivian_time: 'Horário Boliviano',
       checkout: {

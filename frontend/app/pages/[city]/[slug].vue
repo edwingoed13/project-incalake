@@ -86,7 +86,7 @@
             <span class="hidden sm:inline">Compartir</span>
           </button>
           <button
-            @click="toggleSave"
+            @click="toggleSave($event)"
             type="button"
             class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-all active:scale-95"
             :class="isSaved ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'"
@@ -118,7 +118,7 @@
                 <ShareIcon class="size-5" aria-hidden="true" />
               </button>
               <button
-                @click="toggleSave"
+                @click="toggleSave($event)"
                 type="button"
                 class="size-9 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
                 :class="isSaved ? 'text-red-500' : 'text-white'"
@@ -131,180 +131,27 @@
             </div>
           </div>
 
+          <!-- Variant options FIRST — siblings share one activity (Compartido /
+               +Guía / Privado) and picking one changes the price/pax shown below,
+               so it must appear BEFORE the booking panel. Swaps content inline
+               (no navigation) and syncs the URL via history.replaceState. -->
+          <TourOptionsSelector v-if="tour.options?.length" :options="tour.options" :loading="swapping" @select="switchOption" />
+
           <!-- Inline Mobile Booking Panel — appears after gallery so price/date are
                visible without scrolling to the bottom. Hidden on lg+ where the
                sticky right-column widget takes over. -->
-          <section ref="mobileBookingRef" class="lg:hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
-            <!-- Price header (OTA dominant) -->
-            <div class="px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div class="flex items-end justify-between gap-3 flex-wrap">
-                <div>
-                  <div class="flex items-baseline gap-2">
-                    <span class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
-                      {{ currencyStore.formatConverted(basePrice || 0) }}
-                    </span>
-                    <span class="text-xs font-semibold text-slate-500">{{ currencyStore.selectedCurrency }} / persona</span>
-                  </div>
-                </div>
-                <span v-if="activeOffer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
-                  <TagIcon class="size-3.5" aria-hidden="true" />
-                  {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-                </span>
-              </div>
-            </div>
-
-            <div class="p-4 space-y-3">
-              <!-- Travelers (first: cliente define el grupo antes de elegir fecha) -->
-              <div>
-                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  <UsersIcon class="size-4 text-primary" aria-hidden="true" />
-                  Viajeros
-                </label>
-                <div class="space-y-2">
-                  <!-- Adults -->
-                  <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
-                    <div class="leading-tight">
-                      <span class="font-bold text-sm text-slate-800">Adultos</span>
-                      <span class="block text-[11px] text-slate-500">{{ currencyStore.formatConverted(adultPrice || 0) }} c/u</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <button @click="decrementAdults" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="adults <= 1" aria-label="Quitar adulto">
-                        <MinusIcon class="size-4" aria-hidden="true" />
-                      </button>
-                      <span class="w-6 text-center font-bold text-sm tabular-nums">{{ adults }}</span>
-                      <button @click="incrementAdults" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="totalPax >= maxPax" aria-label="Agregar adulto">
-                        <PlusIcon class="size-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                  <!-- Children (only when the tour has child pricing) -->
-                  <div v-if="hasChildPricing" class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
-                    <div class="leading-tight">
-                      <span class="font-bold text-sm text-slate-800">Niños</span>
-                      <span class="block text-[11px] text-slate-500">{{ children > 0 ? `${currencyStore.formatConverted(childPrice || 0)} c/u` : 'Opcional' }}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <button @click="decrementChildren" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="children <= 0" aria-label="Quitar niño">
-                        <MinusIcon class="size-4" aria-hidden="true" />
-                      </button>
-                      <span class="w-6 text-center font-bold text-sm tabular-nums">{{ children }}</span>
-                      <button @click="incrementChildren" type="button" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 disabled:opacity-40" :disabled="totalPax >= maxPax" aria-label="Agregar niño">
-                        <PlusIcon class="size-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Calendar -->
-              <div>
-                <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                  <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
-                  Fecha
-                </label>
-                <TourCalendar
-                  v-model="selectedDate"
-                  :min-date="minDate"
-                  :offers="tour?.offers_data || []"
-                  :blocks="tour?.blocks_data || []"
-                  :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                  :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                  :availability-start="tour?.availability_data?.start || ''"
-                  :availability-end="tour?.availability_data?.end || ''"
-                />
-              </div>
-
-              <!-- Time -->
-              <div>
-                <div class="flex items-baseline justify-between gap-1 mb-2 flex-wrap">
-                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    <ClockIcon class="size-4 text-primary" aria-hidden="true" />
-                    Horario
-                  </label>
-                  <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                    <GlobeAltIcon class="size-3" aria-hidden="true" />
-                    {{ tzInfo.code }} {{ tzInfo.gmt }}
-                  </span>
-                </div>
-                <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
-              </div>
-
-              <!-- Price breakdown + total -->
-              <div class="pt-3 border-t border-slate-100 space-y-1.5">
-                <div class="flex justify-between text-xs text-slate-600">
-                  <span>{{ currencyStore.formatConverted(adultPrice || 0) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
-                  <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(adultPrice * adults || 0) }}</span>
-                </div>
-                <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600">
-                  <span>{{ currencyStore.formatConverted(childPrice || 0) }} × {{ children }} {{ children === 1 ? 'niño' : 'niños' }}</span>
-                  <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(childPrice * children || 0) }}</span>
-                </div>
-                <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
-                  <span class="text-trust font-bold inline-flex items-center gap-1"><TagIcon class="size-3" aria-hidden="true" />Descuento</span>
-                  <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
-                </div>
-                <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-100">
-                  <span class="text-sm font-bold text-slate-800">Subtotal</span>
-                  <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                    {{ currencyStore.formatConverted(total || 0) }}
-                    <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Validation error -->
-              <div v-if="mobileError" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                <ExclamationCircleIcon class="size-4 text-red-500" aria-hidden="true" />
-                <span class="text-xs font-semibold text-red-700">{{ mobileError }}</span>
-              </div>
-
-              <!-- CTA — OTA-style big and prominent -->
-              <button
-                @click="mobileHandleBooking"
-                class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
-              >
-                RESERVAR AHORA
-                <ArrowRightIcon class="size-5" aria-hidden="true" />
-              </button>
-              <button
-                @click="handleAddToCart"
-                class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
-              >
-                <ShoppingCartIcon class="size-5" aria-hidden="true" />
-                Agregar al carrito
-              </button>
-              <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
-                <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
-                Agregado al carrito — puedes seguir navegando
-              </div>
-              <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
-                <ExclamationCircleIcon class="size-4" aria-hidden="true" />
-                Ya está en tu carrito con esa fecha y hora
-              </div>
-
-              <!-- Trust signals (compact 3-row stack) -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
-                <div v-if="tour.free_cancellation" class="flex items-center gap-1.5 text-xs">
-                  <CheckCircleSolidIcon class="size-4 text-trust shrink-0" aria-hidden="true" />
-                  <span class="text-slate-600 font-medium">Cancelación gratuita</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-xs">
-                  <ClockIcon class="size-4 text-primary shrink-0" aria-hidden="true" />
-                  <span class="text-slate-600 font-medium">Confirmación instantánea</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-xs">
-                  <ShieldCheckIcon class="size-4 text-primary shrink-0" aria-hidden="true" />
-                  <span class="text-slate-600 font-medium">Mejor precio</span>
-                </div>
-              </div>
-            </div>
+          <section ref="mobileBookingRef" class="lg:hidden">
+            <TourBookingCard
+              variant="inline"
+              v-bind="bookingProps"
+              v-model:adults="adults"
+              v-model:children="children"
+              v-model:selected-date="selectedDate"
+              v-model:selected-time="selectedTime"
+              @book="handleBooking"
+              @add-to-cart="handleAddToCart"
+            />
           </section>
-
-          <!-- Variant options — siblings share one activity (Compartido / +Guía / Privado).
-               Picking an option swaps the page content inline (no navigation) and
-               updates the URL via history.replaceState so shareable links land
-               on the chosen option. -->
-          <TourOptionsSelector v-if="tour.options?.length" :options="tour.options" :loading="swapping" @select="switchOption" />
 
           <!-- Content Sections -->
           <!-- Tour Description -->
@@ -416,178 +263,17 @@
         <!-- Right Column: Booking Widget - Sticky (OTA-style) -->
         <div class="hidden lg:block">
           <div class="sticky top-24 space-y-3">
-            <!-- Booking Widget Card -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
-              <!-- Price Header — dominant, OTA pattern -->
-              <div class="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex items-baseline gap-1.5 flex-wrap">
-                  <span class="text-[32px] leading-none font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
-                    {{ currencyStore.formatConverted(basePrice || 0) }}
-                  </span>
-                  <span class="text-sm font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
-                  <span class="text-[11px] text-slate-500 font-medium">por persona</span>
-                </div>
-              </div>
-
-              <div class="p-4 space-y-3">
-                <!-- Travelers (first: cliente define el grupo antes de elegir fecha) -->
-                <div>
-                  <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                    <UsersIcon class="size-4 text-primary" aria-hidden="true" />
-                    Viajeros
-                  </label>
-                  <div class="space-y-2">
-                    <!-- Adults -->
-                    <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-                      <div class="leading-tight">
-                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Adultos</span>
-                        <span class="block text-[11px] text-slate-500">{{ currencyStore.formatConverted(adultPrice || 0) }} c/u</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <button
-                          @click="decrementAdults"
-                          type="button"
-                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
-                          :disabled="adults <= 1"
-                          aria-label="Quitar adulto"
-                        >
-                          <MinusIcon class="size-4" aria-hidden="true" />
-                        </button>
-                        <span class="w-6 text-center font-bold text-sm tabular-nums">{{ adults }}</span>
-                        <button
-                          @click="incrementAdults"
-                          type="button"
-                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
-                          :disabled="totalPax >= maxPax"
-                          aria-label="Agregar adulto"
-                        >
-                          <PlusIcon class="size-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
-                    <!-- Children (only when the tour has child pricing) -->
-                    <div v-if="hasChildPricing" class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-                      <div class="leading-tight">
-                        <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Niños</span>
-                        <span class="block text-[11px] text-slate-500">{{ children > 0 ? `${currencyStore.formatConverted(childPrice || 0)} c/u` : 'Opcional' }}</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <button
-                          @click="decrementChildren"
-                          type="button"
-                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
-                          :disabled="children <= 0"
-                          aria-label="Quitar niño"
-                        >
-                          <MinusIcon class="size-4" aria-hidden="true" />
-                        </button>
-                        <span class="w-6 text-center font-bold text-sm tabular-nums">{{ children }}</span>
-                        <button
-                          @click="incrementChildren"
-                          type="button"
-                          class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition disabled:opacity-40"
-                          :disabled="totalPax >= maxPax"
-                          aria-label="Agregar niño"
-                        >
-                          <PlusIcon class="size-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Date Selector -->
-                <div>
-                  <label class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-                    <span class="inline-flex items-center gap-1.5">
-                      <CalendarDaysIcon class="size-4 text-primary" aria-hidden="true" />
-                      Fecha
-                    </span>
-                  </label>
-                  <TourCalendar
-                    v-model="selectedDate"
-                    :min-date="minDate"
-                    :offers="tour?.offers_data || []"
-                    :blocks="tour?.blocks_data || []"
-                    :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-                    :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-                    :availability-start="tour?.availability_data?.start || ''"
-                    :availability-end="tour?.availability_data?.end || ''"
-                  />
-                  <div v-if="activeOffer" class="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-trust-soft text-trust">
-                    <TagIcon class="size-3.5" aria-hidden="true" />
-                    <span class="text-xs font-bold">
-                      {{ activeOffer.discountType === 'percentage' ? `${activeOffer.discount}% OFF` : `$${activeOffer.discount} OFF` }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Time Selector -->
-                <div>
-                  <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-                    <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      <ClockIcon class="size-4 text-primary" aria-hidden="true" />
-                      Horario
-                    </label>
-                    <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-                      <GlobeAltIcon class="size-3" aria-hidden="true" />
-                      {{ tzInfo.code }} {{ tzInfo.gmt }}
-                    </span>
-                  </div>
-                  <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
-                </div>
-
-                <!-- Compact total -->
-                <div v-if="adults" class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5">
-                  <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-                    <span>{{ currencyStore.formatConverted(adultPrice || 0) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
-                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(adultPrice * adults || 0) }}</span>
-                  </div>
-                  <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-                    <span>{{ currencyStore.formatConverted(childPrice || 0) }} × {{ children }} {{ children === 1 ? 'niño' : 'niños' }}</span>
-                    <span class="tabular-nums font-medium">{{ currencyStore.formatConverted(childPrice * children || 0) }}</span>
-                  </div>
-                  <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
-                    <span class="text-trust font-bold inline-flex items-center gap-1">
-                      <TagIcon class="size-3" aria-hidden="true" />
-                      Descuento
-                    </span>
-                    <span class="text-trust font-bold tabular-nums">−{{ currencyStore.formatConverted(groupDiscount || 0) }}</span>
-                  </div>
-                  <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-slate-700">
-                    <span class="text-sm font-bold">Subtotal</span>
-                    <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-                      {{ currencyStore.formatConverted(total || 0) }}
-                      <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
-                    </span>
-                  </div>
-                </div>
-
-                <!-- CTA — bigger, bolder, shadow -->
-                <button
-                  @click="handleBooking"
-                  class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
-                >
-                  RESERVAR AHORA
-                  <ArrowRightIcon class="size-5" aria-hidden="true" />
-                </button>
-                <button
-                  @click="handleAddToCart"
-                  class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
-                >
-                  <ShoppingCartIcon class="size-5" aria-hidden="true" />
-                  Agregar al carrito
-                </button>
-                <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
-                  <CheckCircleSolidIcon class="size-4" aria-hidden="true" />
-                  Agregado al carrito — puedes seguir navegando
-                </div>
-                <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
-                  <ExclamationCircleIcon class="size-4" aria-hidden="true" />
-                  Ya está en tu carrito con esa fecha y hora
-                </div>
-              </div>
-            </div>
+            <!-- Booking widget (shared component) -->
+            <TourBookingCard
+              variant="sidebar"
+              v-bind="bookingProps"
+              v-model:adults="adults"
+              v-model:children="children"
+              v-model:selected-date="selectedDate"
+              v-model:selected-time="selectedTime"
+              @book="handleBooking"
+              @add-to-cart="handleAddToCart"
+            />
 
             <!-- Trust signals card — OTA pattern: stacks below booking widget -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2.5">
@@ -660,7 +346,7 @@
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <button
-                @click.stop.prevent="toggleSaveRelated(relatedTour)"
+                @click.stop.prevent="toggleSaveRelated(relatedTour, $event)"
                 type="button"
                 class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md transition-all active:scale-90"
                 :class="wishlistStore.has(relatedTour.id) ? 'text-red-500 bg-white/80' : 'text-white'"
@@ -746,18 +432,11 @@ import {
   ShareIcon,
   HeartIcon,
   TagIcon,
-  GlobeAltIcon,
-  MinusIcon,
-  PlusIcon,
-  CalendarDaysIcon,
   ChevronDownIcon,
   ChatBubbleLeftRightIcon,
-  ExclamationCircleIcon,
   MagnifyingGlassIcon,
-  UsersIcon,
   ArrowRightIcon,
   ShieldCheckIcon,
-  ShoppingCartIcon,
 } from '@heroicons/vue/24/outline'
 import {
   StarIcon as StarSolidIcon,
@@ -774,6 +453,7 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 const cartStore = useCartStore()
 const wishlistStore = useWishlistStore()
+const { flyTo } = useFlyTo()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 
@@ -806,9 +486,15 @@ function wishlistPayload() {
   }
 }
 
-function toggleSave() {
+function toggleSave(ev?: MouseEvent) {
   if (!tour.value?.id) return
+  const wasAdded = !wishlistStore.has(tour.value.id)
+  // Capture the tapped button synchronously (currentTarget is nulled after
+  // dispatch / on replayed early clicks) so the first save still animates.
+  const src = ev ? ((ev.currentTarget as HTMLElement) || (ev.target as HTMLElement)?.closest('button') as HTMLElement | null) : null
   wishlistStore.toggle(wishlistPayload())
+  // Fly a heart up to the header wishlist counter on ADD (not on un-save).
+  if (wasAdded && src) flyTo(src, '#nav-wishlist', 'heart')
 }
 
 const isSaved = computed(() => wishlistStore.has((tour.value as any)?.id))
@@ -822,8 +508,10 @@ async function openShare() {
   shareOpen.value = true
 }
 
-function toggleSaveRelated(relatedTour: any) {
+function toggleSaveRelated(relatedTour: any, ev?: MouseEvent) {
   if (!relatedTour?.id) return
+  const wasAdded = !wishlistStore.has(Number(relatedTour.id))
+  const src = ev ? ((ev.currentTarget as HTMLElement) || (ev.target as HTMLElement)?.closest('button') as HTMLElement | null) : null
   wishlistStore.toggle({
     id: Number(relatedTour.id),
     slug: relatedTour.slug,
@@ -833,6 +521,7 @@ function toggleSaveRelated(relatedTour: any) {
     min_price: relatedTour.min_price,
     currency: relatedTour.currency || 'USD',
   })
+  if (wasAdded && src) flyTo(src, '#nav-wishlist', 'heart')
 }
 const currencyStore = useCurrencyStore()
 
@@ -967,28 +656,18 @@ const selectedDate = ref('')
 const selectedTime = ref('')
 const adults = ref(2)
 const children = ref(0)
-const mobileError = ref('')
 const mobileBookingRef = ref<HTMLElement | null>(null)
 
-function mobileHandleBooking() {
-  if (!selectedDate.value) {
-    mobileError.value = 'Please select a date'
-    return
-  }
-  if (!selectedTime.value) {
-    mobileError.value = 'Please select a time'
-    return
-  }
-  mobileError.value = ''
-  handleBooking()
-}
+// One validation source for both the mobile inline panel and the desktop
+// sticky widget — localized, shown inline (no browser alert()).
+const { error: bookingError, validate: validateBooking } = useBookingValidation()
 
 // Sticky bottom-bar CTA: if the user already picked date+time we proceed to
 // checkout; otherwise we scroll them up to the inline booking panel so they
 // can finish configuring without losing scroll context.
 function onMobileBottomCta() {
   if (selectedDate.value && selectedTime.value) {
-    mobileHandleBooking()
+    handleBooking()
     return
   }
   if (mobileBookingRef.value) {
@@ -1014,9 +693,8 @@ watch(mobileBookingRef, (el) => {
 
 onBeforeUnmount(() => stickyObserver?.disconnect())
 
-// Clear mobile error when user selects
-watch(selectedDate, () => { if (mobileError.value) mobileError.value = '' })
-watch(selectedTime, () => { if (mobileError.value) mobileError.value = '' })
+// Clear the booking error as soon as the user fixes the missing field.
+watch([selectedDate, selectedTime], () => { if (bookingError.value) bookingError.value = '' })
 
 // Pricing model — a tour defines `price_details[]`, one row per
 // (age_stage, quantity-tier). We group active rows by age stage and order the
@@ -1216,11 +894,14 @@ const availableTimes = computed(() => {
   }
 
   if (times.length === 0) {
+    // Fallback departure slots when the tour has no configured times.
+    // NOTE: use `defaultDur` — a stray `dur` here was an undeclared variable
+    // that threw a ReferenceError and broke the time selector for such tours.
     times.push(
-      { value: '06:00', label: `06:00 AM${dur}` },
-      { value: '08:00', label: `08:00 AM${dur}` },
-      { value: '09:00', label: `09:00 AM${dur}` },
-      { value: '10:00', label: `10:00 AM${dur}` }
+      { value: '06:00', label: `06:00 AM${defaultDur}` },
+      { value: '08:00', label: `08:00 AM${defaultDur}` },
+      { value: '09:00', label: `09:00 AM${defaultDur}` },
+      { value: '10:00', label: `10:00 AM${defaultDur}` }
     )
   }
 
@@ -1242,19 +923,8 @@ const maxPax = computed(() => {
 })
 
 const totalPax = computed(() => adults.value + children.value)
-
-function incrementAdults() {
-  if (totalPax.value < maxPax.value) adults.value++
-}
-function decrementAdults() {
-  if (adults.value > 1) adults.value--
-}
-function incrementChildren() {
-  if (totalPax.value < maxPax.value) children.value++
-}
-function decrementChildren() {
-  if (children.value > 0) children.value--
-}
+// Quantity +/- now lives in <TourQuantityStepper> (v-model + :at-max), so the
+// old increment/decrement handlers were removed as dead code.
 
 const guideLanguageMap: Record<number, string> = { 1: 'Spanish', 2: 'English', 3: 'French', 4: 'German', 5: 'Portuguese', 6: 'Italian' }
 function getGuideLanguageNames(ids: number[]): string[] {
@@ -1278,8 +948,8 @@ type CartFeedback = 'added' | 'duplicate' | null
 const cartFeedback = ref<CartFeedback>(null)
 let cartFeedbackTimer: any = null
 function handleAddToCart(): boolean {
-  if (!selectedDate.value) { alert('Please select a tour date'); return false }
-  if (!selectedTime.value) { alert('Please select a departure time'); return false }
+  // Inline, localized validation (replaces the old English browser alerts).
+  if (!validateBooking(selectedDate.value, selectedTime.value)) return false
 
   const tourImage = tour.value?.media_gallery && tour.value.media_gallery.length > 0
     ? getImageUrl(tour.value.media_gallery[0].url)
@@ -1324,6 +994,27 @@ function handleAddToCart(): boolean {
 function handleBooking() {
   if (handleAddToCart()) navigateTo('/cart')
 }
+
+// One-way props for the shared <TourBookingCard> (the four inputs use v-model).
+// Spread with v-bind so the mobile + desktop instances stay identical.
+const bookingProps = computed(() => ({
+  tour: tour.value,
+  adultPrice: adultPrice.value,
+  childPrice: childPrice.value,
+  basePrice: basePrice.value,
+  subtotal: subtotal.value,
+  total: total.value,
+  groupDiscount: groupDiscount.value,
+  hasChildPricing: hasChildPricing.value,
+  maxPax: maxPax.value,
+  totalPax: totalPax.value,
+  minDate: minDate.value,
+  availableTimes: availableTimes.value,
+  activeOffer: activeOffer.value,
+  tzInfo: tzInfo.value,
+  error: bookingError.value,
+  cartFeedback: cartFeedback.value,
+}))
 
 
 // Per-locale slugs for correct hreflang/alternate links — tour slugs differ

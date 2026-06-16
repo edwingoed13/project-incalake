@@ -1,19 +1,35 @@
 <template>
   <div class="select-none relative">
-    <!-- Trigger button -->
-    <div
+    <!-- Trigger button — real button semantics + keyboard + aria-expanded -->
+    <button
+      type="button"
       @click="open = !open"
-      class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all"
+      :aria-expanded="open"
+      aria-haspopup="dialog"
+      class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-left"
     >
-      <Icon name="material-symbols:calendar-today-outline" class="text-slate-400 text-lg" />
+      <Icon name="material-symbols:calendar-today-outline" class="text-slate-400 text-lg shrink-0" />
       <span v-if="modelValue" class="text-sm font-semibold text-slate-800 dark:text-white">{{ formatSelected }}</span>
       <span v-else class="text-sm text-slate-400">{{ t('select_date') }}</span>
-      <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm ml-auto" />
-    </div>
+      <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm ml-auto shrink-0" />
+    </button>
 
-    <!-- Calendar dropdown -->
+    <!-- Calendar: bottom-sheet on mobile (doesn't push the page), popover on desktop -->
     <Transition name="cal">
-      <div v-if="open" class="mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden lg:absolute lg:z-50 lg:right-0 lg:w-[560px] lg:max-w-[calc(100vw-2rem)]">
+      <div
+        v-if="open"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('select_date')"
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto
+               fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]
+               lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-0 lg:mt-2 lg:rounded-2xl lg:overflow-hidden
+               lg:max-h-[calc(100vh-8rem)] lg:w-[560px] lg:max-w-[calc(100vw-2rem)]"
+      >
+        <!-- Mobile grab handle -->
+        <div class="lg:hidden flex justify-center pt-3 pb-1">
+          <div class="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+        </div>
         <!-- Header: navigation -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <button @click="prevMonth" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
@@ -41,14 +57,17 @@
                   v-if="day"
                   @click="selectDate(day.date)"
                   :disabled="day.disabled"
-                  class="relative h-10 text-sm font-semibold rounded-xl transition-all"
+                  :aria-label="fullDateLabel(day)"
+                  :aria-pressed="day.isSelected"
+                  class="relative h-11 w-full text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
                   :class="getDayClasses(day)"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
-                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 font-black leading-none" :style="{ color: day.offerColor, fontSize: '6px' }">%</span>
+                  <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
+                  <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else class="h-10"></span>
+                <span v-else class="h-11"></span>
               </template>
             </div>
           </div>
@@ -67,14 +86,17 @@
                   v-if="day"
                   @click="selectDate(day.date)"
                   :disabled="day.disabled"
-                  class="relative h-10 text-sm font-semibold rounded-xl transition-all"
+                  :aria-label="fullDateLabel(day)"
+                  :aria-pressed="day.isSelected"
+                  class="relative h-11 w-full text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
                   :class="getDayClasses(day)"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
-                  <span v-if="day.hasOffer" class="absolute top-0 right-0.5 font-black leading-none" :style="{ color: day.offerColor, fontSize: '6px' }">%</span>
+                  <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
+                  <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else class="h-10"></span>
+                <span v-else class="h-11"></span>
               </template>
             </div>
           </div>
@@ -82,13 +104,22 @@
 
         <!-- Legend -->
         <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-5 text-xs font-semibold text-slate-400">
-          <span class="flex items-center gap-1"><span class="text-amber-500 text-[8px] font-black">%</span> {{ t('offer_legend') }}</span>
+          <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-amber-500"></span> {{ t('offer_legend') }}</span>
+        </div>
+
+        <!-- Mobile: explicit "Done" to close the sheet (selecting a day also closes) -->
+        <div class="lg:hidden sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button type="button" @click="open = false"
+            class="w-full min-h-[48px] bg-primary hover:bg-primary-dark text-white font-bold rounded-xl active:scale-[0.98] transition-transform">
+            {{ t('done') || 'Listo' }}
+          </button>
         </div>
       </div>
     </Transition>
 
-    <!-- Close backdrop -->
-    <div v-if="open" class="fixed inset-0 z-[-1]" @click="open = false"></div>
+    <!-- Click-outside / dim backdrop: real overlay (was z-[-1], which sat behind
+         the page and never caught clicks). Dim on mobile, invisible on desktop. -->
+    <div v-if="open" class="fixed inset-0 z-40 bg-black/40 lg:bg-transparent" @click="open = false"></div>
   </div>
 </template>
 
@@ -259,6 +290,13 @@ function getDayStyle(day: CalDay): Record<string, string> {
     }
   }
   return {}
+}
+
+// Full, localized date for the day button's aria-label (screen readers hear
+// "Sábado, 12 de julio" instead of just "12").
+function fullDateLabel(day: CalDay): string {
+  const [y, m, d] = day.date.split('-').map(Number)
+  return cap(new Date(y, m - 1, d).toLocaleDateString(intlLocale.value, { weekday: 'long', day: 'numeric', month: 'long' }))
 }
 
 function selectDate(date: string) {

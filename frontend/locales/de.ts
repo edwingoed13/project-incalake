@@ -7,6 +7,11 @@ export default {
       hero_description: 'Entdecken Sie atemberaubende Erlebnisse am höchsten schiffbaren See der Welt.',
       share: 'Teilen', save: 'Speichern', book_now: 'Buchen', per_person_label: 'pro Person',
       tour_date: 'Tourdatum', select_date: 'Datum wählen', departure_time: 'Abfahrtszeit',
+      booking_err_date: 'Bitte wählen Sie ein Datum für Ihre Tour',
+      booking_err_time: 'Bitte wählen Sie eine Abfahrtszeit',
+      booking_max_pax: 'Maximal {n} Personen pro Buchung',
+      booking_cancel_hint: 'Kostenlose Stornierung bis 24h vorher',
+      done: 'Fertig',
       difficulty_easy: 'Leicht', difficulty_moderate: 'Mittel', difficulty_hard: 'Schwer',
       select_time: 'Wählen', peruvian_time: 'Peruanische Zeit', bolivian_time: 'Bolivianische Zeit',
       checkout: {

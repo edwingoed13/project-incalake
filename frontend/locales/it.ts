@@ -7,6 +7,11 @@ export default {
       hero_description: 'Scopri esperienze mozzafiato nel lago navigabile più alto del mondo.',
       share: 'Condividi', save: 'Salva', book_now: 'Prenota', per_person_label: 'a persona',
       tour_date: 'Data del Tour', select_date: 'Seleziona data', departure_time: 'Ora di Partenza',
+      booking_err_date: 'Seleziona una data per il tuo tour',
+      booking_err_time: 'Seleziona un orario di partenza',
+      booking_max_pax: 'Massimo {n} persone per prenotazione',
+      booking_cancel_hint: 'Cancellazione gratuita fino a 24h prima',
+      done: 'Fatto',
       difficulty_easy: 'Facile', difficulty_moderate: 'Moderato', difficulty_hard: 'Difficile',
       select_time: 'Seleziona', peruvian_time: 'Ora Peruviana', bolivian_time: 'Ora Boliviana',
       checkout: {

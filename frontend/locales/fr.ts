@@ -7,6 +7,11 @@ export default {
       hero_description: 'Découvrez des expériences incroyables sur le plus haut lac navigable du monde.',
       share: 'Partager', save: 'Sauvegarder', book_now: 'Réserver', per_person_label: 'par personne',
       tour_date: 'Date du Tour', select_date: 'Sélectionner la date', departure_time: 'Heure de Départ',
+      booking_err_date: 'Sélectionnez une date pour votre tour',
+      booking_err_time: 'Sélectionnez une heure de départ',
+      booking_max_pax: 'Maximum {n} personnes par réservation',
+      booking_cancel_hint: 'Annulation gratuite jusqu’à 24h avant',
+      done: 'Terminé',
       difficulty_easy: 'Facile', difficulty_moderate: 'Modéré', difficulty_hard: 'Difficile',
       select_time: 'Sélectionner', peruvian_time: 'Heure Péruvienne', bolivian_time: 'Heure Bolivienne',
       checkout: {
