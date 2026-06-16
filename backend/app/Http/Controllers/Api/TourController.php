@@ -742,6 +742,170 @@ class TourController extends Controller
     }
 
     /**
+     * Admin-only: list tours that can be attached as a CHILD variant of the
+     * tour given by ?exclude_id. Mirror of eligibleParents but the candidate
+     * set is "free" tours: active, not this tour, with NO parent of their own
+     * (parent_tour_id IS NULL → not already someone's child) and NO children
+     * of their own (so we never create a nested group). Language-scoped +
+     * multi-word search, same as eligibleParents.
+     */
+    public function eligibleChildren(Request $request): JsonResponse
+    {
+        try {
+            $langCode = strtoupper((string) $request->query('language', 'ES'));
+            $excludeId = (int) $request->query('exclude_id', 0);
+
+            $query = Tour::query()
+                ->where('active', true)
+                ->whereNull('parent_tour_id')          // not already a child
+                ->whereDoesntHave('childOptions')      // not already a parent (no nesting)
+                ->where('id', '!=', $excludeId);
+
+            if ($request->filled('city_id')) {
+                $query->where('city_id', (int) $request->query('city_id'));
+            }
+
+            $query->whereHas('translations', function ($q) use ($langCode) {
+                $q->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
+            });
+
+            $search = trim((string) $request->query('search', ''));
+            if ($search !== '') {
+                $tokens = array_values(array_filter(
+                    preg_split('/\s+/u', $search) ?: [],
+                    fn ($w) => trim((string) $w) !== ''
+                ));
+                $query->whereHas('translations', function ($q) use ($tokens, $langCode) {
+                    $q->whereHas('language', fn ($q2) => $q2->where('code', $langCode));
+                    foreach ($tokens as $word) {
+                        $q->where('h1_title', 'like', '%' . $word . '%');
+                    }
+                });
+            }
+
+            $tours = $query
+                ->with([
+                    'translations:id,tour_id,language_id,h1_title,slug',
+                    'translations.language:id,code',
+                    'city:id,name,slug',
+                ])
+                ->orderBy('id', 'desc')
+                ->limit(50)
+                ->get();
+
+            $data = $tours->map(function ($t) use ($langCode) {
+                $tr = $t->translations->first(fn ($x) => optional($x->language)->code === $langCode);
+                if (!$tr) return null;
+                return [
+                    'id' => $t->id,
+                    'h1_title' => $tr->h1_title ?? $t->code,
+                    'city_name' => optional($t->city)->name,
+                ];
+            })->filter()->values();
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar variantes candidatas.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin-only: list the CHILD variants currently linked to the tour {id}.
+     * Drives the "Variantes vinculadas" list on the parent's Step 6.
+     */
+    public function childVariants(Request $request, $id): JsonResponse
+    {
+        try {
+            $langCode = strtoupper((string) $request->query('language', 'ES'));
+            $children = Tour::query()
+                ->where('parent_tour_id', (int) $id)
+                ->with([
+                    'translations:id,tour_id,language_id,h1_title',
+                    'translations.language:id,code',
+                ])
+                ->orderBy('id')
+                ->get();
+
+            $data = $children->map(function ($t) use ($langCode) {
+                $tr = $t->translations->first(fn ($x) => optional($x->language)->code === $langCode)
+                    ?? $t->translations->first();
+                return [
+                    'id' => $t->id,
+                    'h1_title' => $tr?->h1_title ?? $t->code,
+                    'option_label' => $t->option_label,
+                    'option_color' => $t->option_color,
+                    'active' => (bool) $t->active,
+                ];
+            });
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar variantes vinculadas.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin-only: set (or clear) the parent of tour {id}. Used both ways —
+     * a child setting its parent, and a parent attaching/detaching a child
+     * (by calling this on the child's id). Guards against self-parenting and
+     * nesting (the chosen parent must not itself be a child).
+     *
+     * Body: { parent_tour_id: int|null, option_label?, option_color? }
+     */
+    public function setParent(Request $request, $id): JsonResponse
+    {
+        try {
+            $tour = Tour::findOrFail((int) $id);
+            $parentId = $request->input('parent_tour_id');
+
+            if ($parentId === null || $parentId === '' || (int) $parentId === 0) {
+                // Detach
+                $tour->forceFill([
+                    'parent_tour_id' => null,
+                    'option_label' => $request->input('option_label'),
+                    'option_color' => $request->input('option_color'),
+                ])->save();
+            } else {
+                $parentId = (int) $parentId;
+                if ($parentId === $tour->id) {
+                    return response()->json(['success' => false, 'message' => 'Un tour no puede ser su propio padre.'], 422);
+                }
+                $parent = Tour::find($parentId);
+                if (!$parent) {
+                    return response()->json(['success' => false, 'message' => 'El tour padre no existe.'], 422);
+                }
+                if ($parent->parent_tour_id !== null) {
+                    return response()->json(['success' => false, 'message' => 'No se puede anidar: el tour elegido ya es una variante de otra actividad.'], 422);
+                }
+                $tour->forceFill([
+                    'parent_tour_id' => $parentId,
+                    'option_label' => $request->input('option_label', $tour->option_label),
+                    'option_color' => $request->input('option_color', $tour->option_color),
+                ])->save();
+            }
+
+            // The listing hides children + the detail group changed — invalidate.
+            \App\Services\CacheService::bumpToursVersion();
+
+            return response()->json(['success' => true]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al vincular la variante.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Show tour by multilang URL structure: /{lang}/{city}/{slug}
      * Example: /es/puno/tour-uros-amantani-taquile-sillustani-2d1n
      */

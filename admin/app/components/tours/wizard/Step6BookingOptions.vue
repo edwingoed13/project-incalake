@@ -651,6 +651,81 @@
               {{ store.bookingOptions.optionLabel || 'Sin etiqueta' }}
             </span>
           </div>
+
+          <!-- PARENT mode only: manage the child variants attached to THIS
+               tour. Lets the operator build the whole group from the parent
+               instead of editing each child separately. -->
+          <div v-if="variantMode === 'parent'" class="space-y-3 pt-4 border-t border-default">
+            <div>
+              <p class="text-sm font-bold">Variantes vinculadas</p>
+              <p class="text-[11px] text-muted">Tours que se muestran como opciones dentro de esta actividad.</p>
+            </div>
+
+            <!-- Current children -->
+            <div v-if="childrenLoading" class="text-xs text-muted flex items-center gap-2">
+              <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" /> Cargando…
+            </div>
+            <div v-else-if="linkedChildren.length" class="space-y-2">
+              <div
+                v-for="c in linkedChildren"
+                :key="c.id"
+                class="flex items-center justify-between gap-2 rounded-lg border border-default bg-default px-3 py-2"
+              >
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold truncate">{{ c.h1_title }}</p>
+                  <span v-if="c.option_label" class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider" :class="badgeClassFor(c.option_color)">
+                    {{ c.option_label }}
+                  </span>
+                  <span v-else class="text-[11px] text-warning">Sin etiqueta — edítala en ese tour</span>
+                </div>
+                <UButton
+                  icon="i-lucide-unlink" color="error" variant="ghost" size="xs"
+                  :loading="detachingId === c.id" title="Quitar de la actividad"
+                  @click="detachChild(c)"
+                />
+              </div>
+            </div>
+            <p v-else class="text-xs text-muted italic">Aún no hay variantes vinculadas.</p>
+
+            <!-- Search-to-add -->
+            <div ref="childSearchWrapperEl" class="relative" @keydown.esc="childDropdownOpen = false">
+              <UInput
+                v-model="childSearchQuery"
+                placeholder="Buscar tour para agregar como variante…"
+                icon="i-lucide-search"
+                :loading="childSearching"
+                @focus="childDropdownOpen = true"
+                @input="onChildSearchInput"
+              />
+              <div
+                v-if="childDropdownOpen && (childSearching || childSearchQuery.trim().length >= 2)"
+                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[260px] overflow-y-auto"
+              >
+                <div v-if="childSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
+                  <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" /> Buscando…
+                </div>
+                <div v-else-if="childCandidates.length === 0" class="px-3 py-3 text-xs text-muted">
+                  Sin tours disponibles para "{{ childSearchQuery.trim() }}".
+                </div>
+                <template v-else>
+                  <button
+                    v-for="cand in childCandidates"
+                    :key="cand.id"
+                    type="button"
+                    class="w-full text-left px-3 py-2 hover:bg-elevated transition-colors flex flex-col gap-0.5 border-b border-default last:border-0"
+                    :disabled="attachingId === cand.id"
+                    @click="attachChild(cand)"
+                  >
+                    <span class="text-sm font-semibold">{{ cand.h1_title }}</span>
+                    <span class="text-[11px] text-muted">{{ cand.city_name }}</span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <p class="text-[11px] text-muted">
+              Solo aparecen tours activos, sin variantes propias y sin padre. Tras vincular, ponle su etiqueta (Compartido/Privado…) editando ese tour.
+            </p>
+          </div>
         </div>
       </div>
     </WizardSection>
@@ -969,8 +1044,8 @@ function pickColor(token: string) {
   store.isDirty = true
 }
 
-const previewBadgeClass = computed(() => {
-  switch (store.bookingOptions.optionColor) {
+function badgeClassFor(color?: string | null): string {
+  switch (color) {
     case 'violet':  return 'bg-violet-100 text-violet-700'
     case 'amber':   return 'bg-amber-100 text-amber-700'
     case 'rose':    return 'bg-rose-100 text-rose-700'
@@ -979,7 +1054,111 @@ const previewBadgeClass = computed(() => {
     case 'blue':    return 'bg-blue-100 text-blue-700'
     default:        return 'bg-slate-100 text-slate-700'
   }
-})
+}
+const previewBadgeClass = computed(() => badgeClassFor(store.bookingOptions.optionColor))
+
+// ===== Child variants management (PARENT mode) ==========================
+// Build the option group from the parent: list linked children, search +
+// attach free tours, detach with one click. Each attach/detach is an
+// immediate API call (sets the CHILD's parent_tour_id), independent of this
+// tour's autosave.
+const linkedChildren = ref<{ id: number; h1_title: string; option_label: string | null; option_color: string | null; active: boolean }[]>([])
+const childrenLoading = ref(false)
+const childSearchQuery = ref('')
+const childDropdownOpen = ref(false)
+const childSearching = ref(false)
+const childCandidates = ref<{ id: number; h1_title: string; city_name: string | null }[]>([])
+const childSearchWrapperEl = ref<HTMLElement | null>(null)
+const attachingId = ref<number | null>(null)
+const detachingId = ref<number | null>(null)
+let childSearchTimer: any = null
+
+async function loadChildren() {
+  if (!store.tourId || store.tourId === 'new') { linkedChildren.value = []; return }
+  childrenLoading.value = true
+  try {
+    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/${store.tourId}/children?language=${store.currentLanguage || 'ES'}`)
+    linkedChildren.value = res.data || []
+  } catch (e) {
+    console.error('load children failed', e)
+  } finally {
+    childrenLoading.value = false
+  }
+}
+
+async function fetchChildCandidates(search = '') {
+  childSearching.value = true
+  try {
+    const params = new URLSearchParams({ language: store.currentLanguage || 'ES' })
+    if (store.tourId) params.set('exclude_id', String(store.tourId))
+    if (store.basicInfo?.cityId) params.set('city_id', String(store.basicInfo.cityId))
+    if (search) params.set('search', search)
+    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/eligible-children?${params.toString()}`)
+    childCandidates.value = res.data || []
+  } catch (e) {
+    console.error('eligible-children failed', e)
+    childCandidates.value = []
+  } finally {
+    childSearching.value = false
+  }
+}
+
+function onChildSearchInput() {
+  childDropdownOpen.value = true
+  clearTimeout(childSearchTimer)
+  const q = childSearchQuery.value.trim()
+  if (q.length < 2) { childCandidates.value = []; childSearching.value = false; return }
+  childSearchTimer = setTimeout(() => fetchChildCandidates(q), 250)
+}
+
+async function attachChild(cand: { id: number; h1_title: string }) {
+  attachingId.value = cand.id
+  try {
+    await $fetch(`${apiBase}/admin/tours/${cand.id}/set-parent`, {
+      method: 'POST',
+      body: { parent_tour_id: store.tourId },
+    })
+    childSearchQuery.value = ''
+    childCandidates.value = []
+    childDropdownOpen.value = false
+    await loadChildren()
+  } catch (e: any) {
+    console.error('attach child failed', e)
+    alert(e?.data?.message || 'No se pudo vincular la variante.')
+  } finally {
+    attachingId.value = null
+  }
+}
+
+async function detachChild(c: { id: number }) {
+  detachingId.value = c.id
+  try {
+    await $fetch(`${apiBase}/admin/tours/${c.id}/set-parent`, {
+      method: 'POST',
+      body: { parent_tour_id: null },
+    })
+    await loadChildren()
+  } catch (e) {
+    console.error('detach child failed', e)
+  } finally {
+    detachingId.value = null
+  }
+}
+
+function closeChildDropdownOnOutsideClick(e: MouseEvent) {
+  if (!childDropdownOpen.value) return
+  const el = childSearchWrapperEl.value
+  if (el && !el.contains(e.target as Node)) childDropdownOpen.value = false
+}
+
+// Load children when in parent mode AND the tour id is ready. Watching both
+// covers the async load order: the tour data (which sets tourId + derives
+// parent mode) may arrive after this component mounts.
+watch(
+  () => [variantMode.value, store.tourId] as const,
+  ([m, id]) => { if (m === 'parent' && id && id !== 'new') loadChildren() },
+  { immediate: true }
+)
 
 let parentSearchTimer: any = null
 async function fetchParentCandidates(search = '') {
@@ -1152,6 +1331,7 @@ function closeDropdownOnOutsideClick(e: MouseEvent) {
 // is still trying to handle the same event.
 onMounted(async () => {
   document.addEventListener('mousedown', closeDropdownOnOutsideClick)
+  document.addEventListener('mousedown', closeChildDropdownOnOutsideClick)
   // If this tour already points at a parent, resolve the parent's name once
   // so "Padre seleccionado: X" shows on load. We fetch the unfiltered list
   // (ordered id desc, limit 50) and look the parent up; parents tend to be
@@ -1167,6 +1347,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', closeDropdownOnOutsideClick)
+  document.removeEventListener('mousedown', closeChildDropdownOnOutsideClick)
 })
 </script>
 
