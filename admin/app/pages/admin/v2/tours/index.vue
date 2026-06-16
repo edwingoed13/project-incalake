@@ -177,30 +177,23 @@ const confirmDeleteTour = async (tour: Tour) => {
   const langCount = (tour.translations_summary || []).length
   const langList = (tour.translations_summary || []).map(t => t.language_code).join(', ')
 
-  // Primera confirmación
-  const first = await confirm({
+  // Single deliberate confirmation: lists the full impact and requires the
+  // operator to type the tour CODE to enable the delete button. Replaces the
+  // old two-dialog flow (less annoying, equally safe — you can't fat-finger
+  // your way through typing the exact code).
+  const ok = await confirm({
     title: `Eliminar tour ${tour.code}`,
-    description: `Vas a eliminar "${tour.title}" y todas sus ${langCount} traducción${langCount === 1 ? '' : 'es'} (${langList}). Esta acción no se puede deshacer.`,
-    confirmLabel: 'Continuar',
+    description: `Se eliminará "${tour.title}" y todo lo asociado: contenido en ${langCount} idioma${langCount === 1 ? '' : 's'} (${langList}), imágenes, precios, disponibilidad, bloqueos, ofertas y reseñas. Esta acción no se puede deshacer.`,
+    requireText: tour.code,
+    requireTextLabel: 'Escribe el código',
+    confirmLabel: 'Eliminar definitivamente',
+    cancelLabel: 'Cancelar',
     confirmColor: 'error',
-    confirmIcon: 'i-lucide-triangle-alert',
+    confirmIcon: 'i-lucide-trash-2',
     icon: 'i-lucide-triangle-alert',
     iconColor: 'error',
   })
-  if (!first) return
-
-  // Segunda confirmación (doble seguridad para acción destructiva)
-  const second = await confirm({
-    title: '¿Estás completamente seguro?',
-    description: `Se eliminarán: contenido en ${langCount} idiomas, imágenes, precios, disponibilidad, bloqueos, ofertas y reseñas asociadas. NO HAY MARCHA ATRÁS.`,
-    confirmLabel: 'Sí, eliminar definitivamente',
-    cancelLabel: 'No, mejor no',
-    confirmColor: 'error',
-    confirmIcon: 'i-lucide-trash-2',
-    icon: 'i-lucide-skull',
-    iconColor: 'error',
-  })
-  if (!second) return
+  if (!ok) return
 
   try {
     const response: any = await $fetch(`${API_BASE_URL}/tours/${tour.id}`, { method: 'DELETE' })
@@ -390,7 +383,7 @@ onMounted(() => {
         <!-- Header card -->
         <div class="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h2 class="text-2xl font-bold">Gestión de tours</h2>
+            <h1 class="admin-h1">Gestión de tours</h1>
             <p class="text-sm text-muted mt-1">
               <span v-if="meta">{{ meta.total }} tours · {{ meta.from }}-{{ meta.to }} mostrados</span>
               <span v-else>Cargando...</span>
@@ -515,6 +508,20 @@ onMounted(() => {
                   Continuar
                 </UButton>
 
+                <!-- md+: individual language code badges. Below md they were
+                     hidden entirely (info loss); now a compact count badge
+                     keeps the "how many languages" signal on phones. -->
+                <UBadge
+                  v-if="(tour.available_languages || []).length"
+                  class="md:hidden"
+                  color="primary"
+                  variant="subtle"
+                  size="xs"
+                  icon="i-lucide-languages"
+                  :title="(tour.available_languages || []).map(l => l.code).join(', ')"
+                >
+                  {{ (tour.available_languages || []).length }}
+                </UBadge>
                 <div class="hidden md:flex gap-1 max-w-[200px] flex-wrap">
                   <UBadge
                     v-for="lang in tour.available_languages || []"

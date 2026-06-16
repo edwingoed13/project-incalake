@@ -429,6 +429,47 @@ export const useTourWizardStore = defineStore('tourWizard', {
     } as TourStep8Availability,
   }),
 
+  getters: {
+    // Per-step "essential data present?" status, surfaced as a dot on the
+    // stepper so the operator sees at a glance which core steps still need
+    // work — without opening each one. Only the publish-critical steps
+    // (1 Info, 2 Contenido, 3 SEO, 4 Precios, 5 Multimedia) are evaluated;
+    // 6-9 are optional config and stay neutral. Mirrors the field checks the
+    // InsightsSidebar quality score uses, kept here so both read one source.
+    stepStatuses(): Record<number, 'complete' | 'empty'> {
+      const lang = (this as any).currentLanguage || 'es'
+      const seo: any = (this as any).contentSEO?.[lang] || {}
+      const detailed: any = (this as any).detailedContent?.[lang] || {}
+      const images: any[] = (this as any).multimedia?.images || []
+      const stages: any[] = (this as any).commercialRules?.ageStages || []
+      const bi: any = (this as any).basicInfo || {}
+
+      // Rich-text fields can be an empty "<p></p>"; strip tags before testing.
+      const hasRich = (v: any) => !!String(v || '').replace(/<[^>]*>/g, '').trim()
+      const hasText = (v: any) => !!String(v || '').trim()
+
+      const hasDuration =
+        (Number(bi.durationDays) || 0) + (Number(bi.durationHours) || 0) + (Number(bi.durationMinutes) || 0) > 0 ||
+        Number(bi.duration) > 0
+
+      const step1 = hasText(bi.title) && (bi.cityId || hasText(bi.nearestCity)) && hasDuration
+      const step2 = hasRich(detailed.detailedDescription) || hasRich(detailed.itineraryText)
+      const step3 = hasText(seo.shortDescription) || hasText(seo.metaTitle) || hasText(seo.metaDescription)
+      const step4 = stages.some((s: any) =>
+        s.active && (s.nationalities || []).some((n: any) => (n.ranges || []).some((r: any) => Number(r.price) > 0))
+      )
+      const step5 = images.length >= 1
+
+      return {
+        1: step1 ? 'complete' : 'empty',
+        2: step2 ? 'complete' : 'empty',
+        3: step3 ? 'complete' : 'empty',
+        4: step4 ? 'complete' : 'empty',
+        5: step5 ? 'complete' : 'empty',
+      }
+    },
+  },
+
   actions: {
     setTourId(id: string) {
       this.tourId = id

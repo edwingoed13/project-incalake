@@ -1,6 +1,11 @@
 <script setup lang="ts">
 const { state, accept, cancel } = useConfirm()
 
+// Gate the confirm button when the dialog requires typed confirmation.
+const confirmDisabled = computed(() =>
+  !!state.value.requireText && state.value.inputValue.trim() !== state.value.requireText
+)
+
 const iconBgClass = computed(() => {
   switch (state.value.iconColor) {
     case 'success': return 'bg-success/10'
@@ -37,6 +42,22 @@ const iconColorClass = computed(() => {
               <p v-if="state.description" class="text-sm text-muted mt-2 leading-relaxed">{{ state.description }}</p>
             </div>
           </div>
+
+          <!-- Type-to-confirm gate for destructive actions -->
+          <div v-if="state.requireText" class="mt-4">
+            <label class="text-xs font-medium text-muted block mb-1.5">
+              {{ state.requireTextLabel || 'Escribe' }}
+              <span class="font-mono font-bold text-default">{{ state.requireText }}</span>
+              para confirmar
+            </label>
+            <UInput
+              v-model="state.inputValue"
+              :placeholder="state.requireText"
+              autocomplete="off"
+              class="w-full"
+              @keydown.enter="!confirmDisabled && accept()"
+            />
+          </div>
         </div>
         <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" :disabled="state.loading" @click="cancel">
@@ -46,6 +67,7 @@ const iconColorClass = computed(() => {
             :color="state.confirmColor"
             :icon="state.confirmIcon"
             :loading="state.loading"
+            :disabled="confirmDisabled"
             @click="accept"
           >
             {{ state.confirmLabel }}

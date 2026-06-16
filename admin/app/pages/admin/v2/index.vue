@@ -217,29 +217,38 @@ const greeting = computed(() => {
         <!-- Welcome -->
         <div class="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h2 class="text-2xl font-bold">
+            <h1 class="admin-h1">
               {{ greeting }}, {{ authStore.user?.name || 'Admin' }} 👋
-            </h2>
-            <p class="text-sm text-muted mt-1">Resumen de actividad de Incalake este mes</p>
+            </h1>
+            <p class="admin-meta mt-1">Resumen de actividad de Incalake este mes</p>
           </div>
           <UBadge color="neutral" variant="subtle" icon="i-lucide-clock" size="lg">
             {{ new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) }}
           </UBadge>
         </div>
 
-        <!-- KPIs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <UCard v-for="stat in stats" :key="stat.key" :ui="{ body: 'p-5' }">
+        <!-- KPIs. Revenue is the headline metric, so it's visually elevated
+             (spans 2 cols until xl, primary ring + tint, larger number) while
+             the rest stay equal weight — gives the page a clear scanning
+             anchor. sm:grid-cols-2 fills the awkward 640-768px gap where
+             cards previously stayed single-column. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <UCard
+            v-for="stat in stats"
+            :key="stat.key"
+            :ui="{ body: 'p-5' }"
+            :class="stat.key === 'revenue' ? 'sm:col-span-2 xl:col-span-1 ring-1 ring-primary/25 bg-primary/[0.03]' : ''"
+          >
             <div class="flex items-start justify-between gap-3">
               <div class="space-y-2 min-w-0">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">{{ stat.label }}</p>
+                <p class="admin-label">{{ stat.label }}</p>
                 <USkeleton v-if="loading" class="h-9 w-28" />
-                <p v-else class="text-3xl font-bold tabular-nums truncate">{{ stat.value }}</p>
+                <p v-else class="font-black tabular-nums truncate" :class="stat.key === 'revenue' ? 'text-4xl text-primary' : 'text-3xl text-highlighted'">{{ stat.value }}</p>
                 <div class="flex items-center gap-2 flex-wrap">
                   <UBadge v-if="!loading" :color="trendColor(stat.trend)" variant="subtle" size="sm" :icon="trendIcon(stat.trend)">
                     {{ formatTrend(stat.trend) }}
                   </UBadge>
-                  <span v-if="stat.subtitle && !loading" class="text-xs text-muted truncate">{{ stat.subtitle }}</span>
+                  <span v-if="stat.subtitle && !loading && stat.key !== 'revenue'" class="text-xs text-muted truncate">{{ stat.subtitle }}</span>
                 </div>
               </div>
               <div :class="['size-11 rounded-xl flex items-center justify-center shrink-0', stat.bgClass]">
@@ -255,7 +264,7 @@ const greeting = computed(() => {
             <template #header>
               <div class="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <h3 class="font-semibold">Ventas mensuales</h3>
+                  <h3 class="admin-h3">Ventas mensuales</h3>
                   <p class="text-xs text-muted mt-0.5">Últimos 12 meses · reservas pagadas</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -272,6 +281,15 @@ const greeting = computed(() => {
             <div class="h-72 flex flex-col">
               <div v-if="loadingChart" class="flex-1 flex items-end justify-around gap-2 px-2">
                 <USkeleton v-for="i in 12" :key="i" class="flex-1" :style="{ height: `${30 + (i * 7) % 60}%` }" />
+              </div>
+
+              <!-- Empty: no paid bookings in the whole 12-month window -->
+              <div v-else-if="salesChart.totals.bookings === 0" class="flex-1 flex flex-col items-center justify-center text-center gap-1">
+                <div class="size-12 rounded-full bg-elevated flex items-center justify-center mb-1">
+                  <UIcon name="i-lucide-bar-chart-3" class="size-6 text-muted" />
+                </div>
+                <p class="text-sm font-semibold text-highlighted">Sin ventas en los últimos 12 meses</p>
+                <p class="text-xs text-muted max-w-[260px]">La gráfica se llenará a medida que se confirmen pagos.</p>
               </div>
 
               <div v-else class="flex-1 flex items-end justify-around gap-2 px-2 border-b border-default">
@@ -302,7 +320,8 @@ const greeting = computed(() => {
                 </div>
               </div>
 
-              <div class="flex justify-around mt-2 text-[10px] text-muted font-medium px-2">
+              <!-- Month labels only when there are bars to label -->
+              <div v-if="!loadingChart && salesChart.totals.bookings > 0" class="flex justify-around mt-2 text-[10px] text-muted font-medium px-2">
                 <span v-for="point in salesChart.series" :key="point.ym" class="flex-1 text-center">{{ point.label }}</span>
               </div>
             </div>
@@ -311,7 +330,7 @@ const greeting = computed(() => {
           <UCard :ui="{ body: 'p-5' }">
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="font-semibold flex items-center gap-2">
+                <h3 class="admin-h3 flex items-center gap-2">
                   <span class="size-2 bg-success rounded-full animate-pulse" />
                   Reservas recientes
                 </h3>
@@ -331,9 +350,15 @@ const greeting = computed(() => {
               </div>
             </div>
 
-            <div v-else-if="recentBookings.length === 0" class="flex flex-col items-center justify-center py-10 text-center">
-              <UIcon name="i-lucide-receipt" class="size-10 text-muted mb-2" />
-              <p class="text-sm text-muted">No hay reservas recientes</p>
+            <div v-else-if="recentBookings.length === 0" class="flex flex-col items-center justify-center py-10 text-center gap-1">
+              <div class="size-12 rounded-full bg-elevated flex items-center justify-center mb-1">
+                <UIcon name="i-lucide-receipt" class="size-6 text-muted" />
+              </div>
+              <p class="text-sm font-semibold text-highlighted">Aún no hay reservas pagadas</p>
+              <p class="text-xs text-muted max-w-[220px]">Cuando un cliente complete un pago, aparecerá aquí al instante.</p>
+              <UButton class="mt-2" size="xs" color="neutral" variant="subtle" trailing-icon="i-lucide-arrow-right" to="/admin/v2/bookings">
+                Ver todas las reservas
+              </UButton>
             </div>
 
             <div v-else class="space-y-3">
@@ -364,13 +389,15 @@ const greeting = computed(() => {
           </UCard>
         </div>
 
-        <!-- Quick actions -->
+        <!-- Quick actions. "Crear tour" is the headline workflow, so it's a
+             solid primary button; the rest are neutral outlines (navigation,
+             not creation) so the eye lands on the primary action first. -->
         <UCard :ui="{ body: 'p-5' }">
           <template #header>
-            <h3 class="font-semibold">Accesos rápidos</h3>
+            <h3 class="admin-h3">Accesos rápidos</h3>
           </template>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <UButton block color="neutral" variant="outline" icon="i-lucide-plus-circle" size="lg" to="/admin/v2/tours/new/edit">
+            <UButton block color="primary" variant="solid" icon="i-lucide-plus-circle" size="lg" to="/admin/v2/tours/new/edit">
               Crear tour
             </UButton>
             <UButton block color="neutral" variant="outline" icon="i-lucide-calendar" size="lg" to="/admin/v2/bookings">
