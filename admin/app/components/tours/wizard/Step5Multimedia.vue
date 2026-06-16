@@ -385,34 +385,31 @@
             </span>
           </div>
 
-          <!-- Action overlay. Always visible on touch (can-hover gate), hover-
-               reveal on mouse. Move buttons give tablets a reorder path since
-               native drag-and-drop doesn't fire on touch. -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3 pointer-events-none">
-            <!-- Drag handle (top row). Touch + mouse drag-to-reorder via
-                 SortableJS; the grip signals it's draggable (long-press on
-                 touch). Sortable's `handle` is set to .img-drag-handle so a
-                 normal tap/scroll doesn't start a drag. -->
-            <div class="flex items-center justify-end pointer-events-auto">
-              <span
-                class="img-drag-handle cursor-grab active:cursor-grabbing touch-none size-8 rounded-lg bg-black/50 backdrop-blur-md flex items-center justify-center text-white"
-                title="Arrastra para reordenar"
-              >
-                <UIcon name="i-lucide-grip-vertical" class="size-4" />
-              </span>
-            </div>
-            <!-- Edit / delete (bottom row) -->
+          <!-- Action overlay (always visible on touch via can-hover, hover-
+               reveal on mouse). All controls sit on ONE bottom row so the
+               drag grip no longer overlaps the #N order badge top-right:
+               [grip] [Editar] ........ [eliminar]. The grip starts the
+               SortableJS drag (long-press on touch). -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
             <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
-              <UButton
-                size="xs"
-                color="neutral"
-                variant="subtle"
-                icon="i-lucide-pencil"
-                class="backdrop-blur-md"
-                @click.stop="openEditModal(index)"
-              >
-                Editar
-              </UButton>
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="img-drag-handle cursor-grab active:cursor-grabbing touch-none size-7 rounded-lg bg-black/50 backdrop-blur-md flex items-center justify-center text-white shrink-0"
+                  title="Arrastra para reordenar"
+                >
+                  <UIcon name="i-lucide-grip-vertical" class="size-4" />
+                </span>
+                <UButton
+                  size="xs"
+                  color="neutral"
+                  variant="subtle"
+                  icon="i-lucide-pencil"
+                  class="backdrop-blur-md"
+                  @click.stop="openEditModal(index)"
+                >
+                  Editar
+                </UButton>
+              </div>
               <UButton
                 size="xs"
                 color="error"
