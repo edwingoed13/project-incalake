@@ -7,6 +7,11 @@ const router = useRouter()
 const auth = useAuthStore()
 const open = ref(false)
 
+// Nav link sizing: 44px tall touch target below lg (where the sidebar is a
+// mobile/tablet drawer), compact on lg+ where it's a mouse-driven inline
+// rail. Below lg the WCAG 44px minimum matters; above it, density wins.
+const navUi = { link: 'min-h-11 lg:min-h-0 py-2.5 lg:py-1.5' }
+
 const SOON = { color: 'neutral' as const, variant: 'subtle' as const }
 
 // Carga permisos al iniciar (igual que el layout actual)
@@ -216,32 +221,32 @@ const userMenuItems = computed(() => [
       <template #default="{ collapsed }">
         <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
 
-        <UNavigationMenu :collapsed="collapsed" :items="links.main" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.main" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Reservas</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.reservations" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.reservations" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed && links.services.length" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Servicios</div>
-        <UNavigationMenu v-if="links.services.length" :collapsed="collapsed" :items="links.services" orientation="vertical" />
+        <UNavigationMenu v-if="links.services.length" :collapsed="collapsed" :items="links.services" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Finanzas</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.finance" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.finance" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Operaciones</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.operations" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.operations" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Marketing</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.marketing" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.marketing" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Transporte</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.transport" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.transport" orientation="vertical" :ui="navUi" />
 
         <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Integraciones</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.integrations" orientation="vertical" />
+        <UNavigationMenu :collapsed="collapsed" :items="links.integrations" orientation="vertical" :ui="navUi" />
 
         <template v-if="links.settings.length">
           <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Configuración</div>
-          <UNavigationMenu :collapsed="collapsed" :items="links.settings" orientation="vertical" />
+          <UNavigationMenu :collapsed="collapsed" :items="links.settings" orientation="vertical" :ui="navUi" />
         </template>
       </template>
 

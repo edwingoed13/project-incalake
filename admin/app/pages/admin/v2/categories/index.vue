@@ -175,7 +175,7 @@ onMounted(() => {
     <template #body>
       <div class="p-6 space-y-4">
         <div>
-          <h2 class="text-2xl font-bold">Gestión de categorías</h2>
+          <h1 class="admin-h1">Gestión de categorías</h1>
           <p class="text-sm text-muted mt-1">Organiza los tours por temática</p>
         </div>
 
@@ -270,7 +270,7 @@ onMounted(() => {
           <!-- Empty -->
           <div v-else-if="filtered.length === 0" class="p-12 flex flex-col items-center text-center gap-3">
             <UIcon name="i-lucide-tags" class="size-12 text-muted" />
-            <h3 class="text-lg font-semibold">
+            <h3 class="admin-h2">
               {{ categories.length === 0 ? 'No hay categorías' : 'Sin resultados' }}
             </h3>
             <p class="text-sm text-muted">

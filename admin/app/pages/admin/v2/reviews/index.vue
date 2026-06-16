@@ -348,7 +348,7 @@ onMounted(() => {
     <template #body>
       <div class="p-6 space-y-4">
         <div>
-          <h2 class="text-2xl font-bold">Reseñas y testimonios</h2>
+          <h1 class="admin-h1">Reseñas y testimonios</h1>
           <p class="text-sm text-muted mt-1">
             Modera las opiniones de los clientes y destaca las mejores
           </p>

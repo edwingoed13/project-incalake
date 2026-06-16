@@ -151,7 +151,7 @@ onMounted(() => {
     <template #body>
       <div class="p-6 space-y-4">
         <div>
-          <h2 class="text-2xl font-bold">Gestión de idiomas</h2>
+          <h1 class="admin-h1">Gestión de idiomas</h1>
           <p class="text-sm text-muted mt-1">Idiomas disponibles para traducciones del catálogo</p>
         </div>
 
@@ -230,7 +230,7 @@ onMounted(() => {
           <!-- Empty -->
           <div v-else-if="sortedFiltered.length === 0" class="p-12 flex flex-col items-center text-center gap-3">
             <UIcon name="i-lucide-languages" class="size-12 text-muted" />
-            <h3 class="text-lg font-semibold">
+            <h3 class="admin-h2">
               {{ languages.length === 0 ? 'No hay idiomas' : 'Sin resultados' }}
             </h3>
             <p class="text-sm text-muted">

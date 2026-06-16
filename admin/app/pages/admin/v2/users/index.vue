@@ -193,7 +193,7 @@ onMounted(() => {
     <template #body>
       <div class="p-6 space-y-4">
         <div>
-          <h2 class="text-2xl font-bold">Gestión de usuarios</h2>
+          <h1 class="admin-h1">Gestión de usuarios</h1>
           <p class="text-sm text-muted mt-1">Administra los accesos al sistema y los clientes registrados</p>
         </div>
 
@@ -288,7 +288,7 @@ onMounted(() => {
           <!-- Empty -->
           <div v-else-if="filtered.length === 0" class="p-12 flex flex-col items-center text-center gap-3">
             <UIcon name="i-lucide-users" class="size-12 text-muted" />
-            <h3 class="text-lg font-semibold">
+            <h3 class="admin-h2">
               {{ users.length === 0 ? 'No hay usuarios' : 'Sin resultados' }}
             </h3>
             <p class="text-sm text-muted">

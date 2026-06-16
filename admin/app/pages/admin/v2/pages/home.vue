@@ -263,7 +263,7 @@ onMounted(async () => {
     <template #body>
       <div class="p-6 space-y-6 pb-32">
         <div>
-          <h2 class="text-2xl font-bold">Contenido de la página principal</h2>
+          <h1 class="admin-h1">Contenido de la página principal</h1>
           <p class="text-sm text-muted mt-1">Gestiona los textos e imágenes que ven los clientes en cada idioma</p>
         </div>
 
@@ -299,7 +299,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
                   <UIcon name="i-lucide-image" class="size-5 text-primary" />
                 </div>
-                <h3 class="text-base font-bold">Hero (cabecera)</h3>
+                <h3 class="admin-h2">Hero (cabecera)</h3>
               </div>
             </template>
 
@@ -366,7 +366,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-success/10 flex items-center justify-center">
                   <UIcon name="i-lucide-shield-check" class="size-5 text-success" />
                 </div>
-                <h3 class="text-base font-bold">Indicadores de confianza</h3>
+                <h3 class="admin-h2">Indicadores de confianza</h3>
               </div>
             </template>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -393,7 +393,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-info/10 flex items-center justify-center">
                   <UIcon name="i-lucide-map-pin" class="size-5 text-info" />
                 </div>
-                <h3 class="text-base font-bold">Sección de destinos</h3>
+                <h3 class="admin-h2">Sección de destinos</h3>
               </div>
             </template>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -420,7 +420,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-warning/10 flex items-center justify-center">
                   <UIcon name="i-lucide-star" class="size-5 text-warning" />
                 </div>
-                <h3 class="text-base font-bold">Tours destacados</h3>
+                <h3 class="admin-h2">Tours destacados</h3>
               </div>
             </template>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -440,7 +440,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-secondary/10 flex items-center justify-center">
                   <UIcon name="i-lucide-circle-help" class="size-5 text-secondary" />
                 </div>
-                <h3 class="text-base font-bold">¿Por qué elegirnos?</h3>
+                <h3 class="admin-h2">¿Por qué elegirnos?</h3>
               </div>
             </template>
             <UFormField label="Título de sección" class="mb-4">
@@ -470,7 +470,7 @@ onMounted(async () => {
                 <div class="size-9 rounded-lg bg-neutral/10 flex items-center justify-center">
                   <UIcon name="i-lucide-type" class="size-5 text-muted" />
                 </div>
-                <h3 class="text-base font-bold">Otros textos</h3>
+                <h3 class="admin-h2">Otros textos</h3>
               </div>
             </template>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">

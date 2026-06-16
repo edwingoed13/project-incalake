@@ -239,7 +239,7 @@ onMounted(() => {
             <UIcon name="i-lucide-sparkles" class="size-6" />
           </div>
           <div>
-            <h2 class="text-2xl font-bold">Configuración de Traducción IA</h2>
+            <h1 class="admin-h1">Configuración de Traducción IA</h1>
             <p class="text-sm text-muted mt-1">
               Configura tu proveedor de IA para traducir automáticamente el contenido de los tours
             </p>
@@ -258,7 +258,7 @@ onMounted(() => {
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-server" class="size-5 text-primary" />
-                <h3 class="text-base font-bold">Proveedor de IA</h3>
+                <h3 class="admin-h2">Proveedor de IA</h3>
               </div>
             </template>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -294,7 +294,7 @@ onMounted(() => {
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-settings-2" class="size-5 text-primary" />
-                <h3 class="text-base font-bold">Configuración del proveedor</h3>
+                <h3 class="admin-h2">Configuración del proveedor</h3>
               </div>
             </template>
 
