@@ -317,23 +317,15 @@
             </UButton>
           </div>
         </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div ref="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div
           v-for="(image, index) in store.multimedia.images"
           :key="image.id"
-          draggable="true"
           :class="[
-            'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg cursor-grab active:cursor-grabbing',
+            'group relative aspect-square rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg',
             image.isPrimary ? 'border-primary ring-2 ring-primary/20' : 'border-default',
             isImageSelected(image.id) && 'ring-4 ring-primary/60',
-            dragFromIndex === index && 'opacity-40 scale-95',
-            dragOverIndex === index && dragFromIndex !== index && 'ring-4 ring-primary/40 scale-105',
           ]"
-          @dragstart="onDragStart(index, $event)"
-          @dragover="onDragOver(index, $event)"
-          @dragleave="onDragLeave(index)"
-          @drop="onDrop(index, $event)"
-          @dragend="onDragEnd"
         >
           <img :src="getImageUrl(image.url)" :alt="image.altText" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none" />
 
@@ -397,20 +389,17 @@
                reveal on mouse. Move buttons give tablets a reorder path since
                native drag-and-drop doesn't fire on touch. -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3 pointer-events-none">
-            <!-- Reorder (top row) -->
-            <div class="flex items-center gap-1.5 pointer-events-auto">
-              <UButton
-                size="xs" color="neutral" variant="subtle" icon="i-lucide-arrow-left"
-                class="backdrop-blur-md" title="Mover antes"
-                :disabled="index === 0"
-                @click.stop="moveImage(index, -1)"
-              />
-              <UButton
-                size="xs" color="neutral" variant="subtle" icon="i-lucide-arrow-right"
-                class="backdrop-blur-md" title="Mover después"
-                :disabled="index === store.multimedia.images.length - 1"
-                @click.stop="moveImage(index, 1)"
-              />
+            <!-- Drag handle (top row). Touch + mouse drag-to-reorder via
+                 SortableJS; the grip signals it's draggable (long-press on
+                 touch). Sortable's `handle` is set to .img-drag-handle so a
+                 normal tap/scroll doesn't start a drag. -->
+            <div class="flex items-center justify-end pointer-events-auto">
+              <span
+                class="img-drag-handle cursor-grab active:cursor-grabbing touch-none size-8 rounded-lg bg-black/50 backdrop-blur-md flex items-center justify-center text-white"
+                title="Arrastra para reordenar"
+              >
+                <UIcon name="i-lucide-grip-vertical" class="size-4" />
+              </span>
             </div>
             <!-- Edit / delete (bottom row) -->
             <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
@@ -642,7 +631,7 @@ import { useAuthStore } from '~/stores/auth'
 import WizardSection from './WizardSection.vue'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const store = useTourWizardStore()
 const { confirm } = useConfirm()
@@ -1164,66 +1153,46 @@ const deleteSelectedImages = async () => {
   clearImageSelection()
 }
 
-// Touch-friendly reorder: drag-and-drop (below) doesn't fire on tablets, so
-// these step the image one slot earlier/later. Same splice + order-resync as
-// onDrop, exposed as buttons in the image overlay.
-const moveImage = (index: number, dir: -1 | 1) => {
+// Gallery reordering via SortableJS — works on BOTH mouse and touch (native
+// HTML5 drag-and-drop, which we used before, never fires on touch, so tablets
+// couldn't reorder at all). Drag is started from the .img-drag-handle grip so
+// a normal tap/scroll on the card doesn't begin a drag; on touch a short
+// long-press on the grip initiates it.
+const galleryGrid = ref<HTMLElement | null>(null)
+let sortable: any = null
+
+const applyReorder = (oldIndex: number, newIndex: number) => {
+  if (oldIndex === newIndex) return
   const images = store.multimedia.images
-  const target = index + dir
-  if (target < 0 || target >= images.length) return
-  const [moved] = images.splice(index, 1)
-  images.splice(target, 0, moved)
+  const [moved] = images.splice(oldIndex, 1)
+  images.splice(newIndex, 0, moved)
   images.forEach((img: any, i: number) => { img.order = i + 1 })
-  syncPrimaryByOrder()
+  syncPrimaryByOrder()      // first image in the new order becomes primary
   store.isDirty = true
 }
 
-// Drag-and-drop reordering of gallery images.
-const dragFromIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
+onMounted(async () => {
+  const { default: Sortable } = await import('sortablejs')
+  if (!galleryGrid.value) return
+  sortable = Sortable.create(galleryGrid.value, {
+    handle: '.img-drag-handle',
+    animation: 150,
+    delay: 120,                 // touch long-press before dragging…
+    delayOnTouchOnly: true,     // …mouse drags immediately
+    ghostClass: 'opacity-40',
+    chosenClass: 'ring-4',
+    onEnd: (evt: any) => {
+      if (evt.oldIndex != null && evt.newIndex != null) {
+        applyReorder(evt.oldIndex, evt.newIndex)
+      }
+    },
+  })
+})
 
-const onDragStart = (index: number, e: DragEvent) => {
-  dragFromIndex.value = index
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', String(index))
-  }
-}
-
-const onDragOver = (index: number, e: DragEvent) => {
-  e.preventDefault()
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
-  if (dragFromIndex.value !== null && dragFromIndex.value !== index) {
-    dragOverIndex.value = index
-  }
-}
-
-const onDragLeave = (index: number) => {
-  if (dragOverIndex.value === index) dragOverIndex.value = null
-}
-
-const onDrop = (targetIndex: number, e: DragEvent) => {
-  e.preventDefault()
-  const from = dragFromIndex.value
-  dragFromIndex.value = null
-  dragOverIndex.value = null
-  if (from === null || from === targetIndex) return
-
-  const images = store.multimedia.images
-  const [moved] = images.splice(from, 1)
-  images.splice(targetIndex, 0, moved)
-
-  // Refresh order field (1-based) so the backend keeps the sequence
-  images.forEach((img: any, i: number) => { img.order = i + 1 })
-
-  // The first image in the new order becomes the primary
-  syncPrimaryByOrder()
-}
-
-const onDragEnd = () => {
-  dragFromIndex.value = null
-  dragOverIndex.value = null
-}
+onBeforeUnmount(() => {
+  sortable?.destroy?.()
+  sortable = null
+})
 </script>
 
 <style scoped>
