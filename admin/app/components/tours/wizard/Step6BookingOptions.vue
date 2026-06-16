@@ -1151,15 +1151,6 @@ function closeChildDropdownOnOutsideClick(e: MouseEvent) {
   if (el && !el.contains(e.target as Node)) childDropdownOpen.value = false
 }
 
-// Load children when in parent mode AND the tour id is ready. Watching both
-// covers the async load order: the tour data (which sets tourId + derives
-// parent mode) may arrive after this component mounts.
-watch(
-  () => [variantMode.value, store.tourId] as const,
-  ([m, id]) => { if (m === 'parent' && id && id !== 'new') loadChildren() },
-  { immediate: true }
-)
-
 let parentSearchTimer: any = null
 async function fetchParentCandidates(search = '') {
   parentSearching.value = true
@@ -1205,6 +1196,16 @@ const variantMode = ref<VariantMode>(deriveMode())
 watch(
   () => [store.bookingOptions.parentTourId, store.bookingOptions.optionLabel],
   () => { variantMode.value = deriveMode() },
+)
+
+// Load child variants when in parent mode AND the tour id is ready. Watching
+// both covers the async load order (tour data sets tourId + derives parent
+// mode after this component mounts). Declared here, AFTER variantMode, to
+// avoid a temporal-dead-zone access during setup.
+watch(
+  () => [variantMode.value, store.tourId] as const,
+  ([m, id]) => { if (m === 'parent' && id && id !== 'new') loadChildren() },
+  { immediate: true }
 )
 
 function setMode(m: VariantMode) {
