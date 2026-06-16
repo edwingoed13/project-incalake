@@ -393,8 +393,26 @@
             </span>
           </div>
 
-          <!-- Hover overlay with actions -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
+          <!-- Action overlay. Always visible on touch (can-hover gate), hover-
+               reveal on mouse. Move buttons give tablets a reorder path since
+               native drag-and-drop doesn't fire on touch. -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3 pointer-events-none">
+            <!-- Reorder (top row) -->
+            <div class="flex items-center gap-1.5 pointer-events-auto">
+              <UButton
+                size="xs" color="neutral" variant="subtle" icon="i-lucide-arrow-left"
+                class="backdrop-blur-md" title="Mover antes"
+                :disabled="index === 0"
+                @click.stop="moveImage(index, -1)"
+              />
+              <UButton
+                size="xs" color="neutral" variant="subtle" icon="i-lucide-arrow-right"
+                class="backdrop-blur-md" title="Mover después"
+                :disabled="index === store.multimedia.images.length - 1"
+                @click.stop="moveImage(index, 1)"
+              />
+            </div>
+            <!-- Edit / delete (bottom row) -->
             <div class="flex items-center justify-between w-full gap-2 pointer-events-auto">
               <UButton
                 size="xs"
@@ -1144,6 +1162,20 @@ const deleteSelectedImages = async () => {
 
   syncPrimaryByOrder()
   clearImageSelection()
+}
+
+// Touch-friendly reorder: drag-and-drop (below) doesn't fire on tablets, so
+// these step the image one slot earlier/later. Same splice + order-resync as
+// onDrop, exposed as buttons in the image overlay.
+const moveImage = (index: number, dir: -1 | 1) => {
+  const images = store.multimedia.images
+  const target = index + dir
+  if (target < 0 || target >= images.length) return
+  const [moved] = images.splice(index, 1)
+  images.splice(target, 0, moved)
+  images.forEach((img: any, i: number) => { img.order = i + 1 })
+  syncPrimaryByOrder()
+  store.isDirty = true
 }
 
 // Drag-and-drop reordering of gallery images.

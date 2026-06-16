@@ -111,7 +111,7 @@ const handleSubmit = async () => {
             </div>
             <h2 class="text-lg font-bold">{{ isEdit ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
           </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" :disabled="saving" @click="close" />
+          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="md" :ui="{ base: 'rounded-full' }" :disabled="saving" @click="close" />
         </div>
 
         <form class="p-6 space-y-4" @submit.prevent="handleSubmit">

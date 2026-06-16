@@ -137,7 +137,7 @@ const close = () => {
                 <p class="text-xs text-muted font-mono truncate">{{ booking.booking_code }}</p>
               </div>
             </div>
-            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="close" />
+            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="md" :ui="{ base: 'rounded-full' }" @click="close" />
           </div>
           <div class="flex items-center gap-2 flex-wrap mt-3">
             <UBadge
