@@ -362,9 +362,15 @@
             </span>
           </div>
 
-          <!-- Completeness indicator (bottom-left, hidden on hover).
-               pointer-events-none so it never blocks the hover-overlay buttons. -->
-          <div class="absolute bottom-2 left-2 z-10 transition-opacity group-hover:opacity-0 pointer-events-none">
+          <!-- Completeness indicator (bottom-left). On mouse it shows at rest
+               and hides on hover so the overlay actions take that corner.
+               On TOUCH the overlay is always visible (can-hover), so this
+               badge must hide there too — otherwise it collides with the
+               grip + Editar in the same bottom-left corner. Hence:
+               hidden by default, visible only on hover-capable devices when
+               not hovering. (Per-image completeness is still shown inside
+               the Edit modal.) -->
+          <div class="absolute bottom-2 left-2 z-10 transition-opacity opacity-0 can-hover:opacity-100 can-hover:group-hover:opacity-0 pointer-events-none">
             <UBadge
               v-if="getMissingFields(image).length"
               :color="getMissingFields(image).includes('ALT') ? 'warning' : 'neutral'"
