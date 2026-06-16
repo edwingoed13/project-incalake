@@ -25,6 +25,11 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
   if (id === store.currentStep) return 'current'
   return 'pending'
 }
+
+// Essential-data status for the dot overlay. Returns undefined for the
+// optional steps (6-9) so they render no dot. Reads the store getter.
+const dataStatus = (id: number): 'complete' | 'empty' | undefined =>
+  store.stepStatuses[id]
 </script>
 
 <template>
@@ -41,29 +46,49 @@ const stepState = (id: number): 'completed' | 'current' | 'pending' => {
           @click="store.goToStep(step.id)"
         >
           <!-- Circle -->
-          <div
-            :class="[
-              'size-7 rounded-full flex items-center justify-center text-xs font-black transition-all shrink-0',
-              stepState(step.id) === 'completed' && 'bg-success text-white shadow-sm',
-              stepState(step.id) === 'current' && 'bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/15',
-              stepState(step.id) === 'pending' && 'bg-elevated text-muted ring-1 ring-default group-hover:ring-2 group-hover:ring-primary/30',
-            ]"
-          >
-            <UIcon v-if="stepState(step.id) === 'completed'" name="i-lucide-check" class="size-4" />
-            <span v-else>{{ step.id }}</span>
+          <div class="relative shrink-0">
+            <div
+              :class="[
+                'size-7 rounded-full flex items-center justify-center text-xs font-black transition-all',
+                stepState(step.id) === 'completed' && 'bg-success text-white shadow-sm',
+                stepState(step.id) === 'current' && 'bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/15',
+                stepState(step.id) === 'pending' && 'bg-elevated text-muted ring-1 ring-default group-hover:ring-2 group-hover:ring-primary/30',
+              ]"
+            >
+              <UIcon v-if="stepState(step.id) === 'completed'" name="i-lucide-check" class="size-4" />
+              <span v-else>{{ step.id }}</span>
+            </div>
+            <!-- Essential-data dot (steps 1-5 only): green = filled, amber =
+                 still empty. Lets the operator spot incomplete core steps
+                 without opening each. Hidden on the step they're currently on
+                 to avoid clutter. -->
+            <span
+              v-if="dataStatus(step.id) && stepState(step.id) !== 'current'"
+              :class="[
+                'absolute -top-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-default',
+                dataStatus(step.id) === 'complete' ? 'bg-success' : 'bg-amber-400',
+              ]"
+              :title="dataStatus(step.id) === 'complete' ? 'Datos esenciales completos' : 'Faltan datos esenciales'"
+            />
           </div>
 
-          <!-- Label: every step shows its name (hidden on mobile = circles only).
-               The "Paso N" subtitle is dropped to keep the bar compact. -->
+          <!-- Label visibility is progressive:
+               · the CURRENT step always shows its label (so even on a phone
+                 you read "③ SEO", not just a circle),
+               · every other step reveals from lg up.
+               Short label until xl, full label from xl, so the 9-step row
+               never overflows on mid-width laptops. -->
           <p
-            class="text-xs font-bold tracking-tight whitespace-nowrap hidden 2xl:block"
+            class="text-xs font-bold tracking-tight whitespace-nowrap"
             :class="[
+              stepState(step.id) === 'current' ? 'block' : 'hidden lg:block',
               stepState(step.id) === 'current' && 'text-primary',
               stepState(step.id) === 'completed' && 'text-default',
               stepState(step.id) === 'pending' && 'text-muted',
             ]"
           >
-            {{ step.label }}
+            <span class="xl:hidden">{{ step.shortLabel }}</span>
+            <span class="hidden xl:inline">{{ step.label }}</span>
           </p>
         </button>
 

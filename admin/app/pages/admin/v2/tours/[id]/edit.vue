@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
             icon="i-lucide-eye"
             color="neutral"
             variant="ghost"
-            class="2xl:hidden"
+            class="xl:hidden"
             :disabled="!previewUrl"
             :title="previewUrl || 'Guarda el tour para generar el enlace'"
             aria-label="Vista previa"
@@ -309,7 +309,7 @@ onBeforeUnmount(() => {
           <UButton
             icon="i-lucide-rocket"
             color="success"
-            class="2xl:hidden"
+            class="xl:hidden"
             :loading="publishing"
             :disabled="store.loading || store.autosaving"
             @click="publishTour"
@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
             icon="i-lucide-arrow-left"
             color="neutral"
             variant="ghost"
-            class="2xl:hidden"
+            class="xl:hidden"
           >
             Volver
           </UButton>
@@ -333,7 +333,11 @@ onBeforeUnmount(() => {
       <div class="flex h-full min-h-0">
         <!-- Main content -->
         <main class="flex-1 flex flex-col min-h-0">
-          <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+          <!-- pb-28 reserves space below the last field so the sticky bottom
+               nav bar (~56px) never covers it; scroll-pb-28 makes keyboard /
+               programmatic scroll-into-view stop above the bar too. Fixes the
+               recurring "dropdown / last input hidden behind the footer". -->
+          <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28">
           <div class="max-w-5xl mx-auto">
             <!-- Step header (the stepper already shows the step/category) -->
             <div class="mb-5">

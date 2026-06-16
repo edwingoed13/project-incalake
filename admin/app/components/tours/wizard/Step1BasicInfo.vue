@@ -162,12 +162,17 @@
           </div>
 
           <div class="space-y-2">
+            <!-- Mobile (<sm): time gets its own full-width row, then
+                 days/hours/minutes + delete sit in a 4-col row below.
+                 sm+: the original single 5-col row. The rigid 5-col grid
+                 squeezed a time picker + 3 steppers + a button into ~360px
+                 on phones. -->
             <div
               v-for="(item, idx) in store.basicInfo.startTimes"
               :key="idx"
-              class="grid grid-cols-[1.6fr_repeat(3,minmax(0,1fr))_auto] gap-2 items-end"
+              class="grid grid-cols-[repeat(3,minmax(0,1fr))_auto] sm:grid-cols-[1.6fr_repeat(3,minmax(0,1fr))_auto] gap-2 items-end"
             >
-              <UFormField :label="idx === 0 ? 'Hora de salida' : undefined" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+              <UFormField :label="idx === 0 ? 'Hora de salida' : undefined" class="col-span-full sm:col-span-1" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
                 <UInput
                   v-model="item.time"
                   type="time"

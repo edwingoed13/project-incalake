@@ -111,6 +111,16 @@ const hasActiveFilters = computed(() =>
   !!filters.value.date
 )
 
+// Mobile: the 4 dropdown filters collapse behind a toggle so they don't push
+// the booking list 5 rows down on a phone. Search stays always-visible.
+const mobileFiltersOpen = ref(false)
+const advancedFilterCount = computed(() =>
+  (filters.value.status !== 'all' ? 1 : 0) +
+  (filters.value.payment_state !== 'all' ? 1 : 0) +
+  (filters.value.payment_method !== 'all' ? 1 : 0) +
+  (filters.value.date ? 1 : 0)
+)
+
 const pagination = ref<Pagination>({
   current_page: 1,
   last_page: 1,
@@ -456,7 +466,7 @@ onMounted(() => {
     <template #body>
       <div class="p-6 space-y-4">
         <div>
-          <h2 class="text-2xl font-bold">Gestión de reservas</h2>
+          <h1 class="admin-h1">Gestión de reservas</h1>
           <p class="text-sm text-muted mt-1">Reservas de clientes (web + OTAs)</p>
         </div>
 
@@ -477,8 +487,9 @@ onMounted(() => {
 
         <!-- Filters -->
         <UCard :ui="{ body: 'p-4' }">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            <UFormField label="Buscar">
+          <!-- Search (always visible) + mobile toggle for the advanced filters -->
+          <div class="flex items-end gap-2">
+            <UFormField label="Buscar" class="flex-1 min-w-0">
               <UInput
                 v-model="filters.search"
                 placeholder="Código, nombre, email..."
@@ -487,6 +498,20 @@ onMounted(() => {
                 @input="debouncedSearch"
               />
             </UFormField>
+            <UButton
+              class="md:hidden shrink-0"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-sliders-horizontal"
+              @click="mobileFiltersOpen = !mobileFiltersOpen"
+            >
+              Filtros
+              <UBadge v-if="advancedFilterCount" color="primary" variant="solid" size="xs">{{ advancedFilterCount }}</UBadge>
+            </UButton>
+          </div>
+
+          <!-- Advanced filters: inline grid on md+, collapsible on mobile -->
+          <div :class="['grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3', mobileFiltersOpen ? 'grid' : 'hidden md:grid']">
             <UFormField label="Estado">
               <USelect
                 v-model="filters.status"
@@ -543,6 +568,10 @@ onMounted(() => {
 
         <!-- Table -->
         <UCard :ui="{ body: 'p-0' }">
+          <!-- DESKTOP (≥lg): full 11-column table. Below lg it forced a
+               horizontal scroll that made the list unusable on the phones
+               sales actually works from — so we render stacked cards there
+               instead (same `bookings` array + helpers, different layout). -->
           <UTable
             ref="bookingsTable"
             v-model:row-selection="rowSelection"
@@ -551,7 +580,7 @@ onMounted(() => {
             :columns="columns"
             :loading="loading"
             sticky
-            class="max-h-[70vh]"
+            class="hidden lg:block max-h-[70vh]"
             :ui="{ thead: 'bg-elevated/50', th: 'text-[10px] font-black uppercase tracking-widest text-muted py-3', td: 'py-3' }"
           >
             <template #select-header="{ table }">
@@ -579,12 +608,14 @@ onMounted(() => {
             </template>
 
             <template #customer_name-cell="{ row }">
-              <p class="font-semibold truncate max-w-[200px]">{{ row.original.customer_name }}</p>
-              <p class="text-xs text-muted truncate max-w-[200px]">{{ row.original.customer_email }}</p>
+              <!-- native title tooltip so the full name/email is reachable
+                   even when truncated -->
+              <p class="font-semibold truncate max-w-[200px]" :title="row.original.customer_name">{{ row.original.customer_name }}</p>
+              <p class="text-xs text-muted truncate max-w-[200px]" :title="row.original.customer_email">{{ row.original.customer_email }}</p>
             </template>
 
             <template #tour_title-cell="{ row }">
-              <p class="truncate max-w-[260px]">{{ row.original.tour_title || row.original.tour?.title || 'N/A' }}</p>
+              <p class="truncate max-w-[260px]" :title="row.original.tour_title || row.original.tour?.title || 'N/A'">{{ row.original.tour_title || row.original.tour?.title || 'N/A' }}</p>
               <p v-if="row.original.is_group" class="text-xs text-muted">
                 + {{ (row.original.group_count || 1) - 1 }} tour(s) más · ver detalle
               </p>
@@ -660,6 +691,69 @@ onMounted(() => {
               </div>
             </template>
           </UTable>
+
+          <!-- MOBILE/TABLET (<lg): stacked cards. Shows the fields a sales
+               rep scans first — code, customer, tour, date, total, status,
+               payment — plus the same view/actions affordances. Bulk select
+               stays desktop-only (rare on mobile, keeps the card clean). -->
+          <div class="lg:hidden">
+            <!-- Loading skeletons -->
+            <div v-if="loading" class="p-3 space-y-3">
+              <USkeleton v-for="i in 5" :key="'sk-' + i" class="h-28 w-full rounded-xl" />
+            </div>
+            <!-- Empty -->
+            <div v-else-if="!bookings.length" class="py-12 flex flex-col items-center text-center gap-3 px-4">
+              <UIcon name="i-lucide-inbox" class="size-12 text-muted" />
+              <p class="text-sm text-muted">No hay reservas con los filtros seleccionados.</p>
+              <UButton v-if="hasActiveFilters" variant="outline" size="sm" @click="resetFilters">
+                Limpiar filtros
+              </UButton>
+            </div>
+            <!-- Cards -->
+            <div v-else class="divide-y divide-default">
+              <div v-for="b in bookings" :key="'card-' + b.id" class="p-3.5">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <UBadge color="neutral" variant="subtle" size="sm" class="font-mono">{{ b.booking_code }}</UBadge>
+                      <UBadge v-if="b.is_group" color="primary" variant="subtle" size="sm" icon="i-heroicons-squares-2x2">
+                        {{ b.group_count }} tours
+                      </UBadge>
+                    </div>
+                    <p class="font-bold text-sm text-highlighted truncate">{{ b.customer_name }}</p>
+                    <p class="text-xs text-muted truncate">{{ b.tour_title || b.tour?.title || 'N/A' }}</p>
+                    <p class="text-xs text-muted mt-0.5">
+                      <UIcon name="i-lucide-calendar" class="size-3 -mt-0.5 inline" />
+                      {{ formatDate(b.tour_date) }}
+                      <span v-if="totalPax(b)"> · {{ totalPax(b) }} pax</span>
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="font-black text-base tabular-nums text-highlighted">${{ bookingTotal(b).toFixed(2) }}</p>
+                    <p v-if="b.payment_state === 'partial' && b.amount_remaining" class="text-[11px] font-bold tabular-nums text-amber-600">
+                      Saldo ${{ b.amount_remaining.toFixed(2) }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-default">
+                  <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <UBadge :color="statusBadge[b.status]?.color || 'neutral'" variant="subtle" size="sm" :icon="statusBadge[b.status]?.icon">
+                      {{ statusBadge[b.status]?.label || b.status }}
+                    </UBadge>
+                    <UBadge v-if="b.payment_state && paymentStateBadge[b.payment_state]" :color="paymentStateBadge[b.payment_state].color" variant="soft" size="sm">
+                      {{ paymentStateBadge[b.payment_state].label }}
+                    </UBadge>
+                  </div>
+                  <div class="inline-flex items-center gap-1 shrink-0">
+                    <UButton icon="i-lucide-eye" color="neutral" variant="ghost" size="sm" title="Ver detalles" @click="viewBooking(b)" />
+                    <UDropdownMenu :items="rowActions(b)" :content="{ align: 'end' }">
+                      <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="sm" />
+                    </UDropdownMenu>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Pagination -->
           <div v-if="pagination.last_page > 1" class="p-4 border-t border-default flex items-center justify-between flex-wrap gap-3">
