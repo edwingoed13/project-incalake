@@ -11,34 +11,34 @@
       </div>
     </section>
 
-    <!-- MOBILE/TABLET: search-only sticky bar — filters live in the bottom sheet -->
+    <!-- MOBILE/TABLET: search sticky bar — filters live in the bottom sheet -->
     <div class="lg:hidden sticky top-[56px] z-30 bg-white border-b border-slate-200 shadow-sm">
-      <div class="px-3 py-2">
-        <div class="relative">
-          <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+      <div class="px-3 py-2 flex items-center gap-2">
+        <div class="relative flex-1 min-w-0">
+          <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
           <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
-            class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
       </div>
     </div>
 
-    <!-- DESKTOP (>=lg): search + view-mode bar; filters live in the right sidebar -->
+    <!-- DESKTOP (>=lg): search + view-mode bar; filters in the sidebar -->
     <div class="hidden lg:block sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-6 lg:px-10 py-2.5">
         <div class="flex items-center gap-3">
-          <div class="relative w-72">
-            <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
+          <!-- Search grows to fill the available space (was a fixed w-72) -->
+          <div class="relative flex-1">
+            <Icon name="material-symbols:search" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
-              class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
-          <div class="flex-1"></div>
-          <span v-if="tours.length" class="text-xs font-bold text-slate-400">{{ t('tours_found', { count: filteredTours.length }) }}</span>
-          <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden">
-            <button @click="viewMode = 'grid'" class="p-1.5 transition-colors"
+          <span v-if="tours.length" class="text-xs font-bold text-slate-400 shrink-0 whitespace-nowrap">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden shrink-0">
+            <button @click="viewMode = 'grid'" class="p-2 transition-colors" :aria-label="t('view')"
               :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
               <Icon name="material-symbols:grid-view-outline" class="text-base" />
             </button>
-            <button @click="viewMode = 'list'" class="p-1.5 transition-colors"
+            <button @click="viewMode = 'list'" class="p-2 transition-colors" :aria-label="t('view')"
               :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
               <Icon name="material-symbols:view-list-outline" class="text-base" />
             </button>
@@ -95,31 +95,32 @@
       <!-- Main column -->
       <div class="flex-1 min-w-0 order-2">
 
-      <!-- Active filters badges -->
+      <!-- Active filters badges. Chips are taller (py-1) and the × is a real
+           20px tap target inside the chip, so they're removable with a thumb. -->
       <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5 mb-3">
-        <span v-if="selectedCitySlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
+        <span v-if="selectedCitySlug" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
-          <button @click="selectedCitySlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          <button @click="selectedCitySlug = ''" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
-        <span v-if="selectedTagSlug" class="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-500/10 text-violet-600 text-[10px] font-semibold rounded-full">
-          <Icon name="material-symbols:label-outline" class="text-[10px]" />
+        <span v-if="selectedTagSlug" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-violet-500/10 text-violet-600 text-xs font-semibold rounded-full">
+          <Icon name="material-symbols:label-outline" class="text-sm" />
           {{ activeTagInfo?.name || selectedTagSlug }}
-          <button @click="selectedTagSlug = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          <button @click="selectedTagSlug = ''" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-violet-500/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
-        <span v-if="selectedDuration" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
+        <span v-if="selectedDuration" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
           {{ durationLabels[selectedDuration] }}
-          <button @click="selectedDuration = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          <button @click="selectedDuration = ''" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
-        <span v-if="selectedPrice" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
+        <span v-if="selectedPrice" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
           {{ priceLabels[selectedPrice] }}
-          <button @click="selectedPrice = ''" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          <button @click="selectedPrice = ''" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
-        <span v-for="name in selectedPlaces" :key="name" class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded-full">
-          <Icon name="material-symbols:location-on-outline" class="text-[10px]" />
+        <span v-for="name in selectedPlaces" :key="name" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+          <Icon name="material-symbols:location-on-outline" class="text-sm" />
           {{ name }}
-          <button @click="selectedPlaces = selectedPlaces.filter(n => n !== name)" class="text-[10px] hover:text-red-500 inline-flex"><Icon name="material-symbols:close" /></button>
+          <button @click="selectedPlaces = selectedPlaces.filter(n => n !== name)" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
-        <button @click="clearFilters" class="ml-1 text-[10px] font-bold text-red-500 hover:underline">{{ t('clear_all') }}</button>
+        <button @click="clearFilters" class="ml-1 px-2 py-1 text-xs font-bold text-red-500 hover:underline">{{ t('clear_all') }}</button>
       </div>
 
       <!-- Loading: skeleton SOLO para las tarjetas (el título y los filtros de arriba ya están visibles) -->
@@ -216,8 +217,8 @@
           </NuxtLink>
           <!-- Wishlist heart -->
           <button
-            @click.stop.prevent="toggleWishlist(tour)"
-            class="absolute top-3 right-3 size-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+            @click.stop.prevent="toggleWishlist(tour, $event)"
+            class="absolute top-3 right-3 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform"
             :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400'"
             :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
             :aria-pressed="wishlistStore.has(tour.id)"
@@ -228,7 +229,7 @@
       </div>
 
       <!-- DESKTOP: Grid cards -->
-      <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
         <div v-for="tour in paginatedTours.data" :key="'d-'+tour.id" class="relative">
         <NuxtLink
           :to="getTourLink(tour)"
@@ -248,13 +249,13 @@
             </div>
           </div>
           <div class="p-4">
-            <div class="flex items-center gap-1 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
+            <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
               <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
             </div>
-            <h3 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+            <h3 class="text-[15px] md:text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
             <div class="flex items-end justify-between pt-3 border-t border-slate-100">
               <div>
-                <span class="text-[10px] text-slate-500 font-medium block">{{ t('from') }}</span>
+                <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
                 <span class="flex items-baseline gap-1.5">
                   <span v-if="showDiscountedPrice(tour)" class="text-xs line-through text-slate-400">
                     {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
@@ -264,7 +265,9 @@
                   </span>
                 </span>
               </div>
-              <span class="text-xs font-bold text-primary opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+              <!-- "Ver" stays visible on touch; only mouse devices get the
+                   hover-reveal (can-hover) — a touch laptop ≥lg saw nothing. -->
+              <span class="text-xs font-bold text-primary opacity-100 can-hover:lg:opacity-0 can-hover:lg:group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                 {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </span>
             </div>
@@ -272,13 +275,13 @@
         </NuxtLink>
         <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
         <button
-          @click.stop.prevent="toggleWishlist(tour)"
-          class="absolute top-3 right-3 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+          @click.stop.prevent="toggleWishlist(tour, $event)"
+          class="absolute top-2.5 right-2.5 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
           :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
           :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
           :aria-pressed="wishlistStore.has(tour.id)"
         >
-          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
+          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-xl" />
         </button>
         </div>
       </div>
@@ -328,7 +331,7 @@
                   </span>
                 </span>
               </div>
-              <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+              <span class="text-xs font-bold text-primary flex items-center gap-1 opacity-100 can-hover:lg:opacity-0 can-hover:lg:group-hover:opacity-100 transition-opacity">
                 {{ t('view') }} <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </span>
             </div>
@@ -336,8 +339,8 @@
         </NuxtLink>
         <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
         <button
-          @click.stop.prevent="toggleWishlist(tour)"
-          class="absolute top-5 right-5 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+          @click.stop.prevent="toggleWishlist(tour, $event)"
+          class="absolute top-5 right-5 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
           :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
           :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
           :aria-pressed="wishlistStore.has(tour.id)"
@@ -419,6 +422,7 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
 const wishlistStore = useWishlistStore()
+const { flyTo } = useFlyTo()
 
 const langCode = computed(() => locale.value.toUpperCase())
 
@@ -738,7 +742,15 @@ function getTourLink(tour: any) {
   return localePath(`/${citySlug}/${tour.slug || tour.id}`)
 }
 
-function toggleWishlist(tour: any) {
+function toggleWishlist(tour: any, ev?: MouseEvent) {
+  const wasAdded = !wishlistStore.has(tour.id)
+  // Capture the source element NOW. On the very first interaction Nuxt may
+  // replay an early (pre-hydration) click, and currentTarget is also nulled
+  // once the dispatch finishes — so resolve it synchronously with a fallback
+  // to the clicked node's nearest button. This fixes "first click does nothing".
+  const src = ev
+    ? ((ev.currentTarget as HTMLElement) || (ev.target as HTMLElement)?.closest('button') as HTMLElement | null)
+    : null
   wishlistStore.toggle({
     id: tour.id,
     title: tour.title,
@@ -748,6 +760,11 @@ function toggleWishlist(tour: any) {
     min_price: tour.min_price || 0,
     currency: tour.currency || 'USD',
   })
+  // Only animate on ADD (not on un-save). Fly a heart from the tapped button
+  // up to the header wishlist counter.
+  if (wasAdded && src) {
+    flyTo(src, '#nav-wishlist', 'heart')
+  }
 }
 
 // The card now gets a precomputed `offer` ({ label, discount, discount_type,

@@ -106,7 +106,7 @@
              The earlier filled-vs-outline swap created a visible flicker
              on first load because the wishlistStore hydrates from
              localStorage AFTER first paint. -->
-        <NuxtLink :to="localePath('/saved')" class="relative p-2 transition-colors" aria-label="Mis guardados"
+        <NuxtLink id="nav-wishlist" :to="localePath('/saved')" class="relative p-2 transition-colors origin-center" aria-label="Mis guardados"
           :class="wishlistStore.count > 0 ? 'text-red-500' : 'text-rose-400 hover:text-red-500'">
           <Icon name="material-symbols:favorite-outline" class="text-xl" />
           <span
@@ -118,7 +118,7 @@
         </NuxtLink>
 
         <!-- Cart Icon -->
-        <NuxtLink :to="localePath('/cart')" class="relative p-2 text-slate-600 hover:text-primary transition-colors">
+        <NuxtLink id="nav-cart" :to="localePath('/cart')" class="relative p-2 text-slate-600 hover:text-primary transition-colors origin-center">
           <Icon name="material-symbols:shopping-cart-outline" class="text-xl inline-block origin-center" :class="{ 'cart-bump': bumpCart }" />
           <span
             v-if="cartStore.itemCount > 0"

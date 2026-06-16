@@ -3,6 +3,25 @@
 /* Dark mode driven by a `.dark` class on <html> (matches v3 `darkMode: 'class'`). */
 @variant dark (&:where(.dark, .dark *));
 
+/* `can-hover:` only matches devices with a real hover-capable pointer
+   (mouse/trackpad). Use it to gate hover-reveal affordances so they stay
+   ALWAYS visible on touch (where group-hover never fires). */
+@custom-variant can-hover (@media (hover: hover));
+
+/* Counter pulse — the header wishlist/cart icon bounces when a flying icon
+   (useFlyTo) lands on it. Added/removed via JS, so it lives in global CSS. */
+.fly-pulse {
+  animation: fly-pulse 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes fly-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fly-pulse { animation: none; }
+}
+
 @theme {
   --color-primary: #0077cc;
   --color-primary-dark: #005fa3;
