@@ -39,6 +39,15 @@ return [
         'api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    // Google Places reviews for the homepage. Falls back to the Maps key when a
+    // dedicated Places key isn't set (Places API must be enabled on that key).
+    // The place_id (Incalake / "Inca Lake", Puno) is public, so it ships as the
+    // default; env can still override it.
+    'google_places' => [
+        'api_key' => env('GOOGLE_PLACES_API_KEY', env('GOOGLE_MAPS_API_KEY')),
+        'place_id' => env('GOOGLE_PLACE_ID', 'ChIJKcYdY-tpXZERKudgfrNW0oU'),
+    ],
+
     'culqi' => [
         'public_key' => env('CULQI_PUBLIC_KEY'),
         'secret_key' => env('CULQI_SECRET_KEY'),

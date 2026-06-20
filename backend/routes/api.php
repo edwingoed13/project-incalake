@@ -72,6 +72,10 @@ Route::post('/admin/tours/{id}/set-parent', [TourController::class, 'setParent']
 use App\Http\Controllers\Api\ReviewController;
 Route::get('/reviews', [ReviewController::class, 'index'])->name('api.reviews.index');
 
+// Public routes - Google Places reviews (cached 12h server-side)
+use App\Http\Controllers\Api\GoogleReviewController;
+Route::get('/google-reviews', [GoogleReviewController::class, 'index'])->name('api.google-reviews.index');
+
 // Public routes - Page content (read-only)
 use App\Http\Controllers\Api\PageContentController;
 Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');

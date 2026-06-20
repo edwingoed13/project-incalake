@@ -372,8 +372,8 @@
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-10">
           <div>
-            <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">Testimonials</p>
-            <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">What our travelers say</h3>
+            <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">{{ c('testimonials', 'label', 'home_testimonials_label') }}</p>
+            <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">{{ c('testimonials', 'title', 'home_testimonials_title') }}</h3>
           </div>
           <div class="hidden sm:flex gap-2">
             <button @click="scrollReviews(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
@@ -412,6 +412,71 @@
                 </NuxtLink>
               </div>
             </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Google Reviews — lazy fetch from our cached backend endpoint, shown
+         below our own testimonials. Hidden until configured / non-empty. -->
+    <section v-if="googleReviews.length" class="py-8 md:py-12 px-4 md:px-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between gap-4 mb-6 md:mb-10 flex-wrap">
+          <div class="flex items-center gap-3">
+            <!-- Google "G" mark (inline SVG — no icon-set dependency) -->
+            <svg viewBox="0 0 48 48" class="size-7 shrink-0" aria-hidden="true">
+              <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+              <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+              <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34A21.99 21.99 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/>
+              <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+            </svg>
+            <div>
+              <h3 class="text-xl md:text-2xl font-black tracking-tight text-slate-900">{{ t('google_reviews_title') }}</h3>
+              <p v-if="googleRating" class="flex items-center gap-1.5 text-sm text-slate-500">
+                <span class="font-black text-slate-800 tabular-nums">{{ googleRating }}</span>
+                <span class="flex">
+                  <Icon v-for="i in 5" :key="i" name="material-symbols:star" class="text-sm" :class="i <= Math.round(googleRating) ? 'text-yellow-400' : 'text-slate-300'" />
+                </span>
+                <span>· {{ googleTotal }} {{ t('reviews_count_label') }}</span>
+              </p>
+            </div>
+          </div>
+          <a v-if="googlePlaceUrl" :href="googlePlaceUrl" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-primary hover:underline inline-flex items-center gap-1">
+            {{ t('view_on_google') }} <Icon name="material-symbols:open-in-new" class="text-sm" />
+          </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div v-for="(r, i) in googleReviews" :key="i" class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-3 mb-3">
+              <img v-if="r.profile_photo_url" :src="r.profile_photo_url" :alt="r.author_name" class="size-9 rounded-full shrink-0" loading="lazy" referrerpolicy="no-referrer" />
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate">{{ r.author_name }}</p>
+                <div class="flex items-center gap-0.5">
+                  <Icon v-for="n in r.rating" :key="n" name="material-symbols:star" class="text-yellow-400 text-xs" />
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed line-clamp-5">{{ r.text }}</p>
+            <p class="text-[10px] text-slate-400 mt-3">{{ r.relative_time }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Testimonials — lazy YouTube facade (the iframe loads only on
+         click), placed below the text reviews so the homepage stays fast. -->
+    <section v-if="videoTestimonials.length" class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-6 md:mb-10">
+          <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">{{ c('video_testimonials', 'label', 'home_video_label') }}</p>
+          <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">{{ c('video_testimonials', 'title', 'home_video_title') }}</h3>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+          <CommonLiteYouTube
+            v-for="v in videoTestimonials"
+            :key="v.id"
+            :video-id="v.id"
+            :title="v.title"
+          />
         </div>
       </div>
     </section>
@@ -560,6 +625,18 @@ const { data: reviewsData } = useAsyncData(
   { lazy: true, default: () => [], getCachedData }
 )
 const featuredReviews = computed(() => reviewsData.value || [])
+
+// Google Places reviews (cached 12h server-side). Lazy so it never blocks the
+// homepage; the section hides itself when the integration isn't configured.
+const { data: googleData } = useAsyncData(
+  `google-reviews-${locale.value}`,
+  () => api(`/google-reviews?language=${locale.value}`).catch(() => ({ data: [], rating: null, total: 0 })),
+  { lazy: true, default: () => ({ data: [], rating: null, total: 0 }), watch: [locale], getCachedData }
+)
+const googleReviews = computed(() => (googleData.value as any)?.data || [])
+const googleRating = computed(() => (googleData.value as any)?.rating || null)
+const googleTotal = computed(() => (googleData.value as any)?.total || 0)
+const googlePlaceUrl = computed(() => (googleData.value as any)?.place_url || null)
 // Testimonials: native horizontal scroll-snap (swipe on mobile, arrows desktop).
 const reviewsScroll = ref<HTMLElement | null>(null)
 function scrollReviews(dir: number) {
@@ -567,6 +644,22 @@ function scrollReviews(dir: number) {
   if (!el) return
   el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
 }
+
+// Video testimonials (YouTube), rendered via the lazy <CommonLiteYouTube>
+// facade so their iframes never touch the initial page load. Accepts full URLs
+// or bare IDs. The section hides itself when the list is empty.
+function ytId(urlOrId: string): string {
+  const m = urlOrId.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)
+  return m ? m[1] : urlOrId
+}
+const videoTestimonials = computed(() =>
+  ([
+    { url: 'https://www.youtube.com/watch?v=sUVaxTj9UI4', title: '' },
+    { url: 'https://www.youtube.com/watch?v=MuAQ4OaNhpQ', title: '' },
+    { url: 'https://www.youtube.com/watch?v=UuWqDJY5lXc', title: '' },
+    { url: 'https://www.youtube.com/watch?v=pOZDbv39fU0', title: '' },
+  ]).map(v => ({ id: ytId(v.url), title: v.title })),
+)
 
 // Hero image: from API or default
 // Stable fallback = the real hero on our own CDN (NOT a fragile Google design-tool
