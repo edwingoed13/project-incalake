@@ -150,7 +150,7 @@
             'px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all',
             store.bookingOptions.dataRequirementType === 'leader' ? 'bg-default text-primary shadow-sm' : 'text-muted',
           ]"
-          @click="store.bookingOptions.dataRequirementType = 'leader'"
+          @click="store.bookingOptions.dataRequirementType = 'leader'; store.isDirty = true"
         >
           Solo líder
         </button>
@@ -160,7 +160,7 @@
             'px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-md transition-all',
             store.bookingOptions.dataRequirementType === 'all' ? 'bg-default text-primary shadow-sm' : 'text-muted',
           ]"
-          @click="store.bookingOptions.dataRequirementType = 'all'"
+          @click="store.bookingOptions.dataRequirementType = 'all'; store.isDirty = true"
         >
           Todos los pasajeros
         </button>
@@ -758,6 +758,10 @@ const toggleInArray = (arr: any[], value: any, checked: boolean) => {
   const idx = arr.indexOf(value)
   if (checked && idx === -1) arr.push(value)
   if (!checked && idx !== -1) arr.splice(idx, 1)
+  // Mark the wizard dirty so the (isDirty-gated) autosave actually persists the
+  // change — without this, ticking required-data fields / guide languages was
+  // silently lost unless another change happened to flip isDirty.
+  store.isDirty = true
 }
 
 const isInArray = (arr: any[] | undefined, value: any) => Array.isArray(arr) && arr.includes(value)
