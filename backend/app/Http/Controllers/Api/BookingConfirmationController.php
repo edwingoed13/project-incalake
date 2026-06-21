@@ -383,6 +383,12 @@ class BookingConfirmationController extends Controller
                     'currency'           => $b->currency,
                     'subtotal'           => (float) $b->subtotal,
                     'total'              => (float) $b->total,
+                    // Per-traveler data config so the multi-tour confirmation form
+                    // renders the admin-configured fields for EACH tour (the
+                    // single-tour path already gets these via booking.tour).
+                    'data_requirement'          => (int) ($b->tour?->data_requirement ?? 1),
+                    'personal_info_required'    => $b->tour?->personal_info_required ?? [],
+                    'operational_info_required' => $b->tour?->operational_info_required ?? [],
                     // Per-tour pickup so the admin sees what each client chose
                     'pickup_configured'  => (bool) $b->pickupDetail,
                     'pickup_choice'      => $b->pickupDetail?->final_choice,
