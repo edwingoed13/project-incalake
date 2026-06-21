@@ -54,6 +54,7 @@ const links = computed(() => {
   if (auth.hasPermission?.('languages.view')) services.push({ label: 'Idiomas', icon: 'i-lucide-languages', to: '/admin/v2/languages' })
   services.push({ label: 'Paquetes', icon: 'i-lucide-package', to: '/admin/packages', badge: { label: 'Pronto', ...SOON } })
   services.push({ label: 'Home Page', icon: 'i-lucide-house', to: '/admin/v2/pages/home' })
+  services.push({ label: 'Menú', icon: 'i-lucide-menu', to: '/admin/v2/pages/menu' })
 
   // Sección "Finanzas"
   const finance = [
@@ -124,6 +125,7 @@ const searchGroups = computed(() => [
     items: [
       { label: 'Usuarios', icon: 'i-lucide-shield-user', to: '/admin/v2/users' },
       { label: 'Home Page', icon: 'i-lucide-house', to: '/admin/v2/pages/home' },
+      { label: 'Menú', icon: 'i-lucide-menu', to: '/admin/v2/pages/menu' },
     ],
   },
 ])

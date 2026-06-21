@@ -833,7 +833,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
           this.selectedCategories = data.categories?.map((c: any) => c.id) || []
           this.selectedTags = data.tags?.map((t: any) => t.id) || []
 
-          // Map Step 8 Availability
+          // Map Step 8 Availability. require_availability is independent of the
+          // availability_data blob (a tour can require an inquiry without a
+          // configured calendar), so read it unconditionally — otherwise the
+          // switch resets to off on reload for tours with no calendar data.
+          this.availability.requireAvailability = data.require_availability || false
           if (data.availability_data) {
              const defaultEnd = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
              this.availability = {

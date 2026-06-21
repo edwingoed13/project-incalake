@@ -404,7 +404,7 @@ initExpanded()
 
 const paymentMethodOptions = [
   { value: 'all', label: 'Todos los métodos', description: 'PayPal + Culqi', icon: 'i-lucide-credit-card' },
-  { value: 'culqi', label: 'Solo Culqi', description: 'Tarjetas locales (Perú)', icon: 'i-lucide-circle-dollar-sign' },
+  { value: 'culqi', label: 'Solo Culqi', description: 'Tarjetas débito y crédito', icon: 'i-lucide-circle-dollar-sign' },
   { value: 'paypal', label: 'Solo PayPal', description: 'Pagos internacionales', icon: 'i-lucide-globe' },
 ]
 

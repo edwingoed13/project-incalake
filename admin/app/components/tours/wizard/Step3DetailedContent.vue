@@ -49,6 +49,21 @@
             placeholder="Resumen breve para las tarjetas de tours..."
             class="w-full"
           />
+          <!-- Live character count + recommended range for catalog cards. -->
+          <div class="flex items-center justify-between mt-1 text-[11px]">
+            <span class="text-muted">Recomendado: 60–120 caracteres</span>
+            <span
+              class="font-bold tabular-nums"
+              :class="[
+                (seoData.shortDescription || '').length === 0 ? 'text-muted'
+                : (seoData.shortDescription || '').length < 60 ? 'text-warning'
+                : (seoData.shortDescription || '').length > 120 ? 'text-error'
+                : 'text-success'
+              ]"
+            >
+              {{ (seoData.shortDescription || '').length }} / 120
+            </span>
+          </div>
         </UFormField>
       </UCard>
 
