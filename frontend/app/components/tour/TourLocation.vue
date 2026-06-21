@@ -10,8 +10,15 @@ const props = defineProps<Props>()
 const mapContainer = ref<HTMLElement | null>(null)
 const isExpanded = ref(false)
 let map: google.maps.Map | null = null
+// The DOM element the current `map` is bound to. When the tour (or selected
+// variant) changes, the layout can switch between the single-point and the
+// timeline container, so the old `map` ends up attached to a detached node and
+// the new container renders blank. Tracking the element lets us rebuild only
+// when it actually changed.
+let mapEl: HTMLElement | null = null
 let markers: google.maps.Marker[] = []
 let routeLine: google.maps.Polyline | null = null
+let mapCircle: google.maps.Circle | null = null
 
 const cityName = computed(() => props.tour?.city?.name || props.tour?.city_name || 'Perú')
 
@@ -50,6 +57,11 @@ const mapLng = computed(() => {
   return null
 })
 
+// Coordinates can be missing or malformed (NaN) for some tours; gate the map on
+// real, finite numbers so we show the "Mapa no disponible" placeholder instead
+// of a broken/blank Google map.
+const coordsValid = computed(() => Number.isFinite(mapLat.value as number) && Number.isFinite(mapLng.value as number))
+
 const mapPoints = computed(() => props.tour?.map_points || [])
 
 const displayMapPoint = computed(() => {
@@ -64,7 +76,7 @@ const displayMapPoint = computed(() => {
 })
 
 async function initMap() {
-  if (!mapContainer.value || !hasMap.value || !mapLat.value || !mapLng.value) return
+  if (!mapContainer.value || !hasMap.value || !coordsValid.value) return
 
   // Lazy-load the Google Maps JS API on first use.
   try {
@@ -74,37 +86,50 @@ async function initMap() {
     return
   }
 
-  // Limpiar marcadores y líneas existentes
-  markers.forEach(marker => marker.setMap(null))
-  markers = []
-  if (routeLine) {
-    routeLine.setMap(null)
-    routeLine = null
-  }
+  // Everything below talks to the Google Maps SDK; a single bad coordinate or a
+  // restricted/over-quota key used to throw here and leave the map blank. Wrap
+  // it so one failure can't cascade.
+  try {
+    const center = { lat: mapLat.value as number, lng: mapLng.value as number }
 
-  // Crear mapa
-  if (!map) {
-    map = new google.maps.Map(mapContainer.value, {
-      center: { lat: mapLat.value, lng: mapLng.value },
-      zoom: 13,
-      mapTypeControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-    })
-  }
+    // Limpiar marcadores, líneas y círculo existentes
+    markers.forEach(marker => marker.setMap(null))
+    markers = []
+    if (routeLine) { routeLine.setMap(null); routeLine = null }
+    if (mapCircle) { mapCircle.setMap(null); mapCircle = null }
 
-  const bounds = new google.maps.LatLngBounds()
+    // (Re)create the map when it doesn't exist OR the container element changed
+    // (single-point ↔ timeline layout, e.g. after a variant swap / SPA nav).
+    if (!map || mapEl !== mapContainer.value) {
+      map = new google.maps.Map(mapContainer.value, {
+        center,
+        zoom: 13,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+      })
+      mapEl = mapContainer.value
+    } else {
+      // Reused instance: recenter on the new tour's location.
+      map.setCenter(center)
+      map.setZoom(13)
+    }
 
-  // Agregar marcadores
-  if (mapPoints.value.length > 0) {
-    const routePath: google.maps.LatLngLiteral[] = []
+    const bounds = new google.maps.LatLngBounds()
 
-    mapPoints.value.forEach((point: any, index: number) => {
-      const lat = parseFloat(point.lat)
-      const lng = parseFloat(point.lng)
-      const position = { lat, lng }
+    // Agregar marcadores
+    if (mapPoints.value.length > 0) {
+      const routePath: google.maps.LatLngLiteral[] = []
 
-      const marker = new google.maps.Marker({
+      mapPoints.value.forEach((point: any, index: number) => {
+        const lat = parseFloat(point.lat)
+        const lng = parseFloat(point.lng)
+        // Skip malformed points instead of placing a NaN marker (which corrupts
+        // fitBounds and can blank the whole map).
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+        const position = { lat, lng }
+
+        const marker = new google.maps.Marker({
         position: position,
         map: map!,
         label: {
@@ -155,11 +180,11 @@ async function initMap() {
       })
     }
 
-    // Ajustar vista para mostrar todos los puntos
-    map!.fitBounds(bounds)
+    // Ajustar vista para mostrar todos los puntos (solo si hay marcadores válidos)
+    if (markers.length) map!.fitBounds(bounds)
   } else {
     // Solo un punto (meeting point o pickup center)
-    const position = { lat: mapLat.value, lng: mapLng.value }
+    const position = center
 
     const marker = new google.maps.Marker({
       position: position,
@@ -196,40 +221,48 @@ async function initMap() {
     markers.push(marker)
   }
 
-  // Agregar círculo de radio si existe pickup_radius_km
-  if (props.tour?.pickup_type === 'hotel_pickup' && props.tour?.pickup_radius_km && props.tour?.pickup_center_lat && props.tour?.pickup_center_lng) {
-    new google.maps.Circle({
-      strokeColor: '#0077cc',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#60a5fa',
-      fillOpacity: 0.2,
-      map: map!,
-      center: {
-        lat: parseFloat(props.tour.pickup_center_lat),
-        lng: parseFloat(props.tour.pickup_center_lng)
-      },
-      radius: props.tour.pickup_radius_km * 1000 // convertir km a metros
-    })
+    // Agregar círculo de radio si existe pickup_radius_km
+    if (props.tour?.pickup_type === 'hotel_pickup' && props.tour?.pickup_radius_km && props.tour?.pickup_center_lat && props.tour?.pickup_center_lng) {
+      mapCircle = new google.maps.Circle({
+        strokeColor: '#0077cc',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#60a5fa',
+        fillOpacity: 0.2,
+        map: map!,
+        center: {
+          lat: parseFloat(props.tour.pickup_center_lat),
+          lng: parseFloat(props.tour.pickup_center_lng)
+        },
+        radius: props.tour.pickup_radius_km * 1000 // convertir km a metros
+      })
+    }
+  } catch (e) {
+    console.error('Google Maps init failed', e)
   }
 }
 
 onMounted(() => {
-  if (hasMap.value) {
-    // Pequeño delay para asegurar que el DOM esté listo
-    setTimeout(() => {
-      initMap()
-    }, 100)
+  if (hasMap.value && coordsValid.value) {
+    nextTick(() => initMap())
   }
 })
 
+// Re-init when the tour (or selected variant) changes. coordsValid gates out
+// tours without usable coordinates, and initMap rebuilds on the right container.
 watch(() => props.tour, () => {
-  if (hasMap.value) {
-    setTimeout(() => {
-      initMap()
-    }, 100)
+  if (hasMap.value && coordsValid.value) {
+    nextTick(() => initMap())
   }
 }, { deep: true })
+
+onBeforeUnmount(() => {
+  markers.forEach(m => m.setMap(null))
+  if (routeLine) routeLine.setMap(null)
+  if (mapCircle) mapCircle.setMap(null)
+  map = null
+  mapEl = null
+})
 </script>
 
 <template>
@@ -240,10 +273,11 @@ watch(() => props.tour, () => {
     </h2>
 
     <!-- Map Container (solo cuando no hay timeline) -->
-    <div v-if="hasMap && mapPoints.length <= 1" ref="mapContainer" class="rounded-xl overflow-hidden h-96 mb-4 border border-slate-200 dark:border-slate-700"></div>
+    <div v-if="hasMap && coordsValid && mapPoints.length <= 1" ref="mapContainer" class="rounded-xl overflow-hidden h-96 mb-4 border border-slate-200 dark:border-slate-700"></div>
 
-    <!-- Placeholder when no map data -->
-    <div v-else-if="!hasMap" class="bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
+    <!-- Placeholder when there's no map data or the coordinates are unusable
+         (only for the single/no-point case; the timeline below renders its own) -->
+    <div v-else-if="(!hasMap || !coordsValid) && mapPoints.length <= 1" class="bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
       <div class="text-center">
         <MapIcon class="size-24 text-slate-400 dark:text-slate-600 mb-4 mx-auto" aria-hidden="true" />
         <p class="text-slate-500 dark:text-slate-400 text-lg font-bold">Mapa no disponible</p>
