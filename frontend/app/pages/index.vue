@@ -416,12 +416,12 @@
       </div>
     </section>
 
-    <!-- Google Reviews — lazy fetch from our cached backend endpoint, shown
-         below our own testimonials. Hidden until configured / non-empty. -->
+    <!-- Google Reviews — slider (best-rated first, swipe / arrows for more),
+         lazy fetch from our cached backend endpoint. Hidden until non-empty. -->
     <section v-if="googleReviews.length" class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
-        <div class="flex items-center justify-between gap-4 mb-6 md:mb-10 flex-wrap">
-          <div class="flex items-center gap-3">
+        <div class="flex items-end justify-between gap-4 mb-6 md:mb-10">
+          <div class="flex items-center gap-3 min-w-0">
             <!-- Google "G" mark (inline SVG — no icon-set dependency) -->
             <svg viewBox="0 0 48 48" class="size-7 shrink-0" aria-hidden="true">
               <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
@@ -429,23 +429,40 @@
               <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34A21.99 21.99 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/>
               <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
             </svg>
-            <div>
+            <div class="min-w-0">
               <h3 class="text-xl md:text-2xl font-black tracking-tight text-slate-900">{{ t('google_reviews_title') }}</h3>
-              <p v-if="googleRating" class="flex items-center gap-1.5 text-sm text-slate-500">
-                <span class="font-black text-slate-800 tabular-nums">{{ googleRating }}</span>
-                <span class="flex">
-                  <Icon v-for="i in 5" :key="i" name="material-symbols:star" class="text-sm" :class="i <= Math.round(googleRating) ? 'text-yellow-400' : 'text-slate-300'" />
+              <p class="flex items-center gap-x-2 gap-y-0.5 text-sm text-slate-500 flex-wrap">
+                <span v-if="googleRating" class="inline-flex items-center gap-1.5">
+                  <span class="font-black text-slate-800 tabular-nums">{{ googleRating }}</span>
+                  <span class="flex">
+                    <Icon v-for="i in 5" :key="i" name="material-symbols:star" class="text-sm" :class="i <= Math.round(googleRating) ? 'text-yellow-400' : 'text-slate-300'" />
+                  </span>
+                  <span>· {{ googleTotal }} {{ t('reviews_count_label') }}</span>
                 </span>
-                <span>· {{ googleTotal }} {{ t('reviews_count_label') }}</span>
+                <a v-if="googlePlaceUrl" :href="googlePlaceUrl" target="_blank" rel="noopener noreferrer" class="font-bold text-primary hover:underline inline-flex items-center gap-0.5">
+                  {{ t('view_on_google') }} <Icon name="material-symbols:open-in-new" class="text-sm" />
+                </a>
               </p>
             </div>
           </div>
-          <a v-if="googlePlaceUrl" :href="googlePlaceUrl" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-primary hover:underline inline-flex items-center gap-1">
-            {{ t('view_on_google') }} <Icon name="material-symbols:open-in-new" class="text-sm" />
-          </a>
+          <!-- Slider arrows (desktop) — only when there's more than one screenful -->
+          <div v-if="googleReviews.length > 3" class="hidden sm:flex gap-2 shrink-0">
+            <button @click="scrollGoogle(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+              <Icon name="material-symbols:chevron-left" class="text-lg" />
+            </button>
+            <button @click="scrollGoogle(1)" :aria-label="t('next')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
+              <Icon name="material-symbols:chevron-right" class="text-lg" />
+            </button>
+          </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <div v-for="(r, i) in googleReviews" :key="i" class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow">
+
+        <!-- Native scroll-snap carousel: 3 visible on desktop, swipe for more -->
+        <div ref="googleScroll" class="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2">
+          <div
+            v-for="(r, i) in googleReviews"
+            :key="i"
+            class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow shrink-0 snap-start w-[85%] sm:w-[60%] md:w-[calc(33.333%-16px)]"
+          >
             <div class="flex items-center gap-3 mb-3">
               <img v-if="r.profile_photo_url" :src="r.profile_photo_url" :alt="r.author_name" class="size-9 rounded-full shrink-0" loading="lazy" referrerpolicy="no-referrer" />
               <div class="min-w-0">
@@ -633,9 +650,21 @@ const { data: googleData } = useAsyncData(
   () => api(`/google-reviews?language=${locale.value}`).catch(() => ({ data: [], rating: null, total: 0 })),
   { lazy: true, default: () => ({ data: [], rating: null, total: 0 }), watch: [locale], getCachedData }
 )
-const googleReviews = computed(() => (googleData.value as any)?.data || [])
+// Best-rated first so the 3 visible in the slider are the strongest reviews;
+// ties fall back to most recent.
+const googleReviews = computed(() => {
+  const list = ((googleData.value as any)?.data || []) as any[]
+  return [...list].sort((a, b) => (b.rating - a.rating) || (b.time - a.time))
+})
 const googleRating = computed(() => (googleData.value as any)?.rating || null)
 const googleTotal = computed(() => (googleData.value as any)?.total || 0)
+// Google reviews slider (same native scroll-snap pattern as the text reviews).
+const googleScroll = ref<HTMLElement | null>(null)
+function scrollGoogle(dir: number) {
+  const el = googleScroll.value
+  if (!el) return
+  el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
+}
 const googlePlaceUrl = computed(() => (googleData.value as any)?.place_url || null)
 // Testimonials: native horizontal scroll-snap (swipe on mobile, arrows desktop).
 const reviewsScroll = ref<HTMLElement | null>(null)

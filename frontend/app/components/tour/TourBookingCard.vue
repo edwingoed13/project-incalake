@@ -30,7 +30,7 @@ const props = defineProps<{
   cartFeedback: 'added' | 'duplicate' | null
 }>()
 
-defineEmits<{ book: []; addToCart: [] }>()
+defineEmits<{ book: []; addToCart: []; inquire: [] }>()
 
 const adults = defineModel<number>('adults', { required: true })
 const children = defineModel<number>('children', { required: true })
@@ -43,6 +43,8 @@ const fmt = (v: number) => currencyStore.formatConverted(v || 0)
 
 const isInline = computed(() => props.variant !== 'sidebar')
 const atMax = computed(() => props.totalPax >= props.maxPax)
+// Tours flagged require_availability replace instant booking with an inquiry.
+const requiresInquiry = computed(() => !!props.tour?.require_availability)
 const offerLabel = computed(() => {
   const o = props.activeOffer
   if (!o) return ''
@@ -165,35 +167,52 @@ const offerLabel = computed(() => {
         </div>
       </div>
 
-      <!-- Validation error (localized, inline) -->
-      <div v-if="error" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg" role="alert">
+      <!-- Validation error (localized, inline) — only relevant to the instant
+           booking flow, not the availability inquiry. -->
+      <div v-if="error && !requiresInquiry" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg" role="alert">
         <Icon name="material-symbols:error-outline" class="size-4 text-red-500 shrink-0" />
         <span class="text-xs font-semibold text-red-700">{{ error }}</span>
       </div>
 
-      <!-- CTAs -->
-      <button
-        @click="$emit('book')"
-        class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
-      >
-        RESERVAR AHORA
-        <Icon name="material-symbols:arrow-forward" class="size-5" />
-      </button>
-      <button
-        @click="$emit('add-to-cart')"
-        class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
-      >
-        <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
-        Agregar al carrito
-      </button>
-      <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
-        <Icon name="material-symbols:check-circle" class="size-4" />
-        Agregado al carrito — puedes seguir navegando
-      </div>
-      <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
-        <Icon name="material-symbols:error-outline" class="size-4" />
-        Ya está en tu carrito con esa fecha y hora
-      </div>
+      <!-- CTAs — tours that require availability verification can't be booked
+           instantly; they capture a lead via the inquiry modal instead. -->
+      <template v-if="requiresInquiry">
+        <button
+          @click="$emit('inquire')"
+          class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+        >
+          Consultar disponibilidad
+          <Icon name="material-symbols:event-available-outline" class="size-5" />
+        </button>
+        <p class="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+          <Icon name="material-symbols:info-outline" class="size-4 text-primary shrink-0" />
+          Este tour requiere confirmar disponibilidad
+        </p>
+      </template>
+      <template v-else>
+        <button
+          @click="$emit('book')"
+          class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+        >
+          RESERVAR AHORA
+          <Icon name="material-symbols:arrow-forward" class="size-5" />
+        </button>
+        <button
+          @click="$emit('add-to-cart')"
+          class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
+        >
+          <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
+          Agregar al carrito
+        </button>
+        <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
+          <Icon name="material-symbols:check-circle" class="size-4" />
+          Agregado al carrito — puedes seguir navegando
+        </div>
+        <div v-else-if="cartFeedback === 'duplicate'" class="mt-1.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600">
+          <Icon name="material-symbols:error-outline" class="size-4" />
+          Ya está en tu carrito con esa fecha y hora
+        </div>
+      </template>
 
       <!-- Trust signals — inline variant only (the desktop sidebar keeps its own
            separate trust card below the widget). -->

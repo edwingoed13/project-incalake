@@ -150,6 +150,7 @@
               v-model:selected-time="selectedTime"
               @book="handleBooking"
               @add-to-cart="handleAddToCart"
+              @inquire="inquiryOpen = true"
             />
           </section>
 
@@ -273,6 +274,7 @@
               v-model:selected-time="selectedTime"
               @book="handleBooking"
               @add-to-cart="handleAddToCart"
+              @inquire="inquiryOpen = true"
             />
 
             <!-- Trust signals card — OTA pattern: stacks below booking widget -->
@@ -394,7 +396,7 @@
           @click="onMobileBottomCta"
           class="flex-1 min-h-[52px] bg-primary hover:bg-primary-dark text-white font-extrabold py-3 px-5 rounded-xl shadow-md shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wide text-sm"
         >
-          {{ selectedDate && selectedTime ? 'RESERVAR' : 'VER FECHAS' }}
+          {{ tour.require_availability ? 'CONSULTAR' : (selectedDate && selectedTime ? 'RESERVAR' : 'VER FECHAS') }}
           <ArrowRightIcon class="size-4" aria-hidden="true" />
         </button>
       </div>
@@ -402,6 +404,16 @@
     </Transition>
 
     <ShareModal :open="shareOpen" :url="shareUrl" :title="tour?.title" @close="shareOpen = false" />
+
+    <!-- Availability inquiry (tours flagged require_availability) -->
+    <TourAvailabilityInquiryModal
+      :open="inquiryOpen"
+      :tour="tour"
+      :prefill-date="selectedDate"
+      :prefill-adults="adults"
+      :prefill-children="children"
+      @close="inquiryOpen = false"
+    />
 
   </div>
 
@@ -459,6 +471,7 @@ const localePath = useLocalePath()
 
 // --- Save / Share (wishlist + share modal) ---
 const shareOpen = ref(false)
+const inquiryOpen = ref(false)
 
 const shareUrl = computed(() => {
   if (import.meta.client) return window.location.href
@@ -666,6 +679,11 @@ const { error: bookingError, validate: validateBooking } = useBookingValidation(
 // checkout; otherwise we scroll them up to the inline booking panel so they
 // can finish configuring without losing scroll context.
 function onMobileBottomCta() {
+  // Tours requiring availability verification open the inquiry modal directly.
+  if (tour.value?.require_availability) {
+    inquiryOpen.value = true
+    return
+  }
   if (selectedDate.value && selectedTime.value) {
     handleBooking()
     return

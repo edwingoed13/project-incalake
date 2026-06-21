@@ -19,19 +19,30 @@
         </div>
       </NuxtLink>
 
-      <!-- Desktop Navigation -->
+      <!-- Desktop Navigation (CMS-driven; internal links use localePath, external open in a new tab) -->
       <nav class="hidden md:flex items-center gap-8">
-        <NuxtLink
-          v-for="link in navLinks"
-          :key="link.key"
-          :to="localePath(link.path)"
-          class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group text-slate-600"
-          @mouseenter="prefetchLink(link)"
-          @focus="prefetchLink(link)"
-        >
-          {{ t(link.key) }}
-          <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-        </NuxtLink>
+        <template v-for="link in menuItems" :key="link.url">
+          <a
+            v-if="link.type === 'external'"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group text-slate-600"
+          >
+            {{ link.label }}
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+          </a>
+          <NuxtLink
+            v-else
+            :to="localePath(link.url)"
+            class="text-[11px] font-black uppercase tracking-widest transition-all hover:text-primary relative group text-slate-600"
+            @mouseenter="prefetchLink(link)"
+            @focus="prefetchLink(link)"
+          >
+            {{ link.label }}
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+          </NuxtLink>
+        </template>
       </nav>
 
       <!-- Right Actions -->
@@ -145,15 +156,26 @@
     <Transition name="slide-down">
       <div v-if="mobileOpen" class="md:hidden bg-white border-t border-slate-100 shadow-lg">
         <div class="px-4 py-4 space-y-1">
-          <NuxtLink
-            v-for="link in navLinks"
-            :key="link.key"
-            :to="localePath(link.path)"
-            @click="mobileOpen = false"
-            class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors"
-          >
-            {{ t(link.key) }}
-          </NuxtLink>
+          <template v-for="link in menuItems" :key="link.url">
+            <a
+              v-if="link.type === 'external'"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="mobileOpen = false"
+              class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors"
+            >
+              {{ link.label }}
+            </a>
+            <NuxtLink
+              v-else
+              :to="localePath(link.url)"
+              @click="mobileOpen = false"
+              class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </template>
 
           <!-- Mobile Currency (language lives in the top bar already) -->
           <div class="pt-3 mt-3 border-t border-slate-100">
@@ -184,7 +206,7 @@ import { countryFlagUrl } from '~/utils/countries'
 import { useCartStore } from '~/stores/cart'
 import { useCurrencyStore, CURRENCIES } from '~/stores/currency'
 
-const { t, locale, locales } = useI18n()
+const { locale, locales } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const cartStore = useCartStore()
@@ -210,11 +232,8 @@ const flagSrc = (locCode: string, size = 24) => {
   return countryFlagUrl(cc, size)
 }
 
-const navLinks = [
-  { key: 'tours', path: '/tours' },
-  { key: 'about', path: '/about' },
-  { key: 'contact', path: '/contact' },
-]
+// Main menu is CMS-driven (admin-editable) with a hardcoded fallback.
+const { menuItems } = useNavigation()
 
 // Prefetch the tours listing data on hover/focus so the click feels instant.
 // We warm the exact useAsyncData key the listing reads (getCachedData uses
@@ -223,8 +242,8 @@ const navLinks = [
 const { api } = useApi()
 const nuxtApp = useNuxtApp()
 const prefetched = new Set<string>()
-function prefetchLink(link: { key: string; path: string }) {
-  if (link.key !== 'tours') return
+function prefetchLink(link: { url: string }) {
+  if (link.url !== '/tours') return
   const lang = locale.value.toUpperCase()
   const key = `tours-${lang}-all`
   if (prefetched.has(key) || (nuxtApp.payload.data && nuxtApp.payload.data[key])) return
