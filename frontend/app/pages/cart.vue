@@ -14,6 +14,13 @@ const sortedCartItems = computed(() =>
   [...cartStore.items].sort((a, b) => a.selectedDate.localeCompare(b.selectedDate))
 )
 
+// Single tax rate to show inline next to "Tasas de transacción" — only when all
+// items share the same percentage (otherwise the per-item popover covers it).
+const uniformTaxPercent = computed<number | null>(() => {
+  const pcts = [...new Set(cartStore.items.map((i: any) => Number(i.taxPercentage || 0)).filter((p: number) => p > 0))]
+  return pcts.length === 1 ? pcts[0] : null
+})
+
 // Tour details cache (for policies, guide info not in cart)
 const tourDetails = ref<Record<number, any>>({})
 
@@ -278,38 +285,57 @@ function getImageUrl(path: string) {
             <Transition name="slide">
               <div v-if="editingItem === item.id" class="p-4 bg-slate-50 border-t border-slate-100">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{{ t('edit_booking') }}</p>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-4">
+                  <!-- Step 1: number of travelers -->
                   <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('date') }}</label>
-                    <input v-model="editForm.date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('time') }}</label>
-                    <input v-model="editForm.time" type="time" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('adults') }}</label>
-                    <div class="flex items-center gap-2">
-                      <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <Icon name="material-symbols:remove" class="text-sm" />
-                      </button>
-                      <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
-                      <button @click="editForm.adults = Math.min(99, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <Icon name="material-symbols:add" class="text-sm" />
-                      </button>
+                    <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 mb-2">
+                      <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+                      {{ t('cart_travelers_label') }}
+                    </label>
+                    <div class="flex items-end gap-5 pl-7">
+                      <div>
+                        <span class="block text-[10px] font-semibold text-slate-400 mb-1">{{ t('adults') }}</span>
+                        <div class="flex items-center gap-2">
+                          <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                            <Icon name="material-symbols:remove" class="text-sm" />
+                          </button>
+                          <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
+                          <button @click="editForm.adults = Math.min(99, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                            <Icon name="material-symbols:add" class="text-sm" />
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="item.childPrice > 0 || item.children > 0">
+                        <span class="block text-[10px] font-semibold text-slate-400 mb-1">{{ t('children_label') }}</span>
+                        <div class="flex items-center gap-2">
+                          <button @click="editForm.children = Math.max(0, editForm.children - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                            <Icon name="material-symbols:remove" class="text-sm" />
+                          </button>
+                          <span class="text-sm font-bold w-6 text-center">{{ editForm.children }}</span>
+                          <button @click="editForm.children = Math.min(99, editForm.children + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
+                            <Icon name="material-symbols:add" class="text-sm" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div v-if="item.childPrice > 0 || item.children > 0">
-                    <label class="text-[10px] font-bold uppercase text-slate-500 mb-1 block">{{ t('children_label') }}</label>
-                    <div class="flex items-center gap-2">
-                      <button @click="editForm.children = Math.max(0, editForm.children - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <Icon name="material-symbols:remove" class="text-sm" />
-                      </button>
-                      <span class="text-sm font-bold w-6 text-center">{{ editForm.children }}</span>
-                      <button @click="editForm.children = Math.min(99, editForm.children + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                        <Icon name="material-symbols:add" class="text-sm" />
-                      </button>
-                    </div>
+
+                  <!-- Step 2: travel date -->
+                  <div>
+                    <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 mb-2">
+                      <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+                      {{ t('cart_date_label') }}
+                    </label>
+                    <input v-model="editForm.date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  </div>
+
+                  <!-- Step 3: time -->
+                  <div>
+                    <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 mb-2">
+                      <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+                      {{ t('cart_time_label') }}
+                    </label>
+                    <input v-model="editForm.time" type="time" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                   </div>
                 </div>
                 <div class="flex gap-2 mt-3">
@@ -352,7 +378,7 @@ function getImageUrl(path: string) {
                 <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.subtotal) }}</span>
               </div>
               <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
-                <span class="text-slate-500 flex items-center gap-1">
+                <span class="text-slate-500 flex items-center gap-1 flex-wrap">
                   {{ t('transaction_fees') }}
                   <AppPopover :label="t('transaction_fees')" width="w-72">
                     <p class="leading-snug mb-1.5">{{ t('transaction_fees_info') }}</p>
@@ -364,6 +390,8 @@ function getImageUrl(path: string) {
                       </div>
                     </div>
                   </AppPopover>
+                  <!-- Percentage shown prominently inline (uniform rate across items). -->
+                  <span v-if="uniformTaxPercent !== null" class="font-bold text-slate-700 tabular-nums">({{ uniformTaxPercent.toFixed(2) }}%)</span>
                 </span>
                 <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
               </div>
