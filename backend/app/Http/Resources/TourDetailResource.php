@@ -89,6 +89,12 @@ class TourDetailResource extends JsonResource
             'youtube_url' => $translation?->youtube_url ?? '',
             'video_first' => $this->video_first ?? true,
             'gallery_layout' => $this->gallery_layout ?? 'hero_mosaic',
+            // Variant grouping (raw fields) so the admin wizard can recover the
+            // Step 6 mode on load. option_label/color are already public (badges);
+            // parent_tour_id is just the FK the editor needs to mark a child.
+            'parent_tour_id' => $this->parent_tour_id,
+            'option_label' => $this->option_label,
+            'option_color' => $this->option_color,
             // Media alt/title texts per translation
             'media_texts' => $translation?->media_texts ?? [],
             // Booking texts per translation (policies, meeting point, pickup descriptions)

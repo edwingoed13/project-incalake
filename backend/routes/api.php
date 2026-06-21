@@ -76,6 +76,10 @@ Route::get('/reviews', [ReviewController::class, 'index'])->name('api.reviews.in
 use App\Http\Controllers\Api\GoogleReviewController;
 Route::get('/google-reviews', [GoogleReviewController::class, 'index'])->name('api.google-reviews.index');
 
+// Public route - Availability inquiry (tours that require verification)
+use App\Http\Controllers\Api\AvailabilityInquiryController;
+Route::post('/availability-inquiry', [AvailabilityInquiryController::class, 'store'])->name('api.availability-inquiry.store');
+
 // Public routes - Page content (read-only)
 use App\Http\Controllers\Api\PageContentController;
 Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');

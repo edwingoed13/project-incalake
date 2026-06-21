@@ -52,7 +52,8 @@ class StoreTourRequest extends FormRequest
             'follow_status' => 'nullable|in:follow,nofollow',
             'active' => 'nullable|boolean',
             'youtube_url' => 'nullable|string|max:255',
-            'gallery_layout' => 'nullable|in:hero_mosaic,full_width_hero,video_image,masonry_grid',
+            // See UpdateTourRequest: accept the admin wizard's layout values too.
+            'gallery_layout' => 'nullable|in:hero_mosaic,full_width_hero,video_image,masonry_grid,featured,grid,slider,mosaic_vertical',
 
             'translations' => 'required|array',
             'translations.*.language_id' => 'required|exists:languages,id',

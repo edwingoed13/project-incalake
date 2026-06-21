@@ -92,7 +92,11 @@ class UpdateTourRequest extends FormRequest
             'follow_status' => 'nullable|in:follow,nofollow',
             'active' => 'nullable|boolean',
             'youtube_url' => 'nullable|string|max:255',
-            'gallery_layout' => 'nullable|in:hero_mosaic,full_width_hero,video_image,masonry_grid',
+            // Accept both the legacy/frontend taxonomy and the admin wizard's own
+            // values (featured/grid/slider/mosaic_vertical). The column is a free
+            // string and the public gallery auto-detects its layout from content,
+            // so this just lets the admin's selection round-trip without a 422.
+            'gallery_layout' => 'nullable|in:hero_mosaic,full_width_hero,video_image,masonry_grid,featured,grid,slider,mosaic_vertical',
 
             'translations' => 'sometimes|required|array',
             'translations.*.language_id' => 'required_with:translations|exists:languages,id',
