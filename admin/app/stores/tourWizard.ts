@@ -231,6 +231,9 @@ export interface TourStep6 {
   parentTourId: number | null
   optionLabel: string
   optionColor: string
+  // Number of child variants pointing at this tour (read-only, from the API).
+  // Lets Step 6 detect a parent even before its own option_label is set.
+  childCount: number
 }
 
 export interface TourStep4 {
@@ -412,6 +415,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       parentTourId: null,
       optionLabel: '',
       optionColor: 'blue',
+      childCount: 0,
     } as TourStep6,
 
     selectedCategories: [] as number[],
@@ -827,6 +831,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
             parentTourId: data.parent_tour_id ? Number(data.parent_tour_id) : null,
             optionLabel: data.option_label || '',
             optionColor: data.option_color || 'blue',
+            // The public `options` array is the variant group (this tour + its
+            // children) when it's a parent. Use it to recover parent mode even
+            // when option_label hasn't been set yet.
+            childCount: Array.isArray(data.options) ? Math.max(0, data.options.length - 1) : 0,
           }
 
           // Map Step 7 Categories

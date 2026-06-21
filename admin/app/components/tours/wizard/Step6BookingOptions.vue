@@ -1185,7 +1185,10 @@ type VariantMode = 'standalone' | 'parent' | 'child'
 
 function deriveMode(): VariantMode {
   if (store.bookingOptions.parentTourId) return 'child'
-  if (store.bookingOptions.optionLabel) return 'parent'
+  // A tour is a parent if it has a label OR already has child variants pointing
+  // at it (child_count > 0) — the latter recovers parent mode even when the
+  // operator never set the parent's own option_label.
+  if (store.bookingOptions.optionLabel || (store.bookingOptions.childCount || 0) > 0) return 'parent'
   return 'standalone'
 }
 const variantMode = ref<VariantMode>(deriveMode())
@@ -1194,7 +1197,7 @@ const variantMode = ref<VariantMode>(deriveMode())
 // via the search dropdown). The setter is explicit (setMode) so toggling
 // modes resets the right fields without losing already-typed labels.
 watch(
-  () => [store.bookingOptions.parentTourId, store.bookingOptions.optionLabel],
+  () => [store.bookingOptions.parentTourId, store.bookingOptions.optionLabel, store.bookingOptions.childCount],
   () => { variantMode.value = deriveMode() },
 )
 
