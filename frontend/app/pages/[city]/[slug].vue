@@ -73,6 +73,30 @@
               <ClockIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
               {{ formatDuration(tour) }}
             </span>
+            <!-- Difficulty -->
+            <template v-if="difficultyLabel">
+              <span class="text-slate-300" aria-hidden="true">•</span>
+              <span class="inline-flex items-center gap-1 font-semibold" :class="difficultyColor">
+                <Icon name="material-symbols:signal-cellular-alt" class="size-4 shrink-0" aria-hidden="true" />
+                {{ difficultyLabel }}
+              </span>
+            </template>
+            <!-- Target audience -->
+            <template v-if="audienceLabel">
+              <span class="text-slate-300" aria-hidden="true">•</span>
+              <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                <Icon name="material-symbols:groups-outline" class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
+                {{ audienceLabel }}
+              </span>
+            </template>
+            <!-- Guide -->
+            <template v-if="guideSummary">
+              <span class="text-slate-300" aria-hidden="true">•</span>
+              <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                <Icon name="material-symbols:record-voice-over-outline" class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
+                {{ guideSummary }}
+              </span>
+            </template>
           </div>
         </div>
         <div class="hidden md:flex gap-2 items-start shrink-0">
@@ -957,6 +981,33 @@ const guideTypeLabels: Record<string, string> = {
   none: 'None'
 }
 
+// --- Quick-facts chips shown under the title (difficulty / audience / guide) ---
+const difficultyLabel = computed(() => {
+  const k = String(tour.value?.difficulty || '').toLowerCase()
+  const norm: Record<string, string> = { easy: 'easy', moderate: 'moderate', hard: 'hard', difficult: 'hard' }
+  return norm[k] ? t(`difficulty_${norm[k]}`) : ''
+})
+const difficultyColor = computed(() => {
+  const k = String(tour.value?.difficulty || '').toLowerCase()
+  if (k === 'easy') return 'text-trust'
+  if (k === 'moderate') return 'text-bestseller'
+  if (k === 'hard' || k === 'difficult') return 'text-urgency'
+  return 'text-slate-600'
+})
+const audienceLabel = computed(() => {
+  const map: Record<string, string> = { all: 'Todos los públicos', families: 'Familias', adults: 'Adultos', adventure: 'Aventureros', seniors: 'Adultos mayores' }
+  return map[String(tour.value?.target_audience || '')] || ''
+})
+const guideSummary = computed(() => {
+  const type = tour.value?.guide_type
+  if (!type || type === 'none' || type === 'no_guide') return ''
+  const esLangs: Record<number, string> = { 1: 'Español', 2: 'Inglés', 3: 'Francés', 4: 'Alemán', 5: 'Portugués', 6: 'Italiano' }
+  const langs = (tour.value?.guide_languages || []).map((id: number) => esLangs[id]).filter(Boolean)
+  const typeEs: Record<string, string> = { live_guide: 'Guía en vivo', audio_guide: 'Audioguía', informative_brochures: 'Folletos informativos' }
+  const base = typeEs[type] || 'Guía'
+  return type === 'live_guide' && langs.length ? `${base}: ${langs.join(', ')}` : base
+})
+
 // Add the current configuration (date/time/pax) to the cart and stay on the
 // page. cartFeedback drives a transient inline message: 'added' when the line
 // was created, 'duplicate' when the same tour+date+time is already in the
@@ -1069,16 +1120,24 @@ watchEffect(() => {
   const citySlugVal = tour.value.city?.slug || citySlug
   const localeHome = `${siteUrl}/${locale.value}`
 
+  // SEO driven by the admin's per-tour fields (Step 2), with sensible fallbacks
+  // so nothing breaks when they're empty.
+  const seoTitle = () => tour.value.meta_title || tour.value.title
+  const seoDescription = () => tour.value.meta_description || tour.value.short_description || tour.value.title
+  const seoKeywords = () => Array.isArray(tour.value.keywords) && tour.value.keywords.length
+    ? tour.value.keywords.join(', ')
+    : `${tour.value.title}, tours ${cityName}, lago titicaca, peru`
+
   useSeoMeta({
-    title: () => tour.value.title,
-    description: () => tour.value.short_description || tour.value.title,
-    keywords: () => `${tour.value.title}, tours ${cityName}, lago titicaca, peru`,
+    title: seoTitle,
+    description: seoDescription,
+    keywords: seoKeywords,
     robots: () => isChildVariant.value
       ? 'noindex, follow'
       : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
     author: 'Incalake Tours',
-    ogTitle: () => tour.value.title,
-    ogDescription: () => tour.value.short_description || tour.value.title,
+    ogTitle: seoTitle,
+    ogDescription: seoDescription,
     ogType: 'website',
     ogUrl: () => url,
     ogSiteName: 'Incalake Tours',
@@ -1088,8 +1147,8 @@ watchEffect(() => {
     ogImageAlt: () => tour.value.title,
     ogLocale: () => locale.value,
     twitterCard: 'summary_large_image',
-    twitterTitle: () => tour.value.title,
-    twitterDescription: () => tour.value.short_description || tour.value.title,
+    twitterTitle: seoTitle,
+    twitterDescription: seoDescription,
     twitterImage: () => imageUrl,
   })
 
