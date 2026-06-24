@@ -22,6 +22,12 @@ class TourDetailResource extends JsonResource
             'slug' => $translation?->slug ?? $this->translations->first()?->slug ?? '',
             'meta_title' => $translation?->meta_title ?? $this->translations->first()?->meta_title ?? '',
             'meta_description' => $translation?->meta_description ?? $this->translations->first()?->meta_description ?? '',
+            // SEO keywords for the current language (flat string list) so the
+            // frontend can drive <meta keywords> from the admin instead of a
+            // hardcoded fallback.
+            'keywords' => optional($translation ?? $this->translations->first())->relationLoaded('keywords')
+                ? ($translation ?? $this->translations->first())->keywords->pluck('keyword')->filter()->values()->all()
+                : [],
             'short_description' => $translation?->short_description ?? $this->translations->first()?->short_description ?? '',
             'long_description' => $translation?->long_description ?? $this->translations->first()?->long_description ?? '',
             'itinerary' => $translation?->itinerary ?? $this->translations->first()?->itinerary ?? '',
