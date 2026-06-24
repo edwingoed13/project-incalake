@@ -120,91 +120,6 @@
       </div>
     </WizardSection>
 
-    <!-- Gallery Layout Detection Section -->
-    <WizardSection
-      collapsible
-      title="Detección de layout de galería"
-      icon="i-lucide-layout-grid"
-      :open="isSectionExpanded('layout')"
-      @update:open="toggleSection('layout')"
-    >
-      <template #actions>
-        <UBadge color="primary" variant="subtle" size="xs">
-          {{ currentLayoutName }}
-        </UBadge>
-      </template>
-
-      <div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Layout Options -->
-        <button 
-          v-for="layout in layouts" 
-          :key="layout.id"
-          @click="store.multimedia.galleryLayout = layout.id"
-          class="flex flex-col items-center gap-4 p-4 rounded-2xl border-2 transition-all group"
-          :class="[
-            store.multimedia.galleryLayout === layout.id
-              ? 'border-primary bg-primary/5 shadow-xl shadow-primary/5'
-              : 'border-slate-100 dark:border-slate-800/50 bg-white dark:bg-slate-950/20 hover:border-slate-200 dark:hover:border-slate-700'
-          ]"
-        >
-          <!-- Visual Representation -->
-          <div class="w-full aspect-video rounded-2xl p-2 flex gap-1 items-stretch" :class="store.multimedia.galleryLayout === layout.id ? 'bg-primary/20' : 'bg-slate-50 dark:bg-slate-900'">
-             <!-- Layout Previews based on type -->
-             <template v-if="layout.id === 'featured'">
-                <div class="flex-1 bg-primary rounded-lg"></div>
-                <div class="w-1/3 flex flex-col gap-1">
-                   <div class="flex-1 border-2 border-primary/40 rounded-lg"></div>
-                   <div class="flex-1 border-2 border-primary/40 rounded-lg"></div>
-                </div>
-             </template>
-
-             <template v-if="layout.id === 'grid'">
-                <div class="grid grid-cols-2 grid-rows-2 gap-1 w-full">
-                   <div class="dark:bg-slate-800 bg-slate-200 rounded-md" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'grid'}"></div>
-                   <div class="dark:bg-slate-800 bg-slate-200 rounded-md" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'grid'}"></div>
-                   <div class="dark:bg-slate-800 bg-slate-200 rounded-md" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'grid'}"></div>
-                   <div class="dark:bg-slate-800 bg-slate-200 rounded-md" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'grid'}"></div>
-                </div>
-             </template>
-
-             <template v-if="layout.id === 'slider'">
-                <div class="flex flex-col gap-1 w-full">
-                   <div class="flex-1 dark:bg-slate-800 bg-slate-200 rounded-lg" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'slider'}"></div>
-                   <div class="h-1/3 flex gap-1">
-                      <div class="flex-1 dark:bg-slate-700 bg-slate-300 rounded-md" :class="{'bg-primary/60 dark:bg-primary/60': store.multimedia.galleryLayout === 'slider'}"></div>
-                      <div class="flex-1 dark:bg-slate-700 bg-slate-300 rounded-md" :class="{'bg-primary/60 dark:bg-primary/60': store.multimedia.galleryLayout === 'slider'}"></div>
-                      <div class="flex-1 dark:bg-slate-700 bg-slate-300 rounded-md" :class="{'bg-primary/60 dark:bg-primary/60': store.multimedia.galleryLayout === 'slider'}"></div>
-                   </div>
-                </div>
-             </template>
-
-             <template v-if="layout.id === 'mosaic_vertical'">
-                <div class="flex gap-1 w-full h-full">
-                   <div class="flex-1 dark:bg-slate-800 bg-slate-200 rounded-lg" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'mosaic_vertical'}"></div>
-                   <div class="flex-1 dark:bg-slate-800 bg-slate-200 rounded-lg shadow-inner" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'mosaic_vertical'}"></div>
-                   <div class="flex-1 dark:bg-slate-800 bg-slate-200 rounded-lg" :class="{'bg-primary/40 dark:bg-primary/40': store.multimedia.galleryLayout === 'mosaic_vertical'}"></div>
-                </div>
-             </template>
-          </div>
-
-          <span class="text-[11px] font-black text-center transition-colors uppercase tracking-widest" :class="store.multimedia.galleryLayout === layout.id ? 'text-primary' : 'text-slate-500'">
-            {{ layout.name }}
-          </span>
-        </button>
-      </div>
-
-      <UAlert
-        color="primary"
-        variant="subtle"
-        icon="i-lucide-wand-sparkles"
-        title="Detección automática"
-        description="El layout se ajusta automáticamente según si el video es YouTube Shorts (vertical) u horizontal."
-        class="mt-4"
-      />
-      </div>
-    </WizardSection>
-
     <!-- Image Gallery Section -->
     <WizardSection
       collapsible
@@ -947,19 +862,10 @@ const getImageUrl = (url: string) => {
   return `${baseUrl}${finalPath}`
 }
 
-const layouts = [
-  { id: 'featured', name: 'Featured Hero' },
-  { id: 'grid', name: 'Uniform Grid' },
-  { id: 'slider', name: 'Cinematic Slider' },
-  { id: 'mosaic_vertical', name: 'Mosaic Vertical' },
-] as const
-
-// Friendly label for the section badge. The store normalizes the loaded
-// value to one of the 4 ids, so this always resolves; the fallback is a
-// safety net only.
-const currentLayoutName = computed(() =>
-  layouts.find(l => l.id === store.multimedia.galleryLayout)?.name || 'Featured Hero'
-)
+// NOTE: the gallery layout picker was removed — the public gallery auto-detects
+// its layout from the media (YouTube short / horizontal video / images), so the
+// manual selector was non-functional. store.multimedia.galleryLayout stays for
+// backward compatibility but is no longer surfaced in the UI.
 
 const youtubeId = computed(() => {
   const url = currentLangSeo.value?.youtubeUrl || ''
