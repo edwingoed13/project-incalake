@@ -73,12 +73,16 @@
               <ClockIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
               {{ formatDuration(tour) }}
             </span>
-            <!-- Difficulty -->
+            <!-- Difficulty (with an info popover describing the level) -->
             <template v-if="difficultyLabel">
               <span class="text-slate-300" aria-hidden="true">•</span>
               <span class="inline-flex items-center gap-1 font-semibold" :class="difficultyColor">
                 <Icon name="material-symbols:signal-cellular-alt" class="size-4 shrink-0" aria-hidden="true" />
                 {{ difficultyLabel }}
+                <AppPopover v-if="difficultyDesc" :label="`Dificultad: ${difficultyLabel}`" width="w-64">
+                  <p class="text-xs font-bold uppercase tracking-wider text-white/60 mb-1">{{ difficultyLabel }}</p>
+                  <p class="leading-snug">{{ difficultyDesc }}</p>
+                </AppPopover>
               </span>
             </template>
             <!-- Target audience -->
@@ -747,10 +751,16 @@ watch([selectedDate, selectedTime], () => { if (bookingError.value) bookingError
 // group grows (quantity tiers).
 const priceStages = computed(() => {
   const details = (tour.value?.price_details || []).filter((p: any) => p.active)
-  const byStage: Record<string, { id: any; desc: string; tiers: any[] }> = {}
+  const byStage: Record<string, { id: any; desc: string; minAge: number | null; maxAge: number | null; tiers: any[] }> = {}
   for (const p of details) {
     const key = String(p.age_stage_id ?? '0')
-    if (!byStage[key]) byStage[key] = { id: p.age_stage_id, desc: p.age_stage?.description || '', tiers: [] }
+    if (!byStage[key]) byStage[key] = {
+      id: p.age_stage_id,
+      desc: p.age_stage?.description || '',
+      minAge: p.age_stage?.min_age ?? null,
+      maxAge: p.age_stage?.max_age ?? null,
+      tiers: [],
+    }
     byStage[key].tiers.push(p)
   }
   const stages = Object.values(byStage)
@@ -764,6 +774,18 @@ const priceStages = computed(() => {
 const adultStage = computed(() => priceStages.value[0] || null)
 const childStage = computed(() => priceStages.value[1] || null)
 const hasChildPricing = computed(() => !!childStage.value)
+
+// "(16-99)" age-range labels from the admin's age stages; empty when unset.
+function ageRangeLabel(stage: { minAge: number | null; maxAge: number | null } | null): string {
+  if (!stage) return ''
+  const min = stage.minAge, max = stage.maxAge
+  if (min == null && max == null) return ''
+  if (min != null && max != null) return `(${min}-${max})`
+  if (min != null) return `(${min}+)`
+  return `(0-${max})`
+}
+const adultAgeLabel = computed(() => ageRangeLabel(adultStage.value))
+const childAgeLabel = computed(() => ageRangeLabel(childStage.value))
 
 // Per-person price for a stage at a given quantity, honoring quantity tiers
 // (beyond the last tier we keep the cheapest/last per-person rate).
@@ -994,6 +1016,15 @@ const difficultyColor = computed(() => {
   if (k === 'hard' || k === 'difficult') return 'text-urgency'
   return 'text-slate-600'
 })
+const difficultyDesc = computed(() => {
+  const k = String(tour.value?.difficulty || '').toLowerCase()
+  const map: Record<string, string> = {
+    easy: 'Apto para todo tipo de viajeros. Sin esfuerzo físico significativo, caminatas cortas y ritmo tranquilo.',
+    moderate: 'Requiere buena condición física básica. Incluye caminatas de mediana duración y algunos desniveles.',
+    hard: 'Para viajeros activos. Caminatas largas, terrenos irregulares y mayor exposición a la altitud. Se requiere buena condición física.',
+  }
+  return map[k === 'difficult' ? 'hard' : k] || ''
+})
 const audienceLabel = computed(() => {
   const map: Record<string, string> = { all: 'Todos los públicos', families: 'Familias', adults: 'Adultos', adventure: 'Aventureros', seniors: 'Adultos mayores' }
   return map[String(tour.value?.target_audience || '')] || ''
@@ -1075,6 +1106,8 @@ const bookingProps = computed(() => ({
   total: total.value,
   groupDiscount: groupDiscount.value,
   hasChildPricing: hasChildPricing.value,
+  adultAgeLabel: adultAgeLabel.value,
+  childAgeLabel: childAgeLabel.value,
   maxPax: maxPax.value,
   totalPax: totalPax.value,
   minDate: minDate.value,

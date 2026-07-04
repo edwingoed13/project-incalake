@@ -43,14 +43,69 @@ const editForm = ref({ date: '', time: '', adults: 1, children: 0 })
 function openEdit(item: CartItem) {
   editForm.value = {
     date: item.selectedDate,
-    time: item.selectedTime,
+    // Normalize to HH:MM so it matches a departure-time option value.
+    time: (item.selectedTime || '').slice(0, 5),
     adults: item.adults,
     children: item.children || 0,
   }
   editingItem.value = item.id
 }
 
+// --- Availability-aware date/time for the edit form -----------------------
+// The cart already fetches each item's full tour (tourDetails), so we can feed
+// the real TourCalendar (offers / blocked / inactive days) and TourTimeSelect
+// (only the admin's departure times) instead of free-form inputs that let a
+// customer pick blocked dates or non-existent times.
+const detailFor = (item: any) => tourDetails.value[item.tourId] || {}
+
+function calendarPropsFor(item: any) {
+  const d = detailFor(item)
+  return {
+    offers: d.offers_data || [],
+    blocks: d.blocks_data || [],
+    activeDays: d.availability_data?.activeDays?.map(Number) || [0, 1, 2, 3, 4, 5, 6],
+    specialDays: d.special_days || d.availability_data?.specialDays || [],
+    availabilityStart: d.availability_data?.start || '',
+    availabilityEnd: d.availability_data?.end || '',
+  }
+}
+
+function minDateFor(item: any): string {
+  const d = detailFor(item)
+  const q = Number(d.booking_anticipation_quantity || 0)
+  const unit = d.booking_anticipation_unit || 'hours'
+  const ms = unit === 'minutes' ? q * 60000 : unit === 'days' ? q * 86400000 : q * 3600000
+  const dt = new Date(Date.now() + ms)
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+}
+
+function timeOptionsFor(item: any) {
+  const d = detailFor(item)
+  const fmt = (raw: string) => {
+    const [h, m] = String(raw).split(':')
+    const hr = parseInt(h)
+    const ampm = hr >= 12 ? 'PM' : 'AM'
+    const h12 = hr % 12 || 12
+    return { value: String(raw).slice(0, 5), label: `${h12}:${m} ${ampm}` }
+  }
+  const out: { value: string; label: string }[] = []
+  const multi = d.departure_times
+  if (Array.isArray(multi) && multi.length) {
+    for (const it of multi) {
+      if (!it) continue
+      if (typeof it === 'string') out.push(fmt(it))
+      else if (it.time) out.push(fmt(it.time))
+    }
+  } else if (d.departure_time) {
+    out.push(fmt(d.departure_time))
+  }
+  return out
+}
+
 function saveEdit(item: CartItem) {
+  // Guard: a valid date + a real departure time are required, so an edit can't
+  // produce a booking on a blocked day or a non-existent time.
+  if (!editForm.value.date || !editForm.value.time) return
   // Keep child cost in the total when only adults are edited.
   const newTotal =
     item.basePrice * editForm.value.adults +
@@ -204,8 +259,13 @@ function getImageUrl(path: string) {
           <div
             v-for="item in sortedCartItems"
             :key="item.id"
-            class="relative bg-white rounded-2xl shadow-sm border overflow-hidden transition-colors"
-            :class="isSelected(item.id) ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100'"
+            class="relative bg-white rounded-2xl shadow-sm border transition-colors"
+            :class="[
+              isSelected(item.id) ? 'border-primary/40 ring-1 ring-primary/20' : 'border-slate-100',
+              // Let the date calendar pop out of the card while editing; keep the
+              // rounded clip when collapsed.
+              editingItem === item.id ? 'overflow-visible' : 'overflow-hidden',
+            ]"
           >
             <!-- Per-item selection checkbox -->
             <label v-if="cartStore.itemCount > 1" class="absolute top-2.5 left-2.5 z-10 flex items-center justify-center w-6 h-6 bg-white/90 backdrop-blur rounded-md cursor-pointer">
@@ -320,27 +380,40 @@ function getImageUrl(path: string) {
                     </div>
                   </div>
 
-                  <!-- Step 2: travel date -->
+                  <!-- Step 2: travel date — real calendar (offers, blocked and
+                       inactive days respected, like the tour page) -->
                   <div>
                     <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 mb-2">
                       <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">2</span>
                       {{ t('cart_date_label') }}
                     </label>
-                    <input v-model="editForm.date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <TourCalendar
+                      v-model="editForm.date"
+                      :min-date="minDateFor(item)"
+                      v-bind="calendarPropsFor(item)"
+                    />
                   </div>
 
-                  <!-- Step 3: time -->
+                  <!-- Step 3: time — only the admin's departure times -->
                   <div>
                     <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 mb-2">
                       <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">3</span>
                       {{ t('cart_time_label') }}
                     </label>
-                    <input v-model="editForm.time" type="time" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <TourTimeSelect
+                      v-model="editForm.time"
+                      :options="timeOptionsFor(item)"
+                      placeholder="Selecciona horario"
+                    />
                   </div>
                 </div>
                 <div class="flex gap-2 mt-3">
                   <button @click="editingItem = null" class="flex-1 py-2 text-xs font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg">{{ t('cancel') }}</button>
-                  <button @click="saveEdit(item)" class="flex-1 py-2 text-xs font-bold text-white bg-primary rounded-lg">{{ t('save_changes') }}</button>
+                  <button
+                    @click="saveEdit(item)"
+                    :disabled="!editForm.date || !editForm.time"
+                    class="flex-1 py-2 text-xs font-bold text-white bg-primary rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                  >{{ t('save_changes') }}</button>
                 </div>
               </div>
             </Transition>

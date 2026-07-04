@@ -20,6 +20,8 @@ const props = defineProps<{
   total: number
   groupDiscount: number
   hasChildPricing: boolean
+  adultAgeLabel?: string
+  childAgeLabel?: string
   maxPax: number
   totalPax: number
   minDate: string
@@ -78,7 +80,7 @@ const offerLabel = computed(() => {
         <div class="space-y-2">
           <TourQuantityStepper
             v-model="adults"
-            label="Adultos"
+            :label="`Adultos${adultAgeLabel ? ' ' + adultAgeLabel : ''}`"
             :hint="`${fmt(adultPrice)} c/u`"
             :min="1"
             :at-max="atMax"
@@ -86,7 +88,7 @@ const offerLabel = computed(() => {
           <TourQuantityStepper
             v-if="hasChildPricing"
             v-model="children"
-            label="Niños"
+            :label="`Niños${childAgeLabel ? ' ' + childAgeLabel : ''}`"
             :hint="children > 0 ? `${fmt(childPrice)} c/u` : 'Opcional'"
             :min="0"
             :at-max="atMax"
@@ -114,11 +116,8 @@ const offerLabel = computed(() => {
           :availability-start="tour?.availability_data?.start || ''"
           :availability-end="tour?.availability_data?.end || ''"
         />
-        <!-- Date-specific offer -->
-        <div v-if="offerLabel" class="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-trust-soft text-trust">
-          <Icon name="material-symbols:sell-outline" class="size-3.5" />
-          <span class="text-xs font-bold">{{ offerLabel }}</span>
-        </div>
+        <!-- (The date-specific offer badge was removed here — the discount % now
+             lives on the "Descuento" line of the breakdown, so it isn't redundant.) -->
         <!-- Policy reassurance at the point of decision -->
         <p v-if="tour?.free_cancellation" class="mt-2 flex items-center gap-1.5 text-xs text-trust font-semibold">
           <Icon name="material-symbols:check-circle" class="size-4 shrink-0" />
@@ -154,7 +153,7 @@ const offerLabel = computed(() => {
         <div v-if="groupDiscount > 0" class="flex justify-between text-xs">
           <span class="text-trust font-bold inline-flex items-center gap-1">
             <Icon name="material-symbols:sell-outline" class="size-3" />
-            Descuento
+            Descuento<span v-if="offerLabel" class="font-black">({{ offerLabel }})</span>
           </span>
           <span class="text-trust font-bold tabular-nums">−{{ fmt(groupDiscount) }}</span>
         </div>
