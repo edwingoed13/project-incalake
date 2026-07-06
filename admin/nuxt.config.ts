@@ -4,6 +4,15 @@ import tailwindcss from "@tailwindcss/vite"
 export default defineNuxtConfig({
   ssr: false,
 
+  // Recover stale admin clients after a deploy without a manual hard-refresh:
+  // reload the SPA when a lazy chunk 404s (old build replaced), and poll the
+  // build manifest every 5 min so an open admin tab picks up new versions.
+  experimental: {
+    appManifest: true,
+    checkOutdatedBuildInterval: 1000 * 60 * 5,
+    emitRouteChunkError: 'automatic-immediate',
+  },
+
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
