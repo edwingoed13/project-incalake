@@ -697,9 +697,13 @@
                 @focus="childDropdownOpen = true"
                 @input="onChildSearchInput"
               />
+              <!-- Drop-UP: this search box is the LAST element of the step, so a
+                   downward dropdown gets clipped by the scroll area / hidden
+                   behind the wizard's bottom nav. Opening upward keeps every
+                   result visible. -->
               <div
                 v-if="childDropdownOpen && (childSearching || childSearchQuery.trim().length >= 2)"
-                class="absolute z-30 mt-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[260px] overflow-y-auto"
+                class="absolute z-30 bottom-full mb-1 w-full bg-default border border-default rounded-lg shadow-xl max-h-[260px] overflow-y-auto"
               >
                 <div v-if="childSearching" class="px-3 py-3 text-xs text-muted flex items-center gap-2">
                   <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" /> Buscando…
