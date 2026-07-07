@@ -61,12 +61,9 @@ Route::prefix('cities')->group(function () {
     Route::get('/{id}', [CityController::class, 'show'])->name('api.cities.show');
 });
 
-// Public utility routes for tour creation form
-Route::get('/admin/tours/generate-code', [TourController::class, 'generateCodeApi'])->name('api.admin.tours.generate-code');
-Route::get('/admin/tours/eligible-parents', [TourController::class, 'eligibleParents'])->name('api.admin.tours.eligible-parents');
-Route::get('/admin/tours/eligible-children', [TourController::class, 'eligibleChildren'])->name('api.admin.tours.eligible-children');
-Route::get('/admin/tours/{id}/children', [TourController::class, 'childVariants'])->name('api.admin.tours.children');
-Route::post('/admin/tours/{id}/set-parent', [TourController::class, 'setParent'])->name('api.admin.tours.set-parent');
+// (Tour-wizard utility routes moved INSIDE the authenticated admin group below —
+// they were registered here unauthenticated by mistake, which exposed catalog
+// internals and a public write (set-parent).)
 
 // Public routes - Reviews
 use App\Http\Controllers\Api\ReviewController;
@@ -76,9 +73,13 @@ Route::get('/reviews', [ReviewController::class, 'index'])->name('api.reviews.in
 use App\Http\Controllers\Api\GoogleReviewController;
 Route::get('/google-reviews', [GoogleReviewController::class, 'index'])->name('api.google-reviews.index');
 
-// Public route - Availability inquiry (tours that require verification)
+// Public route - Availability inquiry (tours that require verification).
+// Tight throttle: every request stores a lead AND emails reservas@ — without
+// it this is a one-line email-bomb.
 use App\Http\Controllers\Api\AvailabilityInquiryController;
-Route::post('/availability-inquiry', [AvailabilityInquiryController::class, 'store'])->name('api.availability-inquiry.store');
+Route::post('/availability-inquiry', [AvailabilityInquiryController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('api.availability-inquiry.store');
 
 // Public routes - Page content (read-only)
 use App\Http\Controllers\Api\PageContentController;
@@ -96,8 +97,12 @@ Route::middleware(['throttle:60,1'])->prefix('tours')->group(function () {
     Route::post('/{id}/calculate-price', [TourController::class, 'calculatePrice'])->name('api.tours.calculate-price');
     Route::post('/validate-coupon', [TourController::class, 'validateCoupon'])->name('api.tours.validate-coupon');
     Route::get('/{id}/available-dates', [TourController::class, 'getAvailableDates'])->name('api.tours.available-dates');
+});
 
-    // Clone/Translation endpoints
+// Clone/Translation endpoints — same public paths the admin already calls, but
+// now admin-gated: clone-ai spends paid AI credits and deleteTranslation can
+// drop the whole tour when it removes the last translation.
+Route::middleware(['auth:sanctum', 'admin.api', 'throttle:30,1'])->prefix('tours')->group(function () {
     Route::post('/{id}/clone', [TourCloneController::class, 'cloneManual'])->name('api.tours.clone');
     Route::post('/{id}/clone-ai', [TourCloneController::class, 'cloneWithAI'])->name('api.tours.clone-ai');
     Route::delete('/{id}/translation/{languageId}', [TourCloneController::class, 'deleteTranslation'])->name('api.tours.delete-translation');
@@ -122,6 +127,12 @@ Route::middleware(['throttle:20,1'])->prefix('bookings')->group(function () {
     Route::post('/', [BookingController::class, 'create'])->name('api.bookings.create');
     Route::post('/{id}/payment/culqi', [BookingController::class, 'confirmCulqiPayment'])->name('api.bookings.payment.culqi');
     Route::post('/{id}/payment/paypal', [BookingController::class, 'confirmPayPalPayment'])->name('api.bookings.payment.paypal');
+});
+
+// cancel/confirm are operator actions (only the admin bookings page calls
+// them, already with a Bearer token) — they were public + id-enumerable,
+// letting anyone cancel or "confirm" arbitrary reservations.
+Route::middleware(['auth:sanctum', 'admin.api', 'throttle:20,1'])->prefix('bookings')->group(function () {
     Route::post('/{id}/cancel', [BookingController::class, 'cancel'])->name('api.bookings.cancel');
     Route::post('/{id}/confirm', [BookingController::class, 'confirm'])->name('api.bookings.confirm');
 });
@@ -129,18 +140,20 @@ Route::middleware(['throttle:20,1'])->prefix('bookings')->group(function () {
 // Public routes - Payment configuration
 Route::get('/payment/config', [BookingController::class, 'paymentConfig'])->name('api.payment.config');
 
-// AI Translation Settings routes
-Route::prefix('ai-translation-settings')->group(function () {
-    Route::get('/', [AITranslationSettingsController::class, 'index'])->name('api.ai-translation-settings.index');
-    Route::post('/', [AITranslationSettingsController::class, 'store'])->name('api.ai-translation-settings.store');
+// AI Translation Settings — admin-gated: exposes/edits the AI provider api_key
+// and the test endpoint spends paid AI calls.
+Route::middleware(['auth:sanctum', 'admin.api'])->group(function () {
+    Route::prefix('ai-translation-settings')->group(function () {
+        Route::get('/', [AITranslationSettingsController::class, 'index'])->name('api.ai-translation-settings.index');
+        Route::post('/', [AITranslationSettingsController::class, 'store'])->name('api.ai-translation-settings.store');
+    });
+    Route::post('/ai-translation-test', [AITranslationSettingsController::class, 'test'])->name('api.ai-translation-test');
+
+    // Dashboard stats — revenue/customers; admin eyes only.
+    Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
+    Route::get('/dashboard/recent-bookings', [App\Http\Controllers\Api\DashboardController::class, 'recentBookings']);
+    Route::get('/dashboard/sales-chart', [App\Http\Controllers\Api\DashboardController::class, 'salesChart']);
 });
-
-Route::post('/ai-translation-test', [AITranslationSettingsController::class, 'test'])->name('api.ai-translation-test');
-
-// Dashboard stats
-Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
-Route::get('/dashboard/recent-bookings', [App\Http\Controllers\Api\DashboardController::class, 'recentBookings']);
-Route::get('/dashboard/sales-chart', [App\Http\Controllers\Api\DashboardController::class, 'salesChart']);
 
 // Tags — public listing (used by both admin wizard and public tour filter)
 Route::get('/tags', [App\Http\Controllers\Api\TagController::class, 'index'])->name('api.tags.index');
@@ -160,7 +173,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/permissions', [AuthController::class, 'permissions'])->name('api.auth.permissions');
     });
 
-    // Bookings - List user's bookings (authenticated only)
+    // Everything below is ADMIN surface. `auth:sanctum` alone is NOT enough:
+    // /auth/register is public and hands out customer tokens, so without a
+    // role gate any self-registered account could manage users/tours/run
+    // migrations. admin.api = role column in (admin, staff).
+    Route::middleware('admin.api')->group(function () {
+
+    // Bookings - full booking listing (admin operators)
     Route::prefix('bookings')->group(function () {
         Route::get('/', [BookingController::class, 'index'])->name('api.bookings.index');
     });
@@ -209,7 +228,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Static routes MUST come before /{id} otherwise Laravel matches them
         // as if 'upload-image' / etc were a tour ID and returns "Tour no encontrado".
         Route::post('/upload-image', [UploadController::class, 'uploadTourImage'])->name('api.admin.tours.upload-image');
+        // Wizard utility routes (previously registered public by mistake).
+        Route::get('/generate-code', [TourController::class, 'generateCodeApi'])->name('api.admin.tours.generate-code');
+        Route::get('/eligible-parents', [TourController::class, 'eligibleParents'])->name('api.admin.tours.eligible-parents');
+        Route::get('/eligible-children', [TourController::class, 'eligibleChildren'])->name('api.admin.tours.eligible-children');
         Route::post('/', [TourController::class, 'store'])->name('api.admin.tours.store');
+        Route::get('/{id}/children', [TourController::class, 'childVariants'])->name('api.admin.tours.children');
+        Route::post('/{id}/set-parent', [TourController::class, 'setParent'])->name('api.admin.tours.set-parent');
         Route::match(['put', 'post'], '/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
         Route::match(['delete', 'post'], '/{id}/delete', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
         Route::match(['patch', 'post'], '/{id}/status', [TourController::class, 'updateStatus'])->name('api.admin.tours.status');
@@ -253,12 +278,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{page}', [PageContentController::class, 'update'])->name('api.admin.pages.update');
         Route::post('/{page}/translate', [PageContentController::class, 'translate'])->name('api.admin.pages.translate');
     });
+
+    }); // end admin.api
 });
 
-// Booking confirmation routes (post-payment)
+// Booking confirmation routes (post-payment). Public URLs (the customer opens
+// them from the email link) but each request must prove access with the
+// booking's confirmation token or customer email — enforced inside
+// BookingConfirmationController::authorizeBookingAccess — so booking ids can't
+// be enumerated for other people's personal data.
 use App\Http\Controllers\Api\BookingConfirmationController;
 
-Route::prefix('bookings')->group(function () {
+Route::middleware(['throttle:30,1'])->prefix('bookings')->group(function () {
     Route::get('/{id}/pickup-details', [BookingConfirmationController::class, 'getPickupDetails'])
         ->name('api.bookings.pickup-details');
     Route::post('/{id}/validate-hotel', [BookingConfirmationController::class, 'validateHotelLocation'])

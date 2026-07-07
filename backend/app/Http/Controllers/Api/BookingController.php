@@ -58,18 +58,17 @@ class BookingController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $errorDetails = [
-                'errors' => $validator->errors()->toArray(),
-                'data' => $request->all()
-            ];
+            // Log only the failing fields — never the raw payload (it carries
+            // the customer's name/email/phone: PII doesn't belong in logs or
+            // in the response body).
+            \Log::warning('Booking validation failed', [
+                'fields' => array_keys($validator->errors()->toArray()),
+            ]);
 
-            \Log::error('Booking validation failed', $errorDetails);
-
-            // Return detailed error for debugging
             return response()->json([
                 'success' => false,
+                'message' => 'Error de validación',
                 'errors' => $validator->errors(),
-                'debug_data' => $request->all() // Added for debugging
             ], 422);
         }
 
@@ -104,68 +103,78 @@ class BookingController extends Controller
             $infants = $request->infants ?? 0;
             $totalParticipants = $adults + $children + $infants;
 
-            // Get price for adults (age_stage_id = 2)
-            // First try exact range match (e.g. qty=3 for row min=3 max=3)
-            $adultPrice = DB::table('tour_prices')
+            // ---- Authoritative server-side pricing --------------------------
+            // NEVER trust client-sent totals: the previous code accepted
+            // `total_amount` straight from the request, which let anyone book
+            // any tour for $1. Recompute exactly what the storefront shows:
+            // quantity-tiered per-person prices (lowest age_stage_id = primary/
+            // adult stage, next = child — same convention as the frontend and
+            // Tour::getMinPriceAttribute), minus the travel date's active
+            // offer, plus tax.
+            $priceRows = DB::table('tour_prices')
                 ->where('tour_id', $tour->id)
-                ->where('age_stage_id', 2) // Adults
-                ->where('min_quantity', '<=', $adults)
-                ->where('max_quantity', '>=', $adults)
                 ->where('active', 1)
-                ->first();
+                ->orderBy('age_stage_id')
+                ->orderBy('min_quantity')
+                ->get()
+                ->groupBy('age_stage_id')
+                ->values();
 
-            // If no exact match (qty exceeds all defined ranges), use the last range (highest min_quantity)
-            // e.g. table has 1-1, 2-2, 3-3 and booking is 5 adults -> use 3-3 price
-            if (!$adultPrice) {
-                $adultPrice = DB::table('tour_prices')
-                    ->where('tour_id', $tour->id)
-                    ->where('age_stage_id', 2)
-                    ->where('active', 1)
-                    ->orderBy('min_quantity', 'desc')
-                    ->first();
+            $tierPrice = function ($rows, int $qty): float {
+                if (!$rows || $rows->isEmpty() || $qty <= 0) {
+                    return 0.0;
+                }
+                $match = $rows->first(fn ($r) => $qty >= (int) $r->min_quantity && $qty <= (int) $r->max_quantity);
+                if ($match) {
+                    return (float) $match->amount;
+                }
+                // Beyond the last tier: keep the largest-group per-person rate.
+                return (float) $rows->sortByDesc('min_quantity')->first()->amount;
+            };
+
+            $adultRows = $priceRows->get(0);
+            $childRows = $priceRows->get(1);
+
+            $pricePerAdult = $tierPrice($adultRows, max(1, $adults));
+            if ($pricePerAdult <= 0) {
+                $pricePerAdult = 50.00; // legacy fallback for tours without price rows
+            }
+            $pricePerChild = ($children > 0 && $childRows)
+                ? $tierPrice($childRows, $children)
+                : ($children > 0 ? $pricePerAdult * 0.5 : 0.0);
+
+            $subtotal = ($adults * $pricePerAdult) + ($children * $pricePerChild); // infants free
+
+            // Active offer for the travel date — same formula as the storefront:
+            // percentage → subtotal * d/100; fixed amount → d × (adults+children).
+            $discount = 0.0;
+            $offers = is_array($tour->offers_data) ? $tour->offers_data : [];
+            foreach ($offers as $offer) {
+                $start = $offer['startDate'] ?? null;
+                $end = $offer['endDate'] ?? null;
+                if ($start && $end && $request->tour_date >= $start && $request->tour_date <= $end) {
+                    $amount = (float) ($offer['discount'] ?? 0);
+                    $discount = ($offer['discountType'] ?? '') === 'percentage'
+                        ? round($subtotal * $amount / 100, 2)
+                        : round($amount * ($adults + $children), 2);
+                    break;
+                }
             }
 
-            // Use price or default to 50 USD per adult
-            $pricePerAdult = $adultPrice ? $adultPrice->amount : 50.00;
+            $total = max(0.0, $subtotal - $discount);
 
-            \Log::info('Booking price calculation', [
-                'tour_id' => $tour->id,
-                'adults' => $adults,
-                'children' => $children,
-                'price_per_adult' => $pricePerAdult,
-                'adult_price_found' => $adultPrice ? true : false
-            ]);
-
-            // Check if there's an offer discount from frontend
-            $discount = 0;
-            $originalSubtotal = ($adults * $pricePerAdult) + ($children * $pricePerAdult * 0.5) + ($infants * 0);
-
-            // Use frontend-provided pricing if available (includes offer calculations)
-            if ($request->has('total_amount') && (float) $request->total_amount > 0) {
-                $total = (float) $request->total_amount;
-                $subtotal = $total;
-
-                // Calculate discount if offer is active
-                if ($request->has('has_offer') && $request->has_offer) {
-                    if ($request->has('original_price')) {
-                        $originalPrice = (float) $request->original_price;
-                        $basePrice = (float) $request->base_price;
-                        $discount = ($originalPrice - $basePrice) * $adults;
-                        $subtotal = $originalPrice * $adults;
-                    }
-                }
-            } else {
-                // Fallback to calculated prices
-                $subtotal = $originalSubtotal;
-                $total = $subtotal - $discount;
-            }
-
-            // Also check for old field name for backward compatibility
-            if (!isset($total) || $total < 1.00) {
-                if ($request->has('total_price') && (float) $request->total_price > 0) {
-                    $total = (float) $request->total_price;
-                    $subtotal = $total;
-                }
+            // Observability during the transition: the frontend still sends
+            // total_amount — log drift instead of trusting it, so genuine
+            // pricing mismatches surface without being exploitable.
+            if ($request->filled('total_amount') && abs((float) $request->total_amount - $total) > 0.5) {
+                \Log::warning('Booking total mismatch (client vs server)', [
+                    'tour_id' => $tour->id,
+                    'client_total' => (float) $request->total_amount,
+                    'server_total' => $total,
+                    'adults' => $adults,
+                    'children' => $children,
+                    'tour_date' => $request->tour_date,
+                ]);
             }
 
             // Calculate tax

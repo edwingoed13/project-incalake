@@ -33,9 +33,13 @@ return [
         'https://admin.incalake.com',
     ],
 
-    // Vercel preview / branch deploys
+    // Vercel preview / branch deploys — ONLY this project's deployments.
+    // A bare `.*\.vercel\.app` pattern with supports_credentials=true would let
+    // ANY Vercel-hosted site (anyone can deploy one) make credentialed
+    // cross-origin requests against this API.
     'allowed_origins_patterns' => [
-        '#^https://.*\.vercel\.app$#',
+        '#^https://incalake-frontend[a-z0-9-]*\.vercel\.app$#',
+        '#^https://incalake-admin[a-z0-9-]*\.vercel\.app$#',
     ],
 
     'allowed_headers' => ['*'],

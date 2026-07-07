@@ -16,6 +16,68 @@ use Illuminate\Support\Facades\Mail;
 class BookingConfirmationController extends Controller
 {
     /**
+     * Access gate for the public confirmation endpoints. The routes stay
+     * public (the customer opens them from an email link) but every request
+     * must prove it belongs to this booking via:
+     *  - ?token=  → the booking's confirmation_token (or the token of the
+     *    purchase's primary booking, for multi-tour groups), or
+     *  - ?email=  → the booking's customer email (same gate as bookings.show).
+     * Without this, sequential ids exposed travelers' passports/emails/phones.
+     */
+    private function authorizeBookingAccess(Request $request, Booking $booking): bool
+    {
+        $token = trim((string) ($request->input('token') ?? $request->header('X-Booking-Token', '')));
+        if ($token !== '') {
+            if (
+                $booking->confirmation_token
+                && hash_equals((string) $booking->confirmation_token, $token)
+                && $booking->confirmation_token_expires_at
+                && $booking->confirmation_token_expires_at->isFuture()
+            ) {
+                return true;
+            }
+
+            // Multi-tour purchases: the email link carries the PRIMARY
+            // booking's token, but the page edits every booking in the group.
+            $primary = Booking::where('confirmation_token', $token)
+                ->where('confirmation_token_expires_at', '>', now())
+                ->first();
+            if ($primary) {
+                if ((int) $primary->id === (int) $booking->id) {
+                    return true;
+                }
+                $groupIds = is_array($primary->payment_data ?? null)
+                    ? array_map('intval', (array) ($primary->payment_data['group_booking_ids'] ?? []))
+                    : [];
+                if (in_array((int) $booking->id, $groupIds, true)) {
+                    return true;
+                }
+                $reverseIds = is_array($booking->payment_data ?? null)
+                    ? array_map('intval', (array) ($booking->payment_data['group_booking_ids'] ?? []))
+                    : [];
+                if (in_array((int) $primary->id, $reverseIds, true)) {
+                    return true;
+                }
+            }
+        }
+
+        $email = strtolower(trim((string) $request->input('email', '')));
+        if ($email !== '' && strtolower(trim((string) $booking->customer_email)) === $email) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function denyBookingAccess()
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'Acceso no autorizado a esta reserva.',
+        ], 403);
+    }
+
+    /**
      * Validate hotel location and calculate if it's within radius
      */
     public function validateHotelLocation(Request $request, $bookingId)
@@ -30,6 +92,9 @@ class BookingConfirmationController extends Controller
 
         try {
             $booking = Booking::with('tour')->findOrFail($bookingId);
+            if (!$this->authorizeBookingAccess($request, $booking)) {
+                return $this->denyBookingAccess();
+            }
             $tour = $booking->tour;
 
             // Check if tour has hotel pickup enabled
@@ -109,6 +174,10 @@ class BookingConfirmationController extends Controller
         DB::beginTransaction();
         try {
             $booking = Booking::with('tour')->findOrFail($bookingId);
+            if (!$this->authorizeBookingAccess($request, $booking)) {
+                DB::rollBack();
+                return $this->denyBookingAccess();
+            }
 
             // Delete existing pickup detail if any
             BookingPickupDetail::where('booking_id', $bookingId)->delete();
@@ -173,11 +242,14 @@ class BookingConfirmationController extends Controller
     /**
      * Get pickup details for a booking
      */
-    public function getPickupDetails($bookingId)
+    public function getPickupDetails(Request $request, $bookingId)
     {
         try {
             $pickupDetail = BookingPickupDetail::where('booking_id', $bookingId)->first();
             $booking = Booking::with('tour')->findOrFail($bookingId);
+            if (!$this->authorizeBookingAccess($request, $booking)) {
+                return $this->denyBookingAccess();
+            }
 
             return response()->json([
                 'success' => true,
@@ -257,6 +329,9 @@ class BookingConfirmationController extends Controller
 
         try {
             $booking = Booking::findOrFail($bookingId);
+            if (!$this->authorizeBookingAccess($request, $booking)) {
+                return $this->denyBookingAccess();
+            }
 
             // Delete existing travelers and recreate
             $booking->travelers()->delete();
@@ -298,9 +373,12 @@ class BookingConfirmationController extends Controller
     /**
      * Get travelers for a booking
      */
-    public function getTravelers($bookingId)
+    public function getTravelers(Request $request, $bookingId)
     {
         $booking = Booking::with('travelers')->findOrFail($bookingId);
+        if (!$this->authorizeBookingAccess($request, $booking)) {
+            return $this->denyBookingAccess();
+        }
 
         return response()->json([
             'success' => true,
@@ -314,10 +392,13 @@ class BookingConfirmationController extends Controller
      * pasajeros + recojo + pedidos especiales con un enlace al admin. Deduped
      * via cache (1h TTL) so retries / SPA double-clicks don't spam the inbox.
      */
-    public function notifyTravelersCompleted($bookingId)
+    public function notifyTravelersCompleted(Request $request, $bookingId)
     {
         try {
             $booking = Booking::with(['tour', 'travelers', 'pickupDetail'])->findOrFail($bookingId);
+            if (!$this->authorizeBookingAccess($request, $booking)) {
+                return $this->denyBookingAccess();
+            }
 
             // Persistent dedup: once notified, never re-send for this booking,
             // even if the customer goes back and edits travelers (which they
@@ -356,9 +437,12 @@ class BookingConfirmationController extends Controller
     /**
      * Get full booking details including pickup and travelers (for admin)
      */
-    public function getFullDetails($bookingId)
+    public function getFullDetails(Request $request, $bookingId)
     {
         $booking = Booking::with(['tour', 'pickupDetail', 'travelers'])->findOrFail($bookingId);
+        if (!$this->authorizeBookingAccess($request, $booking)) {
+            return $this->denyBookingAccess();
+        }
 
         // Sibling bookings paid in the same charge (multi-tour cart) so the
         // admin modal can show every tour of the purchase, not just one.
