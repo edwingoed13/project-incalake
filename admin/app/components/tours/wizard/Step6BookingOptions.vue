@@ -999,6 +999,9 @@ const config = useRuntimeConfig()
 // frontend repo and left this fetch with `undefined/admin/...`, which
 // failed silently and surfaced as "Sin resultados" for every search.
 const apiBase = config.public.apiUrl
+// All the variant-grouping endpoints are admin-gated server-side now (they
+// were public by mistake), so every call must carry the operator's token.
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` })
 
 type ParentCandidate = {
   id: number
@@ -1081,7 +1084,7 @@ async function loadChildren() {
   if (!store.tourId || store.tourId === 'new') { linkedChildren.value = []; return }
   childrenLoading.value = true
   try {
-    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/${store.tourId}/children?language=${store.currentLanguage || 'ES'}`)
+    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/${store.tourId}/children?language=${store.currentLanguage || 'ES'}`, { headers: authHeaders() })
     linkedChildren.value = res.data || []
   } catch (e) {
     console.error('load children failed', e)
@@ -1097,7 +1100,7 @@ async function fetchChildCandidates(search = '') {
     if (store.tourId) params.set('exclude_id', String(store.tourId))
     if (store.basicInfo?.cityId) params.set('city_id', String(store.basicInfo.cityId))
     if (search) params.set('search', search)
-    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/eligible-children?${params.toString()}`)
+    const res = await $fetch<{ data: any[] }>(`${apiBase}/admin/tours/eligible-children?${params.toString()}`, { headers: authHeaders() })
     childCandidates.value = res.data || []
   } catch (e) {
     console.error('eligible-children failed', e)
@@ -1120,6 +1123,7 @@ async function attachChild(cand: { id: number; h1_title: string }) {
   try {
     await $fetch(`${apiBase}/admin/tours/${cand.id}/set-parent`, {
       method: 'POST',
+      headers: authHeaders(),
       body: { parent_tour_id: store.tourId },
     })
     childSearchQuery.value = ''
@@ -1139,6 +1143,7 @@ async function detachChild(c: { id: number }) {
   try {
     await $fetch(`${apiBase}/admin/tours/${c.id}/set-parent`, {
       method: 'POST',
+      headers: authHeaders(),
       body: { parent_tour_id: null },
     })
     await loadChildren()
@@ -1165,7 +1170,7 @@ async function fetchParentCandidates(search = '') {
     // variants within one destination. Drop city_id to widen the search.
     if (store.basicInfo?.cityId) params.set('city_id', String(store.basicInfo.cityId))
     if (search) params.set('search', search)
-    const res = await $fetch<{ data: ParentCandidate[] }>(`${apiBase}/admin/tours/eligible-parents?${params.toString()}`)
+    const res = await $fetch<{ data: ParentCandidate[] }>(`${apiBase}/admin/tours/eligible-parents?${params.toString()}`, { headers: authHeaders() })
     parentCandidates.value = res.data || []
   } catch (e) {
     console.error('eligible-parents failed', e)

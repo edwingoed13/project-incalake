@@ -21,6 +21,9 @@ interface AISettings {
 const config = useRuntimeConfig()
 const toast = useToast()
 
+// These endpoints are admin-gated server-side (they expose the AI api_key).
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` })
+
 const providers = [
   {
     id: 'openai',
@@ -102,7 +105,7 @@ const selectProvider = (providerId: string) => {
 const loadSettings = async () => {
   isLoading.value = true
   try {
-    const response = await fetch(`${config.public.apiUrl}/ai-translation-settings`)
+    const response = await fetch(`${config.public.apiUrl}/ai-translation-settings`, { headers: authHeaders() })
     if (response.ok) {
       const data = await response.json()
       if (data.data) {
@@ -137,7 +140,7 @@ const saveSettings = async () => {
   try {
     const response = await fetch(`${config.public.apiUrl}/ai-translation-settings`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(settings.value),
     })
     if (response.ok) {
@@ -177,7 +180,7 @@ const testConnection = async () => {
   try {
     const response = await fetch(`${config.public.apiUrl}/ai-translation-test`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
         provider: settings.value.provider,
         api_key: settings.value.api_key,

@@ -53,6 +53,8 @@ const API_BASE_URL = config.public.apiUrl
 const FRONTEND_URL = (config.public as any).frontendUrl || 'https://incalake-frontend.vercel.app'
 const toast = useToast()
 const { confirm } = useConfirm()
+// clone / delete-translation are admin-gated server-side now.
+const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` })
 
 const slugifyCity = (name: string) => (name || '')
   .toLowerCase()
@@ -219,7 +221,7 @@ const confirmDeleteTranslation = async (tour: Tour, tr: Translation) => {
   })
   if (!ok) return
   try {
-    const response: any = await $fetch(`${API_BASE_URL}/tours/${tour.id}/translation/${tr.language_id}`, { method: 'DELETE' })
+    const response: any = await $fetch(`${API_BASE_URL}/tours/${tour.id}/translation/${tr.language_id}`, { method: 'DELETE', headers: authHeaders() })
     if (response?.success) {
       toast.add({
         title: response.tour_deleted ? 'Tour eliminado' : 'Traducción eliminada',
@@ -279,6 +281,7 @@ const performClone = async () => {
       : `/tours/${selectedTour.value.id}/clone`
     const response: any = await $fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
+      headers: authHeaders(),
       body: { language_id: selectedLanguage.value.id, clone_type: cloneType.value },
     })
     if (response?.success) {

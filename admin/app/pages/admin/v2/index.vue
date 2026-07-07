@@ -115,9 +115,12 @@ const trendColor = (trend: number): 'success' | 'error' | 'neutral' => {
 const trendIcon = (trend: number) =>
   trend > 0 ? 'i-lucide-trending-up' : trend < 0 ? 'i-lucide-trending-down' : 'i-lucide-minus'
 
+// Dashboard endpoints are admin-gated server-side now.
+const dashHeaders = () => ({ Authorization: `Bearer ${authStore.token || localStorage.getItem('auth_token') || ''}` })
+
 const fetchStats = async () => {
   try {
-    const data = await $fetch<DashboardStats>(`${apiUrl}/dashboard/stats`)
+    const data = await $fetch<DashboardStats>(`${apiUrl}/dashboard/stats`, { headers: dashHeaders() })
     dashboardData.value = data
   } catch (error) {
     console.error('Error loading dashboard stats:', error)
@@ -134,7 +137,7 @@ const fetchStats = async () => {
 
 const fetchRecentBookings = async () => {
   try {
-    const data = await $fetch<RecentBooking[]>(`${apiUrl}/dashboard/recent-bookings`)
+    const data = await $fetch<RecentBooking[]>(`${apiUrl}/dashboard/recent-bookings`, { headers: dashHeaders() })
     recentBookings.value = data || []
   } catch (error) {
     console.error('Error loading recent bookings:', error)
@@ -145,7 +148,7 @@ const fetchRecentBookings = async () => {
 
 const fetchSalesChart = async () => {
   try {
-    const data = await $fetch<SalesChartResponse>(`${apiUrl}/dashboard/sales-chart`)
+    const data = await $fetch<SalesChartResponse>(`${apiUrl}/dashboard/sales-chart`, { headers: dashHeaders() })
     salesChart.value = data
   } catch (error) {
     console.error('Error loading sales chart:', error)

@@ -487,7 +487,9 @@ const generateTourCode = async (langId: number) => {
   if (!langId) return
   
   try {
-    const response: any = await $fetch(`${defaultApiUrl}/admin/tours/generate-code?language_id=${langId}`)
+    const response: any = await $fetch(`${defaultApiUrl}/admin/tours/generate-code?language_id=${langId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` },
+    })
     if (response.success) {
       store.basicInfo.code = response.data.code
     }
