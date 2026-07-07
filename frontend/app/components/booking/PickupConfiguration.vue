@@ -232,6 +232,8 @@ const props = defineProps<{ bookingId: number | string }>()
 const emit = defineEmits<{ completed: [data: any]; error: [msg: string] }>()
 
 const { api } = useApi()
+// Access proof for the token/email-gated confirmation endpoints (anti-IDOR).
+const { accessQs } = useBookingAccess()
 const hotelSearchInput = ref<HTMLInputElement | null>(null)
 const mapContainer = ref<HTMLElement | null>(null)
 const meetingMapContainer = ref<HTMLElement | null>(null)
@@ -279,7 +281,7 @@ async function resetMethod() {
 
 async function loadPickupDetails() {
   try {
-    const res = await api(`/bookings/${props.bookingId}/pickup-details`)
+    const res = await api(`/bookings/${props.bookingId}/pickup-details${accessQs}`)
     const data = (res as any)?.data || res
     tourConfig.value = data.tour_config || {}
 

@@ -2,6 +2,8 @@ import { ref, computed, type Ref } from 'vue'
 
 export function useHotelPickupValidation(bookingId: Ref<number | string>, tourConfig: Ref<any>) {
   const { api } = useApi()
+  // Access proof for the token/email-gated confirmation endpoints (anti-IDOR).
+  const { accessQs } = useBookingAccess()
 
   const hotelValidation = ref<any>(null)
   const pickupChoice = ref<string | null>(null)
@@ -104,7 +106,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
     isValidating.value = true
     validationError.value = null
     try {
-      const res = await api(`/bookings/${bookingId.value}/validate-hotel`, {
+      const res = await api(`/bookings/${bookingId.value}/validate-hotel${accessQs}`, {
         method: 'POST',
         body: hotelData
       })
@@ -149,7 +151,7 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
         payload.distance = hotelValidation.value.distance
         payload.extra_cost = hotelValidation.value.extra_cost
       }
-      await api(`/bookings/${bookingId.value}/save-pickup`, { method: 'POST', body: payload })
+      await api(`/bookings/${bookingId.value}/save-pickup${accessQs}`, { method: 'POST', body: payload })
       return true
     } catch (e: any) {
       saveError.value = 'Error al guardar la configuración de recojo'

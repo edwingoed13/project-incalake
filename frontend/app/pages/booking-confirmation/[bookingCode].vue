@@ -513,6 +513,9 @@ const config = useRuntimeConfig()
 const bookingCode = route.params.bookingCode as string
 const email = route.query.email as string
 const token = route.query.token as string
+// Proof of access appended to every /bookings/{id}/* confirmation call — the
+// backend gates those endpoints by token/email now (anti-IDOR).
+const { accessQs } = useBookingAccess()
 
 const currentStep = ref(0)
 const completedSteps = ref(new Set<number>())
@@ -766,7 +769,7 @@ watch(booking, async (b) => {
     let anySaved = false
     await Promise.all(purchaseTours.value.map(async (tr: any) => {
       try {
-        const res: any = await api(`/bookings/${tr.id}/travelers`)
+        const res: any = await api(`/bookings/${tr.id}/travelers${accessQs}`)
         const existing = res?.data || []
         if (existing.length) {
           travelersByTour.value[tr.id] = existing.map(mapTraveler)
@@ -780,7 +783,7 @@ watch(booking, async (b) => {
 
   // SINGLE TOUR: full details (travelers + pickup)
   try {
-    const details = await api(`/bookings/${b.id}/full-details`)
+    const details = await api(`/bookings/${b.id}/full-details${accessQs}`)
     const data = (details as any)?.data || details
 
     if (data?.travelers?.length) {
@@ -910,12 +913,12 @@ async function commitTravelers() {
     if (isMultiTour.value) {
       for (const tr of purchaseTours.value) {
         const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
-        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+        await api(`/bookings/${tr.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid } })
         if (tr.id) ids.push(tr.id)
       }
     } else {
       const valid = travelers.value.filter(tr => tr.full_name?.trim())
-      await api(`/bookings/${booking.value.id}/travelers`, { method: 'POST', body: { travelers: valid } })
+      await api(`/bookings/${booking.value.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid } })
       if (booking.value?.id) ids.push(booking.value.id)
     }
     completedSteps.value.add(2)
@@ -925,7 +928,7 @@ async function commitTravelers() {
     // a retry or accidental double-click won't spam reservations@). We don't
     // await it: the customer continues to step 3 even if the email fails.
     for (const id of ids) {
-      api(`/bookings/${id}/notify-completed`, { method: 'POST' }).catch(() => {})
+      api(`/bookings/${id}/notify-completed${accessQs}`, { method: 'POST' }).catch(() => {})
     }
   } catch (e: any) {
     travelerError.value = t('error_saving')
@@ -947,11 +950,11 @@ async function runAutoSave() {
       for (const tr of purchaseTours.value) {
         const list = travelersByTour.value[tr.id] || []
         if (!list[0]?.full_name?.trim()) continue
-        await api(`/bookings/${tr.id}/travelers`, { method: 'POST', body: { travelers: list.filter((x: any) => x.full_name?.trim()) } })
+        await api(`/bookings/${tr.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: list.filter((x: any) => x.full_name?.trim()) } })
         savedAny = true
       }
     } else if (travelers.value[0]?.full_name?.trim()) {
-      await api(`/bookings/${booking.value.id}/travelers`, { method: 'POST', body: { travelers: travelers.value.filter(x => x.full_name?.trim()) } })
+      await api(`/bookings/${booking.value.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: travelers.value.filter(x => x.full_name?.trim()) } })
       savedAny = true
     }
     autoSaveState.value = savedAny ? 'saved' : 'idle'
