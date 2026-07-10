@@ -128,6 +128,26 @@
         </div>
       </div>
 
+      <!-- In-page section nav (sticky): jump straight to a section instead of
+           scrolling the whole page. Hidden when there's little content. -->
+      <nav
+        v-if="sectionNav.length > 2"
+        class="sticky top-[56px] lg:top-[68px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800"
+      >
+        <div class="flex gap-1 overflow-x-auto scrollbar-hide">
+          <a
+            v-for="s in sectionNav"
+            :key="s.id"
+            :href="`#${s.id}`"
+            @click.prevent="scrollToSection(s.id)"
+            class="shrink-0 px-3.5 py-3 text-[13px] font-bold whitespace-nowrap border-b-2 -mb-px transition-colors"
+            :class="activeSection === s.id ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'"
+          >
+            {{ s.label }}
+          </a>
+        </div>
+      </nav>
+
       <!-- Two Column Layout: Left Content | Right Booking Sidebar -->
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
         <!-- Left Column: Multimedia + Content -->
@@ -184,13 +204,19 @@
 
           <!-- Content Sections -->
           <!-- Tour Description -->
-          <TourDescription v-if="tour.long_description || tour.description" :tour="tour" />
+          <div v-if="tour.long_description || tour.description" id="descripcion" class="scroll-mt-32">
+            <TourDescription :tour="tour" />
+          </div>
 
           <!-- Tour Itinerary -->
-          <TourItinerary v-if="tour.itinerary" :tour="tour" />
+          <div v-if="tour.itinerary" id="itinerario" class="scroll-mt-32">
+            <TourItinerary :tour="tour" />
+          </div>
 
           <!-- What's Included / Not Included -->
-          <TourIncludes v-if="tour.what_includes || tour.what_not_includes" :tour="tour" />
+          <div v-if="tour.what_includes || tour.what_not_includes" id="incluye" class="scroll-mt-32">
+            <TourIncludes :tour="tour" />
+          </div>
 
           <!-- Important Information / Recommendations -->
           <TourRecommendations :tour="tour" />
@@ -223,12 +249,14 @@
           </section>
 
           <!-- Location Map -->
-          <TourLocation :tour="tour" />
+          <div id="ubicacion" class="scroll-mt-32">
+            <TourLocation :tour="tour" />
+          </div>
 
           <hr class="border-slate-200 dark:border-slate-800" />
 
           <!-- Reviews Section -->
-          <section id="reviews" class="scroll-mt-24">
+          <section id="reviews" class="scroll-mt-32">
             <h3 class="text-xl font-bold mb-3 md:mb-4">{{ t('customer_reviews') }}</h3>
 
             <!-- Rating summary -->
@@ -691,6 +719,37 @@ function scrollToReviews() {
     document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
+
+// --- In-page section navigation (sticky anchor bar) -----------------------
+const sectionNav = computed(() => {
+  const tv = tour.value
+  const items: { id: string; label: string }[] = []
+  if (tv?.long_description || tv?.description) items.push({ id: 'descripcion', label: 'Descripción' })
+  if (tv?.itinerary) items.push({ id: 'itinerario', label: 'Itinerario' })
+  if (tv?.what_includes || tv?.what_not_includes) items.push({ id: 'incluye', label: 'Incluye' })
+  items.push({ id: 'ubicacion', label: 'Ubicación' })
+  if (tourReviews.value.length) items.push({ id: 'reviews', label: 'Opiniones' })
+  return items
+})
+const activeSection = ref('')
+function scrollToSection(id: string) {
+  if (import.meta.client) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+// Highlight the section currently in view.
+let sectionObserver: IntersectionObserver | null = null
+onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined') return
+  sectionObserver = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) activeSection.value = (e.target as HTMLElement).id
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 })
+  nextTick(() => {
+    for (const s of sectionNav.value) {
+      const el = document.getElementById(s.id)
+      if (el) sectionObserver!.observe(el)
+    }
+  })
+})
+onBeforeUnmount(() => sectionObserver?.disconnect())
 
 // Booking widget state
 const selectedDate = ref('')

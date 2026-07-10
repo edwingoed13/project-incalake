@@ -30,7 +30,9 @@
 - [x] 0.9 Throttle availability-inquiry 5/min + grupo confirmación 30/min
 - [x] 0.10 CORS: patrón restringido a incalake-frontend*/incalake-admin*.vercel.app
 - [x] 0.11 PHP lint OK + builds frontend/admin OK (falta prueba manual en localhost)
-- [ ] 0.12 Commit/push + migrate.php (¡OBLIGATORIO: promoción de admins!) + purge-cache.php + smoke prod: (a) login admin y navegar dashboard/tours/Step6, (b) endpoint admin sin token → 401, (c) confirmación de una reserva vieja CON su link (token) → funciona, (d) GET /api/bookings/1/full-details sin token → 403, (e) crear reserva de prueba → total correcto
+- [x] 0.12 Deploy hecho (migrate + purge OK). Smoke: (a)✅ admin navega y Step6 carga/busca, (b)✅ dashboard/stats bloqueado (redirige a login del web guard en navegador; 401 JSON vía SPA — normalizar en F6), (c)✅ confirmación carga con ?email= (el token de la reserva vieja estaba EXPIRADO por el TTL de 7 días preexistente — no relacionado al deploy), (d)✅ full-details sin token → 403, (e)✅ reserva de prueba en prod: total correcto → **FASE 0 COMPLETA**
+- [x] 0.12b fix(admin): dropdown de variantes del Step 6 se abre hacia arriba (quedaba tras la barra Anterior/Siguiente) — 3e5fc3d
+- [ ] 0.14 (F1 candidata) Extender TTL del confirmation_token (7 días es corto si reservan con semanas de anticipación) o auto-renovar al pagar
 - [ ] 0.13 (Usuario) Verificar `QUEUE_CONNECTION` en .env prod: si `database` → falta worker/cron; si `sync` → emails bloquean checkout
 > Nota deploy: correr migrate.php ANTES de probar login admin (la promoción de rol). Si el admin quedara bloqueado igual: revisar en BD `users.role` del usuario que usan.
 

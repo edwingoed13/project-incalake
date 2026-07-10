@@ -47,6 +47,12 @@ const isInline = computed(() => props.variant !== 'sidebar')
 const atMax = computed(() => props.totalPax >= props.maxPax)
 // Tours flagged require_availability replace instant booking with an inquiry.
 const requiresInquiry = computed(() => !!props.tour?.require_availability)
+// Partial payment: the tour takes a deposit now (advance %) and the rest on the
+// tour day. Only meaningful when the advance is a real fraction (0 < p < 100).
+const partialPct = computed(() => {
+  const p = Number(props.tour?.advance_payment_percentage)
+  return Number.isFinite(p) && p > 0 && p < 100 ? p : null
+})
 const offerLabel = computed(() => {
   const o = props.activeOffer
   if (!o) return ''
@@ -164,6 +170,15 @@ const offerLabel = computed(() => {
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
           </span>
         </div>
+      </div>
+
+      <!-- Partial payment: pay a deposit now, the rest on the tour day -->
+      <div v-if="partialPct && !requiresInquiry" class="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+        <Icon name="material-symbols:payments-outline" class="size-4 text-amber-600 shrink-0 mt-0.5" />
+        <p class="text-xs text-amber-800 leading-snug">
+          <span class="font-bold">Pago parcial disponible:</span>
+          reserva con el <span class="font-bold">{{ partialPct }}%</span> ahora y paga el resto el día del tour en efectivo.
+        </p>
       </div>
 
       <!-- Validation error (localized, inline) — only relevant to the instant

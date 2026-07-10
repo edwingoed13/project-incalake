@@ -5,13 +5,29 @@
       {{ t('description') }}
     </h2>
     <div class="prose md:prose-lg max-w-2xl min-w-0 text-slate-600 dark:text-slate-400">
-      <div class="min-w-0 max-w-full overflow-hidden" v-html="sanitizedDescription"></div>
+      <div
+        ref="contentEl"
+        class="min-w-0 max-w-full overflow-hidden relative transition-[max-height] duration-300"
+        :class="isLong && !expanded ? 'max-h-[300px]' : 'max-h-none'"
+        v-html="sanitizedDescription"
+      ></div>
+      <!-- Fade-out hint that there's more when collapsed -->
+      <div v-if="isLong && !expanded" class="h-12 -mt-12 relative bg-gradient-to-t from-white dark:from-slate-900 to-transparent pointer-events-none"></div>
     </div>
+    <button
+      v-if="isLong"
+      type="button"
+      @click="expanded = !expanded"
+      class="mt-3 text-sm font-bold text-primary hover:underline inline-flex items-center gap-1"
+    >
+      {{ expanded ? 'Ver menos' : 'Ver más' }}
+      <Icon name="material-symbols:expand-more" class="size-4 transition-transform" :class="{ '-rotate-180': expanded }" aria-hidden="true" />
+    </button>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, nextTick } from 'vue'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
 const { t } = useI18n()
 
@@ -22,6 +38,18 @@ interface Props {
 const props = defineProps<Props>()
 
 const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_description || props.tour.description || ''))
+
+// "Ver más" clamp: start clamped (avoids a flash on long text), then measure —
+// short descriptions drop the clamp + button entirely.
+const contentEl = ref<HTMLElement | null>(null)
+const expanded = ref(false)
+const isLong = ref(true)
+onMounted(() => {
+  nextTick(() => {
+    const el = contentEl.value
+    if (el) isLong.value = el.scrollHeight > 320
+  })
+})
 </script>
 
 <style scoped>

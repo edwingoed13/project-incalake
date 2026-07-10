@@ -1,19 +1,25 @@
 <template>
   <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4 md:mb-6 flex items-center gap-2">
-      <ShieldCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
-      Cancellation Policies
-    </h2>
-    <div class="prose md:prose-lg max-w-2xl text-slate-600 dark:text-slate-400">
+    <button type="button" @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between gap-2 text-left">
+      <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <ShieldCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
+        Políticas de cancelación
+      </h2>
+      <Icon name="material-symbols:expand-more" class="size-6 text-slate-400 transition-transform shrink-0" :class="{ '-rotate-180': open }" aria-hidden="true" />
+    </button>
+    <div v-show="open" class="prose md:prose-lg max-w-2xl text-slate-600 dark:text-slate-400 mt-5 md:mt-6">
       <div v-html="sanitizedPolicies"></div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { ShieldCheckIcon } from '@heroicons/vue/24/outline'
 // sanitizeHtml is auto-imported
+
+// Collapsed by default — reference content, expand on demand.
+const open = ref(false)
 
 interface Props {
   tour: any
