@@ -75,8 +75,10 @@ class Booking extends Model
             // Auto-generate confirmation token if not set
             if (empty($booking->confirmation_token)) {
                 $booking->confirmation_token = self::generateConfirmationToken();
-                // Token expira en 7 días (balance entre seguridad y usabilidad)
-                $booking->confirmation_token_expires_at = now()->addDays(7);
+                // 30 días: los clientes reservan con semanas de anticipación y
+                // completan sus datos después — 7 días dejaba links del email
+                // muertos antes del tour.
+                $booking->confirmation_token_expires_at = now()->addDays(30);
             }
 
             // Extract security token from booking_code if it was generated
@@ -192,6 +194,10 @@ class Booking extends Model
             'payment_data' => $paymentData,
             'paid_at' => now(),
             'status' => 'confirmed',
+            // The confirmation email (with the tokened link) goes out at payment
+            // time — restart the 30-day window so the link outlives late
+            // traveler-data updates.
+            'confirmation_token_expires_at' => now()->addDays(30),
         ]);
     }
 
