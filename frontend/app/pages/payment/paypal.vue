@@ -25,7 +25,7 @@
             <h3 class="font-bold text-red-900 dark:text-red-100 mb-1">Error Loading Payment</h3>
             <p class="text-red-700 dark:text-red-300">{{ error }}</p>
             <button
-              @click="router.push('/cart')"
+              @click="router.push(localePath('/cart'))"
               class="mt-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               Return to Cart
@@ -97,22 +97,44 @@
               </div>
             </div>
 
-            <!-- Total -->
+            <!-- Total — same breakdown/format as the Culqi page -->
             <div class="pt-2">
+              <div class="space-y-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-500">{{ t('subtotal') }} ({{ allBookings.length }} {{ allBookings.length === 1 ? t('booking') : t('bookings') }})</span>
+                  <span class="font-semibold">{{ currencyStore.formatConverted(subtotalAmount) }}</span>
+                </div>
+                <div v-if="taxAmount > 0" class="flex justify-between text-xs">
+                  <span class="text-slate-500 flex items-center gap-1">
+                    {{ t('transaction_fees') }}
+                    <AppPopover :label="t('transaction_fees')">
+                      {{ t('transaction_fees_info') }}
+                    </AppPopover>
+                  </span>
+                  <span class="font-semibold">{{ currencyStore.formatConverted(taxAmount) }}</span>
+                </div>
+              </div>
               <div class="flex justify-between items-center">
                 <span class="text-lg font-bold text-primary-light dark:text-primary-dark">
-                  {{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : 'Total' }}
+                  {{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay') }}
                 </span>
                 <span class="text-2xl font-black text-primary">
-                  ${{ payNowAmount.toFixed(2) }} {{ booking.pricing?.currency || 'USD' }}
-                  <span v-if="allBookings.length > 1" class="block text-xs font-semibold text-slate-500 mt-1">
-                    {{ allBookings.length }} tours
-                  </span>
+                  {{ currencyStore.formatConverted(payNowAmount) }}
+                  <span v-if="!currencyStore.isForeignCurrency" class="text-sm font-semibold text-slate-400">USD</span>
                 </span>
               </div>
               <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
                 <span>Saldo a pagar en efectivo el día del tour</span>
-                <span class="font-semibold">${{ balanceAmount.toFixed(2) }}</span>
+                <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
+              </div>
+              <!-- PayPal always captures in USD; show the real charge when the
+                   display currency differs (same notice as Culqi). -->
+              <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
+                <div class="flex-1">
+                  <p class="text-[11px] text-amber-800 leading-tight font-semibold">{{ t('payment_usd_notice') }}</p>
+                  <p class="text-[10px] text-amber-700 mt-0.5">≈ ${{ payNowAmount.toFixed(2) }} USD</p>
+                </div>
               </div>
             </div>
           </div>
@@ -123,6 +145,21 @@
           <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
           <div v-if="hasAdvanceOption" class="mb-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
             <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+            <!-- Full payment first = the default/recommended (same as Culqi) -->
+            <label
+              class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+              :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+            >
+              <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                  Pagar todo ahora
+                  <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">Recomendado</span>
+                </p>
+                <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+              </div>
+              <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(fullTotal) }}</span>
+            </label>
             <label
               class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
               :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
@@ -130,20 +167,9 @@
               <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
               <div class="flex-1">
                 <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar adelanto</p>
-                <p class="text-[11px] text-slate-500">Saldo ${{ (fullTotal - advanceTotal).toFixed(2) }} en efectivo el día del tour</p>
+                <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(fullTotal - advanceTotal) }} en efectivo el día del tour</p>
               </div>
-              <span class="text-sm font-black text-primary">${{ advanceTotal.toFixed(2) }}</span>
-            </label>
-            <label
-              class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
-              :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
-            >
-              <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
-              <div class="flex-1">
-                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar todo ahora</p>
-                <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
-              </div>
-              <span class="text-sm font-black text-primary">${{ fullTotal.toFixed(2) }}</span>
+              <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
             </label>
 
             <!-- Partial payment: the balance is collected in person, cash only -->
@@ -249,6 +275,9 @@ const router = useRouter()
 const route = useRoute()
 const bookingStore = useBookingStore()
 const cartStore = useCartStore()
+const currencyStore = useCurrencyStore()
+const localePath = useLocalePath()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -260,6 +289,14 @@ const paymentConfig = ref<any>(null)
 
 // Multi-tour cart: one PayPal capture for the SUM of every booking. The
 // customer can pay the full total or the advance (deposit) when offered.
+// Breakdown mirrors the Culqi page (subtotal + transaction fees) so both
+// payment methods present the money identically.
+const subtotalAmount = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.subtotal || b.pricing?.total || 0), 0)
+)
+const taxAmount = computed(() =>
+  allBookings.value.reduce((sum, b) => sum + (b.pricing?.tax_amount || 0), 0)
+)
 const fullTotal = computed(() =>
   allBookings.value.reduce((sum, b) => sum + (b.pricing?.total || 0), 0)
 )
@@ -359,7 +396,7 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
     // One code in the URL — the confirmation page resolves the whole
     // multi-tour group from the payment record on the backend.
     const email = route.query.email as string || booking.value.customer?.email || ''
-    router.push(`/booking-confirmation/${allBookings.value[0].booking_code}?email=${encodeURIComponent(email)}`)
+    router.push(`${localePath(`/booking-confirmation/${allBookings.value[0].booking_code}`)}?email=${encodeURIComponent(email)}`)
 
   } catch (err: any) {
     console.error('Payment confirmation error:', err)

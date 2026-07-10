@@ -215,7 +215,9 @@ watch(() => wishlistStore.items.map(i => i.id), (ids) => {
 
 function tourLink(item: any) {
   if (item.city_slug && item.slug) return localePath(`/${item.city_slug}/${item.slug}`)
-  if (item.slug) return localePath(`/tours/${item.slug}`)
+  // Legacy items saved before city_slug existed: default to Puno (the same
+  // fallback the rest of the site uses). The old /tours/{slug} page is gone.
+  if (item.slug) return localePath(`/puno/${item.slug}`)
   return localePath('/')
 }
 

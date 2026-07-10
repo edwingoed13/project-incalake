@@ -327,9 +327,11 @@ const modalTitle = computed(() => {
         </p>
       </div>
 
-      <!-- Submit Button -->
+      <!-- Submit Button — really disabled until terms are accepted (it used to
+           only LOOK disabled while staying clickable) -->
       <button
         type="submit"
+        :disabled="!acceptedTerms"
         class="w-full font-black py-4 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
         :class="acceptedTerms ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/20' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'"
       >

@@ -527,7 +527,7 @@ function getImageUrl(path: string) {
             <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
             {{ t('tour_policies') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.policies"></div>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.policies)"></div>
         </div>
 
         <div v-if="policiesItem.cancellationPolicy">
@@ -535,7 +535,7 @@ function getImageUrl(path: string) {
             <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
             {{ t('cancellation_policy') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="policiesItem.cancellationPolicy"></div>
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.cancellationPolicy)"></div>
         </div>
 
         <!-- Standard policy (default when nothing configured) -->
@@ -576,7 +576,7 @@ function getImageUrl(path: string) {
               <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
               {{ t('tour_policies') }}
             </h4>
-            <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="p.policies"></div>
+            <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.policies)"></div>
           </div>
 
           <div v-if="p.cancellationPolicy">
@@ -584,7 +584,7 @@ function getImageUrl(path: string) {
               <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
               {{ t('cancellation_policy') }}
             </h4>
-            <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="p.cancellationPolicy"></div>
+            <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.cancellationPolicy)"></div>
           </div>
 
           <div v-if="!p.policies && !p.cancellationPolicy && p.policyType !== 'custom'">

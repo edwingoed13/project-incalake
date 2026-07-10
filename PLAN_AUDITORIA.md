@@ -36,13 +36,14 @@
 - [ ] 0.13 (Usuario) Verificar `QUEUE_CONNECTION` en .env prod: si `database` → falta worker/cron; si `sync` → emails bloquean checkout
 > Nota deploy: correr migrate.php ANTES de probar login admin (la promoción de rol). Si el admin quedara bloqueado igual: revisar en BD `users.role` del usuario que usan.
 
-## 🔴 FASE 1 — Bugs frontend de pago
-- [ ] 1.1 PayPal: usar `currencyStore.formatConverted` (no `$`+toFixed) + mostrar desglose subtotal/tasas (paypal.vue:100-117)
-- [ ] 1.2 PayPal: default `paymentMode='full'` + orden/badge como Culqi (paypal.vue:313 vs culqi.vue:320)
-- [ ] 1.3 Checkout: disabled real en CTA (CheckoutForm.vue:331 sin :disabled)
-- [ ] 1.4 Cart: `sanitizeHtml` en los v-html de políticas (cart.vue:530,538,579,587)
-- [ ] 1.5 `localePath` en redirects de pago (checkout.vue:46,189,191; culqi.vue:16,343; paypal.vue:28,362)
-- [ ] 1.6 Eliminar legacy `tours/[slug].vue` + fix fallback saved.vue:218 (+ revisar 3 CulqiCheckout*: dejar solo CulqiCheckoutFixed si los otros no se usan)
+## 🔴 FASE 1 — Bugs frontend de pago — CÓDIGO COMPLETO (pendiente revisión + push)
+- [x] 1.1 PayPal: formatConverted en todos los montos + desglose subtotal/tasas + aviso USD en moneda extranjera (espejo de Culqi)
+- [x] 1.2 PayPal: "Pagar todo" primero + badge Recomendado (default ya era 'full')
+- [x] 1.3 Checkout: `:disabled="!acceptedTerms"` real en el CTA
+- [x] 1.4 Cart: sanitizeHtml en los 4 v-html de políticas
+- [x] 1.5 localePath en los 7 redirects (checkout ×3, culqi ×2, paypal ×2)
+- [x] 1.6 Borrados: legacy tours/[slug].vue (985 líneas), CulqiCheckout.vue y CulqiCheckoutSimple.vue (muertos); fallback de saved.vue → /puno/{slug}
+- [x] 1.7 TTL confirmation_token 7d→30d + renovación al markAsPaid (backend)
 
 ## 🟠 FASE 2 — Simetría de tokens (pedido original)
 - [ ] 2.1 Definir en `frontend main.css`: `.btn-primary/.btn-secondary` reales (rounded-xl, min-h-[52px], font-extrabold, hover bg-primary-dark), `.section-title` (text-2xl md:text-3xl font-black tracking-tight), `.micro-label` (text-[11px]), `.input-base` — y limpiar el `.btn` indigo muerto que ya existe

@@ -43,7 +43,7 @@
           {{ t('checkout.empty_cart_desc') }}
         </p>
         <button
-          @click="router.push('/tours')"
+          @click="router.push(localePath('/tours'))"
           class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-all duration-200"
         >
           <Icon name="material-symbols:explore-outline" class="text-2xl" />
@@ -111,6 +111,7 @@ useHead({
 })
 
 const router = useRouter()
+const localePath = useLocalePath()
 const cartStore = useCartStore()
 const bookingStore = useBookingStore()
 
@@ -186,9 +187,9 @@ const handleCheckoutSubmit = async (formData: any) => {
     const codesParam = bookingCodes.join(',')
 
     if (paymentMethod === 'culqi') {
-      router.push(`/payment/culqi?booking=${codesParam}&email=${encodedEmail}`)
+      router.push(`${localePath('/payment/culqi')}?booking=${codesParam}&email=${encodedEmail}`)
     } else if (paymentMethod === 'paypal') {
-      router.push(`/payment/paypal?booking=${codesParam}&email=${encodedEmail}`)
+      router.push(`${localePath('/payment/paypal')}?booking=${codesParam}&email=${encodedEmail}`)
     } else {
       throw new Error('Invalid payment method')
     }

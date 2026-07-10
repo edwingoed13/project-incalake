@@ -13,7 +13,7 @@
         <Icon name="material-symbols:error-outline" class="text-red-400 text-5xl mb-4" />
         <h3 class="text-lg font-bold text-slate-800 mb-2">{{ t('payment_error') }}</h3>
         <p class="text-sm text-slate-500 mb-6">{{ error }}</p>
-        <button @click="router.push('/cart')" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">
+        <button @click="router.push(localePath('/cart'))" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl text-sm">
           {{ t('return_cart') }}
         </button>
       </div>
@@ -219,6 +219,7 @@ import { useRouter, useRoute } from 'vue-router'
 
 const { t } = useI18n()
 const currencyStore = useCurrencyStore()
+const localePath = useLocalePath()
 
 useHead({
   title: 'Payment - Complete Your Booking',
@@ -340,7 +341,7 @@ const handlePaymentSuccess = async (token: string, paymentData: any) => {
     // One code in the URL — the confirmation page resolves the whole
     // multi-tour group from the payment record on the backend.
     const email = allBookings.value[0]?.customer?.email || route.query.email
-    router.push(`/booking-confirmation/${allBookings.value[0].booking_code}?email=${encodeURIComponent(email as string)}`)
+    router.push(`${localePath(`/booking-confirmation/${allBookings.value[0].booking_code}`)}?email=${encodeURIComponent(email as string)}`)
   } catch (err: any) {
     error.value = err.message || 'Payment confirmation failed'
     processingPayment.value = false
