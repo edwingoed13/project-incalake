@@ -14,7 +14,7 @@
           <Icon name="material-symbols:explore-outline" class="font-bold text-xl" />
         </div>
         <div class="flex flex-col">
-          <h1 class="text-lg font-black tracking-tighter uppercase italic leading-none text-slate-900">Incalake</h1>
+          <span class="block text-lg font-black tracking-tighter uppercase italic leading-none text-slate-900">Incalake</span>
           <span class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Tours & Experiences</span>
         </div>
       </NuxtLink>

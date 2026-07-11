@@ -492,8 +492,7 @@ function getImageUrl(path: string) {
             <button
               @click="proceedToCheckout"
               :disabled="!acceptedTerms"
-              class="w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
-              :class="acceptedTerms ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:brightness-110' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+              class="btn-primary w-full"
             >
               <Icon name="material-symbols:lock-outline" class="text-lg" />
               {{ t('proceed_checkout') }}

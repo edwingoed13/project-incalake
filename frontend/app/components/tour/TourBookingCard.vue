@@ -193,7 +193,7 @@ const offerLabel = computed(() => {
       <template v-if="requiresInquiry">
         <button
           @click="$emit('inquire')"
-          class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+          class="btn-primary btn-lg w-full hover:shadow-xl hover:shadow-primary/30"
         >
           Consultar disponibilidad
           <Icon name="material-symbols:event-available-outline" class="size-5" />
@@ -206,14 +206,14 @@ const offerLabel = computed(() => {
       <template v-else>
         <button
           @click="$emit('book')"
-          class="w-full min-h-[56px] bg-primary hover:bg-primary-dark text-white font-extrabold text-base py-4 rounded-xl shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] inline-flex items-center justify-center gap-2 tracking-wide"
+          class="btn-primary btn-lg w-full hover:shadow-xl hover:shadow-primary/30"
         >
           RESERVAR AHORA
           <Icon name="material-symbols:arrow-forward" class="size-5" />
         </button>
         <button
           @click="$emit('add-to-cart')"
-          class="w-full mt-2 min-h-[48px] bg-white dark:bg-slate-800 border-2 border-primary text-primary font-bold py-3 rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
+          class="btn-outline-primary w-full mt-2 dark:bg-slate-800"
         >
           <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
           Agregar al carrito

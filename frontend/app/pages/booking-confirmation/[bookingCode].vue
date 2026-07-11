@@ -206,7 +206,7 @@
             {{ t('voucher') }}
           </button>
 
-          <button @click="currentStep = 1" class="w-full bg-primary active:bg-primary/80 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
+          <button @click="currentStep = 1" class="btn-primary w-full">
             {{ t('continue_pickup') }}
             <Icon name="material-symbols:arrow-forward" class="text-lg" />
           </button>
@@ -253,7 +253,7 @@
               <button
                 @click="onPickupCompleted({})"
                 :disabled="configuredCount < purchaseTours.length"
-                class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 active:bg-primary/80 transition-colors"
+                class="btn-primary flex-1"
               >
                 {{ configuredCount < purchaseTours.length ? `Faltan ${purchaseTours.length - configuredCount}` : t('save_continue') }}
               </button>
@@ -427,7 +427,7 @@
                multi-tour forms; normal flow from sm: up. -->
           <div class="flex gap-2 mt-3 sticky bottom-0 z-30 -mx-3 px-3 py-3 bg-slate-50/95 backdrop-blur border-t border-slate-200 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:px-0 sm:py-0 sm:bg-transparent sm:border-0 sm:pb-0 sm:backdrop-blur-none">
             <button @click="currentStep = 1" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('back') }}</button>
-            <button @click="saveTravelers" :disabled="savingTravelers" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:bg-primary/80 active:scale-[0.98] transition-transform">
+            <button @click="saveTravelers" :disabled="savingTravelers" class="btn-primary flex-1">
               <Icon name="material-symbols:progress-activity" v-if="savingTravelers" class="animate-spin text-base" />
               {{ savingTravelers ? t('saving') : t('save_continue') }}
             </button>

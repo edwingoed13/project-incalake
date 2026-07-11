@@ -241,7 +241,7 @@ const openPayment = () => {
       type="button"
       @click="openPayment"
       :disabled="processing || !culqiReady"
-      class="w-full bg-primary hover:brightness-110 disabled:bg-slate-400 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-[0.98]"
+      class="btn-primary btn-lg w-full hover:shadow-xl"
     >
       <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
       <Icon name="material-symbols:hourglass-empty" v-else-if="!culqiReady" class="text-lg animate-pulse" />

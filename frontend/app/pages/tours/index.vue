@@ -151,7 +151,7 @@
       <div v-else-if="error && !tours.length" class="text-center py-16">
         <Icon name="material-symbols:wifi-off" class="text-5xl text-slate-300 mb-3" />
         <h3 class="text-base font-bold text-slate-800 mb-2">{{ t('error_loading') }}</h3>
-        <button @click="refresh()" class="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">{{ t('retry') }}</button>
+        <button @click="refresh()" class="btn-primary">{{ t('retry') }}</button>
       </div>
 
       <!-- Contenido real -->
@@ -160,7 +160,7 @@
       <div v-if="filteredTours.length === 0" class="text-center py-16">
         <Icon name="material-symbols:search-off" class="text-5xl text-slate-300 mb-3" />
         <h3 class="text-base font-bold text-slate-800 mb-2">{{ t('no_tours_found') }}</h3>
-        <button @click="clearFilters" class="px-5 py-2 bg-primary text-white font-bold rounded-xl text-sm">{{ t('clear_filters') }}</button>
+        <button @click="clearFilters" class="btn-primary">{{ t('clear_filters') }}</button>
       </div>
 
       <!-- MOBILE: GetYourGuide-style horizontal cards -->
@@ -358,7 +358,7 @@
         <button
           v-if="mobileVisibleTours.length < filteredTours.length"
           @click="loadMore"
-          class="w-full min-h-[48px] bg-white border-2 border-primary text-primary font-bold rounded-xl text-sm active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2"
+          class="btn-outline-primary w-full"
         >
           {{ t('load_more') }}
           <Icon name="material-symbols:expand-more" class="text-lg" />

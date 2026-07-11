@@ -30,9 +30,10 @@
       </div>
 
       <div class="relative z-10 text-center max-w-4xl px-4 mb-6 md:mb-8">
-        <h2 class="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-3 md:mb-4 drop-shadow-2xl">
+        <!-- The page's ONE content h1 (the navbar/footer logos are spans now) -->
+        <h1 class="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-3 md:mb-4 drop-shadow-2xl">
           {{ c('hero', 'title', 'home_hero_title') }}
-        </h2>
+        </h1>
         <p class="text-white/85 text-sm sm:text-lg md:text-xl font-medium max-w-2xl mx-auto line-clamp-2">
           {{ c('hero', 'subtitle', 'home_hero_subtitle') }}
         </p>
@@ -57,7 +58,7 @@
           </div>
           <button
             @click="goToTours"
-            class="bg-primary text-white px-4 sm:px-8 min-h-[48px] py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl font-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30 flex items-center gap-2 shrink-0"
+            class="btn-primary shrink-0 px-4 sm:px-8"
             :aria-label="c('search_btn', '', 'home_search_btn')"
           >
             <Icon name="material-symbols:search" class="text-lg" />
@@ -199,7 +200,7 @@
     <section class="py-8 md:py-16 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
         <div class="mb-5 md:mb-10">
-          <h3 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{{ c('destinations', 'title', 'home_destinations_title') }}</h3>
+          <h3 class="section-title">{{ c('destinations', 'title', 'home_destinations_title') }}</h3>
         </div>
 
         <div v-if="cities.length" class="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-5">
@@ -230,8 +231,8 @@
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between gap-3 mb-6 md:mb-8">
           <div class="min-w-0">
-            <p class="text-primary font-black uppercase tracking-[0.2em] text-[11px] mb-1.5">{{ c('featured', 'label', 'home_featured_label') }}</p>
-            <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900">{{ c('featured', 'title', 'home_featured_title') }}</h3>
+            <p class="section-label mb-1.5">{{ c('featured', 'label', 'home_featured_label') }}</p>
+            <h3 class="section-title">{{ c('featured', 'title', 'home_featured_title') }}</h3>
           </div>
           <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-primary/50 transition-all font-bold text-xs sm:text-sm shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
@@ -309,7 +310,7 @@
               <Icon name="material-symbols:sell-outline" class="text-xs align-middle" />
               Special Deals
             </p>
-            <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900">Our Offers</h3>
+            <h3 class="section-title">Our Offers</h3>
           </div>
           <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-green-500/50 transition-all font-bold text-xs sm:text-sm text-green-700 shrink-0">
             {{ c('view_all', '', 'home_view_all') }}
@@ -372,8 +373,8 @@
       <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-10">
           <div>
-            <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">{{ c('testimonials', 'label', 'home_testimonials_label') }}</p>
-            <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">{{ c('testimonials', 'title', 'home_testimonials_title') }}</h3>
+            <p class="section-label mb-2">{{ c('testimonials', 'label', 'home_testimonials_label') }}</p>
+            <h3 class="section-title">{{ c('testimonials', 'title', 'home_testimonials_title') }}</h3>
           </div>
           <div class="hidden sm:flex gap-2">
             <button @click="scrollReviews(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
@@ -430,7 +431,7 @@
               <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
             </svg>
             <div class="min-w-0">
-              <h3 class="text-xl md:text-2xl font-black tracking-tight text-slate-900">{{ t('google_reviews_title') }}</h3>
+              <h3 class="section-title">{{ t('google_reviews_title') }}</h3>
               <p class="flex items-center gap-x-2 gap-y-0.5 text-sm text-slate-500 flex-wrap">
                 <span v-if="googleRating" class="inline-flex items-center gap-1.5">
                   <span class="font-black text-slate-800 tabular-nums">{{ googleRating }}</span>
@@ -484,8 +485,8 @@
     <section v-if="videoTestimonials.length" class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
       <div class="max-w-7xl mx-auto">
         <div class="mb-6 md:mb-10">
-          <p class="text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">{{ c('video_testimonials', 'label', 'home_video_label') }}</p>
-          <h3 class="text-2xl md:text-3xl font-black tracking-tighter text-slate-900">{{ c('video_testimonials', 'title', 'home_video_title') }}</h3>
+          <p class="section-label mb-2">{{ c('video_testimonials', 'label', 'home_video_label') }}</p>
+          <h3 class="section-title">{{ c('video_testimonials', 'title', 'home_video_title') }}</h3>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
           <CommonLiteYouTube
@@ -501,7 +502,7 @@
     <!-- Why Choose Us -->
     <section class="py-8 md:py-12 px-4 md:px-6">
       <div class="max-w-7xl mx-auto">
-        <h3 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-slate-900 text-center mb-6 md:mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
+        <h3 class="section-title text-center mb-6 md:mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
         <div class="flex md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <div v-for="(item, idx) in whyUsItems" :key="idx" class="flex flex-col items-center text-center shrink-0 w-[80%] sm:w-[55%] md:w-auto snap-start bg-slate-50 md:bg-transparent rounded-2xl md:rounded-none p-6 md:p-0">
             <div class="size-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-6 shadow-xl">

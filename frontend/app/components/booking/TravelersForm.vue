@@ -110,7 +110,7 @@ function remove(idx: number) {
       <div class="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
         <!-- Full name: always collected; required for the lead traveler -->
         <div class="md:col-span-2">
-          <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+          <label class="form-label">
             {{ t('full_name') }}<span v-if="traveler.is_leader"> *</span>
           </label>
           <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" placeholder="Nombre completo"
@@ -122,7 +122,7 @@ function remove(idx: number) {
         <!-- Admin-configured fields -->
         <template v-if="showExtras(traveler)">
           <div v-for="key in fields" :key="key" :class="FIELD_DEFS[key].type === 'country' ? 'md:col-span-2' : ''">
-            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+            <label class="form-label">
               {{ FIELD_DEFS[key].label }}<span v-if="traveler.is_leader"> *</span>
             </label>
 
@@ -164,7 +164,7 @@ function remove(idx: number) {
              driven): the customer can leave dietary/access/etc. requests so
              the operator can prepare. Saved into extra_data.special_requests. -->
         <div class="md:col-span-2">
-          <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">
+          <label class="form-label">
             Pedidos especiales <span class="font-normal normal-case text-slate-400">(opcional)</span>
           </label>
           <textarea

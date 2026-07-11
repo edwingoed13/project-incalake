@@ -175,7 +175,7 @@ const modalTitle = computed(() => {
       <!-- First Name + Last Name (international standard) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label for="customer_first_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+          <label for="customer_first_name" class="form-label dark:text-slate-300">
             {{ t('checkout.first_name') }} *
           </label>
           <input
@@ -192,7 +192,7 @@ const modalTitle = computed(() => {
           </p>
         </div>
         <div>
-          <label for="customer_last_name" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+          <label for="customer_last_name" class="form-label dark:text-slate-300">
             {{ t('checkout.last_name') }} *
           </label>
           <input
@@ -212,7 +212,7 @@ const modalTitle = computed(() => {
 
       <!-- Customer Email -->
       <div>
-        <label for="customer_email" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <label for="customer_email" class="form-label dark:text-slate-300">
           {{ t('checkout.email') }} *
         </label>
         <input
@@ -230,7 +230,7 @@ const modalTitle = computed(() => {
 
       <!-- Phone / WhatsApp with integrated country selector -->
       <div>
-        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <label class="form-label dark:text-slate-300">
           {{ t('checkout.phone_whatsapp') }} *
         </label>
         <CheckoutPhoneInput
@@ -249,7 +249,7 @@ const modalTitle = computed(() => {
 
       <!-- Pickup Location (if available) -->
       <div v-if="pickupAvailable">
-        <label for="pickup_location" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <label for="pickup_location" class="form-label dark:text-slate-300">
           {{ t('checkout.pickup_location') }} *
         </label>
         <input
@@ -332,8 +332,7 @@ const modalTitle = computed(() => {
       <button
         type="submit"
         :disabled="!acceptedTerms"
-        class="w-full font-black py-4 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
-        :class="acceptedTerms ? 'bg-primary hover:bg-primary/90 text-white shadow-primary/20' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'"
+        class="btn-primary btn-lg w-full"
       >
         <Icon name="material-symbols:credit-card-outline" class="text-2xl" />
         <span>{{ t('checkout.continue_payment') }}</span>

@@ -45,15 +45,15 @@
 - [x] 1.6 Borrados: legacy tours/[slug].vue (985 líneas), CulqiCheckout.vue y CulqiCheckoutSimple.vue (muertos); fallback de saved.vue → /puno/{slug}
 - [x] 1.7 TTL confirmation_token 7d→30d + renovación al markAsPaid (backend)
 
-## 🟠 FASE 2 — Simetría de tokens (pedido original)
-- [ ] 2.1 Definir en `frontend main.css`: `.btn-primary/.btn-secondary` reales (rounded-xl, min-h-[52px], font-extrabold, hover bg-primary-dark), `.section-title` (text-2xl md:text-3xl font-black tracking-tight), `.micro-label` (text-[11px]), `.input-base` — y limpiar el `.btn` indigo muerto que ya existe
-- [ ] 2.2 Aplicar botón unificado: home (hero, ver-todos), listado (FAB, retry, load-more), detalle (sticky, BookingCard), cart (checkout CTA), CheckoutForm, Culqi, confirmación, footer subscribe
-- [ ] 2.3 Aplicar `.section-title` en headings de home/detalle/listado (elegir rampa única)
-- [ ] 2.4 Unificar micro-labels (rampa: solo text-[11px] y text-xs; eliminar 8/9/10px sueltos donde sea visible móvil)
-- [ ] 2.5 Labels de formulario: una convención (text-xs font-bold uppercase tracking-wider text-slate-600) en CheckoutForm/TravelersForm/Inquiry/cart-edit
-- [ ] 2.6 Inputs: receta única (px-4 py-3 bg-slate-50 border-slate-200 rounded-lg focus:ring-2 ring-primary/30 + focus:border-primary; ≥16px en móvil)
-- [ ] 2.7 Espaciado: py-8 md:py-12 secciones home; gutters px-4 sm:px-6 lg:px-8 en las 3 páginas; pt del navbar consistente
-- [ ] 2.8 Home: h1 semántico (hero → h1, logo navbar → div/span)
+## 🟠 FASE 2 — Simetría de tokens — CÓDIGO COMPLETO (pendiente revisión + push)
+- [x] 2.1 Tokens en main.css: `.btn-primary` (+`.btn-lg`), `.btn-outline-primary`, `.section-title`, `.section-label`, `.form-label`, `.input-base`; bloque indigo muerto eliminado (0 usos verificado)
+- [x] 2.2 Botón unificado en 15 CTAs: TourBookingCard×3, detalle sticky, inquiry submit, Culqi pay, CheckoutForm submit, home hero search, listado retry/clear/load-more, footer subscribe, cart checkout, confirmación×3. Los disabled ahora los maneja el token. (FAB de filtros queda redondo a propósito)
+- [x] 2.3 `.section-title` en 7 headings de home + 4 del detalle; `.section-label` en 3 labels
+- [x] 2.5 `.form-label` en CheckoutForm×5, Inquiry×7, TravelersForm×3
+- [x] 2.6 `.input-base` en Inquiry×7 (CheckoutForm ya ES la receta base y tiene bindings de error-border — no tocado; TravelersForm inputs quedan para F7 por el binding de error)
+- [ ] 2.4 Micro-labels 8/9/10px restantes → se resuelven en F3 con TourCard (los "Desde/from" viven en las tarjetas)
+- [ ] 2.7 Espaciado/gutters — diferido (bajo impacto, alto churn)
+- [x] 2.8 h1 semántico: hero home h2→h1, logo navbar h1→span, logo footer h2→p
 
 ## 🟠 FASE 3 — Componentes compartidos
 - [ ] 3.1 `TourCard.vue` (variants: grid|list|compact|related) + helpers a composable `useTourCard` → reemplazar 7 inline (home×2, listado×3, related, saved)

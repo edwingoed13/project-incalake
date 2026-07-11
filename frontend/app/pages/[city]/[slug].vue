@@ -227,7 +227,7 @@
           <!-- Custom additional sections (admin Step 3) -->
           <section v-if="customSections.length" class="space-y-6">
             <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
-              <h3 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white">{{ section.title }}</h3>
+              <h3 class="section-title dark:text-white">{{ section.title }}</h3>
               <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="sanitizeHtml(section.content)"></div>
             </div>
           </section>
@@ -257,7 +257,7 @@
 
           <!-- Reviews Section -->
           <section id="reviews" class="scroll-mt-32">
-            <h3 class="text-xl font-bold mb-3 md:mb-4">{{ t('customer_reviews') }}</h3>
+            <h3 class="section-title mb-3 md:mb-4">{{ t('customer_reviews') }}</h3>
 
             <!-- Rating summary -->
             <div v-if="tourReviews.length > 0" class="flex items-center gap-3 mb-5 md:mb-6">
@@ -363,7 +363,7 @@
 
       <!-- FAQ (derived from tour data — visible answers match the FAQPage JSON-LD) -->
       <section v-if="faqItems.length" class="mt-16 md:mt-20">
-        <h2 class="text-xl md:text-2xl font-black mb-5 md:mb-8">{{ faqL.title }}</h2>
+        <h2 class="section-title mb-5 md:mb-8">{{ faqL.title }}</h2>
         <div class="space-y-3 max-w-3xl">
           <details
             v-for="(item, i) in faqItems"
@@ -383,7 +383,7 @@
 
       <!-- Related Tours (Full Width) -->
       <section class="mt-16 md:mt-20" v-if="relatedTours.length > 0">
-        <h2 class="text-xl md:text-2xl font-black mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
+        <h2 class="section-title mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
         <div class="flex md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
@@ -450,7 +450,7 @@
         </div>
         <button
           @click="onMobileBottomCta"
-          class="flex-1 min-h-[52px] bg-primary hover:bg-primary-dark text-white font-extrabold py-3 px-5 rounded-xl shadow-md shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wide text-sm"
+          class="btn-primary flex-1"
         >
           {{ tour.require_availability ? 'CONSULTAR' : (selectedDate && selectedTime ? 'RESERVAR' : 'VER FECHAS') }}
           <ArrowRightIcon class="size-4" aria-hidden="true" />

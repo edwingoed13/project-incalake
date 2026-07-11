@@ -10,7 +10,7 @@
                <Icon name="material-symbols:explore-outline" class="font-bold text-3xl" />
             </div>
             <div class="flex flex-col">
-              <h2 class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</h2>
+              <p class="text-2xl font-black tracking-tighter uppercase italic leading-none text-white">Incalake</p>
               <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">{{ t('footer_tagline') }}</span>
             </div>
           </NuxtLink>
@@ -68,7 +68,7 @@
                 :placeholder="t('footer_email_placeholder')"
                 class="w-full bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 rounded-2xl py-3.5 px-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               />
-              <button class="w-full bg-primary text-white min-h-[48px] rounded-2xl font-black uppercase tracking-widest text-[11px] hover:brightness-110 group transition-all active:scale-95 shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+              <button class="btn-primary w-full group">
                  {{ t('footer_subscribe') }}
                  <Icon name="material-symbols:trending-flat" class="text-sm group-hover:translate-x-1 transition-transform" />
               </button>

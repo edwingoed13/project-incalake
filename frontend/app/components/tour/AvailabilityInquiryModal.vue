@@ -102,40 +102,40 @@ async function submit() {
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Fecha deseada</label>
-                <input v-model="form.preferred_date" type="date" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <label class="form-label">Fecha deseada</label>
+                <input v-model="form.preferred_date" type="date" class="input-base" />
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Adultos</label>
-                  <input v-model.number="form.adults" type="number" min="1" max="99" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <label class="form-label">Adultos</label>
+                  <input v-model.number="form.adults" type="number" min="1" max="99" class="input-base" />
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Niños</label>
-                  <input v-model.number="form.children" type="number" min="0" max="99" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <label class="form-label">Niños</label>
+                  <input v-model.number="form.children" type="number" min="0" max="99" class="input-base" />
                 </div>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Nombre completo *</label>
-              <input v-model="form.name" type="text" placeholder="Tu nombre" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <label class="form-label">Nombre completo *</label>
+              <input v-model="form.name" type="text" placeholder="Tu nombre" class="input-base" />
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
-                <input v-model="form.email" type="email" placeholder="tu@email.com" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <label class="form-label">Email *</label>
+                <input v-model="form.email" type="email" placeholder="tu@email.com" class="input-base" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Teléfono</label>
-                <input v-model="form.phone" type="tel" placeholder="+51 ..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                <label class="form-label">WhatsApp / Teléfono</label>
+                <input v-model="form.phone" type="tel" placeholder="+51 ..." class="input-base" />
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Mensaje (opcional)</label>
-              <textarea v-model="form.message" rows="3" placeholder="¿Alguna preferencia o pregunta?" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"></textarea>
+              <label class="form-label">Mensaje (opcional)</label>
+              <textarea v-model="form.message" rows="3" placeholder="¿Alguna preferencia o pregunta?" class="input-base resize-none"></textarea>
             </div>
 
             <div v-if="error" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg" role="alert">
@@ -143,7 +143,7 @@ async function submit() {
               <span class="text-xs font-semibold text-red-700">{{ error }}</span>
             </div>
 
-            <button type="submit" :disabled="sending" class="w-full min-h-[52px] bg-primary hover:bg-primary-dark text-white font-extrabold rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 disabled:opacity-60">
+            <button type="submit" :disabled="sending" class="btn-primary btn-lg w-full">
               <Icon v-if="sending" name="material-symbols:progress-activity" class="size-5 animate-spin" />
               {{ sending ? 'Enviando...' : 'Enviar consulta' }}
             </button>
