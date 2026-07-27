@@ -39,7 +39,10 @@ class ReviewController extends Controller
             $query->where('rating', '>=', $request->min_rating);
         }
 
-        $query->orderByDesc('created_at')->orderByDesc('rating');
+        // Most-recent REAL review first: review_date_parsed comes from the
+        // display string ("jul. 2024"); created_at is only the DB-import
+        // timestamp for legacy reviews, so it's the fallback, not the driver.
+        $query->orderByRaw('COALESCE(review_date_parsed, DATE(created_at)) DESC')->orderByDesc('rating');
 
         $perPage = $request->get('per_page', 10);
         $reviews = $query->paginate($perPage);
@@ -125,6 +128,7 @@ class ReviewController extends Controller
             'tour_id' => $request->tour_id,
             'name' => $request->name,
             'review_date' => $request->review_date,
+            'review_date_parsed' => Review::parseReviewDate($request->review_date),
             'rating' => $request->rating ?? 5,
             'title' => $request->title,
             'comment' => $request->comment,
@@ -148,10 +152,14 @@ class ReviewController extends Controller
     {
         $review = Review::findOrFail($id);
 
-        $review->update($request->only([
+        $data = $request->only([
             'tour_id', 'name', 'review_date', 'rating', 'title',
             'comment', 'language', 'opinion', 'published', 'featured',
-        ]));
+        ]);
+        if ($request->has('review_date')) {
+            $data['review_date_parsed'] = Review::parseReviewDate($request->review_date);
+        }
+        $review->update($data);
 
         return response()->json([
             'success' => true,
