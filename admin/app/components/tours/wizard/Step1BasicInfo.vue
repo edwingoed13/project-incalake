@@ -76,29 +76,31 @@
 
         <!-- Ciudad de Salida -->
         <UFormField label="Ciudad de salida" hint="Escribe para buscar" required>
-          <UInput
-            :ref="setCityInputRef"
-            v-model="citySearchQuery"
-            @input="onCitySearch"
-            placeholder="Ej: Puno, Cusco..."
-            icon="i-lucide-map-pin"
-            class="w-full"
-          />
-          <div v-if="cityResults.length > 0" class="absolute z-50 w-full mt-2 bg-default border border-default rounded-xl shadow-xl overflow-hidden">
-            <ul class="py-1 max-h-60 overflow-y-auto">
-              <li
-                v-for="city in cityResults"
-                :key="city.id"
-                @click="selectCity(city)"
-                class="px-3 py-2 hover:bg-elevated cursor-pointer flex items-center gap-3 transition-colors"
-              >
-                <UIcon name="i-lucide-map-pin" class="size-4 text-muted" />
-                <div>
-                  <div class="text-sm font-semibold">{{ city.name }}</div>
-                  <div class="text-[10px] text-muted uppercase">{{ city.country_code }}</div>
-                </div>
-              </li>
-            </ul>
+          <div class="relative">
+            <UInput
+              v-model="citySearchQuery"
+              @input="onCitySearch"
+              placeholder="Ej: Puno, Cusco..."
+              :icon="isSearchingCities ? 'i-lucide-loader-circle' : 'i-lucide-map-pin'"
+              :ui="{ leadingIcon: isSearchingCities ? 'animate-spin' : '' }"
+              class="w-full"
+            />
+            <div v-if="cityResults.length > 0" class="absolute z-50 w-full mt-2 bg-default border border-default rounded-xl shadow-xl overflow-hidden">
+              <ul class="py-1 max-h-60 overflow-y-auto">
+                <li
+                  v-for="city in cityResults"
+                  :key="city.id"
+                  @click="selectCity(city)"
+                  class="px-3 py-2 hover:bg-elevated cursor-pointer flex items-center gap-3 transition-colors"
+                >
+                  <UIcon name="i-lucide-map-pin" class="size-4 text-muted" />
+                  <div>
+                    <div class="text-sm font-semibold">{{ city.name }}</div>
+                    <div class="text-[10px] text-muted uppercase">{{ city.country_code }}</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
           <template #help>
             <span v-if="store.basicInfo.nearestCity" class="text-success font-semibold">
@@ -256,7 +258,6 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useTourWizardStore } from '~/stores/tourWizard'
 import WizardSection from './WizardSection.vue'
-import { useGooglePlaces } from '~/composables/useGooglePlaces'
 
 const store = useTourWizardStore()
 
@@ -280,7 +281,6 @@ const timezoneItems = [
 ]
 const config = useRuntimeConfig()
 const defaultApiUrl = config.public.apiUrl
-const { initCityAutocomplete, cleanup } = useGooglePlaces()
 
 // Convert any legacy {duration, durationUnit} into {days, hours, minutes}
 const splitLegacyDuration = (qty: number, unit: string) => {
@@ -425,19 +425,6 @@ const languageItems = computed(() =>
 const citySearchQuery = ref('')
 const cityResults = ref<any[]>([])
 const isSearchingCities = ref(false)
-const cityInputRef = ref<HTMLInputElement | null>(null)
-
-// Resolve the native <input> from inside UInput's Vue instance.
-// Nuxt UI v4 wraps the input inside a div, so we query the DOM after mount.
-const setCityInputRef = (el: any) => {
-  if (!el) {
-    cityInputRef.value = null
-    return
-  }
-  // Try the component's exposed inputRef first, fallback to querying inner input
-  const native = el.inputRef?.value || el.$el?.querySelector?.('input') || (el.tagName === 'INPUT' ? el : null)
-  cityInputRef.value = native
-}
 
 // Fetch languages on mount
 const fetchLanguages = async () => {
@@ -498,43 +485,12 @@ const generateTourCode = async (langId: number) => {
   }
 }
 
-// Initialize Google Places Autocomplete
-const initializeGooglePlaces = async () => {
-  await nextTick()
-
-  if (cityInputRef.value) {
-    try {
-      await initCityAutocomplete(cityInputRef.value, (placeData: any) => {
-        // Store the city information
-        store.basicInfo.nearestCity = placeData.cityName || placeData.formatted_address
-        store.basicInfo.cityCoordinates = {
-          lat: placeData.lat,
-          lng: placeData.lng
-        }
-
-        // Update the input value
-        citySearchQuery.value = placeData.cityName ?
-          (placeData.countryName ? `${placeData.cityName}, ${placeData.countryName}` : placeData.cityName) :
-          placeData.formatted_address
-
-        // Clear any old results
-        cityResults.value = []
-      })
-    } catch (error) {
-      console.error('Error initializing Google Places:', error)
-      // Fallback to manual search if Google Places fails
-    }
-  }
-}
-
-// Fallback manual city search (in case Google Places fails)
+// City search against our own /cities table. This field must resolve to a DB
+// city (cityId drives the public /[city]/[slug] URLs), so Google Places is the
+// wrong source here — and with a referer-restricted key it also silently
+// returned no predictions while blocking this fallback.
 let searchTimeout: any = null
 const onCitySearch = () => {
-  // Don't search if Google Places is handling it
-  if (cityInputRef.value?.hasAttribute('data-autocomplete-initialized')) {
-    return
-  }
-
   if (searchTimeout) clearTimeout(searchTimeout)
 
   if (citySearchQuery.value.length < 2) {
@@ -560,6 +516,12 @@ const onCitySearch = () => {
 const selectCity = (city: any) => {
   store.basicInfo.nearestCity = city.name
   store.basicInfo.cityId = city.id
+  if (city.latitude && city.longitude) {
+    store.basicInfo.cityCoordinates = {
+      lat: parseFloat(city.latitude),
+      lng: parseFloat(city.longitude),
+    }
+  }
   citySearchQuery.value = city.name
   cityResults.value = []
 }
@@ -591,18 +553,8 @@ onMounted(async () => {
     citySearchQuery.value = store.basicInfo.nearestCity
   }
 
-  // Initialize Google Places Autocomplete
-  await initializeGooglePlaces()
-
   if (!store.basicInfo.code && selectedLanguageId.value) {
     generateTourCode(selectedLanguageId.value)
-  }
-})
-
-// Cleanup on unmount
-onUnmounted(() => {
-  if (cityInputRef.value) {
-    cleanup(cityInputRef.value)
   }
 })
 </script>

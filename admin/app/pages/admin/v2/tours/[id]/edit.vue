@@ -282,6 +282,13 @@ onBeforeUnmount(() => {
           <UBadge color="primary" variant="subtle" size="md" class="ml-1 font-mono font-bold shrink-0 hidden sm:inline-flex">
             Tour {{ route.params.id !== 'new' ? '#' + route.params.id : 'nuevo' }}
           </UBadge>
+          <span
+            v-if="store.basicInfo.title"
+            class="hidden lg:block text-sm font-bold truncate max-w-48 xl:max-w-72 shrink"
+            :title="store.basicInfo.title"
+          >
+            {{ store.basicInfo.title }}
+          </span>
         </template>
 
         <!-- Steps live in the top bar to save a row of vertical space -->
