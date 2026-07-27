@@ -75,33 +75,20 @@
         </template>
 
         <!-- Ciudad de Salida -->
-        <UFormField label="Ciudad de salida" hint="Escribe para buscar" required>
-          <div class="relative">
-            <UInput
-              v-model="citySearchQuery"
-              @input="onCitySearch"
-              placeholder="Ej: Puno, Cusco..."
-              :icon="isSearchingCities ? 'i-lucide-loader-circle' : 'i-lucide-map-pin'"
-              :ui="{ leadingIcon: isSearchingCities ? 'animate-spin' : '' }"
-              class="w-full"
-            />
-            <div v-if="cityResults.length > 0" class="absolute z-50 w-full mt-2 bg-default border border-default rounded-xl shadow-xl overflow-hidden">
-              <ul class="py-1 max-h-60 overflow-y-auto">
-                <li
-                  v-for="city in cityResults"
-                  :key="city.id"
-                  @click="selectCity(city)"
-                  class="px-3 py-2 hover:bg-elevated cursor-pointer flex items-center gap-3 transition-colors"
-                >
-                  <UIcon name="i-lucide-map-pin" class="size-4 text-muted" />
-                  <div>
-                    <div class="text-sm font-semibold">{{ city.name }}</div>
-                    <div class="text-[10px] text-muted uppercase">{{ city.country_code }}</div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
+        <UFormField label="Ciudad de salida" hint="Busca y selecciona" required>
+          <USelectMenu
+            v-model="selectedCity"
+            :items="cityResults"
+            by="id"
+            label-key="name"
+            description-key="country_code"
+            :filter-fields="['name']"
+            :loading="isLoadingCities"
+            icon="i-lucide-map-pin"
+            :search-input="{ placeholder: 'Ej: Puno, Cusco...', icon: 'i-lucide-search' }"
+            placeholder="Selecciona la ciudad"
+            class="w-full"
+          />
           <template #help>
             <span v-if="store.basicInfo.nearestCity" class="text-success font-semibold">
               <UIcon name="i-lucide-check-circle" class="size-3 inline align-middle" />
@@ -421,10 +408,10 @@ const languageItems = computed(() =>
   }))
 )
 
-// City search state
-const citySearchQuery = ref('')
+// City state — the full active list is small, so we load it once and let
+// USelectMenu handle the searching client-side.
 const cityResults = ref<any[]>([])
-const isSearchingCities = ref(false)
+const isLoadingCities = ref(false)
 
 // Fetch languages on mount
 const fetchLanguages = async () => {
@@ -485,46 +472,45 @@ const generateTourCode = async (langId: number) => {
   }
 }
 
-// City search against our own /cities table. This field must resolve to a DB
-// city (cityId drives the public /[city]/[slug] URLs), so Google Places is the
-// wrong source here — and with a referer-restricted key it also silently
-// returned no predictions while blocking this fallback.
-let searchTimeout: any = null
-const onCitySearch = () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-
-  if (citySearchQuery.value.length < 2) {
-    cityResults.value = []
-    return
+// Departure city comes from our own /cities table. This field must resolve to
+// a DB city (cityId drives the public /[city]/[slug] URLs), so Google Places
+// is the wrong source here — and with a referer-restricted key it also
+// silently returned no predictions while blocking the old fallback.
+const fetchCities = async () => {
+  isLoadingCities.value = true
+  try {
+    const response: any = await $fetch(`${defaultApiUrl}/cities?active=true&per_page=100`)
+    if (response.success) {
+      cityResults.value = response.data
+    }
+  } catch (error) {
+    console.error('Error fetching cities:', error)
+  } finally {
+    isLoadingCities.value = false
   }
+}
 
-  isSearchingCities.value = true
-  searchTimeout = setTimeout(async () => {
-    try {
-      const response: any = await $fetch(`${defaultApiUrl}/cities?search=${citySearchQuery.value}&active=true`)
-      if (response.success) {
-        cityResults.value = response.data
+// Bridge between the store (id + name) and USelectMenu's object model.
+const selectedCity = computed({
+  get: () => {
+    const byId = cityResults.value.find(c => c.id === store.basicInfo.cityId)
+    if (byId) return byId
+    return store.basicInfo.nearestCity
+      ? { id: store.basicInfo.cityId ?? 0, name: store.basicInfo.nearestCity, country_code: '' }
+      : undefined
+  },
+  set: (city: any) => {
+    if (!city) return
+    store.basicInfo.nearestCity = city.name
+    store.basicInfo.cityId = city.id
+    if (city.latitude && city.longitude) {
+      store.basicInfo.cityCoordinates = {
+        lat: parseFloat(city.latitude),
+        lng: parseFloat(city.longitude),
       }
-    } catch (error) {
-      console.error('Error searching cities:', error)
-    } finally {
-      isSearchingCities.value = false
     }
-  }, 300)
-}
-
-const selectCity = (city: any) => {
-  store.basicInfo.nearestCity = city.name
-  store.basicInfo.cityId = city.id
-  if (city.latitude && city.longitude) {
-    store.basicInfo.cityCoordinates = {
-      lat: parseFloat(city.latitude),
-      lng: parseFloat(city.longitude),
-    }
-  }
-  citySearchQuery.value = city.name
-  cityResults.value = []
-}
+  },
+})
 
 // Watch for language changes to auto-generate the tour code (only for new tours)
 watch(selectedLanguageId, (newLangId) => {
@@ -549,9 +535,7 @@ watch(selectedLanguageId, (newLangId) => {
 onMounted(async () => {
   await fetchLanguages()
 
-  if (store.basicInfo.nearestCity) {
-    citySearchQuery.value = store.basicInfo.nearestCity
-  }
+  fetchCities()
 
   if (!store.basicInfo.code && selectedLanguageId.value) {
     generateTourCode(selectedLanguageId.value)

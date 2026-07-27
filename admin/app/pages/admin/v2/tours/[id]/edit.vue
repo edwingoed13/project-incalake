@@ -282,13 +282,6 @@ onBeforeUnmount(() => {
           <UBadge color="primary" variant="subtle" size="md" class="ml-1 font-mono font-bold shrink-0 hidden sm:inline-flex">
             Tour {{ route.params.id !== 'new' ? '#' + route.params.id : 'nuevo' }}
           </UBadge>
-          <span
-            v-if="store.basicInfo.title"
-            class="hidden lg:block text-sm font-bold truncate max-w-48 xl:max-w-72 shrink"
-            :title="store.basicInfo.title"
-          >
-            {{ store.basicInfo.title }}
-          </span>
         </template>
 
         <!-- Steps live in the top bar to save a row of vertical space -->
@@ -355,8 +348,13 @@ onBeforeUnmount(() => {
                recurring "dropdown / last input hidden behind the footer". -->
           <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28">
           <div class="max-w-5xl mx-auto">
-            <!-- Step header (the stepper already shows the step/category) -->
+            <!-- Step header (the stepper already shows the step/category).
+                 The tour title lives here at full content width — the navbar
+                 truncated long titles next to the stepper. -->
             <div class="mb-5">
+              <p v-if="store.basicInfo.title" class="text-sm font-semibold text-primary leading-snug mb-1">
+                {{ store.basicInfo.title }}
+              </p>
               <h1 class="text-xl font-bold tracking-tight">{{ currentStepLabel?.title }}</h1>
               <p class="text-sm text-muted leading-snug mt-1">{{ currentStepLabel?.description }}</p>
             </div>
