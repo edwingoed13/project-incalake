@@ -38,7 +38,7 @@ class SendBookingConfirmation implements ShouldQueue
                 return;
             }
 
-            Mail::to($bookingDetail->email)->send(new BookingConfirmationEmail($this->booking));
+            Mail::to($bookingDetail->email)->bcc('reservas@incalake.com')->send(new BookingConfirmationEmail($this->booking));
 
             Log::info("Booking confirmation sent successfully", [
                 'booking_id' => $this->booking->id,

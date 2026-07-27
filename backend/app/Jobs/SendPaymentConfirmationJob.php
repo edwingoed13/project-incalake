@@ -109,14 +109,17 @@ class SendPaymentConfirmationJob implements ShouldQueue
             }
         }
 
-        // 2) Confirmation emails — one for customer + one for admin.
+        // 2) Confirmation emails — one for customer + one for admin. The
+        // customer email BCCs reservas@ so the office keeps an EXACT copy of
+        // what the customer received (the admin version is a different,
+        // ops-oriented rendering and doesn't serve as backup of it).
         try {
             if ($bookings->count() === 1) {
                 $single = $bookings->first();
-                Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $this->paidNow));
+                Mail::to($single->customer_email)->bcc('reservas@incalake.com')->send(new BookingConfirmationEmail($single, false, $this->paidNow));
                 Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $this->paidNow));
             } else {
-                Mail::to($bookings->first()->customer_email)->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
+                Mail::to($bookings->first()->customer_email)->bcc('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
                 Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($bookings, true, $this->paidNow));
             }
             Log::info('Confirmation emails sent (job)', [
