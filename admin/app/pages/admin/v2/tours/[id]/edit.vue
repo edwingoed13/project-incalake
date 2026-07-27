@@ -187,6 +187,16 @@ watch(() => store.currentStep, (newStep) => {
   if (route.params.id && route.params.id !== 'new') {
     try { localStorage.setItem(lastStepKey.value, String(newStep)) } catch { /* quota or disabled */ }
   }
+  // Changing steps keeps everything in the store, so nothing is lost — but
+  // flush any pending debounced autosave right away instead of letting edits
+  // sit unsaved for 2 more seconds while the user has already moved on.
+  if (store.isDirty && store.tourId && store.tourId !== 'new' && !store.autosaving) {
+    if (autosaveTimer) {
+      clearTimeout(autosaveTimer)
+      autosaveTimer = null
+    }
+    store.autosave()
+  }
   const current = parseInt(String(route.query.step || ''), 10)
   if (current === newStep) return
   router.replace({ query: { ...route.query, step: String(newStep) } })
@@ -247,6 +257,23 @@ const onBeforeUnload = (e: BeforeUnloadEvent) => {
     e.returnValue = ''
   }
 }
+
+// Internal navigation (e.g. "Volver", sidebar links) bypasses beforeunload,
+// so gate it with the project's confirm dialog when a save is still pending.
+onBeforeRouteLeave(async (to) => {
+  // The create-draft flow replaces /new/edit with /{id}/edit — same editor.
+  if (/^\/admin\/v2\/tours\/[^/]+\/edit$/.test(to.path)) return true
+  if (!store.isDirty && !store.autosaving && !firstSaveInFlight) return true
+  return await confirm({
+    title: 'Cambios sin guardar',
+    description: 'Hay cambios que todavía no terminan de guardarse. Si sales ahora podrían perderse.',
+    confirmLabel: 'Salir de todos modos',
+    cancelLabel: 'Quedarme',
+    confirmColor: 'error',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'warning',
+  })
+})
 
 // Ctrl+S / Cmd+S manual save
 const onKeydown = (e: KeyboardEvent) => {
