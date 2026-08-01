@@ -174,9 +174,7 @@
             <!-- Image -->
             <div class="relative w-[42%] max-w-[150px] aspect-square rounded-xl overflow-hidden shrink-0 bg-slate-100">
               <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
-              <div v-if="hasActiveOffer(tour)" class="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-[9px] font-black rounded-md shadow">
-                {{ getOfferLabel(tour) }}
-              </div>
+              <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" size="xs" class="absolute top-1.5 left-1.5" />
             </div>
             <!-- Content -->
             <div class="flex-1 min-w-0 flex flex-col py-0.5 pr-8">
@@ -201,10 +199,10 @@
                   <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
                   <span class="flex items-baseline gap-1">
                     <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-500">
-                      {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                      {{ currencyStore.formatConverted(tour.min_price || 0) }}
                     </span>
                     <span class="text-base font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-slate-900'">
-                      {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                      {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
                     </span>
                   </span>
                   <span class="text-[9px] text-slate-400">{{ t('per_person') }}</span>
@@ -216,15 +214,7 @@
             </div>
           </NuxtLink>
           <!-- Wishlist heart -->
-          <button
-            @click.stop.prevent="toggleWishlist(tour, $event)"
-            class="absolute top-3 right-3 size-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform"
-            :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400'"
-            :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
-            :aria-pressed="wishlistStore.has(tour.id)"
-          >
-            <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
-          </button>
+          <TourWishlistHeartButton :tour="tour" size="sm" class="absolute top-3 right-3" />
         </div>
       </div>
 
@@ -244,9 +234,7 @@
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
               <Icon name="material-symbols:schedule-outline" class="text-sm" />{{ formatDuration(tour) }}
             </div>
-            <div v-if="hasActiveOffer(tour)" class="absolute top-3 left-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
-              <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
-            </div>
+            <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" class="absolute top-3 left-3" />
           </div>
           <div class="p-4">
             <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
@@ -258,10 +246,10 @@
                 <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
                 <span class="flex items-baseline gap-1.5">
                   <span v-if="showDiscountedPrice(tour)" class="text-xs line-through text-slate-400">
-                    {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                    {{ currencyStore.formatConverted(tour.min_price || 0) }}
                   </span>
                   <span class="text-lg font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
-                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
                   </span>
                 </span>
               </div>
@@ -274,15 +262,7 @@
           </div>
         </NuxtLink>
         <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
-        <button
-          @click.stop.prevent="toggleWishlist(tour, $event)"
-          class="absolute top-2.5 right-2.5 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
-          :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
-          :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
-          :aria-pressed="wishlistStore.has(tour.id)"
-        >
-          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-xl" />
-        </button>
+        <TourWishlistHeartButton :tour="tour" class="absolute top-2.5 right-2.5" />
         </div>
       </div>
 
@@ -299,9 +279,7 @@
             <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
               format="webp" width="256" height="176" sizes="256px" />
-            <div v-if="hasActiveOffer(tour)" class="absolute top-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
-              <Icon name="material-symbols:sell-outline" class="text-xs" />{{ getOfferLabel(tour) }}
-            </div>
+            <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" class="absolute top-2 left-2" />
           </div>
           <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
             <div>
@@ -324,10 +302,10 @@
                 <span class="text-[10px] text-slate-500 block">{{ t('from') }}</span>
                 <span class="flex items-baseline gap-2">
                   <span v-if="showDiscountedPrice(tour)" class="text-sm line-through text-slate-400">
-                    {{ currencyStore.formatConverted(tour.min_price || 0, false) }}
+                    {{ currencyStore.formatConverted(tour.min_price || 0) }}
                   </span>
                   <span class="text-xl font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
-                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0), false) }}
+                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
                   </span>
                 </span>
               </div>
@@ -338,15 +316,7 @@
           </div>
         </NuxtLink>
         <!-- Wishlist heart (outside the NuxtLink so it doesn't navigate) -->
-        <button
-          @click.stop.prevent="toggleWishlist(tour, $event)"
-          class="absolute top-5 right-5 size-10 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
-          :class="wishlistStore.has(tour.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-500'"
-          :aria-label="wishlistStore.has(tour.id) ? 'Quitar de guardados' : 'Guardar'"
-          :aria-pressed="wishlistStore.has(tour.id)"
-        >
-          <Icon :name="wishlistStore.has(tour.id) ? 'material-symbols:favorite' : 'material-symbols:favorite-outline'" class="text-lg" />
-        </button>
+        <TourWishlistHeartButton :tour="tour" class="absolute top-5 right-5" />
         </div>
       </div>
 
@@ -422,7 +392,6 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
 const wishlistStore = useWishlistStore()
-const { flyTo } = useFlyTo()
 
 const langCode = computed(() => locale.value.toUpperCase())
 
@@ -742,30 +711,8 @@ function getTourLink(tour: any) {
   return localePath(`/${citySlug}/${tour.slug || tour.id}`)
 }
 
-function toggleWishlist(tour: any, ev?: MouseEvent) {
-  const wasAdded = !wishlistStore.has(tour.id)
-  // Capture the source element NOW. On the very first interaction Nuxt may
-  // replay an early (pre-hydration) click, and currentTarget is also nulled
-  // once the dispatch finishes — so resolve it synchronously with a fallback
-  // to the clicked node's nearest button. This fixes "first click does nothing".
-  const src = ev
-    ? ((ev.currentTarget as HTMLElement) || (ev.target as HTMLElement)?.closest('button') as HTMLElement | null)
-    : null
-  wishlistStore.toggle({
-    id: tour.id,
-    title: tour.title,
-    slug: tour.slug,
-    city_slug: tour.city?.slug || 'puno',
-    image: getImageUrl(tour.featured_image || tour.thumbnail),
-    min_price: tour.min_price || 0,
-    currency: tour.currency || 'USD',
-  })
-  // Only animate on ADD (not on un-save). Fly a heart from the tapped button
-  // up to the header wishlist counter.
-  if (wasAdded && src) {
-    flyTo(src, '#nav-wishlist', 'heart')
-  }
-}
+// Wishlist toggling (incl. the fly-to-counter animation) now lives in the
+// shared <TourWishlistHeartButton> — the inline handler was removed.
 
 // The card now gets a precomputed `offer` ({ label, discount, discount_type,
 // start_date, end_date, is_active, is_upcoming, discounted_min_price }) from

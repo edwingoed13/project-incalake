@@ -88,10 +88,7 @@
               <PhotoIcon class="size-10" aria-hidden="true" />
             </div>
             <!-- Offer badge (live from current listing) -->
-            <div v-if="item.offer" class="absolute bottom-2 left-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow flex items-center gap-0.5">
-              <HeartSolidIcon class="size-2.5" aria-hidden="true" />
-              {{ item.offer.label }}
-            </div>
+            <TourOfferBadge v-if="item.offer" :label="item.offer.label" class="absolute bottom-2 left-2" />
             <button
               @click.stop.prevent="wishlistStore.remove(item.id)"
               type="button"
