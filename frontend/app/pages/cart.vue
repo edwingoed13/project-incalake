@@ -70,13 +70,10 @@ function calendarPropsFor(item: any) {
   }
 }
 
+// Anticipation-aware minimum date: the first day with a departure that is
+// still bookable (shared logic with the tour page — see useBookingWindow).
 function minDateFor(item: any): string {
-  const d = detailFor(item)
-  const q = Number(d.booking_anticipation_quantity || 0)
-  const unit = d.booking_anticipation_unit || 'hours'
-  const ms = unit === 'minutes' ? q * 60000 : unit === 'days' ? q * 86400000 : q * 3600000
-  const dt = new Date(Date.now() + ms)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+  return minBookableDateFor(detailFor(item))
 }
 
 function timeOptionsFor(item: any) {
@@ -99,13 +96,27 @@ function timeOptionsFor(item: any) {
   } else if (d.departure_time) {
     out.push(fmt(d.departure_time))
   }
-  return out
+  // On the edited date, drop departures inside the anticipation window (e.g.
+  // today's 6:45 AM that already left).
+  if (!editForm.value.date) return out
+  return out.filter(o => isDepartureBookable(d, editForm.value.date, o.value))
 }
+
+// If a date change invalidated the chosen time, force re-picking it.
+watch(() => editForm.value.date, () => {
+  if (!editingItem.value || !editForm.value.time) return
+  const item = cartStore.items.find((i: any) => i.id === editingItem.value)
+  if (item && !isDepartureBookable(detailFor(item), editForm.value.date, editForm.value.time)) {
+    editForm.value.time = ''
+  }
+})
 
 function saveEdit(item: CartItem) {
   // Guard: a valid date + a real departure time are required, so an edit can't
   // produce a booking on a blocked day or a non-existent time.
   if (!editForm.value.date || !editForm.value.time) return
+  // Nor one inside the tour's booking-anticipation window.
+  if (!isDepartureBookable(detailFor(item), editForm.value.date, editForm.value.time)) return
   // Keep child cost in the total when only adults are edited.
   const newTotal =
     item.basePrice * editForm.value.adults +
@@ -352,31 +363,22 @@ function getImageUrl(path: string) {
                       <span class="size-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
                       {{ t('cart_travelers_label') }}
                     </label>
-                    <div class="flex items-end gap-5 pl-7">
-                      <div>
-                        <span class="block text-[10px] font-semibold text-slate-400 mb-1">{{ t('adults') }}</span>
-                        <div class="flex items-center gap-2">
-                          <button @click="editForm.adults = Math.max(1, editForm.adults - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                            <Icon name="material-symbols:remove" class="text-sm" />
-                          </button>
-                          <span class="text-sm font-bold w-6 text-center">{{ editForm.adults }}</span>
-                          <button @click="editForm.adults = Math.min(99, editForm.adults + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                            <Icon name="material-symbols:add" class="text-sm" />
-                          </button>
-                        </div>
-                      </div>
-                      <div v-if="item.childPrice > 0 || item.children > 0">
-                        <span class="block text-[10px] font-semibold text-slate-400 mb-1">{{ t('children_label') }}</span>
-                        <div class="flex items-center gap-2">
-                          <button @click="editForm.children = Math.max(0, editForm.children - 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                            <Icon name="material-symbols:remove" class="text-sm" />
-                          </button>
-                          <span class="text-sm font-bold w-6 text-center">{{ editForm.children }}</span>
-                          <button @click="editForm.children = Math.min(99, editForm.children + 1)" class="size-8 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 bg-white">
-                            <Icon name="material-symbols:add" class="text-sm" />
-                          </button>
-                        </div>
-                      </div>
+                    <!-- Shared stepper (44px touch targets) instead of the old
+                         32px inline +/- buttons -->
+                    <div class="space-y-2 pl-7">
+                      <TourQuantityStepper
+                        v-model="editForm.adults"
+                        :label="t('adults')"
+                        :min="1"
+                        :at-max="editForm.adults >= 99"
+                      />
+                      <TourQuantityStepper
+                        v-if="item.childPrice > 0 || item.children > 0"
+                        v-model="editForm.children"
+                        :label="t('children_label')"
+                        :min="0"
+                        :at-max="editForm.children >= 99"
+                      />
                     </div>
                   </div>
 

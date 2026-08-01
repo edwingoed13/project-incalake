@@ -165,17 +165,7 @@
               >
                 <ShareIcon class="size-5" aria-hidden="true" />
               </button>
-              <button
-                @click="toggleSave($event)"
-                type="button"
-                class="size-9 rounded-full bg-black/45 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform"
-                :class="isSaved ? 'text-red-500' : 'text-white'"
-                :aria-label="isSaved ? 'Quitar de guardados' : 'Guardar tour'"
-                :aria-pressed="isSaved"
-              >
-                <HeartSolidIcon v-if="isSaved" class="size-5" aria-hidden="true" />
-                <HeartIcon v-else class="size-5" aria-hidden="true" />
-              </button>
+              <TourWishlistHeartButton :tour="tour" size="sm" overlay="dark" class="shadow-none" />
             </div>
           </div>
 
@@ -403,17 +393,7 @@
                 decoding="async"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <button
-                @click.stop.prevent="toggleSaveRelated(relatedTour, $event)"
-                type="button"
-                class="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-md transition-all active:scale-90"
-                :class="wishlistStore.has(relatedTour.id) ? 'text-red-500 bg-white/80' : 'text-white'"
-                :aria-label="wishlistStore.has(relatedTour.id) ? 'Quitar de guardados' : 'Guardar tour'"
-                :aria-pressed="wishlistStore.has(relatedTour.id)"
-              >
-                <HeartSolidIcon v-if="wishlistStore.has(relatedTour.id)" class="size-5" aria-hidden="true" />
-                <HeartIcon v-else class="size-5" aria-hidden="true" />
-              </button>
+              <TourWishlistHeartButton :tour="relatedTour" size="sm" class="absolute top-3 right-3" />
             </div>
             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ cityLabel(relatedTour) }}</p>
             <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
@@ -577,21 +557,7 @@ async function openShare() {
   shareOpen.value = true
 }
 
-function toggleSaveRelated(relatedTour: any, ev?: MouseEvent) {
-  if (!relatedTour?.id) return
-  const wasAdded = !wishlistStore.has(Number(relatedTour.id))
-  const src = ev ? ((ev.currentTarget as HTMLElement) || (ev.target as HTMLElement)?.closest('button') as HTMLElement | null) : null
-  wishlistStore.toggle({
-    id: Number(relatedTour.id),
-    slug: relatedTour.slug,
-    city_slug: relatedTour.city?.slug,
-    title: relatedTour.title,
-    image: relatedTour.featured_image || (Array.isArray(relatedTour.media_gallery) && relatedTour.media_gallery[0]?.url) || '',
-    min_price: relatedTour.min_price,
-    currency: relatedTour.currency || 'USD',
-  })
-  if (wasAdded && src) flyTo(src, '#nav-wishlist', 'heart')
-}
+// (Related-tour hearts use the shared <TourWishlistHeartButton> now.)
 const currencyStore = useCurrencyStore()
 
 const slug = route.params.slug as string
@@ -801,6 +767,14 @@ onBeforeUnmount(() => stickyObserver?.disconnect())
 // Clear the booking error as soon as the user fixes the missing field.
 watch([selectedDate, selectedTime], () => { if (bookingError.value) bookingError.value = '' })
 
+// A date change can invalidate the chosen time (anticipation window) — force
+// re-picking instead of silently submitting an unbookable departure.
+watch(selectedDate, () => {
+  if (selectedTime.value && tour.value && !isDepartureBookable(tour.value, selectedDate.value, selectedTime.value)) {
+    selectedTime.value = ''
+  }
+})
+
 // Pricing model — a tour defines `price_details[]`, one row per
 // (age_stage, quantity-tier). We group active rows by age stage and order the
 // stages by `age_stage_id` ASC. The backend treats the FIRST stage (lowest id)
@@ -843,8 +817,20 @@ function ageRangeLabel(stage: { minAge: number | null; maxAge: number | null } |
   if (min != null) return `(${min}+)`
   return `(0-${max})`
 }
-const adultAgeLabel = computed(() => ageRangeLabel(adultStage.value))
-const childAgeLabel = computed(() => ageRangeLabel(childStage.value))
+// The same legacy data that mislabels stage descriptions also carries junk
+// age ranges (e.g. the adult/primary stage saying "0-3" and the child one
+// "18-99"). Pricing is unaffected (it goes by stage order), but don't SHOW
+// ranges that contradict the roles: an "adult" band must reach adulthood and
+// sit above the child band. Otherwise showing nothing beats showing nonsense.
+const ageRangesCoherent = computed(() => {
+  const a = adultStage.value, c = childStage.value
+  if (!a) return false
+  if (a.maxAge != null && a.maxAge < 12) return false
+  if (c && a.minAge != null && c.maxAge != null && a.minAge < c.maxAge) return false
+  return true
+})
+const adultAgeLabel = computed(() => ageRangesCoherent.value ? ageRangeLabel(adultStage.value) : '')
+const childAgeLabel = computed(() => ageRangesCoherent.value ? ageRangeLabel(childStage.value) : '')
 
 // Per-person price for a stage at a given quantity, honoring quantity tiers
 // (beyond the last tier we keep the cheapest/last per-person rate).
@@ -910,35 +896,10 @@ const total = computed(() => subtotal.value - groupDiscount.value)
 const currency = computed(() => tour.value?.currency || 'USD')
 
 // Minimum bookable date from the booking-anticipation rule configured in
-// admin Step 6. The wizard writes `booking_anticipation_quantity` +
-// `booking_anticipation_unit` (Step 6 normalizes to minutes); the legacy
-// `booking_anticipation_hours` column is NOT updated by the new wizard, so we
-// only fall back to it when quantity/unit are absent (old tours).
-const anticipationMs = computed(() => {
-  const qty = Number(tour.value?.booking_anticipation_quantity)
-  const unit = tour.value?.booking_anticipation_unit
-
-  if (Number.isFinite(qty) && qty > 0 && unit) {
-    const perUnitMs =
-      unit === 'minutes' ? 60_000 :
-      unit === 'hours'   ? 3_600_000 :
-      unit === 'days'    ? 86_400_000 :
-      unit === 'weeks'   ? 604_800_000 :
-      3_600_000 // default treat unknown unit as hours
-    return qty * perUnitMs
-  }
-
-  // Legacy fallback
-  const hours = Number(tour.value?.booking_anticipation_hours)
-  if (Number.isFinite(hours) && hours > 0) return hours * 3_600_000
-
-  return 24 * 3_600_000 // sensible default: 24h
-})
-
-const minDate = computed(() => {
-  const minDateTime = new Date(Date.now() + anticipationMs.value)
-  return minDateTime.toISOString().split('T')[0]
-})
+// admin Step 6, evaluated against the actual departure TIMES (a day-granular
+// cutoff still offered today's already-departed tours). Shared logic with the
+// cart editor — see composables/useBookingWindow.ts.
+const minDate = computed(() => tour.value ? minBookableDateFor(tour.value) : new Date().toISOString().split('T')[0])
 
 // Available times from tour data
 const durationLabel = computed(() => {
@@ -1028,7 +989,10 @@ const availableTimes = computed(() => {
     )
   }
 
-  return times
+  // On the selected date, hide departures inside the anticipation window
+  // (e.g. today's 6:45 AM that already left).
+  if (!selectedDate.value) return times
+  return times.filter(x => isDepartureBookable(tour.value, selectedDate.value, x.value))
 })
 
 // Booking widget methods

@@ -328,10 +328,7 @@
             class="group bg-white rounded-2xl overflow-hidden border border-green-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
           >
             <!-- Offer badge -->
-            <div class="absolute top-3 right-3 z-10 px-2.5 py-1 bg-green-500 text-white text-[10px] font-black rounded-full shadow-lg flex items-center gap-1">
-              <Icon name="material-symbols:sell-outline" class="text-xs" />
-              {{ getOfferLabel(tour) }}
-            </div>
+            <TourOfferBadge :label="getOfferLabel(tour)" class="absolute top-3 right-3 z-10" />
             <div class="relative h-52 overflow-hidden bg-slate-100">
               <NuxtImg
                 v-skeleton
@@ -626,15 +623,17 @@ function getOfferLabel(tour: any) {
   return tour.offer?.label || ''
 }
 
-// Fetch featured reviews (lazy, non-blocking)
+// Latest published reviews (lazy, non-blocking). The API orders by the real
+// review date, so the slider stays fresh without curating a "featured" set;
+// min_rating keeps low ratings off the homepage.
 const { data: reviewsData } = useAsyncData(
-  `reviews-featured-${locale.value}`,
+  `reviews-latest-${locale.value}`,
   async () => {
     try {
-      const res = await api(`/reviews?featured=1&per_page=9&language=${locale.value}`)
+      const res = await api(`/reviews?per_page=15&min_rating=4&language=${locale.value}`)
       const reviews = (res as any)?.data || []
       if (reviews.length < 3) {
-        const res2 = await api(`/reviews?featured=1&per_page=9`)
+        const res2 = await api(`/reviews?per_page=15&min_rating=4`)
         return (res2 as any)?.data || []
       }
       return reviews
