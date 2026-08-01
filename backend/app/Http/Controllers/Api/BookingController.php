@@ -81,6 +81,46 @@ class BookingController extends Controller
             // Get tour information
             $tour = Tour::findOrFail($request->tour_id);
 
+            // ---- Booking-anticipation window (authoritative) ----------------
+            // The storefront hides dates/times inside the tour's anticipation
+            // window, but the API must enforce it too: compare the departure
+            // moment (tour_date + tour_time, in the tour's timezone) against
+            // now + anticipation. Wizard fields first; legacy hours fallback.
+            $anticipationMinutes = 0.0;
+            $antQty = (float) ($tour->booking_anticipation_quantity ?? 0);
+            $antUnit = $tour->booking_anticipation_unit;
+            if ($antQty > 0 && $antUnit) {
+                $anticipationMinutes = match ($antUnit) {
+                    'minutes' => $antQty,
+                    'days' => $antQty * 1440,
+                    'weeks' => $antQty * 10080,
+                    default => $antQty * 60, // hours
+                };
+            } elseif ((float) ($tour->booking_anticipation_hours ?? 0) > 0) {
+                $anticipationMinutes = (float) $tour->booking_anticipation_hours * 60;
+            }
+
+            if ($anticipationMinutes > 0) {
+                $tz = $tour->timezone ?: 'America/Lima';
+                // Without a parseable time, judge by end of day (lenient: a
+                // later departure that same day could still qualify).
+                $depTime = preg_match('/^\d{1,2}:\d{2}/', (string) $request->tour_time)
+                    ? substr((string) $request->tour_time, 0, 5)
+                    : '23:59';
+                try {
+                    $departure = \Carbon\Carbon::parse($request->tour_date . ' ' . $depTime, $tz);
+                } catch (\Throwable $e) {
+                    $departure = \Carbon\Carbon::parse($request->tour_date, $tz)->endOfDay();
+                }
+                if ($departure->lt(now($tz)->addMinutes((int) round($anticipationMinutes)))) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La fecha u hora seleccionada ya no está disponible: este tour requiere reservar con anticipación. Por favor elige otra fecha u horario.',
+                    ], 422);
+                }
+            }
+
             // Get tour title from translations
             $tourTranslation = DB::table('tour_translations')
                 ->where('tour_id', $tour->id)
