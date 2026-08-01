@@ -75,8 +75,21 @@
         </template>
 
         <!-- Ciudad de Salida -->
-        <UFormField label="Ciudad de salida" hint="Busca y selecciona" required>
+        <UFormField label="Ciudad de salida" :hint="googleFailed ? 'Busca y selecciona' : 'Busca con Google'" required>
+          <!-- Google Places search; if Maps can't load/authenticate we swap to
+               the DB catalog select, which always works. Either way the pick
+               is resolved to a cities.id via /admin/cities/resolve. -->
+          <UInput
+            v-if="!googleFailed"
+            :ref="setCityInputRef"
+            v-model="cityQuery"
+            placeholder="Ej: Puno, Cusco, Arequipa..."
+            :icon="resolvingCity ? 'i-lucide-loader-circle' : 'i-lucide-map-pin'"
+            :ui="{ leadingIcon: resolvingCity ? 'animate-spin' : '' }"
+            class="w-full"
+          />
           <USelectMenu
+            v-else
             v-model="selectedCity"
             :items="cityResults"
             by="id"
@@ -90,7 +103,11 @@
             class="w-full"
           />
           <template #help>
-            <span v-if="store.basicInfo.nearestCity" class="text-success font-semibold">
+            <span v-if="cityResolveError" class="text-error font-semibold">
+              <UIcon name="i-lucide-circle-alert" class="size-3 inline align-middle" />
+              {{ cityResolveError }}
+            </span>
+            <span v-else-if="store.basicInfo.nearestCity" class="text-success font-semibold">
               <UIcon name="i-lucide-check-circle" class="size-3 inline align-middle" />
               {{ store.basicInfo.nearestCity }}
             </span>
@@ -408,10 +425,82 @@ const languageItems = computed(() =>
   }))
 )
 
-// City state — the full active list is small, so we load it once and let
-// USelectMenu handle the searching client-side.
+// City state. Primary UX: Google Places autocomplete over any city; the pick
+// is resolved to a cities.id via /admin/cities/resolve (find-or-create),
+// because public /[city]/[slug] URLs hang off the catalog. If Maps fails to
+// load or authenticate (restricted key, offline), we fall back to a
+// USelectMenu over the DB catalog, which always works.
 const cityResults = ref<any[]>([])
 const isLoadingCities = ref(false)
+const cityQuery = ref('')
+const googleFailed = ref(false)
+const resolvingCity = ref(false)
+const cityResolveError = ref('')
+
+const { initCityAutocomplete, cleanup } = useGooglePlaces()
+
+const cityInputRef = ref<HTMLInputElement | null>(null)
+// Resolve the native <input> from inside UInput's Vue instance (Nuxt UI v4
+// wraps it in a div), then attach the Places autocomplete to it.
+const setCityInputRef = (el: any) => {
+  if (!el) {
+    cityInputRef.value = null
+    return
+  }
+  const native = el.inputRef?.value || el.$el?.querySelector?.('input') || (el.tagName === 'INPUT' ? el : null)
+  if (native && native !== cityInputRef.value) {
+    cityInputRef.value = native
+    attachCityAutocomplete()
+  }
+}
+
+async function attachCityAutocomplete() {
+  const input = cityInputRef.value
+  if (!input) return
+  try {
+    const instance = await initCityAutocomplete(input, onPlacePicked)
+    if (!instance && !input.hasAttribute('data-autocomplete-initialized')) {
+      googleFailed.value = true
+    }
+  } catch {
+    googleFailed.value = true
+  }
+}
+
+async function onPlacePicked(placeData: any) {
+  const name = placeData.cityName || placeData.formatted_address
+  if (!name) return
+  cityQuery.value = placeData.countryName ? `${name}, ${placeData.countryName}` : name
+  resolvingCity.value = true
+  cityResolveError.value = ''
+  try {
+    const res: any = await $fetch(`${defaultApiUrl}/admin/cities/resolve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` },
+      body: {
+        name,
+        country_code: placeData.countryCode || null,
+        latitude: placeData.lat ?? null,
+        longitude: placeData.lng ?? null,
+      },
+    })
+    const city = res?.data
+    if (city?.id) {
+      store.basicInfo.cityId = city.id
+      store.basicInfo.nearestCity = city.name
+      if (city.latitude && city.longitude) {
+        store.basicInfo.cityCoordinates = { lat: parseFloat(city.latitude), lng: parseFloat(city.longitude) }
+      }
+      if (!cityResults.value.some((c: any) => c.id === city.id)) cityResults.value.push(city)
+    }
+  } catch (error) {
+    console.error('Error resolving city:', error)
+    cityResolveError.value = 'No se pudo registrar la ciudad. Intenta de nuevo o elige de la lista.'
+    googleFailed.value = false
+  } finally {
+    resolvingCity.value = false
+  }
+}
 
 // Fetch languages on mount
 const fetchLanguages = async () => {
@@ -536,10 +625,24 @@ onMounted(async () => {
   await fetchLanguages()
 
   fetchCities()
+  cityQuery.value = store.basicInfo.nearestCity || ''
+
+  // Google Maps reports invalid/restricted keys through this global hook —
+  // the script "loads" fine, so it's the only reliable failure signal.
+  ;(window as any).gm_authFailure = () => { googleFailed.value = true }
 
   if (!store.basicInfo.code && selectedLanguageId.value) {
     generateTourCode(selectedLanguageId.value)
   }
+})
+
+// Edit mode loads the tour after mount — reflect the stored city in the input.
+watch(() => store.basicInfo.nearestCity, (name) => {
+  if (name && !cityQuery.value) cityQuery.value = name
+})
+
+onUnmounted(() => {
+  if (cityInputRef.value) cleanup(cityInputRef.value)
 })
 </script>
 

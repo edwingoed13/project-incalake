@@ -263,6 +263,9 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.merge-tag');
     });
 
+    // Admin routes - Cities (resolve a Google Places pick to a catalog row)
+    Route::post('admin/cities/resolve', [CityController::class, 'resolve'])->name('api.admin.cities.resolve');
+
     // Admin routes - Reviews management
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [ReviewController::class, 'adminIndex'])->name('api.admin.reviews.index');

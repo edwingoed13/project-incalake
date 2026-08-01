@@ -93,11 +93,13 @@ export const useGooglePlaces = () => {
           // Extract city name and country
           let cityName = place.name || ''
           let countryName = ''
+          let countryCode = ''
 
           if (place.address_components) {
             for (const component of place.address_components) {
               if (component.types.includes('country')) {
                 countryName = component.long_name
+                countryCode = component.short_name || ''
               }
               if (component.types.includes('locality')) {
                 cityName = component.long_name
@@ -116,6 +118,7 @@ export const useGooglePlaces = () => {
             onPlaceSelected({
               cityName,
               countryName,
+              countryCode,
               formatted_address: place.formatted_address,
               lat: place.geometry?.location?.lat(),
               lng: place.geometry?.location?.lng()

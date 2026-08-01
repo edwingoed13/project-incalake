@@ -117,4 +117,61 @@ class CityController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Admin: resolve a Google Places pick to a catalog city — find it by
+     * slug/name or create it. The tour editor must always end up with a
+     * cities.id (public /[city]/[slug] URLs hang off it), so free-text
+     * Places results can never stay as plain text. Cache invalidation is
+     * handled by the City model observer (bumpSupportVersion).
+     */
+    public function resolve(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'country_code' => 'nullable|string|size:2',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+        ]);
+
+        $name = trim($data['name']);
+        $slug = \Illuminate\Support\Str::slug($name);
+        $country = strtoupper($data['country_code'] ?? 'PE');
+
+        $city = City::withTrashed()
+            ->where(function ($q) use ($slug, $name) {
+                $q->where('slug', $slug)->orWhereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+            })
+            ->first();
+
+        if ($city) {
+            if ($city->trashed()) {
+                $city->restore();
+            }
+            $updates = [];
+            if (!$city->active) {
+                $updates['active'] = true;
+            }
+            if ($city->latitude === null && isset($data['latitude'])) {
+                $updates['latitude'] = $data['latitude'];
+                $updates['longitude'] = $data['longitude'] ?? null;
+            }
+            if ($updates) {
+                $city->update($updates);
+            }
+        } else {
+            $city = City::create([
+                'name' => $name,
+                'slug' => $slug,
+                'country_code' => $country,
+                // Peru and Bolivia are the operating area; both are DST-free.
+                'timezone' => $country === 'BO' ? 'America/La_Paz' : 'America/Lima',
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'active' => true,
+            ]);
+        }
+
+        return response()->json(['success' => true, 'data' => $city]);
+    }
 }
