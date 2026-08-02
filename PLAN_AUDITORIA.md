@@ -69,28 +69,28 @@
 - [x] 3.8 `common/StarRating.vue` → 4 filas de estrellas de la home (2 amarillos distintos unificados)
 
 ## 🟡 FASE 4 — i18n flujo de pago
-- [ ] 4.1 paypal.vue completo a t() (el peor: página entera hardcoded EN/ES)
-- [ ] 4.2 culqi.vue + CulqiCheckoutFixed (botón "Pay/Processing")
-- [ ] 4.3 booking-confirmation (mezclas ES/EN), TravelersForm, cart (política estándar está EN en un modal y ES en otro)
-- [ ] 4.4 Home: "Our Offers"/"Special Deals" → t(); detalle: badges/trust/CTA a t()
-- [ ] 4.5 confirm() nativos → modal propio (cart.vue:180, bookingCode:729)
+- [x] 4.1 paypal.vue a t() — header/detalles/error/modo-adelanto (1bb441f); queda solo el meta title SEO
+- [x] 4.2 culqi.vue + CulqiCheckoutFixed — botón Pay/Processing/Loading, adults/children, modo adelanto (1bb441f)
+- [x] 4.3 TravelersForm + 15 labels de campos de viajero en 6 idiomas + validación líder (3731b71); confirmación y políticas del cart completados en batch 3
+- [x] 4.4 Home offers/search (1bb441f) + detalle badges/trust/CTA/share (batch 3)
+- [x] 4.5 useConfirmDialog + CommonConfirmDialog global — cart bulk-delete y copiar-viajeros (3731b71)
 
 ## 🟡 FASE 5 — Admin
 - [ ] 5.1 Barrido micro-label ad-hoc (49 usos, 15 archivos) → `admin-label` (incl. layout sidebar, BookingDetailsModal, Step1/6, th bookings, Step8 9px)
-- [ ] 5.2 `alert()/confirm()` → useToast/useConfirm: tourWizard.ts:882,918,1181,1183; Step6:1131; Step3:505; layout logout:155
-- [ ] 5.3 `StatCard.vue` compartida (5 grids hardcodeadas) 
-- [ ] 5.4 Step8Availability + Step8FinalReview → WizardSection
-- [ ] 5.5 ModalShell común (botón cerrar md rounded-full, footer bg-elevated/30) en 5 form-modals + clonar
-- [ ] 5.6 Redirects `/admin/* → /admin/v2/*` + borrar WizardHeader.vue (muerto) y páginas viejas
-- [ ] 5.7 Labels EN → ES (nav "Reviews", "Home Page")
-- [ ] 5.8 UTable+UPagination en tours/reviews/categories/users/languages (patrón bookings) — GRANDE, opcional por página
+- [x] 5.2 alert/confirm → toast/dialog: tourWizard ×4, Step6 attach-variant, Step3 delete-section, logout v2 (2917d34); el confirm del layout admin VIEJO se deja (regla: no tocar superficie vieja)
+- [x] 5.3 V2StatCard → bookings + reviews (19763e8); el stat del dashboard queda inline a propósito (skeleton/trend/revenue) 
+- [x] 5.4 DESCARTADO con razón: las cards de Step8 son especializadas (calendario sticky, col-spans, p-0) — WizardSection las forzaría
+- [x] 5.5 V2FormModalShell en los 4 form-modals + clonar (subtitle slot, scrollable, busy)
+- [x] 5.6 Admin viejo retirado (11 páginas, layout, AdminTopbar, WizardHeader; −4,253 líneas) + catch-all 301 /admin/** → /admin/v2/** — OK del cliente recibido — f21faf1
+- [x] 5.7 Nav "Reviews"→"Reseñas", "Home Page"→"Página de inicio" (2917d34)
+- [x] 5.8 UPagination unificado (reviews tenía pager artesanal; tours tenía computed muerto); row-lists se quedan a propósito (mejor fit que UTable) y catálogos chicos sin paginar no la necesitan
 
 ## 🟢 FASE 6 — Limpieza backend
-- [ ] 6.1 Borrar subsistema eventos muerto (EventServiceProvider wiring + ProcessNewTour/UpdateTourCache/SendBookingNotification + 4 jobs nunca despachados)
-- [ ] 6.2 Borrar TourController muertos: cloneManual/cloneWithAI/translateWithAI/generateTourCodeForLanguage (1015-1305, refs a relaciones inexistentes)
-- [ ] 6.3 Quitar `UPDATE_TOUR_DEBUG` (TourService:80) + verbosidad TourTranslationService:84, CacheService, logs Culqi con request completo
-- [ ] 6.4 Borrar .bak/.old/.txt + scripts raíz (check_tours.php, test_*.php, fix_save.php, confirmCulqiPayment_updated.php, tour4.json) + public/test-*.html, calendar-test.php, seed-tour-options.php (ya usado)
-- [ ] 6.5 Retiro Livewire admin (app/Livewire, resources/views/admin+livewire, rutas web, composer) — tras confirmar nada lo usa
+- [x] 6.1 Subsistema eventos borrado: 4 events + 3 listeners + 4 jobs + EventServiceProvider (nunca registrado en bootstrap/providers.php) — 28cc1df
+- [x] 6.2 TourController: cloneManual/cloneWithAI + helpers AI privados borrados (−294 líneas; rutas usan TourCloneController) — 28cc1df
+- [x] 6.3 UPDATE_TOUR_DEBUG + log booking_texts fuera; respuesta Culqi loggea solo charge_id/outcome (el raw llevaba email+metadata de tarjeta al log) — 28cc1df
+- [x] 6.4 Basura borrada: scripts raíz, .bak/.old, ejecutables de public/ (calendar-test, seed-tour-options, test-*.html) + ruta /test-tiptap — 28cc1df. OJO: borrar residuos en el docroot de prod a mano (FTP no borra)
+- [x] 6.5 Livewire retirado (91 archivos, −12,614 líneas): app/Livewire, 10 Admin web controllers, vistas admin+livewire, config, grupo /admin web, alias+clase AdminMiddleware, dep composer. Usuario confirmó que nadie entra por api.incalake.com/admin — 51aa964
 - [ ] 6.6 Contrato de respuesta: render global en bootstrap/app.php (422/404/500 uniformes {success,message,errors}), BookingController::index paginador crudo, claves booking→data
 - [ ] 6.7 Caché: bump en Category writes (nombres viejos hasta 24h en detalle); cachear /pages/{page} y /reviews; borrar métodos CacheService muertos (tags() rompe en file driver)
 - [ ] 6.8 Mailables → ShouldQueue + resolver queue prod (worker cron o sync consciente)
@@ -99,10 +99,10 @@
 - [ ] 6.11 Migraciones no reproducibles (gallery_layout ×4, bookings create ×2, cities slug ×2) — consolidar (solo si se necesita entorno fresco)
 
 ## 🟢 FASE 7 — Responsive fino
-- [ ] 7.1 Touch targets ≥44px: corazón mobile 36px, share/save galería 36px, × chips 20px, steppers cart 32px, iconos editar/eliminar cart 28px, admin row actions xs, WizardStepper móvil
-- [ ] 7.2 Inputs ≥16px móvil (TravelersForm, Inquiry) — evitar zoom iOS
-- [ ] 7.3 Offsets sticky vs navbar de altura variable (56/68px hardcodeados en 3 sitios)
-- [ ] 7.4 Grid del Inquiry modal apretado en móvil (fecha/adultos/niños en cuartos)
+- [x] 7.1 Touch targets 44px móvil: heart (size-11 md:size-9/10), share galería, editar/eliminar cart. Chips/admin xs quedan (secundarios, riesgo layout)
+- [x] 7.2 TravelersForm text-base sm:text-sm ×4 (input-base ya era 16px) + 3 strings ES → i18n
+- [x] 7.3 Token .sticky-below-nav (56/68px) en los 3 sitios
+- [x] 7.4 Inquiry móvil: fecha ancho completo, pax debajo
 
 ---
 
