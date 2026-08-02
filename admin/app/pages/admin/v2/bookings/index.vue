@@ -472,17 +472,7 @@ onMounted(() => {
 
         <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <UCard v-for="card in statsCards" :key="card.label" :ui="{ body: 'p-5' }">
-            <div class="flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">{{ card.label }}</p>
-                <p class="text-3xl font-bold tabular-nums mt-2 truncate">{{ card.value }}</p>
-              </div>
-              <div :class="['size-11 rounded-xl flex items-center justify-center shrink-0', card.bgClass]">
-                <UIcon :name="card.icon" :class="['size-6', card.iconClass]" />
-              </div>
-            </div>
-          </UCard>
+          <V2StatCard v-for="card in statsCards" :key="card.label" v-bind="card" />
         </div>
 
         <!-- Filters -->
