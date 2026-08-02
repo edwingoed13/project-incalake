@@ -188,7 +188,10 @@ class Tour extends Model
     {
         $img = $this->featured_image_path;
         if (!$img && $this->relationLoaded('mediaGallery') && $this->mediaGallery->count()) {
-            $img = $this->mediaGallery->sortBy('order')->first()?->image_path;
+            // The wizard's HERO flag (is_primary) wins; order is the fallback.
+            // (featured_image_path is a legacy column nothing writes anymore.)
+            $img = $this->mediaGallery->firstWhere('is_primary', true)?->image_path
+                ?? $this->mediaGallery->sortBy('order')->first()?->image_path;
         }
         if (!$img) {
             return null;

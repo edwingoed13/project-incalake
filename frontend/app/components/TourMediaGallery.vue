@@ -58,7 +58,13 @@ const images = computed(() => {
   if (!props.tour?.media_gallery || props.tour.media_gallery.length === 0) {
     return []
   }
-  return props.tour.media_gallery.map((media: any) => ({
+  // HERO (is_primary) leads, the rest keep their admin order — so changing
+  // the featured image in the wizard is visible here immediately.
+  return [...props.tour.media_gallery]
+    .sort((a: any, b: any) =>
+      (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || (a.order ?? 0) - (b.order ?? 0)
+    )
+    .map((media: any) => ({
     url: getImageUrl(media.url || media.path),
     alt: media.alt_text || props.tour.title,
     title: media.title_text || '',
@@ -327,6 +333,7 @@ function getImageUrl(path: string) {
             :video-id="youtubeVideoId.id"
             :title="tour.title"
             :extra-params="{ loop: '1', playlist: youtubeVideoId.id }"
+            :vertical="!!youtubeVideoId.isShort"
           />
         </div>
 

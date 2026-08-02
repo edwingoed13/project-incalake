@@ -191,31 +191,43 @@ watch(() => store.currentStep, (newStep) => {
   // flush any pending debounced autosave right away instead of letting edits
   // sit unsaved for 2 more seconds while the user has already moved on. A
   // toast confirms the outcome so the operator KNOWS the previous step's
-  // edits were saved (or not) without having to find the navbar badge.
-  if (store.isDirty && store.tourId && store.tourId !== 'new' && !store.autosaving) {
-    if (autosaveTimer) {
-      clearTimeout(autosaveTimer)
-      autosaveTimer = null
-    }
+  // edits were saved (or not) without having to find the navbar badge. When
+  // the debounced autosave already ran BEFORE the switch (edits older than
+  // ~2s), still confirm — silence read as "did it save?".
+  if (store.tourId && store.tourId !== 'new') {
     const toast = useToast()
-    store.autosave().then(() => {
-      if (store.autosaveError) {
-        toast.add({
-          title: 'El paso anterior NO se guardó',
-          description: store.autosaveError,
-          color: 'error',
-          icon: 'i-lucide-circle-alert',
-          duration: 8000,
-        })
-      } else {
-        toast.add({
-          title: 'Cambios del paso anterior guardados',
-          color: 'success',
-          icon: 'i-lucide-circle-check',
-          duration: 2500,
-        })
+    if (store.isDirty && !store.autosaving) {
+      if (autosaveTimer) {
+        clearTimeout(autosaveTimer)
+        autosaveTimer = null
       }
-    })
+      store.autosave().then(() => {
+        if (store.autosaveError) {
+          toast.add({
+            title: 'El paso anterior NO se guardó',
+            description: store.autosaveError,
+            color: 'error',
+            icon: 'i-lucide-circle-alert',
+            duration: 8000,
+          })
+        } else {
+          toast.add({
+            title: 'Cambios del paso anterior guardados',
+            color: 'success',
+            icon: 'i-lucide-circle-check',
+            duration: 2500,
+          })
+        }
+      })
+    } else if (editedThisSession && !store.autosaveError) {
+      toast.add({
+        title: 'Todo guardado',
+        description: 'Los cambios anteriores ya estaban guardados.',
+        color: 'success',
+        icon: 'i-lucide-circle-check',
+        duration: 2000,
+      })
+    }
   }
   const current = parseInt(String(route.query.step || ''), 10)
   if (current === newStep) return
@@ -224,8 +236,12 @@ watch(() => store.currentStep, (newStep) => {
 
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null
 let firstSaveInFlight = false
+// True once the operator modified anything this session — gates the "Todo
+// guardado" step-change toast so untouched navigation stays silent.
+let editedThisSession = false
 
 watch(() => store.isDirty, (dirty) => {
+  if (dirty) editedThisSession = true
   if (autosaveTimer) {
     clearTimeout(autosaveTimer)
     autosaveTimer = null

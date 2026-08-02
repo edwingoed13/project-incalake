@@ -14,7 +14,7 @@
       <img
         :src="thumbnailUrl"
         :alt="title"
-        class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+        :class="['absolute inset-0 w-full h-full opacity-90 group-hover:opacity-100 transition-opacity', vertical ? 'object-contain' : 'object-cover']"
         loading="lazy"
         decoding="async"
         width="480"
@@ -50,6 +50,9 @@ const props = defineProps<{
   containerClass?: string
   /** Optional iframe URL params (e.g. for shorts: ?loop=1&playlist=ID) */
   extraParams?: Record<string, string>
+  /** Vertical video (Short): letterbox the landscape thumbnail instead of
+   *  zoom-cropping it into the portrait tile (it looked badly cut off). */
+  vertical?: boolean
 }>()
 
 const loaded = ref(false)
