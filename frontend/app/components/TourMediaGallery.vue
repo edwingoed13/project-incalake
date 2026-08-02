@@ -152,29 +152,46 @@ function closeVideoModal() {
   document.body.style.overflow = ''
 }
 
-// Preload the lightbox neighbors with the SAME transform the viewer uses,
-// so "next/previous" swaps instantly instead of sticking on the current
-// photo while the 1600w variant downloads.
+// Lightbox never blocks on the 1600w download: the small variant (same
+// transform the mosaic cells use, so usually browser-cached) swaps in
+// instantly as a blurred placeholder and the full-res fades in on load.
+// Opening the viewer also warms EVERY photo's 1600w in a staggered queue so
+// rapid next-next-next hits warm cache.
 const nuxtImg = useImage()
+const highLoaded = ref(false)
+watch(currentImageIndex, () => { highLoaded.value = false })
+
 function lightboxVariant(i: number): string {
   const img = images.value[i]
   return img ? nuxtImg(img.url, { format: 'webp', width: 1600, height: 1067 }) : ''
 }
-function preloadAround(index: number) {
+function lowVariant(i: number): string {
+  const img = images.value[i]
+  return img ? nuxtImg(img.url, { format: 'webp', width: 440, height: 293 }) : ''
+}
+
+let warmTimers: ReturnType<typeof setTimeout>[] = []
+function warmAllVariants(startAt: number) {
   if (import.meta.server) return
-  for (const i of [index + 1, index - 1]) {
-    if (i >= 0 && i < images.value.length) {
-      const im = new Image()
-      im.src = lightboxVariant(i)
-    }
+  warmTimers.forEach(clearTimeout)
+  warmTimers = []
+  // Nearest first, then outward, 250ms apart to not fight the visible load.
+  const order: number[] = []
+  for (let d = 1; d < images.value.length; d++) {
+    if (startAt + d < images.value.length) order.push(startAt + d)
+    if (startAt - d >= 0) order.push(startAt - d)
   }
+  order.forEach((i, n) => {
+    warmTimers.push(setTimeout(() => { new Image().src = lightboxVariant(i) }, 250 * (n + 1)))
+  })
 }
 
 function openLightbox(index: number) {
   currentImageIndex.value = index
+  highLoaded.value = false
   lightboxOpen.value = true
   document.body.style.overflow = 'hidden'
-  preloadAround(index)
+  warmAllVariants(index)
 }
 
 function closeLightbox() {
@@ -185,14 +202,12 @@ function closeLightbox() {
 function nextImage() {
   if (currentImageIndex.value < images.value.length - 1) {
     currentImageIndex.value++
-    preloadAround(currentImageIndex.value)
   }
 }
 
 function prevImage() {
   if (currentImageIndex.value > 0) {
     currentImageIndex.value--
-    preloadAround(currentImageIndex.value)
   }
 }
 
@@ -483,16 +498,24 @@ function getImageUrl(path: string) {
           <Icon name="material-symbols:chevron-left" class="text-3xl" />
         </button>
 
-        <NuxtImg
-          :src="images[currentImageIndex].url"
-          :alt="images[currentImageIndex].alt"
-          format="webp"
-          width="1600"
-          height="1067"
-          densities="x1"
-          class="max-w-full max-h-full object-contain px-4"
-          @click.stop
-        />
+        <!-- Instant swap: the small (already-cached) variant shows at once,
+             slightly blurred; the 1600w fades in over it when it lands. -->
+        <div class="relative max-w-full max-h-full px-4 flex items-center justify-center" @click.stop>
+          <img
+            :src="lowVariant(currentImageIndex)"
+            :alt="images[currentImageIndex].alt"
+            class="max-w-full max-h-[88vh] object-contain"
+            :class="highLoaded ? 'invisible' : 'blur-[3px] scale-[1.005]'"
+          />
+          <img
+            :key="currentImageIndex"
+            :src="lightboxVariant(currentImageIndex)"
+            :alt="images[currentImageIndex].alt"
+            class="absolute inset-0 w-full h-full object-contain px-4 transition-opacity duration-150"
+            :class="highLoaded ? 'opacity-100' : 'opacity-0'"
+            @load="highLoaded = true"
+          />
+        </div>
 
         <button
           v-if="currentImageIndex < images.length - 1"
