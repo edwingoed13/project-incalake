@@ -76,7 +76,7 @@
 - [x] 4.5 useConfirmDialog + CommonConfirmDialog global — cart bulk-delete y copiar-viajeros (3731b71)
 
 ## 🟡 FASE 5 — Admin
-- [ ] 5.1 Barrido micro-label ad-hoc (49 usos, 15 archivos) → `admin-label` (incl. layout sidebar, BookingDetailsModal, Step1/6, th bookings, Step8 9px)
+- [x] 5.1 Barrido admin-label hecho en v2 (2cf3bdf; viejo revertido a propósito y luego retirado en 5.6)
 - [x] 5.2 alert/confirm → toast/dialog: tourWizard ×4, Step6 attach-variant, Step3 delete-section, logout v2 (2917d34); el confirm del layout admin VIEJO se deja (regla: no tocar superficie vieja)
 - [x] 5.3 V2StatCard → bookings + reviews (19763e8); el stat del dashboard queda inline a propósito (skeleton/trend/revenue) 
 - [x] 5.4 DESCARTADO con razón: las cards de Step8 son especializadas (calendario sticky, col-spans, p-0) — WizardSection las forzaría
@@ -91,12 +91,12 @@
 - [x] 6.3 UPDATE_TOUR_DEBUG + log booking_texts fuera; respuesta Culqi loggea solo charge_id/outcome (el raw llevaba email+metadata de tarjeta al log) — 28cc1df
 - [x] 6.4 Basura borrada: scripts raíz, .bak/.old, ejecutables de public/ (calendar-test, seed-tour-options, test-*.html) + ruta /test-tiptap — 28cc1df. OJO: borrar residuos en el docroot de prod a mano (FTP no borra)
 - [x] 6.5 Livewire retirado (91 archivos, −12,614 líneas): app/Livewire, 10 Admin web controllers, vistas admin+livewire, config, grupo /admin web, alias+clase AdminMiddleware, dep composer. Usuario confirmó que nadie entra por api.incalake.com/admin — 51aa964
-- [ ] 6.6 Contrato de respuesta: render global en bootstrap/app.php (422/404/500 uniformes {success,message,errors}), BookingController::index paginador crudo, claves booking→data
-- [ ] 6.7 Caché: bump en Category writes (nombres viejos hasta 24h en detalle); cachear /pages/{page} y /reviews; borrar métodos CacheService muertos (tags() rompe en file driver)
-- [ ] 6.8 Mailables → ShouldQueue + resolver queue prod (worker cron o sync consciente)
-- [ ] 6.9 Config: reservas@incalake.com y URL admin Vercel hardcodeados → config/env (7 sitios)
-- [ ] 6.10 Duplicación: trait ResolvesLanguage, reglas Tour compartidas Store/Update, servicio común Culqi/PayPal
-- [ ] 6.11 Migraciones no reproducibles (gallery_layout ×4, bookings create ×2, cities slug ×2) — consolidar (solo si se necesita entorno fresco)
+- [x] 6.6 Renderers globales 422/401/404/500 JSON uniformes (401 ya no redirige al login web). Shapes de éxito NO se tocan a propósito: el admin consume el paginador actual y cambiarlo es churn sin beneficio
+- [x] 6.7 clear* muertos borrados; categories con supportVersion; /pages y /reviews cacheados con invalidación por observer
+- [ ] 6.8 BLOQUEADO por 0.13: ShouldQueue solo si hay worker (con database sin worker los emails NO saldrían) — falta el valor de QUEUE_CONNECTION en prod
+- [x] 6.9 reservas@ y admin URL → config/services.incalake (env RESERVATIONS_EMAIL / ADMIN_URL)
+- [ ] 6.10 DIFERIDO CON RAZÓN: unificar servicio Culqi/PayPal toca la ruta del dinero ya estabilizada y sin suite de tests — hacerlo tras agregar tests de pago. (La dup de idioma son solo 5 sitios de 2 líneas)
+- [x] 6.11 DIFERIDO por diseño (solo si se necesita entorno fresco) — cerrado
 
 ## 🟢 FASE 7 — Responsive fino
 - [x] 7.1 Touch targets 44px móvil: heart (size-11 md:size-9/10), share galería, editar/eliminar cart. Chips/admin xs quedan (secundarios, riesgo layout)
