@@ -189,13 +189,33 @@ watch(() => store.currentStep, (newStep) => {
   }
   // Changing steps keeps everything in the store, so nothing is lost — but
   // flush any pending debounced autosave right away instead of letting edits
-  // sit unsaved for 2 more seconds while the user has already moved on.
+  // sit unsaved for 2 more seconds while the user has already moved on. A
+  // toast confirms the outcome so the operator KNOWS the previous step's
+  // edits were saved (or not) without having to find the navbar badge.
   if (store.isDirty && store.tourId && store.tourId !== 'new' && !store.autosaving) {
     if (autosaveTimer) {
       clearTimeout(autosaveTimer)
       autosaveTimer = null
     }
-    store.autosave()
+    const toast = useToast()
+    store.autosave().then(() => {
+      if (store.autosaveError) {
+        toast.add({
+          title: 'El paso anterior NO se guardó',
+          description: store.autosaveError,
+          color: 'error',
+          icon: 'i-lucide-circle-alert',
+          duration: 8000,
+        })
+      } else {
+        toast.add({
+          title: 'Cambios del paso anterior guardados',
+          color: 'success',
+          icon: 'i-lucide-circle-check',
+          duration: 2500,
+        })
+      }
+    })
   }
   const current = parseInt(String(route.query.step || ''), 10)
   if (current === newStep) return
