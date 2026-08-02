@@ -125,15 +125,6 @@ const statsCards = computed(() => [
   },
 ])
 
-const visiblePages = computed(() => {
-  if (!meta.value) return []
-  const c = meta.value.current_page
-  const l = meta.value.last_page
-  const pages: number[] = []
-  for (let i = Math.max(1, c - 2); i <= Math.min(l, c + 2); i++) pages.push(i)
-  return pages
-})
-
 const fetchReviews = async (page = 1) => {
   loading.value = true
   try {
@@ -529,34 +520,12 @@ onMounted(() => {
               Mostrando <span class="font-semibold text-default">{{ meta.from }}-{{ meta.to }}</span>
               de <span class="font-semibold text-default">{{ meta.total }}</span> reseñas
             </p>
-            <div class="flex items-center gap-1">
-              <UButton
-                icon="i-lucide-chevron-left"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="meta.current_page === 1"
-                @click="changePage(meta.current_page - 1)"
-              />
-              <UButton
-                v-for="page in visiblePages"
-                :key="page"
-                :color="meta.current_page === page ? 'primary' : 'neutral'"
-                :variant="meta.current_page === page ? 'solid' : 'ghost'"
-                size="sm"
-                @click="changePage(page)"
-              >
-                {{ page }}
-              </UButton>
-              <UButton
-                icon="i-lucide-chevron-right"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="meta.current_page === meta.last_page"
-                @click="changePage(meta.current_page + 1)"
-              />
-            </div>
+            <UPagination
+              :page="meta.current_page"
+              :total="meta.total"
+              :items-per-page="meta.per_page"
+              @update:page="changePage"
+            />
           </div>
         </UCard>
       </div>

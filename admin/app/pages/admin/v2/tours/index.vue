@@ -305,15 +305,6 @@ const performClone = async () => {
   }
 }
 
-const displayedPages = computed(() => {
-  if (!meta.value) return []
-  const total = meta.value.last_page
-  const current = meta.value.current_page
-  const pages: number[] = []
-  for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) pages.push(i)
-  return pages
-})
-
 const changeStatus = async (tour: Tour, status: 'draft' | 'published' | 'archived') => {
   const verb = status === 'published' ? 'Publicar' : status === 'archived' ? 'Archivar' : 'Mover a borrador'
   const ok = await confirm({
