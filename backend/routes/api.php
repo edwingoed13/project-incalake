@@ -266,6 +266,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes - Cities (resolve a Google Places pick to a catalog row)
     Route::post('admin/cities/resolve', [CityController::class, 'resolve'])->name('api.admin.cities.resolve');
 
+    // Admin routes - one-off gallery re-migration (full-res legacy photos)
+    Route::post('admin/tours/{id}/replace-gallery', [\App\Http\Controllers\Api\TourGalleryRemigrationController::class, 'replaceGallery'])
+        ->name('api.admin.tours.replace-gallery');
+
     // Admin routes - Reviews management
     Route::prefix('admin/reviews')->group(function () {
         Route::get('/', [ReviewController::class, 'adminIndex'])->name('api.admin.reviews.index');
