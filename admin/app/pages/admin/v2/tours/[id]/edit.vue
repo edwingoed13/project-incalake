@@ -245,8 +245,31 @@ let editedThisSession = false
 // Most inputs v-model straight into the store; only a handful of actions set
 // isDirty, so autosave (and the step-change toast) missed most edits — e.g.
 // changing the capacity never marked dirty. Deep-watch every data slice and
-// flag; suppressed during load/hydration so opening a tour isn't "an edit".
+// compare against a BASELINE snapshot: step components normalize/default
+// fields when they mount, and a raw "any mutation = dirty" flag toasted
+// "guardado" on tours nobody touched. Only real data differences count.
 let suppressDirty = true
+let baselineJson = ''
+const slicesJson = () => {
+  try {
+    return JSON.stringify([
+      store.basicInfo, store.contentSEO, store.detailedContent,
+      store.commercialRules, store.multimedia, store.bookingOptions,
+      store.categories, store.availability,
+    ])
+  } catch { return '' }
+}
+// (Re)arm: capture the current data as the reference and start comparing.
+let armTimer: ReturnType<typeof setTimeout> | null = null
+function armDirtyTracking(delayMs: number) {
+  suppressDirty = true
+  if (armTimer) clearTimeout(armTimer)
+  armTimer = setTimeout(() => {
+    baselineJson = slicesJson()
+    suppressDirty = false
+  }, delayMs)
+}
+
 watch(
   () => [
     store.basicInfo, store.contentSEO, store.detailedContent,
@@ -254,21 +277,25 @@ watch(
     store.categories, store.availability,
   ],
   () => {
-    if (suppressDirty || store.loading) return
-    store.isDirty = true
+    if (suppressDirty || store.loading || store.isDirty) return
+    if (slicesJson() !== baselineJson) store.isDirty = true
   },
   { deep: true }
 )
-// Arm the watcher only after the initial load settles (mutations flush async).
+// Initial load settles (mutations flush async) → arm against loaded data.
 watch(() => store.loading, (loading, wasLoading) => {
-  if (wasLoading && !loading) {
-    setTimeout(() => { suppressDirty = false }, 300)
-  }
-}, { immediate: false })
-// New tours never enter loading — arm shortly after mount instead.
-onMounted(() => {
-  setTimeout(() => { suppressDirty = false }, 1500)
+  if (wasLoading && !loading) armDirtyTracking(300)
 })
+// New tours never enter loading — arm shortly after mount instead.
+onMounted(() => armDirtyTracking(1500))
+// A completed save is the new reference (paths/normalizations included).
+watch(() => store.isDirty, (dirty) => {
+  if (!dirty) baselineJson = slicesJson()
+})
+// Step mounts normalize their fields — refresh the baseline right after the
+// switch so those writes don't read as user edits. (The step-change toast
+// above runs FIRST in its own watcher with the pre-switch state.)
+watch(() => store.currentStep, () => armDirtyTracking(400))
 
 watch(() => store.isDirty, (dirty) => {
   if (dirty) editedThisSession = true
