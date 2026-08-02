@@ -32,7 +32,7 @@
 - [x] 0.11 PHP lint OK + builds frontend/admin OK (falta prueba manual en localhost)
 - [x] 0.12 Deploy hecho (migrate + purge OK). Smoke: (a)✅ admin navega y Step6 carga/busca, (b)✅ dashboard/stats bloqueado (redirige a login del web guard en navegador; 401 JSON vía SPA — normalizar en F6), (c)✅ confirmación carga con ?email= (el token de la reserva vieja estaba EXPIRADO por el TTL de 7 días preexistente — no relacionado al deploy), (d)✅ full-details sin token → 403, (e)✅ reserva de prueba en prod: total correcto → **FASE 0 COMPLETA**
 - [x] 0.12b fix(admin): dropdown de variantes del Step 6 se abre hacia arriba (quedaba tras la barra Anterior/Siguiente) — 3e5fc3d
-- [ ] 0.14 (F1 candidata) Extender TTL del confirmation_token (7 días es corto si reservan con semanas de anticipación) o auto-renovar al pagar
+- [x] 0.14 Resuelto en 1.7: TTL 30d + renovación al markAsPaid
 - [ ] 0.13 (Usuario) Verificar `QUEUE_CONNECTION` en .env prod: si `database` → falta worker/cron; si `sync` → emails bloquean checkout
 > Nota deploy: correr migrate.php ANTES de probar login admin (la promoción de rol). Si el admin quedara bloqueado igual: revisar en BD `users.role` del usuario que usan.
 
@@ -51,8 +51,8 @@
 - [x] 2.3 `.section-title` en 7 headings de home + 4 del detalle; `.section-label` en 3 labels
 - [x] 2.5 `.form-label` en CheckoutForm×5, Inquiry×7, TravelersForm×3
 - [x] 2.6 `.input-base` en Inquiry×7 (CheckoutForm ya ES la receta base y tiene bindings de error-border — no tocado; TravelersForm inputs quedan para F7 por el binding de error)
-- [ ] 2.4 Micro-labels 8/9/10px restantes → se resuelven en F3 con TourCard (los "Desde/from" viven en las tarjetas)
-- [ ] 2.7 Espaciado/gutters — diferido (bajo impacto, alto churn)
+- [x] 2.4 Resuelto vía F3/F5 (tokens en tarjetas y admin-label)
+- [x] 2.7 DIFERIDO por decisión (bajo impacto, alto churn) — cerrado
 - [x] 2.8 h1 semántico: hero home h2→h1, logo navbar h1→span, logo footer h2→p
 
 ## 🟠 FASE 3 — Componentes compartidos — BATCH A ✅ PUSHEADO (5014664 + d612202)
