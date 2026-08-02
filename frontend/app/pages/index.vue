@@ -96,13 +96,13 @@
             <!-- Loading -->
             <div v-if="searching" class="px-5 py-4 flex items-center gap-3">
               <Icon name="material-symbols:progress-activity" class="text-slate-400 animate-spin text-lg" />
-              <span class="text-sm text-slate-400">Buscando...</span>
+              <span class="text-sm text-slate-400">{{ t('search_searching') }}</span>
             </div>
 
             <!-- Results -->
             <template v-else-if="searchResults.length > 0">
               <p class="px-5 pt-3 pb-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                {{ searchResults.length }}+ resultados
+                {{ searchResults.length }}+ {{ t('search_results_suffix') }}
               </p>
               <NuxtLink
                 v-for="result in searchResults"
@@ -135,7 +135,7 @@
                 @click="goToTours"
                 class="w-full px-5 py-3 text-sm font-bold text-primary hover:bg-primary/5 transition-colors border-t border-slate-100 flex items-center justify-center gap-1"
               >
-                Ver todos los resultados para "{{ searchQuery }}"
+                {{ t('search_view_all_for') }} "{{ searchQuery }}"
                 <Icon name="material-symbols:arrow-forward" class="text-sm" />
               </button>
             </template>
@@ -263,9 +263,9 @@
           <div class="min-w-0">
             <p class="text-green-600 font-black uppercase tracking-[0.2em] text-[11px] mb-1.5">
               <Icon name="material-symbols:sell-outline" class="text-xs align-middle" />
-              Special Deals
+              {{ t('home_offers_label') }}
             </p>
-            <h3 class="section-title">Our Offers</h3>
+            <h3 class="section-title">{{ t('home_offers_title') }}</h3>
           </div>
           <NuxtLink :to="localePath('/tours')" class="group flex items-center gap-1.5 bg-white px-4 sm:px-5 min-h-[44px] rounded-xl shadow-sm border border-slate-100 hover:border-green-500/50 transition-all font-bold text-xs sm:text-sm text-green-700 shrink-0">
             {{ c('view_all', '', 'home_view_all') }}

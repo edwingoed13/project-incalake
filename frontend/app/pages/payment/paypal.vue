@@ -4,17 +4,15 @@
       <!-- Header -->
       <div class="mb-8 text-center">
         <h1 class="text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-2">
-          Complete Your Payment
-        </h1>
+          {{ t('payment_complete_title') }}        </h1>
         <p class="text-secondary-light dark:text-secondary-dark">
-          Secure payment powered by PayPal
-        </p>
+          {{ t('payment_secure_paypal') }}        </p>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
         <div class="spinner size-12 mb-4"></div>
-        <p class="text-secondary-light dark:text-secondary-dark">Loading payment information...</p>
+        <p class="text-secondary-light dark:text-secondary-dark">{{ t('loading_payment') }}</p>
       </div>
 
       <!-- Error State -->
@@ -28,8 +26,7 @@
               @click="router.push(localePath('/cart'))"
               class="mt-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
-              Return to Cart
-            </button>
+              {{ t('return_cart') }}            </button>
           </div>
         </div>
       </div>
@@ -39,13 +36,12 @@
         <!-- Left Column: Booking Summary -->
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
           <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-4">
-            Booking Details
-          </h3>
+            {{ t('booking_details') }}          </h3>
 
           <div class="space-y-4">
             <!-- Booking Code -->
             <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">Booking Code</p>
+              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">{{ t('booking_code_label') }}</p>
               <p class="text-lg font-black text-primary">{{ booking.booking_code }}</p>
             </div>
 
@@ -59,7 +55,7 @@
 
             <!-- Date -->
             <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">Date</p>
+              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">{{ t('date') }}</p>
               <p class="font-semibold text-primary-light dark:text-primary-dark">
                 {{ formatDate(booking.tour_date) }}
               </p>
@@ -67,16 +63,16 @@
 
             <!-- Participants -->
             <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">Participants</p>
+              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">{{ t('travelers') }}</p>
               <div class="space-y-1 text-sm">
                 <div v-if="booking.participants?.adults" class="flex justify-between">
-                  <span class="text-secondary-light dark:text-secondary-dark">Adults</span>
+                  <span class="text-secondary-light dark:text-secondary-dark">{{ t('adults') }}</span>
                   <span class="font-semibold text-primary-light dark:text-primary-dark">
                     {{ booking.participants.adults }}
                   </span>
                 </div>
                 <div v-if="booking.participants?.children" class="flex justify-between">
-                  <span class="text-secondary-light dark:text-secondary-dark">Children</span>
+                  <span class="text-secondary-light dark:text-secondary-dark">{{ t('children_label') }}</span>
                   <span class="font-semibold text-primary-light dark:text-primary-dark">
                     {{ booking.participants.children }}
                   </span>
@@ -86,7 +82,7 @@
 
             <!-- Customer Info -->
             <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">Customer</p>
+              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">{{ t('customer') }}</p>
               <div class="space-y-1 text-sm">
                 <p class="font-semibold text-primary-light dark:text-primary-dark">
                   {{ booking.customer?.name }}
@@ -104,8 +100,8 @@
               :subtotal="subtotalAmount"
               :tax="taxAmount"
               :total="payNowAmount"
-              :total-label="paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay')"
-              balance-label="Saldo a pagar en efectivo el día del tour"
+              :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
+              :balance-label="t('balance_due_day')"
               :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
               :usd-approx="payNowAmount"
             />
@@ -116,7 +112,7 @@
         <div>
           <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
           <div v-if="hasAdvanceOption" class="mb-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ t('pay_mode_question') }}</p>
             <!-- Full payment first = the default/recommended (same as Culqi) -->
             <label
               class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
@@ -125,10 +121,9 @@
               <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
               <div class="flex-1">
                 <p class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                  Pagar todo ahora
-                  <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">Recomendado</span>
+                  {{ t('pay_full_now') }}                  <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
                 </p>
-                <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+                <p class="text-[11px] text-slate-500">{{ t('no_balance_due') }}</p>
               </div>
               <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(fullTotal) }}</span>
             </label>
@@ -138,8 +133,8 @@
             >
               <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
               <div class="flex-1">
-                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Pagar adelanto</p>
-                <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(fullTotal - advanceTotal) }} en efectivo el día del tour</p>
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ t('pay_deposit') }}</p>
+                <p class="text-[11px] text-slate-500">{{ t('balance_cash_day', { amount: currencyStore.formatConverted(fullTotal - advanceTotal) }) }}</p>
               </div>
               <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
             </label>

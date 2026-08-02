@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+const { t } = useI18n()
+
 // Declare CulqiCheckout and 3DS on window
 declare global {
   interface Window {
@@ -243,12 +245,12 @@ const openPayment = () => {
       :disabled="processing || !culqiReady"
       class="btn-primary btn-lg w-full hover:shadow-xl"
     >
-      <div v-if="processing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+      <div v-if="processing" class="spinner size-5 border-white/20 border-t-white"></div>
       <Icon name="material-symbols:hourglass-empty" v-else-if="!culqiReady" class="text-lg animate-pulse" />
       <Icon name="material-symbols:lock-outline" v-else class="text-lg" />
-      <span v-if="processing">Processing...</span>
-      <span v-else-if="!culqiReady">Loading...</span>
-      <span v-else>Pay {{ currency }} {{ amount.toFixed(2) }}</span>
+      <span v-if="processing">{{ t('payment_processing') }}</span>
+      <span v-else-if="!culqiReady">{{ t('options_loading') }}</span>
+      <span v-else>{{ t('pay_verb') }} {{ currency }} {{ amount.toFixed(2) }}</span>
     </button>
   </div>
 </template>

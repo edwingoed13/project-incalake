@@ -2,6 +2,27 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      pay_mode_question: '¿Cuánto deseas pagar ahora?',
+      pay_full_now: 'Pagar todo ahora',
+      recommended_label: 'Recomendado',
+      no_balance_due: 'Sin saldo pendiente',
+      pay_deposit: 'Pagar adelanto',
+      balance_cash_day: 'Saldo {amount} en efectivo el día del tour',
+      payment_complete_title: 'Completa tu pago',
+      payment_secure_paypal: 'Pago seguro con PayPal',
+      booking_details: 'Detalles de la reserva',
+      booking_code_label: 'Código de reserva',
+      children_label: 'Niños',
+      pay_now_label: 'Pagas ahora',
+      balance_due_day: 'Saldo a pagar en efectivo el día del tour',
+      payment_processing: 'Procesando…',
+      pay_verb: 'Pagar',
+      // Home: offers section + search dropdown (Fase 4 i18n)
+      home_offers_label: 'Ofertas especiales',
+      home_offers_title: 'Nuestras Ofertas',
+      search_searching: 'Buscando…',
+      search_results_suffix: 'resultados',
+      search_view_all_for: 'Ver todos los resultados para',
       welcome: 'Bienvenido',
       tours: 'Tours',
       about: 'Acerca de',

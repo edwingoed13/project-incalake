@@ -60,8 +60,8 @@
                     </span>
                     <span class="flex items-center gap-1">
                       <Icon name="material-symbols:group-outline" class="text-xs" />
-                      {{ b.participants?.adults || 0 }} adults
-                      <template v-if="b.participants?.children">, {{ b.participants.children }} children</template>
+                      {{ b.participants?.adults || 0 }} {{ t('adults').toLowerCase() }}
+                      <template v-if="b.participants?.children">, {{ b.participants.children }} {{ t('children_label').toLowerCase() }}</template>
                     </span>
                   </div>
 
@@ -99,8 +99,8 @@
               :subtotal="subtotalAmount"
               :tax="taxAmount"
               :total="payNowAmount"
-              :total-label="paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay')"
-              balance-label="Saldo a pagar en efectivo el día del tour"
+              :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
+              :balance-label="t('balance_due_day')"
               :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
               :usd-approx="grandTotal"
             />
@@ -112,7 +112,7 @@
           <div class="sticky top-24 space-y-4">
             <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
             <div v-if="hasAdvanceOption" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-2">
-              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">¿Cuánto deseas pagar ahora?</p>
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ t('pay_mode_question') }}</p>
               <!-- Full payment first = the default/recommended -->
               <label
                 class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
@@ -121,10 +121,9 @@
                 <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
                 <div class="flex-1">
                   <p class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                    Pagar todo ahora
-                    <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">Recomendado</span>
+                    {{ t('pay_full_now') }}                    <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
                   </p>
-                  <p class="text-[11px] text-slate-500">Sin saldo pendiente</p>
+                  <p class="text-[11px] text-slate-500">{{ t('no_balance_due') }}</p>
                 </div>
                 <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(grandTotal) }}</span>
               </label>
@@ -134,8 +133,8 @@
               >
                 <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
                 <div class="flex-1">
-                  <p class="text-sm font-bold text-slate-800">Pagar adelanto</p>
-                  <p class="text-[11px] text-slate-500">Saldo {{ currencyStore.formatConverted(grandTotal - advanceTotal) }} en efectivo el día del tour</p>
+                  <p class="text-sm font-bold text-slate-800">{{ t('pay_deposit') }}</p>
+                  <p class="text-[11px] text-slate-500">{{ t('balance_cash_day', { amount: currencyStore.formatConverted(grandTotal - advanceTotal) }) }}</p>
                 </div>
                 <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
               </label>

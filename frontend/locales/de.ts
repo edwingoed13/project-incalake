@@ -2,6 +2,27 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      pay_mode_question: 'Wie viel möchten Sie jetzt zahlen?',
+      pay_full_now: 'Jetzt alles zahlen',
+      recommended_label: 'Empfohlen',
+      no_balance_due: 'Kein Restbetrag',
+      pay_deposit: 'Anzahlung leisten',
+      balance_cash_day: 'Restbetrag {amount} bar am Tag der Tour',
+      payment_complete_title: 'Zahlung abschließen',
+      payment_secure_paypal: 'Sichere Zahlung über PayPal',
+      booking_details: 'Buchungsdetails',
+      booking_code_label: 'Buchungscode',
+      children_label: 'Kinder',
+      pay_now_label: 'Sie zahlen jetzt',
+      balance_due_day: 'Restbetrag bar am Tag der Tour zu zahlen',
+      payment_processing: 'Verarbeitung…',
+      pay_verb: 'Zahlen',
+      // Home: offers section + search dropdown (Fase 4 i18n)
+      home_offers_label: 'Sonderangebote',
+      home_offers_title: 'Unsere Angebote',
+      search_searching: 'Suche…',
+      search_results_suffix: 'Ergebnisse',
+      search_view_all_for: 'Alle Ergebnisse für',
       welcome: 'Willkommen', tours: 'Touren', about: 'Über uns', contact: 'Kontakt',
       hero_subtitle: 'Erkunden & Entdecken', hero_title: 'Touren in Puno & Titicacasee',
       hero_description: 'Entdecken Sie atemberaubende Erlebnisse am höchsten schiffbaren See der Welt.',

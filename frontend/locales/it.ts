@@ -2,6 +2,27 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      pay_mode_question: 'Quanto vuoi pagare ora?',
+      pay_full_now: 'Paga tutto ora',
+      recommended_label: 'Consigliato',
+      no_balance_due: 'Nessun saldo residuo',
+      pay_deposit: 'Paga un acconto',
+      balance_cash_day: 'Saldo {amount} in contanti il giorno del tour',
+      payment_complete_title: 'Completa il pagamento',
+      payment_secure_paypal: 'Pagamento sicuro con PayPal',
+      booking_details: 'Dettagli della prenotazione',
+      booking_code_label: 'Codice di prenotazione',
+      children_label: 'Bambini',
+      pay_now_label: 'Paghi ora',
+      balance_due_day: 'Saldo da pagare in contanti il giorno del tour',
+      payment_processing: 'Elaborazione…',
+      pay_verb: 'Paga',
+      // Home: offers section + search dropdown (Fase 4 i18n)
+      home_offers_label: 'Offerte speciali',
+      home_offers_title: 'Le nostre offerte',
+      search_searching: 'Ricerca…',
+      search_results_suffix: 'risultati',
+      search_view_all_for: 'Vedi tutti i risultati per',
       welcome: 'Benvenuto', tours: 'Tour', about: 'Chi siamo', contact: 'Contatto',
       hero_subtitle: 'Esplora & Scopri', hero_title: 'Tour a Puno & Lago Titicaca',
       hero_description: 'Scopri esperienze mozzafiato nel lago navigabile più alto del mondo.',
