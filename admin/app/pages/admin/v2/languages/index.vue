@@ -160,7 +160,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Total idiomas</p>
+                <p class="admin-label">Total idiomas</p>
                 <p class="text-3xl font-bold tabular-nums mt-2">{{ languages.length }}</p>
               </div>
               <div class="size-11 rounded-xl bg-info/10 flex items-center justify-center">
@@ -171,7 +171,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Con código ISO</p>
+                <p class="admin-label">Con código ISO</p>
                 <p class="text-3xl font-bold tabular-nums mt-2 text-success">{{ languages.filter(l => l.code).length }}</p>
               </div>
               <div class="size-11 rounded-xl bg-success/10 flex items-center justify-center">
@@ -182,7 +182,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Idioma por defecto</p>
+                <p class="admin-label">Idioma por defecto</p>
                 <p class="text-3xl font-bold mt-2 flex items-center gap-2">
                   <span class="text-2xl">🇪🇸</span>
                   <span class="text-primary text-lg">ES</span>

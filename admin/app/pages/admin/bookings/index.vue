@@ -133,14 +133,14 @@
         <table class="w-full">
           <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Código</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Cliente</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Tour</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Fecha</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Pax</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Total</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Estado</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Pago</th>
+              <th class="px-4 py-3 text-left admin-label">Código</th>
+              <th class="px-4 py-3 text-left admin-label">Cliente</th>
+              <th class="px-4 py-3 text-left admin-label">Tour</th>
+              <th class="px-4 py-3 text-left admin-label">Fecha</th>
+              <th class="px-4 py-3 text-left admin-label">Pax</th>
+              <th class="px-4 py-3 text-left admin-label">Total</th>
+              <th class="px-4 py-3 text-left admin-label">Estado</th>
+              <th class="px-4 py-3 text-left admin-label">Pago</th>
               <th class="px-4 py-3 text-right text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>

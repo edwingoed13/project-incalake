@@ -142,18 +142,18 @@
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Name *</label>
+                <label class="admin-label mb-1 block">Name *</label>
                 <input v-model="form.name" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" placeholder="Customer name" />
               </div>
               <div>
-                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Date</label>
+                <label class="admin-label mb-1 block">Date</label>
                 <input v-model="form.review_date" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" placeholder="mar. 2026" />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Rating *</label>
+                <label class="admin-label mb-1 block">Rating *</label>
                 <div class="flex gap-1">
                   <button v-for="i in 5" :key="i" @click="form.rating = i" class="p-1">
                     <span class="material-symbols-outlined text-2xl transition-colors" :class="i <= form.rating ? 'text-yellow-400' : 'text-slate-300'" :style="i <= form.rating ? 'font-variation-settings: FILL 1' : ''">star</span>
@@ -161,7 +161,7 @@
                 </div>
               </div>
               <div>
-                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Language</label>
+                <label class="admin-label mb-1 block">Language</label>
                 <select v-model="form.language" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm">
                   <option value="en">English</option>
                   <option value="es">Spanish</option>
@@ -174,17 +174,17 @@
             </div>
 
             <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Title</label>
+              <label class="admin-label mb-1 block">Title</label>
               <input v-model="form.title" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" placeholder="Review title" />
             </div>
 
             <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Comment *</label>
+              <label class="admin-label mb-1 block">Comment *</label>
               <textarea v-model="form.comment" rows="4" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm resize-none" placeholder="Customer review..."></textarea>
             </div>
 
             <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Assign to Tour</label>
+              <label class="admin-label mb-1 block">Assign to Tour</label>
               <div class="relative">
                 <div class="flex items-center gap-2">
                   <span class="material-symbols-outlined text-slate-400 text-lg">search</span>
@@ -217,7 +217,7 @@
                 </div>
               </div>
               <div class="mt-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Original opinion (reference)</label>
+                <label class="admin-label mb-1 block">Original opinion (reference)</label>
                 <input v-model="form.opinion" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-xs text-slate-500" readonly />
               </div>
             </div>

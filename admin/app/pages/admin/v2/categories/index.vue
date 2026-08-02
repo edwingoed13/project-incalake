@@ -184,7 +184,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Total categorías</p>
+                <p class="admin-label">Total categorías</p>
                 <p class="text-3xl font-bold tabular-nums mt-2">{{ categories.length }}</p>
               </div>
               <div class="size-11 rounded-xl bg-info/10 flex items-center justify-center">
@@ -195,7 +195,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Activas</p>
+                <p class="admin-label">Activas</p>
                 <p class="text-3xl font-bold tabular-nums mt-2 text-success">{{ activeCount }}</p>
               </div>
               <div class="size-11 rounded-xl bg-success/10 flex items-center justify-center">
@@ -206,7 +206,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Inactivas</p>
+                <p class="admin-label">Inactivas</p>
                 <p class="text-3xl font-bold tabular-nums mt-2 text-muted">{{ inactiveCount }}</p>
               </div>
               <div class="size-11 rounded-xl bg-elevated flex items-center justify-center">
@@ -217,7 +217,7 @@ onMounted(() => {
           <UCard :ui="{ body: 'p-5' }">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted">Con tours</p>
+                <p class="admin-label">Con tours</p>
                 <p class="text-3xl font-bold tabular-nums mt-2 text-primary">{{ withToursCount }}</p>
               </div>
               <div class="size-11 rounded-xl bg-primary/10 flex items-center justify-center">

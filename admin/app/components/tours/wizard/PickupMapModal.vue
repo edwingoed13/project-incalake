@@ -107,7 +107,7 @@
                  <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-2xl flex items-center gap-2">
                     <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_92x30dp.png" class="h-4 opacity-50" />
                     <div class="h-3 w-px bg-slate-200 dark:bg-slate-700"></div>
-                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Interactive Map Builder</span>
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Constructor de mapa interactivo</span>
                  </div>
               </div>
             </div>

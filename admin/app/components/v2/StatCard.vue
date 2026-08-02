@@ -14,7 +14,7 @@ withDefaults(defineProps<{
   <UCard :ui="{ body: 'p-5' }">
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0">
-        <p class="text-xs font-semibold uppercase tracking-wider text-muted">{{ label }}</p>
+        <p class="admin-label">{{ label }}</p>
         <p class="text-2xl xl:text-3xl font-bold tabular-nums mt-2 truncate">{{ value }}</p>
       </div>
       <div :class="['size-11 rounded-xl flex items-center justify-center shrink-0', bgClass]">
