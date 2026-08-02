@@ -241,6 +241,35 @@ let firstSaveInFlight = false
 // guardado" step-change toast so untouched navigation stays silent.
 let editedThisSession = false
 
+// --- Dirty tracking that actually covers the whole wizard ------------------
+// Most inputs v-model straight into the store; only a handful of actions set
+// isDirty, so autosave (and the step-change toast) missed most edits — e.g.
+// changing the capacity never marked dirty. Deep-watch every data slice and
+// flag; suppressed during load/hydration so opening a tour isn't "an edit".
+let suppressDirty = true
+watch(
+  () => [
+    store.basicInfo, store.contentSEO, store.detailedContent,
+    store.commercialRules, store.multimedia, store.bookingOptions,
+    store.categories, store.availability,
+  ],
+  () => {
+    if (suppressDirty || store.loading) return
+    store.isDirty = true
+  },
+  { deep: true }
+)
+// Arm the watcher only after the initial load settles (mutations flush async).
+watch(() => store.loading, (loading, wasLoading) => {
+  if (wasLoading && !loading) {
+    setTimeout(() => { suppressDirty = false }, 300)
+  }
+}, { immediate: false })
+// New tours never enter loading — arm shortly after mount instead.
+onMounted(() => {
+  setTimeout(() => { suppressDirty = false }, 1500)
+})
+
 watch(() => store.isDirty, (dirty) => {
   if (dirty) editedThisSession = true
   if (autosaveTimer) {
