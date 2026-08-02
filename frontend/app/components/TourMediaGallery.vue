@@ -261,15 +261,18 @@ function getImageUrl(path: string) {
       <!-- Hero Image (primera imagen grande). LCP candidate on the tour
            detail page — `sizes` lets the browser pick the right responsive
            variant instead of always pulling the 800w copy on mobile. -->
+      <!-- Hero at 1400w single-variant: the old 800w got upscaled by the
+           ~950px+ slot and read blurry on every tour. width-only (densities
+           x1) sidesteps the broken-srcset issue documented on Vercel. -->
       <div class="col-span-2 row-span-2 relative group cursor-pointer overflow-hidden" @click="openLightbox(0)">
         <NuxtImg
           v-skeleton
           :src="images[0].url"
           :alt="images[0].alt"
           format="webp"
-          width="800"
-          height="600"
-          sizes="(max-width: 1024px) 100vw, 50vw"
+          width="1400"
+          height="1050"
+          densities="x1"
           fetchpriority="high"
           loading="eager"
           decoding="async"
@@ -345,7 +348,7 @@ function getImageUrl(path: string) {
           class="relative cursor-pointer group overflow-hidden rounded-r-xl"
           @click="openLightbox(0)"
         >
-          <NuxtImg :src="displayImages[0].url" :alt="displayImages[0].alt" format="webp" width="900" height="640" densities="x1" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <NuxtImg :src="displayImages[0].url" :alt="displayImages[0].alt" format="webp" width="1400" height="1000" densities="x1" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           <button
             v-if="images.length > 1"
             type="button"
@@ -380,8 +383,8 @@ function getImageUrl(path: string) {
             :src="displayImages[0].url"
             :alt="displayImages[0].alt"
             format="webp"
-            width="640"
-            height="400"
+            width="1200"
+            height="750"
             densities="x1"
             fetchpriority="high"
             loading="eager"
