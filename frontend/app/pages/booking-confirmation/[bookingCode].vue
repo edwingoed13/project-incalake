@@ -504,7 +504,7 @@
 </template>
 
 <script setup lang="ts">
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const currencyStore = useCurrencyStore()
 const route = useRoute()
 const { api } = useApi()
@@ -726,10 +726,16 @@ function applyLeaderToAll(sourceTourId: number) {
 // Copy EVERY traveler (not just the leader) from the source tour into every
 // other tour, slot by slot, trimmed to each tour's own pax cap. Useful when
 // the same group is doing multiple tours of the purchase.
-function applyTravelersToAllTours(sourceTourId: number) {
+const { confirmDialog } = useConfirmDialog()
+async function applyTravelersToAllTours(sourceTourId: number) {
   const src = travelersByTour.value[sourceTourId] || []
   if (!src.length || !src[0]?.full_name?.trim()) return
-  if (typeof window !== 'undefined' && !window.confirm('¿Copiar todos los viajeros de este tour a los demás? Sobrescribirá los datos ya cargados en los otros.')) return
+  const ok = await confirmDialog({
+    title: t('copy_travelers_q'),
+    description: t('copy_travelers_d'),
+    confirmLabel: t('copy_label'),
+  })
+  if (!ok) return
   for (const tr of purchaseTours.value) {
     if (tr.id === sourceTourId) continue
     const cap = tourMax(tr)
@@ -747,7 +753,9 @@ function applyTravelersToAllTours(sourceTourId: number) {
 // label, or null when complete.
 function firstMissingLeaderExtra(leader: any, configSrc: any): string | null {
   for (const key of travelerFieldsFor(configSrc)) {
-    if (!travelerFieldValue(leader, key).trim()) return TRAVELER_FIELD_DEFS[key].label
+    if (!travelerFieldValue(leader, key).trim()) {
+      return te(`traveler_field_${key}`) ? t(`traveler_field_${key}`) : TRAVELER_FIELD_DEFS[key].label
+    }
   }
   return null
 }

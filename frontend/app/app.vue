@@ -11,6 +11,8 @@
       <NuxtPage />
     </main>
     <CommonFooter />
+    <!-- Global promise-based confirm dialog (replaces window.confirm) -->
+    <CommonConfirmDialog />
   </div>
 </template>
 

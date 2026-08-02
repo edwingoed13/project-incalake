@@ -30,10 +30,15 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ 'update:modelValue': [v: any[]] }>()
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 // The renderable fields the admin asked for (unknown keys / name parts dropped).
 const fields = computed(() => (props.requiredFields || []).filter(k => FIELD_DEFS[k]))
+
+// Field labels come from i18n (traveler_field_*); the Spanish label in
+// FIELD_DEFS stays as fallback for keys without a translation yet.
+const fieldLabel = (key: string) =>
+  te(`traveler_field_${key}`) ? t(`traveler_field_${key}`) : FIELD_DEFS[key]?.label || key
 
 const canAdd = computed(() => props.modelValue.length < props.maxTravelers)
 const showExtras = (traveler: any) => !!traveler?.is_leader || props.applyToAllPax
@@ -113,23 +118,23 @@ function remove(idx: number) {
           <label class="form-label">
             {{ t('full_name') }}<span v-if="traveler.is_leader"> *</span>
           </label>
-          <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" placeholder="Nombre completo"
+          <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" :placeholder="t('traveler_full_name')"
             class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
             :class="nameInvalid(traveler) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'" />
-          <p v-if="nameInvalid(traveler)" class="text-[10px] text-red-500 mt-1">Requerido</p>
+          <p v-if="nameInvalid(traveler)" class="text-[10px] text-red-500 mt-1">{{ t('required_label') }}</p>
         </div>
 
         <!-- Admin-configured fields -->
         <template v-if="showExtras(traveler)">
           <div v-for="key in fields" :key="key" :class="FIELD_DEFS[key].type === 'country' ? 'md:col-span-2' : ''">
             <label class="form-label">
-              {{ FIELD_DEFS[key].label }}<span v-if="traveler.is_leader"> *</span>
+              {{ fieldLabel(key) }}<span v-if="traveler.is_leader"> *</span>
             </label>
 
             <div v-if="FIELD_DEFS[key].type === 'country'" class="rounded-lg" :class="fieldInvalid(traveler, key) ? 'ring-1 ring-red-300' : ''">
               <AppCountrySelect
                 v-model="traveler.nationality"
-                placeholder="Selecciona país"
+                :placeholder="t('select_country')"
               />
             </div>
 
@@ -139,11 +144,11 @@ function remove(idx: number) {
               class="w-full px-3 py-2.5 rounded-lg border text-sm bg-white"
               :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             >
-              <option value="">Selecciona</option>
-              <option value="male">Masculino</option>
-              <option value="female">Femenino</option>
-              <option value="other">Otro</option>
-              <option value="undisclosed">Prefiero no decir</option>
+              <option value="">{{ t('select_option') }}</option>
+              <option value="male">{{ t('gender_male') }}</option>
+              <option value="female">{{ t('gender_female') }}</option>
+              <option value="other">{{ t('gender_other') }}</option>
+              <option value="undisclosed">{{ t('gender_undisclosed') }}</option>
             </select>
 
             <input
@@ -152,11 +157,11 @@ function remove(idx: number) {
               :type="FIELD_DEFS[key].type === 'number' ? 'number' : FIELD_DEFS[key].type === 'date' ? 'date' : FIELD_DEFS[key].type === 'email' ? 'email' : FIELD_DEFS[key].type === 'tel' ? 'tel' : 'text'"
               :inputmode="FIELD_DEFS[key].type === 'number' ? 'decimal' : undefined"
               :autocomplete="FIELD_DEFS[key].type === 'email' ? 'email' : FIELD_DEFS[key].type === 'tel' ? 'tel' : 'off'"
-              :placeholder="FIELD_DEFS[key].label"
+              :placeholder="fieldLabel(key)"
               class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
               :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             />
-            <p v-if="fieldInvalid(traveler, key)" class="text-[10px] text-red-500 mt-1">Requerido</p>
+            <p v-if="fieldInvalid(traveler, key)" class="text-[10px] text-red-500 mt-1">{{ t('required_label') }}</p>
           </div>
         </template>
 

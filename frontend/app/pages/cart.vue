@@ -186,9 +186,16 @@ const allSelected = computed(() =>
 function toggleSelectAll() {
   selectedIds.value = allSelected.value ? [] : cartStore.items.map(i => i.id)
 }
-function bulkDelete() {
+const { confirmDialog } = useConfirmDialog()
+async function bulkDelete() {
   if (!selectedIds.value.length) return
-  if (!confirm(`¿Eliminar ${selectedIds.value.length} ${selectedIds.value.length === 1 ? 'tour' : 'tours'} del carrito?`)) return
+  const ok = await confirmDialog({
+    title: t('cart_remove_selected_q'),
+    description: t('cart_remove_selected_d', { n: selectedIds.value.length }),
+    confirmLabel: t('remove_label'),
+    danger: true,
+  })
+  if (!ok) return
   for (const id of [...selectedIds.value]) cartStore.removeItem(id)
   selectedIds.value = []
 }

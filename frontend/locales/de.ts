@@ -2,6 +2,19 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      confirm: 'Best√§tigen',
+      cart_remove_selected_q: 'Aus dem Warenkorb entfernen?',
+      cart_remove_selected_d: '{n} ausgew√§hlte Touren werden entfernt.',
+      copy_travelers_q: 'Reisende in die anderen Touren kopieren?',
+      copy_travelers_d: 'Bereits eingegebene Daten der anderen Touren werden √ºberschrieben.',
+      remove_label: 'Entfernen',
+      copy_label: 'Kopieren',
+      traveler_full_name: 'Vollst‰ndiger Name',
+      required_label: 'Erforderlich',
+      select_country: 'Land w‰hlen',
+      select_option: 'W‰hlen',
+      gender_male: 'M‰nnlich', gender_female: 'Weiblich', gender_other: 'Divers', gender_undisclosed: 'Keine Angabe',
+      traveler_field_birthdate: 'Geburtsdatum', traveler_field_nationality: 'Nationalit‰t', traveler_field_phone_whatsapp: 'WhatsApp', traveler_field_email: 'E-Mail', traveler_field_dietary_restrictions: 'Ern‰hrungshinweise', traveler_field_gender: 'Geschlecht', traveler_field_peru_entry_date: 'Einreisedatum Peru', traveler_field_hotel_name: 'Hotelname', traveler_field_passport_copy: 'Pass- oder Ausweisnummer', traveler_field_arrival_flight: 'Ankunftsflug', traveler_field_departure_flight: 'Abflug', traveler_field_weight_kg: 'Gewicht (kg)', traveler_field_height_m: 'Grˆﬂe (m)', traveler_field_arrival_bus_company: 'Busunternehmen (Ankunft)', traveler_field_arrival_train: 'Ankunftszug',
       pay_mode_question: 'Wie viel m√∂chten Sie jetzt zahlen?',
       pay_full_now: 'Jetzt alles zahlen',
       recommended_label: 'Empfohlen',

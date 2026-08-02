@@ -2,6 +2,19 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      confirm: 'Confirm',
+      cart_remove_selected_q: 'Remove from cart?',
+      cart_remove_selected_d: '{n} selected tours will be removed.',
+      copy_travelers_q: 'Copy travelers to the other tours?',
+      copy_travelers_d: 'This will overwrite data already entered in the other tours.',
+      remove_label: 'Remove',
+      copy_label: 'Copy',
+      traveler_full_name: 'Full name',
+      required_label: 'Required',
+      select_country: 'Select country',
+      select_option: 'Select',
+      gender_male: 'Male', gender_female: 'Female', gender_other: 'Other', gender_undisclosed: 'Prefer not to say',
+      traveler_field_birthdate: 'Date of birth', traveler_field_nationality: 'Nationality', traveler_field_phone_whatsapp: 'WhatsApp', traveler_field_email: 'Email', traveler_field_dietary_restrictions: 'Dietary restrictions', traveler_field_gender: 'Gender', traveler_field_peru_entry_date: 'Peru entry date', traveler_field_hotel_name: 'Hotel name', traveler_field_passport_copy: 'Passport or ID number', traveler_field_arrival_flight: 'Arrival flight', traveler_field_departure_flight: 'Departure flight', traveler_field_weight_kg: 'Weight (kg)', traveler_field_height_m: 'Height (m)', traveler_field_arrival_bus_company: 'Arrival bus company', traveler_field_arrival_train: 'Arrival train',
       pay_mode_question: 'How much do you want to pay now?',
       pay_full_now: 'Pay everything now',
       recommended_label: 'Recommended',
