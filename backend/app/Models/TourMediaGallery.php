@@ -18,11 +18,16 @@ class TourMediaGallery extends Model
         'alt_text',
         'title_text',
         'description',
+        // is_primary was missing here since day one — every mass assignment
+        // (wizard Step 5 included) silently dropped it, so no tour ever got a
+        // featured image persisted through this model.
+        'is_primary',
         'order',
     ];
 
     protected $casts = [
         'order' => 'integer',
+        'is_primary' => 'boolean',
         'crop_data' => 'array',
     ];
 
