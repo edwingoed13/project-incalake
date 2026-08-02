@@ -194,8 +194,9 @@ watch(() => store.currentStep, (newStep) => {
   // edits were saved (or not) without having to find the navbar badge. When
   // the debounced autosave already ran BEFORE the switch (edits older than
   // ~2s), still confirm — silence read as "did it save?".
+  // `toast` viene del setup (línea superior) — llamar useToast() dentro del
+  // watcher pierde el contexto de Nuxt y el aviso nunca aparecía.
   if (store.tourId && store.tourId !== 'new') {
-    const toast = useToast()
     if (store.isDirty && !store.autosaving) {
       if (autosaveTimer) {
         clearTimeout(autosaveTimer)

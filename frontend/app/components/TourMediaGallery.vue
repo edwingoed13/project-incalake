@@ -337,30 +337,24 @@ function getImageUrl(path: string) {
           />
         </div>
 
-        <!-- Curated Images Column (Right) -->
-        <div class="flex flex-col gap-2">
-          <div
-            v-if="displayImages[0]"
-            class="relative cursor-pointer hover:opacity-90 transition-opacity flex-1"
-            @click="openLightbox(0)"
+        <!-- Main image (right): one hero photo with a "see all" pill pinned
+             bottom-right — the old 1+2 mosaic read cluttered next to the
+             video column. -->
+        <div
+          v-if="displayImages[0]"
+          class="relative cursor-pointer group overflow-hidden rounded-r-xl"
+          @click="openLightbox(0)"
+        >
+          <NuxtImg :src="displayImages[0].url" :alt="displayImages[0].alt" format="webp" width="900" height="640" densities="x1" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <button
+            v-if="images.length > 1"
+            type="button"
+            class="absolute bottom-4 right-4 inline-flex items-center gap-2 bg-white/95 hover:bg-white text-slate-800 text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg transition-colors"
+            @click.stop="openLightbox(0)"
           >
-            <NuxtImg :src="displayImages[0].url" :alt="displayImages[0].alt" format="webp" width="700" height="420" densities="x1" fetchpriority="high" loading="eager" decoding="async" class="w-full h-full object-cover rounded" />
-          </div>
-          <div class="grid grid-cols-2 gap-2 h-[182px]">
-            <div v-if="displayImages[1]" class="relative cursor-pointer hover:opacity-90 transition-opacity" @click="openLightbox(1)">
-              <NuxtImg :src="displayImages[1].url" :alt="displayImages[1].alt" format="webp" width="380" height="200" densities="x1" loading="lazy" decoding="async" class="w-full h-full object-cover rounded" />
-            </div>
-            <div v-if="displayImages[2]" class="relative cursor-pointer group overflow-hidden rounded" @click="openLightbox(2)">
-              <NuxtImg :src="displayImages[2].url" :alt="displayImages[2].alt" format="webp" width="380" height="200" densities="x1" loading="lazy" decoding="async" class="w-full h-full object-cover" />
-              <div v-if="remainingImagesCount > 0" class="absolute inset-0 bg-black/70 group-hover:bg-black/80 flex items-center justify-center transition-colors">
-                <div class="flex flex-col items-center">
-                  <Icon name="material-symbols:photo-library" class="text-white text-3xl mb-2" />
-                  <span class="text-white text-sm font-semibold">Ver todas</span>
-                  <span class="text-white text-xs">{{ images.length }} fotos</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            <Icon name="material-symbols:photo-library" class="text-lg" />
+            Ver más fotos ({{ images.length }})
+          </button>
         </div>
       </div>
     </div>

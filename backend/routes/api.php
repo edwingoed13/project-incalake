@@ -263,7 +263,9 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.merge-tag');
     });
 
-    // Admin routes - Cities (resolve a Google Places pick to a catalog row)
+    // Admin routes - Cities (Places search proxied server-side + resolve)
+    Route::get('admin/cities/places-search', [CityController::class, 'placesSearch'])->name('api.admin.cities.places-search');
+    Route::post('admin/cities/resolve-place', [CityController::class, 'resolvePlace'])->name('api.admin.cities.resolve-place');
     Route::post('admin/cities/resolve', [CityController::class, 'resolve'])->name('api.admin.cities.resolve');
 
     // Admin routes - one-off gallery re-migration (full-res legacy photos)

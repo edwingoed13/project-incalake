@@ -119,6 +119,73 @@ class CityController extends Controller
     }
 
     /**
+     * Admin: city search proxied through Google Places REST (server key).
+     * The Maps JS widget needed browser-side API enablement that kept
+     * breaking; the REST autocomplete works with the existing server key and
+     * keeps it out of the browser entirely.
+     */
+    public function placesSearch(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        $apiKey = config('services.google_places.api_key');
+        if (mb_strlen($q) < 2 || !$apiKey) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
+
+        $res = \Illuminate\Support\Facades\Http::timeout(6)->get(
+            'https://maps.googleapis.com/maps/api/place/autocomplete/json',
+            ['input' => $q, 'types' => '(cities)', 'language' => 'es', 'key' => $apiKey]
+        )->json();
+
+        $out = [];
+        foreach (($res['predictions'] ?? []) as $p) {
+            $out[] = ['place_id' => $p['place_id'], 'description' => $p['description']];
+        }
+
+        return response()->json(['success' => true, 'data' => $out]);
+    }
+
+    /**
+     * Admin: turn a Places pick (place_id) into a catalog city. Fetches the
+     * details server-side (name, country, coordinates) and find-or-creates
+     * via resolve() so the tour always ends up with a cities.id.
+     */
+    public function resolvePlace(Request $request): JsonResponse
+    {
+        $data = $request->validate(['place_id' => 'required|string|max:512']);
+        $apiKey = config('services.google_places.api_key');
+        if (!$apiKey) {
+            return response()->json(['success' => false, 'message' => 'Places no configurado.'], 503);
+        }
+
+        $res = \Illuminate\Support\Facades\Http::timeout(6)->get(
+            'https://maps.googleapis.com/maps/api/place/details/json',
+            ['place_id' => $data['place_id'], 'fields' => 'name,geometry,address_components', 'language' => 'es', 'key' => $apiKey]
+        )->json();
+
+        $result = $res['result'] ?? null;
+        if (!$result) {
+            return response()->json(['success' => false, 'message' => 'Lugar no encontrado.'], 404);
+        }
+
+        $country = null;
+        foreach (($result['address_components'] ?? []) as $c) {
+            if (in_array('country', $c['types'] ?? [], true)) {
+                $country = $c['short_name'] ?? null;
+            }
+        }
+
+        $request->merge([
+            'name' => $result['name'],
+            'country_code' => $country,
+            'latitude' => $result['geometry']['location']['lat'] ?? null,
+            'longitude' => $result['geometry']['location']['lng'] ?? null,
+        ]);
+
+        return $this->resolve($request);
+    }
+
+    /**
      * Admin: resolve a Google Places pick to a catalog city — find it by
      * slug/name or create it. The tour editor must always end up with a
      * cities.id (public /[city]/[slug] URLs hang off it), so free-text
