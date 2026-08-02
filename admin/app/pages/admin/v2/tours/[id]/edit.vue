@@ -218,6 +218,7 @@ watch(() => store.currentStep, (newStep) => {
             icon: 'i-lucide-circle-check',
             duration: 2500,
           })
+          editedThisSession = false
         }
       })
     } else if (editedThisSession && !store.autosaveError) {
@@ -228,6 +229,9 @@ watch(() => store.currentStep, (newStep) => {
         icon: 'i-lucide-circle-check',
         duration: 2000,
       })
+      // One confirmation per burst of edits: further navigation without new
+      // changes stays silent (the navbar badge keeps the persistent state).
+      editedThisSession = false
     }
   }
   const current = parseInt(String(route.query.step || ''), 10)
