@@ -11,7 +11,7 @@
 
       <!-- Loading -->
       <div v-else-if="pending" class="flex justify-center py-20">
-        <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <div class="spinner size-10"></div>
       </div>
 
       <!-- Content -->

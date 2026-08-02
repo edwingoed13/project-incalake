@@ -13,7 +13,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <div class="spinner size-12 mb-4"></div>
         <p class="text-secondary-light dark:text-secondary-dark">Loading payment information...</p>
       </div>
 
@@ -97,46 +97,18 @@
               </div>
             </div>
 
-            <!-- Total — same breakdown/format as the Culqi page -->
-            <div class="pt-2">
-              <div class="space-y-2 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div class="flex justify-between text-xs">
-                  <span class="text-slate-500">{{ t('subtotal') }} ({{ allBookings.length }} {{ allBookings.length === 1 ? t('booking') : t('bookings') }})</span>
-                  <span class="font-semibold">{{ currencyStore.formatConverted(subtotalAmount) }}</span>
-                </div>
-                <div v-if="taxAmount > 0" class="flex justify-between text-xs">
-                  <span class="text-slate-500 flex items-center gap-1">
-                    {{ t('transaction_fees') }}
-                    <AppPopover :label="t('transaction_fees')">
-                      {{ t('transaction_fees_info') }}
-                    </AppPopover>
-                  </span>
-                  <span class="font-semibold">{{ currencyStore.formatConverted(taxAmount) }}</span>
-                </div>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-primary-light dark:text-primary-dark">
-                  {{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay') }}
-                </span>
-                <span class="text-2xl font-black text-primary">
-                  {{ currencyStore.formatConverted(payNowAmount) }}
-                  <span v-if="!currencyStore.isForeignCurrency" class="text-sm font-semibold text-slate-400">USD</span>
-                </span>
-              </div>
-              <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
-                <span>Saldo a pagar en efectivo el día del tour</span>
-                <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
-              </div>
-              <!-- PayPal always captures in USD; show the real charge when the
-                   display currency differs (same notice as Culqi). -->
-              <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
-                <div class="flex-1">
-                  <p class="text-[11px] text-amber-800 leading-tight font-semibold">{{ t('payment_usd_notice') }}</p>
-                  <p class="text-[10px] text-amber-700 mt-0.5">≈ ${{ payNowAmount.toFixed(2) }} USD</p>
-                </div>
-              </div>
-            </div>
+            <!-- Total — shared breakdown block (same as cart + Culqi) -->
+            <CheckoutOrderTotals
+              class="pt-2"
+              :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
+              :subtotal="subtotalAmount"
+              :tax="taxAmount"
+              :total="payNowAmount"
+              :total-label="paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay')"
+              balance-label="Saldo a pagar en efectivo el día del tour"
+              :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
+              :usd-approx="payNowAmount"
+            />
           </div>
         </div>
 
@@ -223,7 +195,7 @@
             </template>
             <template #fallback>
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div class="spinner size-8"></div>
               </div>
             </template>
           </ClientOnly>
@@ -238,7 +210,7 @@
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       >
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <div class="spinner size-16 mx-auto mb-4"></div>
           <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-2">
             Confirming Payment
           </h3>

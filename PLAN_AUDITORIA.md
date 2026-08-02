@@ -55,16 +55,18 @@
 - [ ] 2.7 Espaciado/gutters — diferido (bajo impacto, alto churn)
 - [x] 2.8 h1 semántico: hero home h2→h1, logo navbar h1→span, logo footer h2→p
 
-## 🟠 FASE 3 — Componentes compartidos
-- [ ] 3.1 `TourCard.vue` (variants: grid|list|compact|related) + helpers a composable `useTourCard` → reemplazar 7 inline (home×2, listado×3, related, saved)
-- [ ] 3.2 `OfferBadge.vue` → 9 sitios
-- [ ] 3.3 `WishlistHeartButton.vue` (encapsula toggle + flyTo) → 10 sitios
-- [ ] 3.4 Adoptar `TourQuantityStepper` en cart edit + AvailabilityInquiryModal
-- [ ] 3.5 `CartTotals.vue` + `TaxBreakdownPopover.vue` (cart + CheckoutSummary comparten verbatim)
-- [ ] 3.6 `SectionHeader.vue` + `useSnapScroll()` (4 flechas idénticas home, 2 funciones gemelas)
-- [ ] 3.7 Adoptar `common/EmptyState.vue` en 7 empty states inline; unificar spinner (LoadingSpinner)
-- [ ] 3.8 `StarRating.vue` (~8 loops, unificar color a text-rating)
-- [ ] 3.9 Precio consistente: siempre CON símbolo (`formatConverted(x)`) en tarjetas
+## 🟠 FASE 3 — Componentes compartidos — BATCH A ✅ PUSHEADO (5014664 + d612202)
+- [x] 3.2 `tour/OfferBadge.vue` (solid|tint, xs|sm, color custom) → aplicado en home offers, listado ×3, saved (los tinted de cart/checkout quedan para 3.5)
+- [x] 3.3 `tour/WishlistHeartButton.vue` (payload + toggle + flyTo encapsulados) → listado ×3, galería del detalle (overlay dark), related tours; funciones toggleWishlist/toggleSaveRelated inline eliminadas (el botón labeled "Guardar" del header del detalle conserva toggleSave)
+- [x] 3.4 `TourQuantityStepper` adoptado en cart edit (32px→44px targets)
+- [x] 3.9 Precio SIEMPRE con símbolo en tarjetas del listado (6 formatConverted(x,false) → (x))
+- [x] Extra: `useBookingWindow` — ventana de anticipación fecha+hora (tz del tour) compartida detalle+cart; backstop server-side en BookingController (9095be2)
+- [x] Extra: home muestra últimos 15 reviews publicados (min 4★) en vez de featured; edades incoherentes ocultas en widget
+- [x] 3.1 `tour/TourCard.vue` → home destacados + ofertas (accent green, badge, dificultad); las variantes del listado (grid/list/mobile con precio tachado/duración/can-hover), saved y related se dejan inline A PROPÓSITO — layouts genuinamente distintos, unificarlos sería prop-explosion
+- [x] 3.5 `checkout/OrderTotals.vue` → cart sidebar + culqi + paypal (subtotal, fees con popover + desglose por ítem + % uniforme, total, saldo advance, aviso USD)
+- [x] 3.6 `common/SectionHeader.vue` + `useSnapScroll()` → testimonios + Google slider
+- [x] 3.7 Spinner unificado vía token `.spinner` (9 sitios); `EmptyState.vue` y `LoadingSpinner.vue` eran código muerto (0 usos) → eliminados; botón de cart vacío → btn-primary
+- [x] 3.8 `common/StarRating.vue` → 4 filas de estrellas de la home (2 amarillos distintos unificados)
 
 ## 🟡 FASE 4 — i18n flujo de pago
 - [ ] 4.1 paypal.vue completo a t() (el peor: página entera hardcoded EN/ES)

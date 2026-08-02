@@ -4,7 +4,7 @@
 
       <!-- Loading -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+        <div class="spinner size-12 mb-4"></div>
         <p class="text-sm text-slate-500 font-medium">{{ t('loading_payment') }}</p>
       </div>
 
@@ -94,39 +94,16 @@
 
           <!-- Total -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <div class="space-y-2 mb-3 pb-3 border-b border-slate-100">
-              <div class="flex justify-between text-xs">
-                <span class="text-slate-500">{{ t('subtotal') }} ({{ allBookings.length }} {{ allBookings.length === 1 ? t('booking') : t('bookings') }})</span>
-                <span class="font-semibold">{{ currencyStore.formatConverted(subtotalAmount) }}</span>
-              </div>
-              <div v-if="taxAmount > 0" class="flex justify-between text-xs">
-                <span class="text-slate-500 flex items-center gap-1">
-                  {{ t('transaction_fees') }}
-                  <AppPopover :label="t('transaction_fees')">
-                    {{ t('transaction_fees_info') }}
-                  </AppPopover>
-                </span>
-                <span class="font-semibold">{{ currencyStore.formatConverted(taxAmount) }}</span>
-              </div>
-            </div>
-            <div class="flex justify-between items-center">
-              <p class="font-black">{{ paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay') }}</p>
-              <p class="text-2xl font-black text-primary">
-                {{ currencyStore.formatConverted(payNowAmount) }}
-                <span v-if="!currencyStore.isForeignCurrency" class="text-sm font-semibold text-slate-400">USD</span>
-              </p>
-            </div>
-            <div v-if="paymentMode === 'advance' && hasAdvanceOption" class="flex justify-between items-center mt-1 text-xs text-slate-500">
-              <span>Saldo a pagar en efectivo el día del tour</span>
-              <span class="font-semibold">{{ currencyStore.formatConverted(balanceAmount) }}</span>
-            </div>
-            <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
-              <div class="flex-1">
-                <p class="text-[11px] text-amber-800 leading-tight font-semibold">{{ t('payment_usd_notice') }}</p>
-                <p class="text-[10px] text-amber-700 mt-0.5">≈ ${{ grandTotal.toFixed(2) }} USD</p>
-              </div>
-            </div>
+            <CheckoutOrderTotals
+              :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
+              :subtotal="subtotalAmount"
+              :tax="taxAmount"
+              :total="payNowAmount"
+              :total-label="paymentMode === 'advance' && hasAdvanceOption ? 'Pagas ahora' : t('total_to_pay')"
+              balance-label="Saldo a pagar en efectivo el día del tour"
+              :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
+              :usd-approx="grandTotal"
+            />
           </div>
         </div>
 
@@ -204,7 +181,7 @@
     <Teleport to="body">
       <div v-if="processingPayment" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
-          <div class="size-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+          <div class="spinner size-16 mx-auto mb-4"></div>
           <h3 class="text-lg font-bold text-slate-800 mb-1">{{ t('processing_payment') }}</h3>
           <p class="text-sm text-slate-500">{{ t('please_wait') }}</p>
         </div>

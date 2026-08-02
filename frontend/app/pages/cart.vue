@@ -244,7 +244,7 @@ function getImageUrl(path: string) {
         <Icon name="material-symbols:shopping-cart-outline" class="text-slate-300 text-6xl mb-4" />
         <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('your_cart_empty') }}</h2>
         <p class="text-sm text-slate-500 mb-6">{{ t('explore_tours_hint') }}</p>
-        <NuxtLink :to="localePath('/tours')" class="bg-primary text-white font-bold px-6 py-3 rounded-xl text-sm">
+        <NuxtLink :to="localePath('/tours')" class="btn-primary inline-flex">
           {{ t('explore_tours') }}
         </NuxtLink>
       </div>
@@ -447,40 +447,14 @@ function getImageUrl(path: string) {
               </div>
             </div>
 
-            <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
-              <div class="flex justify-between text-xs">
-                <span class="text-slate-500">{{ t('tours') }} ({{ cartStore.itemCount }})</span>
-                <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.subtotal) }}</span>
-              </div>
-              <div v-if="cartStore.totalTax > 0" class="flex justify-between text-xs">
-                <span class="text-slate-500 flex items-center gap-1 flex-wrap">
-                  {{ t('transaction_fees') }}
-                  <AppPopover :label="t('transaction_fees')" width="w-72">
-                    <p class="leading-snug mb-1.5">{{ t('transaction_fees_info') }}</p>
-                    <div class="pt-1.5 mt-1.5 border-t border-white/15">
-                      <p class="text-[9px] font-bold uppercase tracking-wider text-white/60 mb-1">{{ t('transaction_fees') }}</p>
-                      <div v-for="ti in sortedCartItems" :key="'tax-'+ti.id" class="flex justify-between py-0.5 gap-2">
-                        <span class="flex-1 break-words">{{ ti.tourTitle }}</span>
-                        <span class="shrink-0 font-semibold">{{ ti.taxPercentage || 0 }}%</span>
-                      </div>
-                    </div>
-                  </AppPopover>
-                  <!-- Percentage shown prominently inline (uniform rate across items). -->
-                  <span v-if="uniformTaxPercent !== null" class="font-bold text-slate-700 tabular-nums">({{ uniformTaxPercent.toFixed(2) }}%)</span>
-                </span>
-                <span class="font-semibold">{{ currencyStore.formatConverted(cartStore.totalTax) }}</span>
-              </div>
-            </div>
-
-            <div class="flex justify-between items-center mb-3">
-              <span class="font-black">{{ t('total') }}</span>
-              <span class="text-2xl font-black text-primary">{{ currencyStore.formatConverted(cartStore.totalAmount) }}</span>
-            </div>
-
-            <div v-if="currencyStore.isForeignCurrency" class="mb-4 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <Icon name="material-symbols:info-outline" class="text-amber-600 text-sm mt-0.5" />
-              <span class="text-[11px] text-amber-800 leading-tight">{{ t('payment_usd_notice') }}</span>
-            </div>
+            <CheckoutOrderTotals
+              :items-label="`${t('tours')} (${cartStore.itemCount})`"
+              :subtotal="cartStore.subtotal"
+              :tax="cartStore.totalTax"
+              :total="cartStore.totalAmount"
+              :tax-percent="uniformTaxPercent"
+              :tax-breakdown="sortedCartItems.map((ti: any) => ({ label: ti.tourTitle, percent: ti.taxPercentage || 0 }))"
+            />
 
             <!-- Terms -->
             <label class="flex items-start gap-2 cursor-pointer mb-4 p-3 bg-slate-50 rounded-xl">

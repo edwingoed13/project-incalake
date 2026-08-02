@@ -188,7 +188,7 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <Icon name="material-symbols:star" v-for="i in 5" :key="i" class="text-yellow-500 text-sm" />
+              <CommonStarRating :value="5" :total="5" />
               <span class="text-[10px] font-black text-slate-500 ml-1">4.9/5</span>
             </div>
           </div>
@@ -241,62 +241,17 @@
         </div>
 
         <div v-if="toursPending" class="flex items-center justify-center py-20">
-          <div class="size-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <div class="spinner size-10"></div>
         </div>
 
         <div v-else class="flex md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-          <NuxtLink
+          <TourCard
             v-for="tour in tours.slice(0, 4)"
             :key="tour.id"
-            :to="getTourLink(tour)"
-            @mouseenter="prefetchTour(tour)"
-            @focus="prefetchTour(tour)"
-            class="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
-          >
-            <div class="relative h-52 overflow-hidden bg-slate-100">
-              <NuxtImg
-                v-skeleton
-                v-if="tour.featured_image"
-                :src="getImageUrl(tour.featured_image)"
-                :alt="tour.title"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                loading="lazy" format="webp" width="400" height="208"
-                sizes="78vw sm:45vw md:30vw lg:25vw"
-              />
-              <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
-                <Icon name="material-symbols:image-outline" class="text-slate-300 text-4xl" />
-              </div>
-              <div v-if="tour.difficulty" class="absolute top-3 left-3">
-                <span
-                  class="px-2.5 py-1 text-[10px] font-bold rounded-full shadow backdrop-blur-md"
-                  :class="{
-                    'bg-green-500/90 text-white': tour.difficulty === 'easy',
-                    'bg-yellow-500/90 text-white': tour.difficulty === 'moderate',
-                    'bg-red-500/90 text-white': tour.difficulty === 'hard' || tour.difficulty === 'difficult',
-                  }"
-                >
-                  {{ translateDifficulty(tour.difficulty) }}
-                </span>
-              </div>
-            </div>
-            <div class="p-4">
-              <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
-                <Icon name="material-symbols:location-on-outline" class="text-xs" />
-                {{ tour.city?.name || 'Puno' }}
-              </div>
-              <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h4>
-              <div class="flex items-end justify-between pt-3 border-t border-slate-100">
-                <div>
-                  <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
-                  <span class="text-lg font-black text-primary">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
-                </div>
-                <span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                  {{ t('view') }}
-                  <Icon name="material-symbols:arrow-forward" class="text-sm" />
-                </span>
-              </div>
-            </div>
-          </NuxtLink>
+            :tour="tour"
+            show-difficulty
+            class="shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
+          />
         </div>
       </div>
     </section>
@@ -319,48 +274,14 @@
         </div>
 
         <div class="flex md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-          <NuxtLink
+          <TourCard
             v-for="tour in toursWithOffers.slice(0, 4)"
             :key="tour.id"
-            :to="getTourLink(tour)"
-            @mouseenter="prefetchTour(tour)"
-            @focus="prefetchTour(tour)"
-            class="group bg-white rounded-2xl overflow-hidden border border-green-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
-          >
-            <!-- Offer badge -->
-            <TourOfferBadge :label="getOfferLabel(tour)" class="absolute top-3 right-3 z-10" />
-            <div class="relative h-52 overflow-hidden bg-slate-100">
-              <NuxtImg
-                v-skeleton
-                v-if="tour.featured_image"
-                :src="getImageUrl(tour.featured_image)"
-                :alt="tour.title"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                loading="lazy" format="webp" width="400" height="208"
-                sizes="78vw sm:45vw md:30vw lg:25vw"
-              />
-              <div v-else class="w-full h-full bg-slate-100 flex items-center justify-center">
-                <Icon name="material-symbols:image-outline" class="text-slate-300 text-4xl" />
-              </div>
-            </div>
-            <div class="p-4">
-              <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
-                <Icon name="material-symbols:location-on-outline" class="text-xs" />
-                {{ tour.city?.name || 'Puno' }}
-              </div>
-              <h4 class="text-sm font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors leading-snug">{{ tour.title }}</h4>
-              <div class="flex items-end justify-between pt-3 border-t border-green-100">
-                <div>
-                  <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
-                  <span class="text-lg font-black text-green-600">{{ currencyStore.formatConverted(tour.min_price || 0) }}</span>
-                </div>
-                <span class="text-xs font-bold text-green-600 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                  {{ t('view') }}
-                  <Icon name="material-symbols:arrow-forward" class="text-sm" />
-                </span>
-              </div>
-            </div>
-          </NuxtLink>
+            :tour="tour"
+            accent="green"
+            :offer-label="getOfferLabel(tour)"
+            class="shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
+          />
         </div>
       </div>
     </section>
@@ -368,20 +289,12 @@
     <!-- Testimonials Slider -->
     <section v-if="featuredReviews.length > 0" class="py-8 md:py-12 px-4 md:px-6 bg-slate-50/50">
       <div class="max-w-7xl mx-auto">
-        <div class="flex items-end justify-between mb-10">
-          <div>
-            <p class="section-label mb-2">{{ c('testimonials', 'label', 'home_testimonials_label') }}</p>
-            <h3 class="section-title">{{ c('testimonials', 'title', 'home_testimonials_title') }}</h3>
-          </div>
-          <div class="hidden sm:flex gap-2">
-            <button @click="scrollReviews(-1)" :aria-label="t('previous')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-              <Icon name="material-symbols:chevron-left" class="text-lg" />
-            </button>
-            <button @click="scrollReviews(1)" :aria-label="t('next')" class="size-11 rounded-full border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white hover:border-primary transition-all">
-              <Icon name="material-symbols:chevron-right" class="text-lg" />
-            </button>
-          </div>
-        </div>
+        <CommonSectionHeader
+          :label="c('testimonials', 'label', 'home_testimonials_label')"
+          :title="c('testimonials', 'title', 'home_testimonials_title')"
+          show-arrows
+          @scroll="scrollReviews"
+        />
 
         <!-- Native scroll-snap carousel: swipe on mobile, arrows on desktop -->
         <div ref="reviewsScroll" class="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2">
@@ -390,9 +303,7 @@
               :key="review.id"
               class="bg-white border border-slate-100 rounded-2xl p-5 md:p-6 hover:shadow-lg transition-shadow shrink-0 snap-start w-[85%] sm:w-[60%] md:w-[calc(33.333%-16px)]"
             >
-              <div class="flex items-center gap-0.5 mb-3">
-                <Icon name="material-symbols:star" v-for="i in review.rating" :key="i" class="text-yellow-400 text-sm" />
-              </div>
+              <CommonStarRating :value="review.rating" class="mb-3" />
               <p v-if="review.title" class="text-sm font-bold text-slate-800 mb-2 line-clamp-1">{{ review.title }}</p>
               <p class="text-xs text-slate-500 leading-relaxed line-clamp-4 mb-4">{{ review.comment }}</p>
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
@@ -432,9 +343,7 @@
               <p class="flex items-center gap-x-2 gap-y-0.5 text-sm text-slate-500 flex-wrap">
                 <span v-if="googleRating" class="inline-flex items-center gap-1.5">
                   <span class="font-black text-slate-800 tabular-nums">{{ googleRating }}</span>
-                  <span class="flex">
-                    <Icon v-for="i in 5" :key="i" name="material-symbols:star" class="text-sm" :class="i <= Math.round(googleRating) ? 'text-yellow-400' : 'text-slate-300'" />
-                  </span>
+                  <CommonStarRating :value="googleRating" :total="5" />
                   <span>· {{ googleTotal }} {{ t('reviews_count_label') }}</span>
                 </span>
                 <a v-if="googlePlaceUrl" :href="googlePlaceUrl" target="_blank" rel="noopener noreferrer" class="font-bold text-primary hover:underline inline-flex items-center gap-0.5">
@@ -465,9 +374,7 @@
               <img v-if="r.profile_photo_url" :src="r.profile_photo_url" :alt="r.author_name" class="size-9 rounded-full shrink-0" loading="lazy" referrerpolicy="no-referrer" />
               <div class="min-w-0">
                 <p class="text-sm font-bold text-slate-800 truncate">{{ r.author_name }}</p>
-                <div class="flex items-center gap-0.5">
-                  <Icon v-for="n in r.rating" :key="n" name="material-symbols:star" class="text-yellow-400 text-xs" />
-                </div>
+                <CommonStarRating :value="r.rating" size="xs" />
               </div>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed line-clamp-5">{{ r.text }}</p>
@@ -520,7 +427,7 @@ import { msIcon } from '~/utils/icons'
 const { api } = useApi()
 const { prefetchTour } = useTourPrefetch()
 const config = useRuntimeConfig()
-const { t, te, locale } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const currencyStore = useCurrencyStore()
 
@@ -530,14 +437,6 @@ const currencyStore = useCurrencyStore()
 function getCachedData(key: string, nuxtApp: any, ctx: any) {
   if (ctx?.cause === 'watch' || ctx?.cause === 'refresh:manual') return undefined
   return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
-}
-
-function translateDifficulty(value: string | null | undefined): string {
-  if (!value) return ''
-  const raw = String(value).toLowerCase()
-  const key = raw === 'difficult' ? 'hard' : raw
-  const k = `difficulty_${key}`
-  return te(k) ? t(k) : value
 }
 
 const searchQuery = ref('')
@@ -659,20 +558,10 @@ const googleReviews = computed(() => {
 const googleRating = computed(() => (googleData.value as any)?.rating || null)
 const googleTotal = computed(() => (googleData.value as any)?.total || 0)
 // Google reviews slider (same native scroll-snap pattern as the text reviews).
-const googleScroll = ref<HTMLElement | null>(null)
-function scrollGoogle(dir: number) {
-  const el = googleScroll.value
-  if (!el) return
-  el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
-}
+const { container: googleScroll, scroll: scrollGoogle } = useSnapScroll()
 const googlePlaceUrl = computed(() => (googleData.value as any)?.place_url || null)
 // Testimonials: native horizontal scroll-snap (swipe on mobile, arrows desktop).
-const reviewsScroll = ref<HTMLElement | null>(null)
-function scrollReviews(dir: number) {
-  const el = reviewsScroll.value
-  if (!el) return
-  el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
-}
+const { container: reviewsScroll, scroll: scrollReviews } = useSnapScroll()
 
 // Video testimonials (YouTube), rendered via the lazy <CommonLiteYouTube>
 // facade so their iframes never touch the initial page load. Accepts full URLs

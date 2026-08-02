@@ -13,7 +13,7 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center items-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div class="spinner size-12"></div>
       </div>
 
       <!-- Error State -->
@@ -75,7 +75,7 @@
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       >
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <div class="spinner size-16 mx-auto mb-4"></div>
           <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-2">
             {{ t('checkout.processing') }}
           </h3>

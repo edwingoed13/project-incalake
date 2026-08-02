@@ -117,6 +117,13 @@
     @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-base
            focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
   }
+
+  /* --- Spinner ------------------------------------------------- */
+  /* Única receta de spinner (anillo). Tamaño con size-* en el uso:
+     <div class="spinner size-10"></div> */
+  .spinner {
+    @apply rounded-full border-4 border-primary/20 border-t-primary animate-spin;
+  }
 }
 
 @layer utilities {

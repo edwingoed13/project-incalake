@@ -456,7 +456,7 @@
   <!-- Loading State -->
   <div v-else-if="pending" class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
     <div class="text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div class="spinner size-12 inline-block"></div>
       <p class="mt-4 text-slate-600">{{ t('loading_tour') }}</p>
     </div>
   </div>
