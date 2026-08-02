@@ -90,8 +90,8 @@ function remove(idx: number) {
     <div v-for="(traveler, idx) in modelValue" :key="idx" class="p-3 bg-slate-50 rounded-xl">
       <div class="flex items-center justify-between gap-2 mb-2.5">
         <p class="text-[11px] font-bold uppercase" :class="traveler.is_leader ? 'text-primary' : 'text-slate-400'">
-          {{ traveler.is_leader ? t('leader') : `Viajero ${idx + 1}` }}
-          <span v-if="traveler.age_group === 'child'" class="ml-1 text-amber-500">(Niño)</span>
+          {{ traveler.is_leader ? t('leader') : `${t('traveler_word')} ${idx + 1}` }}
+          <span v-if="traveler.age_group === 'child'" class="ml-1 text-amber-500">({{ t('child_word') }})</span>
         </p>
         <button
           v-if="traveler.is_leader && customerName"
@@ -100,7 +100,7 @@ function remove(idx: number) {
           class="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-primary active:text-primary/70"
         >
           <Icon name="material-symbols:badge-outline" class="text-sm" />
-          Usar mis datos
+          {{ t('use_my_data') }}
         </button>
         <button
           v-else-if="!traveler.is_leader && modelValue.length > 1"
@@ -119,7 +119,7 @@ function remove(idx: number) {
             {{ t('full_name') }}<span v-if="traveler.is_leader"> *</span>
           </label>
           <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" :placeholder="t('traveler_full_name')"
-            class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            class="w-full px-3 py-2.5 rounded-lg border text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
             :class="nameInvalid(traveler) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'" />
           <p v-if="nameInvalid(traveler)" class="text-[10px] text-red-500 mt-1">{{ t('required_label') }}</p>
         </div>
@@ -141,7 +141,7 @@ function remove(idx: number) {
             <select
               v-else-if="FIELD_DEFS[key].type === 'gender'"
               v-model="traveler.extra_data[key]"
-              class="w-full px-3 py-2.5 rounded-lg border text-sm bg-white"
+              class="w-full px-3 py-2.5 rounded-lg border text-base sm:text-sm bg-white"
               :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             >
               <option value="">{{ t('select_option') }}</option>
@@ -158,7 +158,7 @@ function remove(idx: number) {
               :inputmode="FIELD_DEFS[key].type === 'number' ? 'decimal' : undefined"
               :autocomplete="FIELD_DEFS[key].type === 'email' ? 'email' : FIELD_DEFS[key].type === 'tel' ? 'tel' : 'off'"
               :placeholder="fieldLabel(key)"
-              class="w-full px-3 py-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              class="w-full px-3 py-2.5 rounded-lg border text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
               :class="fieldInvalid(traveler, key) ? 'border-red-400 ring-1 ring-red-200' : 'border-slate-200'"
             />
             <p v-if="fieldInvalid(traveler, key)" class="text-[10px] text-red-500 mt-1">{{ t('required_label') }}</p>
@@ -176,7 +176,7 @@ function remove(idx: number) {
             v-model="traveler.extra_data.special_requests"
             rows="2"
             placeholder="Ej: vegetariano, alérgico a frutos secos, silla extra…"
-            class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-base sm:text-sm resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           ></textarea>
         </div>
       </div>

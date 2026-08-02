@@ -12,7 +12,7 @@
     </section>
 
     <!-- MOBILE/TABLET: search sticky bar — filters live in the bottom sheet -->
-    <div class="lg:hidden sticky top-[56px] z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="lg:hidden sticky-below-nav bg-white border-b border-slate-200 shadow-sm">
       <div class="px-3 py-2 flex items-center gap-2">
         <div class="relative flex-1 min-w-0">
           <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base" />
@@ -23,7 +23,7 @@
     </div>
 
     <!-- DESKTOP (>=lg): search + view-mode bar; filters in the sidebar -->
-    <div class="hidden lg:block sticky top-[68px] z-30 bg-white border-b border-slate-200 shadow-sm">
+    <div class="hidden lg:block sticky-below-nav bg-white border-b border-slate-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-6 lg:px-10 py-2.5">
         <div class="flex items-center gap-3">
           <!-- Search grows to fill the available space (was a fixed w-72) -->

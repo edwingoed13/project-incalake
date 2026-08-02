@@ -100,7 +100,8 @@ async function submit() {
               Este tour requiere confirmar disponibilidad. Déjanos tus datos y te respondemos pronto.
             </p>
 
-            <div class="grid grid-cols-2 gap-3">
+            <!-- Móvil: fecha a lo ancho y pax debajo (antes quedaban en cuartos ilegibles) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="form-label">Fecha deseada</label>
                 <input v-model="form.preferred_date" type="date" class="input-base" />

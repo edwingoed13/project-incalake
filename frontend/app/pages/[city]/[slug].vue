@@ -129,7 +129,7 @@
            scrolling the whole page. Hidden when there's little content. -->
       <nav
         v-if="sectionNav.length > 2"
-        class="sticky top-[56px] lg:top-[68px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800"
+        class="sticky-below-nav -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800"
       >
         <div class="flex gap-1 overflow-x-auto scrollbar-hide">
           <a
@@ -157,7 +157,7 @@
               <button
                 @click="openShare"
                 type="button"
-                class="size-9 rounded-full bg-black/45 backdrop-blur-sm text-white flex items-center justify-center active:scale-90 transition-transform"
+                class="size-11 rounded-full bg-black/45 backdrop-blur-sm text-white flex items-center justify-center active:scale-90 transition-transform"
                 :aria-label="t('share')"
               >
                 <ShareIcon class="size-5" aria-hidden="true" />

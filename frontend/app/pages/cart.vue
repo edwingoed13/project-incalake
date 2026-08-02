@@ -341,10 +341,10 @@ function getImageUrl(path: string) {
                 <!-- Actions + Price -->
                 <div class="flex items-end justify-between mt-3 pt-3 border-t border-slate-100">
                   <div class="flex items-center gap-0.5 -ml-1.5">
-                    <button @click="openEdit(item)" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" :title="t('edit')">
+                    <button @click="openEdit(item)" class="size-11 md:size-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg" :title="t('edit')">
                       <Icon name="material-symbols:edit-outline" class="text-base" />
                     </button>
-                    <button @click="removeItem(item.id)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Eliminar">
+                    <button @click="removeItem(item.id)" class="size-11 md:size-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" :title="t('remove_label')">
                       <Icon name="material-symbols:delete-outline" class="text-base" />
                     </button>
                   </div>

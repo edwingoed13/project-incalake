@@ -118,6 +118,13 @@
            focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
   }
 
+  /* --- Sticky bajo el navbar ----------------------------------- */
+  /* Única fuente de verdad del offset del navbar (56px móvil / 68px lg).
+     Si el navbar cambia de altura, se corrige solo aquí. */
+  .sticky-below-nav {
+    @apply sticky top-[56px] lg:top-[68px] z-30;
+  }
+
   /* --- Spinner ------------------------------------------------- */
   /* Única receta de spinner (anillo). Tamaño con size-* en el uso:
      <div class="spinner size-10"></div> */

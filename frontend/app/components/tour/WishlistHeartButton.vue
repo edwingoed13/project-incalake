@@ -48,7 +48,7 @@ function toggle(ev?: MouseEvent) {
     @click.stop.prevent="toggle($event)"
     class="rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
     :class="[
-      size === 'sm' ? 'size-9' : 'size-10',
+      size === 'sm' ? 'size-11 md:size-9' : 'size-11 md:size-10',
       overlay === 'dark' ? 'bg-black/45 backdrop-blur-sm' : 'bg-white/90 backdrop-blur',
       saved ? 'text-red-500' : (overlay === 'dark' ? 'text-white' : 'text-slate-400 hover:text-red-500'),
     ]"

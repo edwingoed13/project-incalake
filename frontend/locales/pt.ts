@@ -2,6 +2,9 @@
 // Lazy-loaded by @nuxtjs/i18n on demand (lazy: true + langDir: i18n/locales).
 // Originally inline in i18n.config.ts; split out to shrink the main JS bundle.
 export default {
+      traveler_word: 'Viajante',
+      child_word: 'Criança',
+      use_my_data: 'Usar meus dados',
       badge_best_seller: 'Mais vendido',
       badge_few_spots: 'Poucas vagas',
       policy_std_1: 'Cancelamento gratuito até 24 horas antes do início do tour, com reembolso total.',
