@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
         // so the same observer pattern applies — bumpSupportVersion is a
         // single Cache::forever write, cheap.
         $bumpSupport = static fn () => CacheService::bumpSupportVersion();
-        foreach ([City::class, Tag::class] as $model) {
+        foreach ([City::class, Tag::class, \App\Models\CategoryNew::class, \App\Models\Review::class, \App\Models\PageContent::class] as $model) {
             $model::saved($bumpSupport);
             $model::deleted($bumpSupport);
         }

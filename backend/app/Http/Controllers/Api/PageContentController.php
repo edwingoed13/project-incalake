@@ -19,39 +19,51 @@ class PageContentController extends Controller
     public function show(string $page, Request $request): JsonResponse
     {
         $langCode = strtoupper($request->language ?? 'ES');
-        $language = Language::where('code', $langCode)->first();
 
-        if (!$language) {
+        // Hit on every homepage SSR — cache the built payload. supportVersion
+        // is bumped by the PageContent observer, so admin edits show within
+        // seconds instead of waiting out a TTL.
+        $cacheKey = 'page:v' . \App\Services\CacheService::supportVersion() . ":{$page}:{$langCode}";
+        $payload = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($page, $langCode) {
+            $language = Language::where('code', $langCode)->first();
+            if (!$language) {
+                return ['error' => 404];
+            }
+
+            $content = PageContent::where('page', $page)
+                ->where('language_id', $language->id)
+                ->where('published', true)
+                ->first();
+
+            // Fallback to Spanish if not found
+            if (!$content && $langCode !== 'ES') {
+                $esLang = Language::where('code', 'ES')->first();
+                if ($esLang) {
+                    $content = PageContent::where('page', $page)
+                        ->where('language_id', $esLang->id)
+                        ->where('published', true)
+                        ->first();
+                }
+            }
+
+            return [
+                'success' => true,
+                'data' => $content ? [
+                    'id' => $content->id,
+                    'page' => $content->page,
+                    'language_id' => $content->language_id,
+                    'language_code' => $language->code,
+                    'content' => $content->content,
+                    'published' => $content->published,
+                ] : null,
+            ];
+        });
+
+        if (($payload['error'] ?? null) === 404) {
             return response()->json(['success' => false, 'message' => 'Language not found.'], 404);
         }
 
-        $content = PageContent::where('page', $page)
-            ->where('language_id', $language->id)
-            ->where('published', true)
-            ->first();
-
-        // Fallback to Spanish if not found
-        if (!$content && $langCode !== 'ES') {
-            $esLang = Language::where('code', 'ES')->first();
-            if ($esLang) {
-                $content = PageContent::where('page', $page)
-                    ->where('language_id', $esLang->id)
-                    ->where('published', true)
-                    ->first();
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $content ? [
-                'id' => $content->id,
-                'page' => $content->page,
-                'language_id' => $content->language_id,
-                'language_code' => $language->code,
-                'content' => $content->content,
-                'published' => $content->published,
-            ] : null,
-        ]);
+        return response()->json($payload);
     }
 
     /**

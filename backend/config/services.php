@@ -59,4 +59,10 @@ return [
         'mode' => env('PAYPAL_MODE', 'sandbox'),
     ],
 
+    // Operational addresses — override per environment without code changes.
+    'incalake' => [
+        'reservations_email' => env('RESERVATIONS_EMAIL', 'reservas@incalake.com'),
+        'admin_url' => env('ADMIN_URL', 'https://incalake-admin.vercel.app'),
+    ],
+
 ];

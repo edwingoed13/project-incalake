@@ -265,7 +265,9 @@ class CacheService
      */
     public function getCategories(?string $languageCode = null): \Illuminate\Database\Eloquent\Collection
     {
-        $cacheKey = "categories:" . ($languageCode ?? 'all');
+        // supportVersion in the key: a Category save bumps it (see
+        // AppServiceProvider), so renames stop lingering for up to 48h.
+        $cacheKey = 'categories:v' . self::supportVersion() . ':' . ($languageCode ?? 'all');
 
         return Cache::remember($cacheKey, config('constants.cache.categories.default_ttl'), function () use ($languageCode) {
             $query = CategoryNew::where('active', true);
@@ -302,75 +304,6 @@ class CacheService
         });
     }
 
-    /**
-     * Clear tour cache
-     */
-    public function clearTourCache(int $tourId): void
-    {
-        try {
-            $patterns = [
-                "tour:{$tourId}:*",
-                "tour:{$tourId}",
-            ];
-
-            foreach ($patterns as $pattern) {
-                Cache::forget($pattern);
-            }
-
-            Cache::forget('tour:list:*');
-            Cache::tags(['tours'])->flush();
-
-            Log::info("Tour cache cleared", ['tour_id' => $tourId]);
-        } catch (\Exception $e) {
-            Log::error("Error clearing tour cache", [
-                'tour_id' => $tourId,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Clear categories cache
-     */
-    public function clearCategoriesCache(): void
-    {
-        try {
-            Cache::forget('categories:*');
-            Cache::tags(['categories'])->flush();
-
-            Log::info("Categories cache cleared");
-        } catch (\Exception $e) {
-            Log::error("Error clearing categories cache", ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Clear languages cache
-     */
-    public function clearLanguagesCache(): void
-    {
-        try {
-            Cache::forget('languages:*');
-            Cache::tags(['languages'])->flush();
-
-            Log::info("Languages cache cleared");
-        } catch (\Exception $e) {
-            Log::error("Error clearing languages cache", ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Clear all application cache
-     */
-    public function clearAllCache(): void
-    {
-        try {
-            Cache::flush();
-            Log::info("All cache cleared");
-        } catch (\Exception $e) {
-            Log::error("Error clearing all cache", ['error' => $e->getMessage()]);
-        }
-    }
 
     /**
      * Generate tour cache key

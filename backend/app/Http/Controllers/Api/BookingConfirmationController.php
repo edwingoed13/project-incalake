@@ -418,7 +418,7 @@ class BookingConfirmationController extends Controller
                 return response()->json(['success' => false, 'message' => 'Sin viajeros para notificar.'], 422);
             }
 
-            Mail::to('reservas@incalake.com')->send(new BookingTravelersCompletedMail($booking));
+            Mail::to(config('services.incalake.reservations_email'))->send(new BookingTravelersCompletedMail($booking));
 
             $paymentData['travelers_notified_at'] = now()->toIso8601String();
             $booking->forceFill(['payment_data' => $paymentData])->save();

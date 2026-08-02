@@ -116,11 +116,11 @@ class SendPaymentConfirmationJob implements ShouldQueue
         try {
             if ($bookings->count() === 1) {
                 $single = $bookings->first();
-                Mail::to($single->customer_email)->bcc('reservas@incalake.com')->send(new BookingConfirmationEmail($single, false, $this->paidNow));
-                Mail::to('reservas@incalake.com')->send(new BookingConfirmationEmail($single, true, $this->paidNow));
+                Mail::to($single->customer_email)->bcc(config('services.incalake.reservations_email'))->send(new BookingConfirmationEmail($single, false, $this->paidNow));
+                Mail::to(config('services.incalake.reservations_email'))->send(new BookingConfirmationEmail($single, true, $this->paidNow));
             } else {
-                Mail::to($bookings->first()->customer_email)->bcc('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
-                Mail::to('reservas@incalake.com')->send(new GroupBookingConfirmationEmail($bookings, true, $this->paidNow));
+                Mail::to($bookings->first()->customer_email)->bcc(config('services.incalake.reservations_email'))->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
+                Mail::to(config('services.incalake.reservations_email'))->send(new GroupBookingConfirmationEmail($bookings, true, $this->paidNow));
             }
             Log::info('Confirmation emails sent (job)', [
                 'group_size' => $bookings->count(),

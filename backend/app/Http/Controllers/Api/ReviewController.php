@@ -14,6 +14,21 @@ class ReviewController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // Public listing hit on every home/tour SSR — cache the built payload
+        // per filter combination. The Review observer bumps supportVersion, so
+        // publish/feature toggles reflect within seconds.
+        $params = $request->only(['tour_id', 'featured', 'language', 'min_rating', 'per_page', 'page']);
+        $cacheKey = 'reviews:v' . \App\Services\CacheService::supportVersion() . ':' . md5(json_encode($params));
+
+        return response()->json(\Illuminate\Support\Facades\Cache::remember(
+            $cacheKey,
+            1800,
+            fn () => $this->buildPublicIndex($request)
+        ));
+    }
+
+    private function buildPublicIndex(Request $request): array
+    {
         $query = Review::where('published', true);
 
         if ($request->has('tour_id')) {
@@ -47,7 +62,7 @@ class ReviewController extends Controller
         $perPage = $request->get('per_page', 10);
         $reviews = $query->paginate($perPage);
 
-        return response()->json([
+        return [
             'success' => true,
             'data' => $reviews->items(),
             'meta' => [
@@ -56,7 +71,7 @@ class ReviewController extends Controller
                 'last_page' => $reviews->lastPage(),
                 'per_page' => $reviews->perPage(),
             ],
-        ]);
+        ];
     }
 
     /**

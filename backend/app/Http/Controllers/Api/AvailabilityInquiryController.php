@@ -47,7 +47,7 @@ class AvailabilityInquiryController extends Controller
         ]);
 
         try {
-            Mail::to('reservas@incalake.com')->send(new AvailabilityInquiryMail($inquiry));
+            Mail::to(config('services.incalake.reservations_email'))->send(new AvailabilityInquiryMail($inquiry));
         } catch (\Throwable $e) {
             Log::error('Availability inquiry email failed', ['id' => $inquiry->id, 'error' => $e->getMessage()]);
         }

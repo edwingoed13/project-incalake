@@ -25,7 +25,7 @@ class BookingTravelersCompletedMail extends Mailable
         // Public admin booking listing; staff can search by booking_code. Kept
         // as a single URL (vs. deep-linking to an unknown internal id route)
         // so it never points at a 404 if the admin URL scheme changes.
-        $this->adminBookingUrl = 'https://incalake-admin.vercel.app/admin/v2/bookings';
+        $this->adminBookingUrl = rtrim(config('services.incalake.admin_url'), '/') . '/admin/v2/bookings';
     }
 
     public function envelope(): Envelope
