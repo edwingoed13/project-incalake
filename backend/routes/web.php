@@ -56,11 +56,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Coupons Management
     Route::resource('coupons', CouponController::class);
 
-    // Test Tiptap Editor
-    Route::get('/test-tiptap', function () {
-        return view('admin.test-tiptap');
-    })->name('test-tiptap');
-
     // Languages Management
     Route::resource('languages', LanguageController::class);
 });

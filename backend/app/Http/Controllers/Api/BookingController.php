@@ -451,9 +451,13 @@ class BookingController extends Controller
 
             $chargeResponse = json_decode($response, true);
 
+            // Log only the signal fields — the raw response carries the
+            // customer's email, card metadata and antifraud details (PII
+            // doesn't belong in laravel.log).
             \Log::info('Culqi charge response', [
                 'http_code' => $httpCode,
-                'response' => $chargeResponse,
+                'charge_id' => $chargeResponse['id'] ?? null,
+                'outcome' => $chargeResponse['outcome']['type'] ?? ($chargeResponse['object'] ?? null),
                 'booking_id' => $booking->id
             ]);
 
