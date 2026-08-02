@@ -13,7 +13,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'admin.api' => \App\Http\Middleware\EnsureAdminApi::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
