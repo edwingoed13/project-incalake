@@ -63,7 +63,7 @@
           <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             <div v-if="isMultiTour" class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
               <Icon name="material-symbols:confirmation-number-outline" class="text-primary text-base" />
-              <span class="text-xs font-bold text-slate-700">{{ purchaseTours.length }} tours en esta compra</span>
+              <span class="text-xs font-bold text-slate-700">{{ t('purchase_tours_count', { n: purchaseTours.length }) }}</span>
             </div>
 
             <div
@@ -116,13 +116,12 @@
                 <summary class="flex items-center justify-between px-3 md:px-4 py-2 cursor-pointer list-none">
                   <span class="text-xs font-semibold text-primary inline-flex items-center gap-1.5">
                     <Icon name="material-symbols:fact-check-outline" class="text-sm" />
-                    Qué incluye
-                  </span>
+                    {{ t('whats_included_short') }}                  </span>
                   <Icon name="material-symbols:expand-more" class="text-slate-400 text-base transition-transform group-open:rotate-180" />
                 </summary>
                 <div class="px-3 md:px-4 pb-3 space-y-2.5">
                   <div v-if="tourIncludesList(tr.what_includes).length">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">Incluye</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">{{ t('included_label') }}</p>
                     <ul class="space-y-1">
                       <li v-for="(it, k) in tourIncludesList(tr.what_includes)" :key="'wi' + k" class="flex items-start gap-2 text-[13px] text-slate-700">
                         <span class="inline-block size-1.5 rounded-full bg-green-500 shrink-0 mt-[7px]" aria-hidden="true"></span>
@@ -131,7 +130,7 @@
                     </ul>
                   </div>
                   <div v-if="tourExcludesList(tr.what_includes, tr.what_not_includes).length">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">No incluye</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">{{ t('not_included_label') }}</p>
                     <ul class="space-y-1">
                       <li v-for="(it, k) in tourExcludesList(tr.what_includes, tr.what_not_includes)" :key="'wni' + k" class="flex items-start gap-2 text-[13px] text-slate-500">
                         <span class="inline-block size-1.5 rounded-full bg-red-400 shrink-0 mt-[7px]" aria-hidden="true"></span>
@@ -154,7 +153,7 @@
                 <p class="text-sm font-bold text-primary mt-0.5">{{ currencyStore.formatConverted(grandTotal) }}</p>
               </div>
               <div class="p-3 text-center">
-                <p class="text-[10px] text-slate-400 font-semibold uppercase">Estado</p>
+                <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('status_label') }}</p>
                 <p class="text-sm font-bold mt-0.5" :class="paymentSummary?.is_partial ? 'text-amber-600' : 'text-green-600'">
                   {{ paymentSummary?.is_partial ? 'Adelanto pagado' : t('status_paid') }}
                 </p>
@@ -168,7 +167,7 @@
                 Pagaste <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
               </span>
               <span class="text-xs text-right">
-                <span class="text-slate-500">Saldo el día del tour:</span>
+                <span class="text-slate-500">{{ t('balance_on_tour_day') }}</span>
                 <span class="font-bold text-amber-700 ml-1">{{ currencyStore.formatConverted(paymentSummary.balance_due) }}</span>
               </span>
             </div>
@@ -236,7 +235,7 @@
                     <Icon name="material-symbols:check-circle-outline" class="text-xs" />
                     {{ tr.pickup_type === 'hotel_pickup' ? `Recojo en hotel${tr.pickup_hotel ? ': ' + tr.pickup_hotel : ''}` : 'Punto de encuentro confirmado' }}
                   </p>
-                  <p v-else class="text-[11px] text-amber-600 font-semibold mt-0.5">Pendiente de configurar</p>
+                  <p v-else class="text-[11px] text-amber-600 font-semibold mt-0.5">{{ t('pending_setup') }}</p>
                 </div>
                 <button
                   @click="openPickupModal(tr)"
@@ -325,7 +324,7 @@
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
               <div class="px-3 md:px-4 py-2.5 bg-primary/5 border-b border-slate-50 flex items-center gap-1.5">
                 <Icon name="material-symbols:group-outline" class="text-primary text-base" />
-                <span class="text-xs font-bold text-slate-700">Viajeros por tour ({{ toursTravelersDone }}/{{ purchaseTours.length }})</span>
+                <span class="text-xs font-bold text-slate-700">{{ t('travelers_per_tour') }} ({{ toursTravelersDone }}/{{ purchaseTours.length }})</span>
               </div>
               <div
                 v-for="(tr, i) in purchaseTours"
@@ -342,8 +341,8 @@
                     <p class="text-sm font-bold text-slate-800 truncate">{{ tr.tour_title }}</p>
                     <p class="text-[11px] mt-0.5 font-semibold inline-flex items-center gap-1" :class="isTourComplete(tr) ? 'text-green-600' : 'text-amber-600'">
                       <Icon :name="isTourComplete(tr) ? 'material-symbols:check-circle-outline' : 'material-symbols:group-outline'" class="text-xs" />
-                      <template v-if="isTourComplete(tr)">Responsable completo</template>
-                      <template v-else>{{ filledCount(tr.id) }}/{{ tourMax(tr) }} viajeros</template>
+                      <template v-if="isTourComplete(tr)">{{ t('leader_complete') }}</template>
+                      <template v-else>{{ filledCount(tr.id) }}/{{ tourMax(tr) }} {{ t('travelers_lc') }}</template>
                     </p>
                   </div>
                   <Icon name="material-symbols:expand-more" :class="isOpenTour(tr.id) ? 'rotate-180' : ''" class="text-slate-400 transition-transform shrink-0 text-2xl" />
@@ -355,11 +354,10 @@
                       @click="applyTravelersToAllTours(tr.id)"
                       :disabled="!(travelersByTour[tr.id]?.[0]?.full_name || '').trim()"
                       class="inline-flex items-center gap-1 text-xs font-semibold text-primary active:text-primary/70 disabled:opacity-40 disabled:cursor-not-allowed"
-                      title="Sobrescribe los viajeros de los otros tours con los de este"
+                      :title="t('copy_travelers_d')"
                     >
                       <Icon name="material-symbols:groups-outline" class="text-sm" />
-                      Aplicar estos viajeros a los demás tours
-                    </button>
+                      {{ t('apply_travelers_all') }}                    </button>
                     <button
                       type="button"
                       @click="applyLeaderToAll(tr.id)"
@@ -470,7 +468,7 @@
             <div class="absolute inset-0 bg-black/50" @click="reviewOpen = false"></div>
             <div class="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl">
               <div class="sticky top-0 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-                <p class="text-sm font-bold text-slate-800">Revisa los datos</p>
+                <p class="text-sm font-bold text-slate-800">{{ t('review_details') }}</p>
                 <button @click="reviewOpen = false" class="p-1.5 text-slate-400 active:text-slate-700">
                   <Icon name="material-symbols:close" class="text-2xl" />
                 </button>
@@ -482,17 +480,17 @@
                     <p v-for="(p, pi) in g.travelers" :key="pi" class="text-sm text-slate-700 flex items-center gap-1.5">
                       <Icon name="material-symbols:person-outline" class="text-slate-400 text-sm" />
                       {{ p.name }}
-                      <span v-if="p.isLeader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">RESPONSABLE</span>
+                      <span v-if="p.isLeader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{{ t('leader_badge').toUpperCase() }}</span>
                     </p>
                   </div>
                 </div>
-                <p class="text-[11px] text-slate-400">Puedes volver a este enlace para editarlos más adelante.</p>
+                <p class="text-[11px] text-slate-400">{{ t('edit_later_hint') }}</p>
               </div>
               <div class="sticky bottom-0 bg-white border-t border-slate-100 px-4 py-3 flex gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                <button @click="reviewOpen = false" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">Editar</button>
+                <button @click="reviewOpen = false" class="flex-1 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:bg-slate-50">{{ t('edit') }}</button>
                 <button @click="commitTravelers" :disabled="savingTravelers" class="flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 active:bg-primary/80">
                   <Icon name="material-symbols:progress-activity" v-if="savingTravelers" class="animate-spin text-base" />
-                  {{ savingTravelers ? t('saving') : 'Confirmar' }}
+                  {{ savingTravelers ? t('saving') : t('confirm') }}
                 </button>
               </div>
             </div>

@@ -30,19 +30,16 @@
           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-bestseller/10 text-bestseller text-xs font-bold uppercase tracking-wide"
         >
           <BookmarkSolidIcon class="size-3.5" aria-hidden="true" />
-          Más vendido
-        </span>
+          {{ t('badge_best_seller') }}        </span>
         <span v-if="tour.free_cancellation" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
           <CheckCircleSolidIcon class="size-3.5" aria-hidden="true" />
-          Cancelación gratuita
-        </span>
+          {{ t('free_cancellation') }}        </span>
         <span
           v-if="tour.capacity && tour.cupos != null && tour.cupos / Math.max(tour.capacity, 1) < 0.3"
           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-urgency-soft text-urgency text-xs font-bold"
         >
           <FireSolidIcon class="size-3.5" aria-hidden="true" />
-          Pocos cupos
-        </span>
+          {{ t('badge_few_spots') }}        </span>
       </div>
 
       <!-- Title & Basic Info — OTA-style: title huge & bold, meta dense -->
@@ -108,10 +105,10 @@
             @click="openShare"
             type="button"
             class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
-            aria-label="Compartir tour"
+            :aria-label="t('share')"
           >
             <ShareIcon class="size-5" aria-hidden="true" />
-            <span class="hidden sm:inline">Compartir</span>
+            <span class="hidden sm:inline">{{ t('share') }}</span>
           </button>
           <button
             @click="toggleSave($event)"
@@ -161,7 +158,7 @@
                 @click="openShare"
                 type="button"
                 class="size-9 rounded-full bg-black/45 backdrop-blur-sm text-white flex items-center justify-center active:scale-90 transition-transform"
-                aria-label="Compartir tour"
+                :aria-label="t('share')"
               >
                 <ShareIcon class="size-5" aria-hidden="true" />
               </button>
@@ -328,22 +325,22 @@
               <div v-if="tour.free_cancellation" class="flex items-start gap-2.5">
                 <CheckCircleSolidIcon class="size-5 text-trust shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">Cancelación gratuita</p>
-                  <p class="text-xs text-slate-500">Hasta 24h antes del tour</p>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('free_cancellation') }}</p>
+                  <p class="text-xs text-slate-500">{{ t('trust_cancel_hint') }}</p>
                 </div>
               </div>
               <div class="flex items-start gap-2.5">
                 <ClockIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">Confirmación inmediata</p>
-                  <p class="text-xs text-slate-500">Recibe tu reserva al instante</p>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('trust_instant') }}</p>
+                  <p class="text-xs text-slate-500">{{ t('trust_instant_hint') }}</p>
                 </div>
               </div>
               <div class="flex items-start gap-2.5">
                 <ShieldCheckIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">Mejor precio garantizado</p>
-                  <p class="text-xs text-slate-500">Operador oficial autorizado</p>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('trust_best_price') }}</p>
+                  <p class="text-xs text-slate-500">{{ t('trust_best_price_hint') }}</p>
                 </div>
               </div>
             </div>
@@ -432,7 +429,7 @@
           @click="onMobileBottomCta"
           class="btn-primary flex-1"
         >
-          {{ tour.require_availability ? 'CONSULTAR' : (selectedDate && selectedTime ? 'RESERVAR' : 'VER FECHAS') }}
+          {{ tour.require_availability ? t('cta_inquire') : (selectedDate && selectedTime ? t('cta_book') : t('cta_see_dates')) }}
           <ArrowRightIcon class="size-4" aria-hidden="true" />
         </button>
       </div>

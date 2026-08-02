@@ -527,10 +527,10 @@ function getImageUrl(path: string) {
             {{ t('standard_policy') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
-            <p><strong>Free cancellation</strong> up to 24 hours before the tour start time for a full refund.</p>
-            <p><strong>No changes</strong> are accepted within 24 hours of the tour.</p>
-            <p><strong>No-shows</strong> will be charged in full.</p>
-            <p>All tours are subject to weather conditions and minimum participant requirements.</p>
+            <p>{{ t('policy_std_1') }}</p>
+            <p>{{ t('policy_std_2') }}</p>
+            <p>{{ t('policy_std_3') }}</p>
+            <p>{{ t('policy_std_4') }}</p>
           </div>
         </div>
 
@@ -541,7 +541,7 @@ function getImageUrl(path: string) {
             {{ t('custom_policy') }}
           </h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3">
-            <p>This tour has custom policies. Please contact us at <strong>reservas@incalake.com</strong> for specific terms and conditions.</p>
+            <p>{{ t('policy_custom_contact') }}</p>
           </div>
         </div>
       </div>
@@ -575,10 +575,10 @@ function getImageUrl(path: string) {
               {{ t('standard_policy') }}
             </h4>
             <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
-              <p><strong>Cancelación gratuita</strong> hasta 24 horas antes del inicio del tour, con reembolso completo.</p>
-              <p><strong>No se aceptan cambios</strong> dentro de las 24 horas previas al tour.</p>
-              <p><strong>No-shows</strong> se cobran completos.</p>
-              <p>Todos los tours están sujetos a condiciones climáticas y mínimo de participantes.</p>
+              <p>{{ t('policy_std_1') }}</p>
+              <p>{{ t('policy_std_2') }}</p>
+              <p>{{ t('policy_std_3') }}</p>
+              <p>{{ t('policy_std_4') }}</p>
             </div>
           </div>
         </div>
