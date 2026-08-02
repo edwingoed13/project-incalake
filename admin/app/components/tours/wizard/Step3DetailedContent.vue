@@ -500,9 +500,15 @@ const addCustomSection = () => {
   })
 }
 
-const removeCustomSection = (idx: number) => {
+const removeCustomSection = async (idx: number) => {
   if (!currentLangData.value?.customSections) return
-  if (!confirm('¿Eliminar esta sección? Esta acción no se puede deshacer hasta guardar.')) return
+  const ok = await useConfirm().confirm({
+    title: '¿Eliminar esta sección?',
+    description: 'Esta acción no se puede deshacer una vez guardado.',
+    confirmLabel: 'Eliminar',
+    confirmColor: 'error',
+  })
+  if (!ok) return
   currentLangData.value.customSections.splice(idx, 1)
 }
 

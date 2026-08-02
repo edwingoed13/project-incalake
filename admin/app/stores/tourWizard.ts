@@ -2,6 +2,17 @@ import { defineStore } from 'pinia'
 import { nextTick } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
+// Store-level error surface: Nuxt UI toast instead of the blocking native
+// alert(). Falls back to alert if the toast composable isn't reachable
+// (e.g. called outside a component-triggered action).
+const notifyError = (title: string, description?: string) => {
+  try {
+    useToast().add({ title, description, color: 'error', icon: 'i-lucide-circle-alert', duration: 8000 })
+  } catch {
+    alert(description ? `${title}\n\n${description}` : title)
+  }
+}
+
 // Default cancellation policy table — kept in sync with
 // backend/app/Support/StandardCancellationPolicy.php. New tours start with
 // this prefilled per language; admins can edit per-tour if they need to.
@@ -879,7 +890,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       const silent = options.silent === true
       const auth = useAuthStore()
       if (!auth.token) {
-        if (!silent) alert('Sesión expirada. Por favor vuelve a loguearte.')
+        if (!silent) notifyError('Sesión expirada', 'Por favor vuelve a iniciar sesión.')
         return
       }
 
@@ -915,7 +926,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         }
       }
       if (priceErrors.length) {
-        if (!silent) alert('No se puede guardar — hay conflictos en los rangos de precios:\n\n' + priceErrors.join('\n'))
+        if (!silent) notifyError('No se puede guardar: conflictos en los rangos de precios', priceErrors.join('\n'))
         return
       }
 
@@ -1180,7 +1191,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         if (validationErrors) {
           if (!silent) alert('Errores de validación:\n' + messages)
         } else {
-          if (!silent) alert('Error al guardar: ' + messages)
+          if (!silent) notifyError('Error al guardar', messages)
         }
       } finally {
         this.loading = false

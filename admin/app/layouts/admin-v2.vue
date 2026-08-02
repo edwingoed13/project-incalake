@@ -42,7 +42,7 @@ const links = computed(() => {
   // Sección "Reservas"
   const reservations = [
     { label: 'Clientes (Web/OTAs)', icon: 'i-lucide-users', to: '/admin/v2/bookings' },
-    { label: 'Reviews', icon: 'i-lucide-star', to: '/admin/v2/reviews' },
+    { label: 'Reseñas', icon: 'i-lucide-star', to: '/admin/v2/reviews' },
     { label: 'Chatbot', icon: 'i-lucide-bot', to: '/admin/chatbot', badge: { label: 'Pronto', ...SOON } },
   ]
 
@@ -53,7 +53,7 @@ const links = computed(() => {
   if (auth.hasPermission?.('categories.view')) services.push({ label: 'Categorías', icon: 'i-lucide-tags', to: '/admin/v2/categories' })
   if (auth.hasPermission?.('languages.view')) services.push({ label: 'Idiomas', icon: 'i-lucide-languages', to: '/admin/v2/languages' })
   services.push({ label: 'Paquetes', icon: 'i-lucide-package', to: '/admin/packages', badge: { label: 'Pronto', ...SOON } })
-  services.push({ label: 'Home Page', icon: 'i-lucide-house', to: '/admin/v2/pages/home' })
+  services.push({ label: 'Página de inicio', icon: 'i-lucide-house', to: '/admin/v2/pages/home' })
   services.push({ label: 'Menú', icon: 'i-lucide-menu', to: '/admin/v2/pages/menu' })
 
   // Sección "Finanzas"
@@ -107,7 +107,7 @@ const searchGroups = computed(() => [
       { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', to: '/admin/v2' },
       { label: 'Tours', icon: 'i-lucide-map-pin', to: '/admin/v2/tours' },
       { label: 'Reservas', icon: 'i-lucide-calendar-check', to: '/admin/v2/bookings' },
-      { label: 'Reviews', icon: 'i-lucide-star', to: '/admin/v2/reviews' },
+      { label: 'Reseñas', icon: 'i-lucide-star', to: '/admin/v2/reviews' },
     ],
   },
   {
@@ -124,7 +124,7 @@ const searchGroups = computed(() => [
     label: 'Sistema',
     items: [
       { label: 'Usuarios', icon: 'i-lucide-shield-user', to: '/admin/v2/users' },
-      { label: 'Home Page', icon: 'i-lucide-house', to: '/admin/v2/pages/home' },
+      { label: 'Página de inicio', icon: 'i-lucide-house', to: '/admin/v2/pages/home' },
       { label: 'Menú', icon: 'i-lucide-menu', to: '/admin/v2/pages/menu' },
     ],
   },
@@ -152,10 +152,14 @@ const themeIcon = computed(() => {
 })
 
 const logout = async () => {
-  if (confirm('¿Cerrar sesión?')) {
-    await auth.logout()
-    await router.push('/login')
-  }
+  const ok = await useConfirm().confirm({
+    title: '¿Cerrar sesión?',
+    confirmLabel: 'Cerrar sesión',
+    icon: 'i-lucide-log-out',
+  })
+  if (!ok) return
+  await auth.logout()
+  await router.push('/login')
 }
 
 const userMenuItems = computed(() => [

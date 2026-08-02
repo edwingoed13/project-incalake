@@ -1136,7 +1136,7 @@ async function attachChild(cand: { id: number; h1_title: string }) {
     await loadChildren()
   } catch (e: any) {
     console.error('attach child failed', e)
-    alert(e?.data?.message || 'No se pudo vincular la variante.')
+    useToast().add({ title: 'No se pudo vincular la variante', description: e?.data?.message, color: 'error', icon: 'i-lucide-circle-alert' })
   } finally {
     attachingId.value = null
   }
