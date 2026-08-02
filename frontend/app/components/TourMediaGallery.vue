@@ -152,10 +152,29 @@ function closeVideoModal() {
   document.body.style.overflow = ''
 }
 
+// Preload the lightbox neighbors with the SAME transform the viewer uses,
+// so "next/previous" swaps instantly instead of sticking on the current
+// photo while the 1600w variant downloads.
+const nuxtImg = useImage()
+function lightboxVariant(i: number): string {
+  const img = images.value[i]
+  return img ? nuxtImg(img.url, { format: 'webp', width: 1600, height: 1067 }) : ''
+}
+function preloadAround(index: number) {
+  if (import.meta.server) return
+  for (const i of [index + 1, index - 1]) {
+    if (i >= 0 && i < images.value.length) {
+      const im = new Image()
+      im.src = lightboxVariant(i)
+    }
+  }
+}
+
 function openLightbox(index: number) {
   currentImageIndex.value = index
   lightboxOpen.value = true
   document.body.style.overflow = 'hidden'
+  preloadAround(index)
 }
 
 function closeLightbox() {
@@ -166,12 +185,14 @@ function closeLightbox() {
 function nextImage() {
   if (currentImageIndex.value < images.value.length - 1) {
     currentImageIndex.value++
+    preloadAround(currentImageIndex.value)
   }
 }
 
 function prevImage() {
   if (currentImageIndex.value > 0) {
     currentImageIndex.value--
+    preloadAround(currentImageIndex.value)
   }
 }
 
