@@ -12,8 +12,10 @@ use Illuminate\Mail\Mailables\Envelope;
  * Operator notification for a new availability request (tours that require
  * availability verification before booking). Sent to reservas@incalake.com.
  */
-class AvailabilityInquiryMail extends Mailable
+class AvailabilityInquiryMail extends Mailable implements ShouldQueue
 {
+    use Queueable, SerializesModels;
+
     public AvailabilityInquiry $inquiry;
 
     public function __construct(AvailabilityInquiry $inquiry)

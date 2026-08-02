@@ -14,8 +14,10 @@ use Illuminate\Mail\Mailables\Envelope;
  * traveler names, pickup choice, special requests, and links to the booking
  * in the admin so staff can prep the tour.
  */
-class BookingTravelersCompletedMail extends Mailable
+class BookingTravelersCompletedMail extends Mailable implements ShouldQueue
 {
+    use Queueable, SerializesModels;
+
     public Booking $booking;
     public string $adminBookingUrl;
 
