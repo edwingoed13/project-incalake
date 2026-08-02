@@ -50,11 +50,11 @@
         </div>
         <div class="space-y-4">
           <div>
-            <label class="admin-label mb-1 block">Title (H2)</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Title (H2)</label>
             <input v-model="form.hero.title" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-semibold" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">Subtitle</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Subtitle</label>
             <textarea v-model="form.hero.subtitle" rows="2" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm resize-none"></textarea>
           </div>
           <!-- Hero Background Image -->
@@ -121,11 +121,11 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="admin-label mb-1 block">Section Label</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Section Label</label>
             <input v-model="form.destinations.label" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm font-semibold" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">Section Title</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Section Title</label>
             <input v-model="form.destinations.title" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm font-semibold" />
           </div>
         </div>
@@ -143,11 +143,11 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="admin-label mb-1 block">Section Label</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Section Label</label>
             <input v-model="form.featured.label" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm font-semibold" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">Section Title</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Section Title</label>
             <input v-model="form.featured.title" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm font-semibold" />
           </div>
         </div>
@@ -160,7 +160,7 @@
           <h4 class="text-lg font-bold text-slate-900 dark:text-white">Why Choose Us</h4>
         </div>
         <div>
-          <label class="admin-label mb-1 block">Section Title</label>
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Section Title</label>
           <input v-model="form.why_title" type="text" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm font-semibold mb-4" />
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -183,19 +183,19 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <label class="admin-label mb-1 block">Search Placeholder</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Search Placeholder</label>
             <input v-model="form.search_placeholder" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">Search Button</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Search Button</label>
             <input v-model="form.search_btn" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">Trending Label</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">Trending Label</label>
             <input v-model="form.trending_label" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" />
           </div>
           <div>
-            <label class="admin-label mb-1 block">View All</label>
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1 block">View All</label>
             <input v-model="form.view_all" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 dark:bg-slate-950 text-sm" />
           </div>
         </div>
