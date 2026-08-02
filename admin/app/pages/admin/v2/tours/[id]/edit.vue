@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTourWizardStore } from '~/stores/tourWizard'
+import { useTourWizardStore, setWizardErrorNotifier } from '~/stores/tourWizard'
 import { useRoute, useRouter } from 'vue-router'
 import { computed, onMounted, onBeforeUnmount, watch, ref } from 'vue'
 
@@ -292,6 +292,15 @@ watch(() => store.loading, (loading, wasLoading) => {
 })
 // New tours never enter loading — arm shortly after mount instead.
 onMounted(() => armDirtyTracking(1500))
+
+// Store actions lose the Nuxt context after awaits; give the store a
+// context-ful toast so validation/save errors stop falling back to alert().
+onMounted(() => {
+  setWizardErrorNotifier((title, description) =>
+    toast.add({ title, description, color: 'error', icon: 'i-lucide-circle-alert', duration: 8000 })
+  )
+})
+onBeforeUnmount(() => setWizardErrorNotifier(null))
 // A completed save is the new reference (paths/normalizations included).
 watch(() => store.isDirty, (dirty) => {
   if (!dirty) baselineJson = slicesJson()

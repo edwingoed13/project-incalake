@@ -2,10 +2,14 @@ import { defineStore } from 'pinia'
 import { nextTick } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
-// Store-level error surface: Nuxt UI toast instead of the blocking native
-// alert(). Falls back to alert if the toast composable isn't reachable
-// (e.g. called outside a component-triggered action).
+// Store-level error surface. Actions lose the Nuxt context after their first
+// await, so useToast() there throws and we used to fall back to the ugly
+// native alert. The editor page registers a context-ful notifier instead.
+let externalNotifier: ((title: string, description?: string) => void) | null = null
+export const setWizardErrorNotifier = (fn: typeof externalNotifier) => { externalNotifier = fn }
+
 const notifyError = (title: string, description?: string) => {
+  if (externalNotifier) return externalNotifier(title, description)
   try {
     useToast().add({ title, description, color: 'error', icon: 'i-lucide-circle-alert', duration: 8000 })
   } catch {
@@ -964,9 +968,15 @@ export const useTourWizardStore = defineStore('tourWizard', {
         departure_time: (this.basicInfo.startTimes?.[0]?.time || this.basicInfo.startTime || '08:00').substring(0, 5),
         departure_times: (this.basicInfo.startTimes || [])
           .map((item: any) => {
-            const days = Number(item?.days) || 0
-            const hours = Number(item?.hours) || 0
+            let days = Number(item?.days) || 0
+            let hours = Number(item?.hours) || 0
             const minutes = Number(item?.minutes) || 0
+            // Legacy-imported multi-day tours carry hours >= 24 (e.g. 48h for
+            // a 2D1N) which the API rejects (hours must be 0-23). Normalize.
+            if (hours >= 24) {
+              days += Math.floor(hours / 24)
+              hours = hours % 24
+            }
             // Keep legacy duration/duration_unit in sync (some readers still use them)
             const legacyQty = days > 0 ? days : (hours > 0 ? hours : minutes)
             const legacyUnit = days > 0 ? 'days' : (hours > 0 ? 'hours' : 'minutes')
@@ -981,8 +991,17 @@ export const useTourWizardStore = defineStore('tourWizard', {
         timezone: this.basicInfo.timezone,
         duration_quantity: this.basicInfo.duration,
         duration_unit: this.basicInfo.durationUnit,
-        duration_days: Number(this.basicInfo.durationDays) || 0,
-        duration_hours: Number(this.basicInfo.durationHours) || 0,
+        // Same hours>=24 normalization as departure_times (legacy 2D tours
+        // stored 48h and the API's 0-23 rule rejected every save).
+        ...(() => {
+          let d = Number(this.basicInfo.durationDays) || 0
+          let h = Number(this.basicInfo.durationHours) || 0
+          if (h >= 24) {
+            d += Math.floor(h / 24)
+            h = h % 24
+          }
+          return { duration_days: d, duration_hours: h }
+        })(),
         duration_minutes: Number(this.basicInfo.durationMinutes) || 0,
         youtube_url: this.multimedia.youtubeUrl,
         gallery_layout: this.multimedia.galleryLayout,
