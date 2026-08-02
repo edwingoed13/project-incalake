@@ -140,20 +140,16 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <UModal :open="open" :ui="{ content: 'max-w-2xl' }" :dismissible="!saving" @update:open="(v) => !v && close()">
-    <template #content>
-      <div class="bg-default rounded-lg flex flex-col max-h-[90vh]">
-        <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3 shrink-0">
-          <div class="flex items-center gap-3">
-            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UIcon :name="isEdit ? 'i-lucide-pencil' : 'i-lucide-star'" class="size-5 text-primary" />
-            </div>
-            <h2 class="text-lg font-bold">{{ isEdit ? 'Editar reseña' : 'Nueva reseña' }}</h2>
-          </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" :disabled="saving" @click="close" />
-        </div>
-
-        <form class="flex-1 overflow-y-auto p-6 space-y-4" @submit.prevent="handleSubmit">
+  <V2FormModalShell
+    :open="open"
+    :title="isEdit ? 'Editar reseña' : 'Nueva reseña'"
+    :icon="isEdit ? 'i-lucide-pencil' : 'i-lucide-star'"
+    width="max-w-2xl"
+    :busy="saving"
+    scrollable
+    @close="close"
+  >
+    <form class="flex-1 overflow-y-auto p-6 space-y-4" @submit.prevent="handleSubmit">
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="Nombre del cliente" required>
               <UInput v-model="form.name" placeholder="Cliente" icon="i-lucide-user" class="w-full" required />
@@ -265,7 +261,5 @@ const handleSubmit = async () => {
             {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Crear') }}
           </UButton>
         </div>
-      </div>
-    </template>
-  </UModal>
+  </V2FormModalShell>
 </template>

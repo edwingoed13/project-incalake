@@ -101,20 +101,15 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <UModal :open="open" :ui="{ content: 'max-w-2xl' }" :dismissible="!saving" @update:open="(v) => !v && close()">
-    <template #content>
-      <div class="bg-default rounded-lg">
-        <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UIcon :name="category ? 'i-lucide-pencil' : 'i-lucide-plus'" class="size-5 text-primary" />
-            </div>
-            <h2 class="text-lg font-bold">{{ category ? 'Editar categoría' : 'Nueva categoría' }}</h2>
-          </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="md" :ui="{ base: 'rounded-full' }" :disabled="saving" @click="close" />
-        </div>
-
-        <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
+  <V2FormModalShell
+    :open="open"
+    :title="category ? 'Editar categoría' : 'Nueva categoría'"
+    :icon="category ? 'i-lucide-pencil' : 'i-lucide-plus'"
+    width="max-w-2xl"
+    :busy="saving"
+    @close="close"
+  >
+    <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
           <UFormField label="Nombre" required>
             <UInput
               v-model="form.name"
@@ -160,7 +155,5 @@ const handleSubmit = async () => {
             </UButton>
           </div>
         </form>
-      </div>
-    </template>
-  </UModal>
+  </V2FormModalShell>
 </template>

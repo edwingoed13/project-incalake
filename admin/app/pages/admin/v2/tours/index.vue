@@ -656,20 +656,18 @@ onMounted(() => {
   </UDashboardPanel>
 
   <!-- Clone Modal -->
-  <UModal v-model:open="showCloneModal" :ui="{ content: 'max-w-xl' }">
-    <template #content>
-      <UCard :ui="{ body: 'p-6 space-y-6' }">
-        <template #header>
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="text-lg font-bold">Agregar idioma</h3>
-              <p class="text-xs text-muted mt-1">
-                Tour: <span class="font-semibold text-default">{{ selectedTour?.title }}</span>
-              </p>
-            </div>
-            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="closeCloneModal" />
-          </div>
-        </template>
+  <V2FormModalShell
+    :open="showCloneModal"
+    title="Agregar idioma"
+    icon="i-lucide-languages"
+    width="max-w-xl"
+    :busy="cloning"
+    @close="closeCloneModal"
+  >
+    <template #subtitle>
+      Tour: <span class="font-semibold text-default">{{ selectedTour?.title }}</span>
+    </template>
+    <div class="p-6 space-y-6">
 
         <!-- Language Picker -->
         <div>
@@ -743,21 +741,18 @@ onMounted(() => {
           </div>
         </div>
 
-        <template #footer>
-          <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="ghost" @click="closeCloneModal">Cancelar</UButton>
-            <UButton
-              color="primary"
-              :icon="cloneType === 'ai' ? 'i-lucide-sparkles' : 'i-lucide-languages'"
-              :loading="cloning"
-              :disabled="!selectedLanguage || cloneAvailableLanguages.length === 0"
-              @click="performClone"
-            >
-              {{ cloning ? 'Agregando...' : 'Agregar traducción' }}
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </template>
-  </UModal>
+      <div class="flex justify-end gap-2 pt-2 border-t border-default">
+        <UButton color="neutral" variant="ghost" @click="closeCloneModal">Cancelar</UButton>
+        <UButton
+          color="primary"
+          :icon="cloneType === 'ai' ? 'i-lucide-sparkles' : 'i-lucide-languages'"
+          :loading="cloning"
+          :disabled="!selectedLanguage || cloneAvailableLanguages.length === 0"
+          @click="performClone"
+        >
+          {{ cloning ? 'Agregando...' : 'Agregar traducción' }}
+        </UButton>
+      </div>
+    </div>
+  </V2FormModalShell>
 </template>

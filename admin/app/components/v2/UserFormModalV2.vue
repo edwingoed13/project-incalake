@@ -101,20 +101,15 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <UModal :open="open" :ui="{ content: 'max-w-lg' }" :dismissible="!saving" @update:open="(v) => !v && close()">
-    <template #content>
-      <div class="bg-default rounded-lg">
-        <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UIcon :name="isEdit ? 'i-lucide-pencil' : 'i-lucide-user-plus'" class="size-5 text-primary" />
-            </div>
-            <h2 class="text-lg font-bold">{{ isEdit ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
-          </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="md" :ui="{ base: 'rounded-full' }" :disabled="saving" @click="close" />
-        </div>
-
-        <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
+  <V2FormModalShell
+    :open="open"
+    :title="isEdit ? 'Editar usuario' : 'Nuevo usuario'"
+    :icon="isEdit ? 'i-lucide-pencil' : 'i-lucide-user-plus'"
+    width="max-w-lg"
+    :busy="saving"
+    @close="close"
+  >
+    <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
           <UFormField label="Nombre" required>
             <UInput
               v-model="form.name"
@@ -175,7 +170,5 @@ const handleSubmit = async () => {
             </UButton>
           </div>
         </form>
-      </div>
-    </template>
-  </UModal>
+  </V2FormModalShell>
 </template>

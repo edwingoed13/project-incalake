@@ -88,20 +88,14 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <UModal :open="open" :ui="{ content: 'max-w-md' }" :dismissible="!saving" @update:open="(v) => !v && close()">
-    <template #content>
-      <div class="bg-default rounded-lg">
-        <div class="px-6 py-4 border-b border-default flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UIcon :name="isEdit ? 'i-lucide-pencil' : 'i-lucide-languages'" class="size-5 text-primary" />
-            </div>
-            <h2 class="text-lg font-bold">{{ isEdit ? 'Editar idioma' : 'Nuevo idioma' }}</h2>
-          </div>
-          <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" :disabled="saving" @click="close" />
-        </div>
-
-        <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
+  <V2FormModalShell
+    :open="open"
+    :title="isEdit ? 'Editar idioma' : 'Nuevo idioma'"
+    :icon="isEdit ? 'i-lucide-pencil' : 'i-lucide-languages'"
+    :busy="saving"
+    @close="close"
+  >
+    <form class="p-6 space-y-4" @submit.prevent="handleSubmit">
           <UFormField label="Nombre del idioma" required hint="Tal como se mostrará a los clientes (ej: Español, English)">
             <UInput v-model="form.country" placeholder="Español" icon="i-lucide-flag" class="w-full" required />
           </UFormField>
@@ -131,7 +125,5 @@ const handleSubmit = async () => {
             </UButton>
           </div>
         </form>
-      </div>
-    </template>
-  </UModal>
+  </V2FormModalShell>
 </template>
