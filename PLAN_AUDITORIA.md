@@ -33,7 +33,7 @@
 - [x] 0.12 Deploy hecho (migrate + purge OK). Smoke: (a)✅ admin navega y Step6 carga/busca, (b)✅ dashboard/stats bloqueado (redirige a login del web guard en navegador; 401 JSON vía SPA — normalizar en F6), (c)✅ confirmación carga con ?email= (el token de la reserva vieja estaba EXPIRADO por el TTL de 7 días preexistente — no relacionado al deploy), (d)✅ full-details sin token → 403, (e)✅ reserva de prueba en prod: total correcto → **FASE 0 COMPLETA**
 - [x] 0.12b fix(admin): dropdown de variantes del Step 6 se abre hacia arriba (quedaba tras la barra Anterior/Siguiente) — 3e5fc3d
 - [x] 0.14 Resuelto en 1.7: TTL 30d + renovación al markAsPaid
-- [ ] 0.13 (Usuario) Verificar `QUEUE_CONNECTION` en .env prod: si `database` → falta worker/cron; si `sync` → emails bloquean checkout
+- [x] 0.13 Confirmado: QUEUE_CONNECTION=database y el worker procesa (los emails de confirmación llegan)
 > Nota deploy: correr migrate.php ANTES de probar login admin (la promoción de rol). Si el admin quedara bloqueado igual: revisar en BD `users.role` del usuario que usan.
 
 ## 🔴 FASE 1 — Bugs frontend de pago — CÓDIGO COMPLETO (pendiente revisión + push)
@@ -93,7 +93,7 @@
 - [x] 6.5 Livewire retirado (91 archivos, −12,614 líneas): app/Livewire, 10 Admin web controllers, vistas admin+livewire, config, grupo /admin web, alias+clase AdminMiddleware, dep composer. Usuario confirmó que nadie entra por api.incalake.com/admin — 51aa964
 - [x] 6.6 Renderers globales 422/401/404/500 JSON uniformes (401 ya no redirige al login web). Shapes de éxito NO se tocan a propósito: el admin consume el paginador actual y cambiarlo es churn sin beneficio
 - [x] 6.7 clear* muertos borrados; categories con supportVersion; /pages y /reviews cacheados con invalidación por observer
-- [ ] 6.8 BLOQUEADO por 0.13: ShouldQueue solo si hay worker (con database sin worker los emails NO saldrían) — falta el valor de QUEUE_CONNECTION en prod
+- [x] 6.8 AvailabilityInquiryMail + BookingTravelersCompletedMail → ShouldQueue (QUEUE_CONNECTION=database con worker activo confirmado)
 - [x] 6.9 reservas@ y admin URL → config/services.incalake (env RESERVATIONS_EMAIL / ADMIN_URL)
 - [ ] 6.10 DIFERIDO CON RAZÓN: unificar servicio Culqi/PayPal toca la ruta del dinero ya estabilizada y sin suite de tests — hacerlo tras agregar tests de pago. (La dup de idioma son solo 5 sitios de 2 líneas)
 - [x] 6.11 DIFERIDO por diseño (solo si se necesita entorno fresco) — cerrado
