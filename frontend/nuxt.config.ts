@@ -245,19 +245,19 @@ export default defineNuxtConfig({
 
   // SSR activado para SEO (IPC fix applied via non-blocking data fetching)
 
-  // SSR + SPA + SWR Híbrido: Optimización por tipo de página
+  // SSR + SPA + ISR Híbrido: Optimización por tipo de página
   routeRules: {
     // SPA — páginas privadas (instant load, no SEO). Localized too: with i18n
     // strategy 'prefix' the real paths are /{locale}/cart, /{locale}/payment/…
     // so the unprefixed rules alone never matched. robots:false = noindex.
     // payment (/es/payment/culqi) and booking-confirmation (/es/booking-confirmation/{code})
-    // are 3-segment paths. The `/*/*/*` swr(300) rule below ALSO matches them, and in
+    // are 3-segment paths. The `/*/*/*` isr(300) rule below ALSO matches them, and in
     // Nitro/radix3 a param segment (`*`) outranks a wildcard (`**`), so a `/**/…`
     // rule LOSES to `/*/*/*` — that's why ssr:false never applied and the page was
     // SSR-cached by PATH, dropping the per-user `?token=`/`?email=` query (links
     // always hit the no-token branch → "verificación de email requerida", plus
     // personal data got cached). Use a STATIC 2nd segment (`/*/booking-confirmation/**`),
-    // which DOES outrank `/*/*/*`, and swr:false to drop the inherited swr(300) so
+    // which DOES outrank `/*/*/*`, and isr:false to drop the inherited isr(300) so
     // they stay pure client-side SPA and read the token in the browser.
     '/**/cart': { ssr: false, robots: false, isr: false },
     '/**/checkout': { ssr: false, robots: false, isr: false },

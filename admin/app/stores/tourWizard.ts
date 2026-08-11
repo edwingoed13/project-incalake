@@ -617,7 +617,13 @@ export const useTourWizardStore = defineStore('tourWizard', {
       try {
         const config = useRuntimeConfig()
         const defaultApiUrl = config.public.apiUrl
-        const response: any = await $fetch(`${defaultApiUrl}/tours/${id}`)
+        // Authenticated: /tours/{id} 404s for anonymous callers when the tour
+        // isn't published, so without the token the wizard could no longer
+        // open a draft — which is most of what it's used for.
+        const auth = useAuthStore()
+        const response: any = await $fetch(`${defaultApiUrl}/tours/${id}`, {
+          headers: auth.token ? { Authorization: `Bearer ${auth.token}` } : undefined,
+        })
         
         if (response.success && response.data) {
           const data = response.data

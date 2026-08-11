@@ -578,6 +578,17 @@ const { data: response, pending, error } = await useAsyncData(
   { getCachedData }
 )
 
+// The API 404s for a tour that doesn't exist or isn't published, and the
+// template below renders a "no encontrado" block — but the response itself
+// stayed HTTP 200. That's a soft 404: Google reads it as a live page and keeps
+// it indexed, so an un-published tour went on showing up in search. Send a real
+// 404 status instead. Done inline rather than with createError so the existing
+// not-found UI (inside the normal layout) is preserved.
+if (import.meta.server && !response.value?.data) {
+  const event = useRequestEvent()
+  if (event) setResponseStatus(event, 404)
+}
+
 // Inline option swap: when the user picks an option on the selector we
 // fetch that sibling's full payload and overwrite this ref instead of
 // navigating. SSR keeps the per-URL HTML (Google/Perplexity see the

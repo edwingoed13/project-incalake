@@ -137,7 +137,9 @@ const fetchTours = async (page = 1, search = '') => {
   try {
     const params = new URLSearchParams({ page: String(page), per_page: '10', search })
     if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
-    const response: any = await $fetch(`${API_BASE_URL}/tours?${params}`)
+    // Authenticated: /tours only returns published tours to anonymous callers
+    // now, so without the token the admin list would show no drafts at all.
+    const response: any = await $fetch(`${API_BASE_URL}/tours?${params}`, { headers: authHeaders() })
     if (response?.success) {
       tours.value = response.data
       meta.value = response.meta
