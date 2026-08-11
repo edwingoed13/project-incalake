@@ -110,6 +110,54 @@ const publishTour = async () => {
   }
 }
 
+// Someone else saved this tour while this tab was editing. Autosave has
+// stopped, so the operator must pick a side — there is no safe default:
+// keeping mine erases theirs, taking theirs erases mine.
+const resolvingConflict = ref(false)
+
+const keepTheirs = async () => {
+  const ok = await confirm({
+    title: 'Descartar tus cambios',
+    description: 'Se cargará la versión de la otra persona y se perderá lo que hayas editado en esta pestaña sin guardar.',
+    confirmLabel: 'Cargar la suya',
+    cancelLabel: 'Cancelar',
+    confirmColor: 'error',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'warning',
+  })
+  if (!ok) return
+  resolvingConflict.value = true
+  try {
+    await store.resolveConflictWithTheirs()
+    toast.add({ title: 'Cargada la versión más reciente', color: 'success', icon: 'i-lucide-refresh-cw' })
+  } finally {
+    resolvingConflict.value = false
+  }
+}
+
+const keepMine = async () => {
+  const who = store.draftConflict?.updatedByName || 'la otra persona'
+  const ok = await confirm({
+    title: 'Sobrescribir el otro borrador',
+    description: `Tus cambios reemplazarán los de ${who}. Su trabajo se perderá y no se puede deshacer.`,
+    confirmLabel: 'Sobrescribir',
+    cancelLabel: 'Cancelar',
+    confirmColor: 'error',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
+  resolvingConflict.value = true
+  try {
+    const done = await store.resolveConflictWithMine()
+    toast.add(done
+      ? { title: 'Guardado con tus cambios', color: 'success', icon: 'i-lucide-circle-check' }
+      : { title: 'No se pudo guardar', description: store.draftError || '', color: 'error', icon: 'i-lucide-circle-alert' })
+  } finally {
+    resolvingConflict.value = false
+  }
+}
+
 // Throw away parked edits and go back to what the public site is serving.
 const discardDraft = async () => {
   const ok = await confirm({
@@ -651,6 +699,49 @@ onBeforeUnmount(() => {
                 :class="saveState.spin ? 'animate-spin' : ''"
               />
               <span class="hidden sm:inline">{{ autosaveLabel }}</span>
+            </div>
+          </div>
+
+          <!-- Edit collision. Sits above the form, outside the scroll area,
+               and stays until resolved: autosave is stopped while it shows, so
+               anything typed now is going nowhere. -->
+          <div
+            v-if="store.draftConflict"
+            class="shrink-0 border-b border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-4 lg:px-6 py-3"
+          >
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-users" class="size-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold text-red-700 dark:text-red-400">
+                  Conflicto de edición
+                </p>
+                <p class="text-sm text-red-800/90 dark:text-red-200/80 leading-snug mt-0.5">
+                  {{ store.draftConflict.message }}
+                  El guardado automático está detenido: elige qué versión conservar.
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-2.5">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="solid"
+                    icon="i-lucide-refresh-cw"
+                    :loading="resolvingConflict"
+                    @click="keepTheirs"
+                  >
+                    Cargar la versión más reciente
+                  </UButton>
+                  <UButton
+                    size="xs"
+                    color="error"
+                    variant="outline"
+                    icon="i-lucide-triangle-alert"
+                    :loading="resolvingConflict"
+                    @click="keepMine"
+                  >
+                    Sobrescribir con lo mío
+                  </UButton>
+                </div>
+              </div>
             </div>
           </div>
 

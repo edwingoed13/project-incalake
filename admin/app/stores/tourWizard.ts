@@ -322,6 +322,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
     // would flip autosave back to writing through and unpublish the tour live.
     persistedStatus: 'draft' as string,
     hasPendingDraft: false,
+    // Version of the draft this session last read. Sent back on save so the
+    // API can reject a write built on a copy someone else has since replaced.
+    draftVersion: null as number | null,
+    // Set when that rejection happens: autosave stops and the operator has to
+    // choose, because silently retrying is exactly the overwrite we're avoiding.
+    draftConflict: null as { message: string; updatedByName: string | null } | null,
     draftUpdatedAt: null as string | null,
     draftUpdatedByName: null as string | null,
     draftError: null as string | null,
@@ -1305,22 +1311,42 @@ export const useTourWizardStore = defineStore('tourWizard', {
       const auth = useAuthStore()
       if (!auth.token) return false
 
+      // A conflict is unresolved until the operator acts on it; saving again
+      // would be the blind overwrite the check exists to prevent.
+      if (this.draftConflict) return false
+
       const config = useRuntimeConfig()
       try {
         const res: any = await $fetch(`${config.public.apiUrl}/admin/tours/${this.tourId}/revision`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
-          body: { payload: this.draftSlices(), schema_version: DRAFT_SCHEMA_VERSION },
+          body: {
+            payload: this.draftSlices(),
+            schema_version: DRAFT_SCHEMA_VERSION,
+            base_version: this.draftVersion,
+          },
         })
         if (!res?.success) throw new Error(res?.message || 'Respuesta inesperada del servidor')
 
         this.isDirty = false
         this.lastSavedAt = Date.now()
         this.hasPendingDraft = true
+        this.draftVersion = res.data?.version ?? this.draftVersion
         this.draftUpdatedAt = res.data?.updated_at || new Date().toISOString()
         this.draftError = null
         return true
       } catch (e: any) {
+        // 409: someone else saved while this tab was editing.
+        if (e?.status === 409 || e?.response?.status === 409) {
+          const data = e?.data ?? e?.response?._data
+          this.draftConflict = {
+            message: data?.message || 'Otra persona guardó cambios en este tour mientras lo editabas.',
+            updatedByName: data?.data?.updated_by_name ?? null,
+          }
+          this.draftError = this.draftConflict.message
+          this.isDirty = true
+          return false
+        }
         // A 404 here means the backend has no revision endpoint yet (frontend
         // deployed ahead of the API). Deliberately NOT falling back to a live
         // write — that would publish the very edits the buffer exists to hold.
@@ -1359,6 +1385,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         const draft = res?.data
         if (!draft?.payload) {
           this.hasPendingDraft = false
+          this.draftVersion = null
           this.draftUpdatedAt = null
           this.draftUpdatedByName = null
           return false
@@ -1378,8 +1405,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
         if (Array.isArray(p.selectedTags)) this.selectedTags = p.selectedTags
 
         this.hasPendingDraft = true
+        this.draftVersion = draft.version ?? null
         this.draftUpdatedAt = draft.updated_at || null
         this.draftUpdatedByName = draft.updated_by_name || null
+        // Now in step with the server, so any earlier conflict is resolved.
+        this.draftConflict = null
+        this.draftError = null
         // Restoring a saved draft is not an unsaved edit.
         this.isDirty = false
         return true
@@ -1396,6 +1427,49 @@ export const useTourWizardStore = defineStore('tourWizard', {
       }
     },
 
+    /**
+     * Conflict resolution — take THEIRS. Reloads the tour and the newer draft,
+     * losing whatever this tab had unsaved. The operator chooses this knowing
+     * that, which is the whole point of asking instead of picking a winner.
+     */
+    async resolveConflictWithTheirs(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      this.draftConflict = null
+      await this.fetchTourData(this.tourId)
+      await this.loadDraft()
+      return true
+    },
+
+    /**
+     * Conflict resolution — take MINE. Re-reads the server's version purely to
+     * satisfy the check, then writes this tab's state over it. Deliberately
+     * explicit: this is the overwrite the version check exists to prevent, so
+     * it only ever happens because someone asked for it.
+     */
+    async resolveConflictWithMine(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      const auth = useAuthStore()
+      if (!auth.token) return false
+
+      const config = useRuntimeConfig()
+      try {
+        const res: any = await $fetch(
+          `${config.public.apiUrl}/admin/tours/${this.tourId}/revision`,
+          {
+            method: 'GET',
+            params: { schema_version: DRAFT_SCHEMA_VERSION },
+            headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          }
+        )
+        this.draftVersion = res?.data?.version ?? null
+      } catch {
+        this.draftVersion = null
+      }
+
+      this.draftConflict = null
+      return await this.saveDraft()
+    },
+
     /** Throw the draft away. The caller reloads the live tour afterwards. */
     async discardDraft(): Promise<boolean> {
       if (!this.tourId || this.tourId === 'new') return false
@@ -1410,8 +1484,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
           headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
         })
         this.hasPendingDraft = false
+        this.draftVersion = null
         this.draftUpdatedAt = null
         this.draftUpdatedByName = null
+        this.draftConflict = null
         this.draftError = null
         return true
       } catch (e: any) {
