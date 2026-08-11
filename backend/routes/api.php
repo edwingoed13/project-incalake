@@ -238,6 +238,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['put', 'post'], '/{id}', [TourController::class, 'update'])->name('api.admin.tours.update');
         Route::match(['delete', 'post'], '/{id}/delete', [TourController::class, 'destroy'])->name('api.admin.tours.destroy');
         Route::match(['patch', 'post'], '/{id}/status', [TourController::class, 'updateStatus'])->name('api.admin.tours.status');
+
+        // Draft buffer for tours that are already published. Same mod_security
+        // caveat as above: DELETE is blocked on this host, so discard also
+        // accepts POST on an explicit /delete path.
+        Route::get('/{id}/revision', [\App\Http\Controllers\Api\TourRevisionController::class, 'show'])
+            ->name('api.admin.tours.revision.show');
+        Route::post('/{id}/revision', [\App\Http\Controllers\Api\TourRevisionController::class, 'store'])
+            ->name('api.admin.tours.revision.store');
+        Route::match(['delete', 'post'], '/{id}/revision/delete', [\App\Http\Controllers\Api\TourRevisionController::class, 'destroy'])
+            ->name('api.admin.tours.revision.destroy');
     });
 
     // Admin routes - Upload

@@ -11,18 +11,34 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Guarded: dropoff_location_description is also created by
+        // 2026_01_28_183312_add_pickup_and_guide_options_to_tours_table, so a
+        // from-scratch migrate died here on "1060 Duplicate column name".
+        // Prod already has this recorded as run — guards only affect fresh DBs.
         Schema::table('tours', function (Blueprint $table) {
             // Meeting point coordinates
-            $table->decimal('meeting_point_lat', 10, 7)->nullable()->after('meeting_point_description');
-            $table->decimal('meeting_point_lng', 10, 7)->nullable()->after('meeting_point_lat');
+            if (!Schema::hasColumn('tours', 'meeting_point_lat')) {
+                $table->decimal('meeting_point_lat', 10, 7)->nullable()->after('meeting_point_description');
+            }
+            if (!Schema::hasColumn('tours', 'meeting_point_lng')) {
+                $table->decimal('meeting_point_lng', 10, 7)->nullable()->after('meeting_point_lat');
+            }
 
             // Pickup center coordinates and radius
-            $table->decimal('pickup_center_lat', 10, 7)->nullable()->after('pickup_location_description');
-            $table->decimal('pickup_center_lng', 10, 7)->nullable()->after('pickup_center_lat');
-            $table->decimal('pickup_radius_km', 5, 2)->nullable()->after('pickup_center_lng');
+            if (!Schema::hasColumn('tours', 'pickup_center_lat')) {
+                $table->decimal('pickup_center_lat', 10, 7)->nullable()->after('pickup_location_description');
+            }
+            if (!Schema::hasColumn('tours', 'pickup_center_lng')) {
+                $table->decimal('pickup_center_lng', 10, 7)->nullable()->after('pickup_center_lat');
+            }
+            if (!Schema::hasColumn('tours', 'pickup_radius_km')) {
+                $table->decimal('pickup_radius_km', 5, 2)->nullable()->after('pickup_center_lng');
+            }
 
             // Dropoff description
-            $table->text('dropoff_location_description')->nullable()->after('pickup_radius_km');
+            if (!Schema::hasColumn('tours', 'dropoff_location_description')) {
+                $table->text('dropoff_location_description')->nullable()->after('pickup_radius_km');
+            }
         });
     }
 

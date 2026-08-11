@@ -11,10 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Guarded per column: a later migration also creates nationality_id, so
+        // running the full stack from scratch (fresh local/CI DB) died here with
+        // "1060 Duplicate column name". Prod was migrated incrementally and has
+        // this recorded as run, so the guards only ever matter on a clean build.
         Schema::table('price_details', function (Blueprint $table) {
-            $table->foreignId('nationality_id')->nullable()->after('age_stage_id')->constrained('nationalities')->onDelete('cascade');
-            $table->integer('age_min')->nullable()->after('nationality_id'); // Edad mínima para esta nacionalidad
-            $table->integer('age_max')->nullable()->after('age_min'); // Edad máxima para esta nacionalidad
+            if (!Schema::hasColumn('price_details', 'nationality_id')) {
+                $table->foreignId('nationality_id')->nullable()->after('age_stage_id')->constrained('nationalities')->onDelete('cascade');
+            }
+            if (!Schema::hasColumn('price_details', 'age_min')) {
+                $table->integer('age_min')->nullable()->after('nationality_id'); // Edad mínima para esta nacionalidad
+            }
+            if (!Schema::hasColumn('price_details', 'age_max')) {
+                $table->integer('age_max')->nullable()->after('age_min'); // Edad máxima para esta nacionalidad
+            }
         });
     }
 

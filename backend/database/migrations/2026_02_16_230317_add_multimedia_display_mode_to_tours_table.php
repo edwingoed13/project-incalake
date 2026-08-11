@@ -11,12 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Guarded: the columns this drops are added by two earlier migrations
+        // that overlap, so on a fresh DB one of them may never have been
+        // created and dropColumn would fail on a missing column.
         Schema::table('tours', function (Blueprint $table) {
-            // Remove old gallery_layout column
-            $table->dropColumn('gallery_layout');
+            if (Schema::hasColumn('tours', 'gallery_layout')) {
+                $table->dropColumn('gallery_layout');
+            }
 
-            // Remove video_first column (ya no se necesita con detección automática)
-            $table->dropColumn('video_first');
+            // (ya no se necesita con detección automática)
+            if (Schema::hasColumn('tours', 'video_first')) {
+                $table->dropColumn('video_first');
+            }
         });
     }
 

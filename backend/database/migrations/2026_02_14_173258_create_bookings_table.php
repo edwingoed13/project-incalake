@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // `bookings` is also created by 2024_01_01_000022_create_bookings_table,
+        // so migrating from scratch died here on "1050 Table already exists".
+        // The next migration (…_173620_update_bookings_table_for_checkout) drops
+        // and recreates it with the final shape anyway, so skipping is safe.
+        if (Schema::hasTable('bookings')) {
+            return;
+        }
+
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->string('booking_code', 20)->unique()->comment('Unique booking code (e.g., BK-2026-0001)');
