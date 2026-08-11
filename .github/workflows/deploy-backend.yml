@@ -5,11 +5,74 @@ on:
     branches: [master]
     paths:
       - 'backend/**'
+      # Changes to this file were never exercised by their own push, so a
+      # broken pipeline only showed up on the next unrelated backend commit.
+      - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
 jobs:
+  # Gate. Nothing stopped a broken suite from shipping before — the same hole
+  # migrations had. Runs against a real MySQL service rather than sqlite
+  # because several migrations use raw MySQL that sqlite cannot even parse,
+  # and testing on another engine would say nothing about enums or JSON.
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: incalake_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      # tests/bootstrap.php appends _test unless the name already ends in it,
+      # so this stays as written and can never point at a working database.
+      DB_DATABASE: incalake_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, xml, bcmath, curl, fileinfo, gd, zip
+
+      # WITH dev dependencies, unlike the deploy job below: phpunit lives there.
+      - name: Install Composer dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare application
+        working-directory: backend
+        run: |
+          mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs
+          chmod -R 775 bootstrap/cache storage
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run test suite
+        working-directory: backend
+        run: php artisan test
+
   deploy:
     runs-on: ubuntu-latest
+    # A red suite must not reach production.
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
