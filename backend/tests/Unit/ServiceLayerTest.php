@@ -4,12 +4,19 @@ namespace Tests\Unit;
 
 use App\Models\Tour;
 use App\Services\TourService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use App\Jobs\ProcessTourImages;
 use Tests\TestCase;
 
 class ServiceLayerTest extends TestCase
 {
+    // These tests hit the database but never migrated one, so they were
+    // quietly relying on whatever schema and rows the developer's working
+    // database happened to have. Once the suite stopped running against that
+    // database they failed with "table doesn't exist".
+    use RefreshDatabase;
+
     public function test_tour_service_can_generate_code(): void
     {
         $service = app(TourService::class);
