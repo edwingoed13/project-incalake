@@ -12,6 +12,7 @@ use App\Models\Tour;
 use App\Services\TourService;
 use App\Services\PriceCalculatorService;
 use App\Services\CacheService;
+use App\Services\FrontendRevalidator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -25,15 +26,18 @@ class TourController extends Controller
     protected TourService $tourService;
     protected PriceCalculatorService $priceCalculator;
     protected CacheService $cacheService;
+    protected FrontendRevalidator $revalidator;
 
     public function __construct(
         TourService $tourService,
         PriceCalculatorService $priceCalculator,
-        CacheService $cacheService
+        CacheService $cacheService,
+        FrontendRevalidator $revalidator
     ) {
         $this->tourService = $tourService;
         $this->priceCalculator = $priceCalculator;
         $this->cacheService = $cacheService;
+        $this->revalidator = $revalidator;
     }
 
     /**
@@ -52,6 +56,14 @@ class TourController extends Controller
             'status' => $data['status'],
             'active' => $data['status'] === 'published',
         ]);
+
+        // This path writes the model directly instead of going through
+        // TourService, so it does NOT inherit that service's cache purge.
+        // Without this, un-publishing from the admin list left the tour's page
+        // being served from Vercel's cache for the rest of its expiration —
+        // a tour you just took down stayed up. Purge on EVERY status change:
+        // publishing needs the new page, un-publishing needs the old one gone.
+        $this->revalidator->revalidateTour($tour->refresh());
 
         return response()->json([
             'success' => true,

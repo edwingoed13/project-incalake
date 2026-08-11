@@ -109,3 +109,29 @@ jobs:
           if [ "$code" != "200" ]; then
             echo "::warning::Cache purge returned HTTP $code (non-fatal). Run purge-cache.php manually if needed."
           fi
+
+      # FTP upload does NOT run artisan, so a deploy that carries a migration
+      # used to ship code against a schema that was never updated — the new
+      # endpoints then 500 on a table that doesn't exist, silently, until
+      # someone remembers to hit migrate.php by hand. Runs AFTER the purge so
+      # migrate.php boots with fresh config.
+      #
+      # Unlike the purge above this is NOT continue-on-error: a failed
+      # migration means the deployed code and the database disagree, and that
+      # must show up as a red build rather than a warning nobody reads.
+      - name: Run pending migrations
+        run: |
+          echo "Running migrations on api.incalake.com ..."
+          code=$(curl -sS -o /tmp/migrate.json -w "%{http_code}" \
+            --max-time 180 --retry 3 --retry-delay 10 \
+            "https://api.incalake.com/migrate.php?key=${{ secrets.DEPLOY_HOOK_KEY }}" || true)
+          echo "HTTP $code"; cat /tmp/migrate.json 2>/dev/null || true; echo
+          if [ "$code" != "200" ]; then
+            echo "::error::migrate.php returned HTTP $code — migrations did NOT run."
+            exit 1
+          fi
+          if ! grep -qE '"success"[[:space:]]*:[[:space:]]*true' /tmp/migrate.json; then
+            echo "::error::Migrations reported failure. Deployed code may expect schema that does not exist."
+            exit 1
+          fi
+          echo "Migrations OK."

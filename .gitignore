@@ -30,7 +30,12 @@ build/
 Thumbs.db
 
 # Laravel specific
-/backend/bootstrap/cache/
+# Ignore the CONTENTS but keep the directory: git doesn't track empty dirs, so
+# ignoring the folder outright meant a fresh clone had no bootstrap/cache and
+# Laravel refused to boot ("must be present and writable"). CI papers over it
+# with mkdir -p; local setups just broke.
+/backend/bootstrap/cache/*
+!/backend/bootstrap/cache/.gitignore
 /backend/storage/*.key
 /backend/storage/app/public/
 /backend/storage/framework/cache/data/*
