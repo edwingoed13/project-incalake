@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tour extends Model
 {
+    // Tests have called Tour::factory() since the initial commit; without this
+    // trait every one of them died on BadMethodCallException.
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
