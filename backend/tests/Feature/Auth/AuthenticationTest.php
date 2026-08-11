@@ -27,7 +27,26 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // Login is role-aware since the admin panel landed: admins and staff go
+        // to admin.dashboard, everyone else to '/'. A factory user is neither,
+        // so '/' is the correct destination — the old assertion predated that.
+        $response->assertRedirect('/');
+    }
+
+    public function test_admins_can_log_in_through_the_web_form(): void
+    {
+        // Regression: this used to redirect to route('admin.dashboard'), which
+        // no longer exists, so admins got RouteNotFoundException instead of a
+        // session. The web form is not how the Nuxt admin authenticates, which
+        // is why it went unnoticed.
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->post('/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticated();
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

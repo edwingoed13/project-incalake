@@ -20,9 +20,18 @@ class ServiceLayerTest extends TestCase
     public function test_tour_service_can_generate_code(): void
     {
         $service = app(TourService::class);
-        $languageId = 1;
+        // Was hardcoded to 1, which only existed because the suite used to run
+        // against a seeded database. Create the language the test needs.
+        $languageId = \App\Models\Language::factory()->create(['code' => 'ES'])->id;
 
         $code1 = $service->generateTourCode($languageId);
+
+        // The generator derives the next code from the codes already stored, so
+        // it only advances once one is taken. Calling it twice without saving
+        // returns the same value — correct behaviour, and what the previous
+        // version of this test asserted was a bug.
+        Tour::factory()->create(['code' => $code1, 'primary_language_id' => $languageId]);
+
         $code2 = $service->generateTourCode($languageId);
 
         $this->assertNotEquals($code1, $code2);

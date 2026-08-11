@@ -157,9 +157,13 @@ class TourManagementTest extends TestCase
 
     public function test_can_query_tours_by_city(): void
     {
-        $cityId = 123;
+        // Was hardcoded to 123 / 456, which the cities foreign key rejects on a
+        // database the test actually built. Create real rows.
+        $cityId = \App\Models\City::create(['name' => 'Puno test', 'slug' => 'puno-test'])->id;
+        $otherCityId = \App\Models\City::create(['name' => 'Cusco test', 'slug' => 'cusco-test'])->id;
+
         Tour::factory()->create(['city_id' => $cityId]);
-        Tour::factory()->create(['city_id' => 456]);
+        Tour::factory()->create(['city_id' => $otherCityId]);
         Tour::factory()->create(['city_id' => $cityId]);
 
         $toursInCity = Tour::byCity($cityId)->get();

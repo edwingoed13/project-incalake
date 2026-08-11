@@ -28,11 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect based on user role
-        if (auth()->user()->canAccessAdminPanel()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
-        }
-
+        // The admin branch used to send staff to route('admin.dashboard'). That
+        // route went away with the Livewire panel, so the call threw
+        // RouteNotFoundException and every admin logging in through this form
+        // got a 500 — the redirect target outlived the page it pointed at.
+        // The admin panel is a separate Nuxt app authenticating over /api now,
+        // so there is nothing here to send them to.
         return redirect()->intended('/');
     }
 

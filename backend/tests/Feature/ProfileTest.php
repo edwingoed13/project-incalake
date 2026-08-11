@@ -10,6 +10,17 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * The profile Blade view calls @vite, and the backend has no compiled
+     * assets in a test run — the page 500'd on ViteManifestNotFoundException,
+     * which says nothing about the profile page itself.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
