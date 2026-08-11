@@ -1,11 +1,18 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// SWR/ISR is a production optimisation. In `nuxt dev` it triggers a Nitro
+// ISR is a production optimisation. In `nuxt dev` it triggers a Nitro
 // payload-cache path collision (/es is cached as a file, /es/tours needs /es as
 // a dir) that 500s sub-routes. So apply the cache rules only in production —
 // dev renders fresh SSR, which is what you want while developing anyway.
+//
+// `isr`, not `swr`: on Vercel the swr rule only stamps stale-while-revalidate
+// headers on the CDN, it does NOT wire up Vercel's ISR cache. In practice that
+// meant pages went stale and never regenerated (observed Age 551s on a
+// swr(300) route, still serving pre-edit HTML), and — the reason this changed —
+// on-demand revalidation is only available for isr routes. Publishing a tour
+// can now purge its pages instead of waiting out a timer.
 const isProd = process.env.NODE_ENV === 'production'
-const swr = (maxage: number) => (isProd ? { swr: maxage } : {})
+const isr = (maxage: number) => (isProd ? { isr: maxage } : {})
 
 export default defineNuxtConfig({
   devtools: { enabled: false },
@@ -220,6 +227,15 @@ export default defineNuxtConfig({
 
   nitro: {
     compressPublicAssets: true,
+    // Shared secret that lets the backend purge an ISR page on demand: a GET
+    // with `x-prerender-revalidate: <token>` regenerates that path instead of
+    // waiting out the expiration above. Must match VERCEL_BYPASS_TOKEN in the
+    // Vercel project env AND FRONTEND_REVALIDATE_TOKEN in the API's .env.
+    vercel: {
+      config: {
+        bypassToken: process.env.VERCEL_BYPASS_TOKEN,
+      },
+    },
     // Pre-render páginas estáticas para SEO
     prerender: {
       crawlLinks: false,
@@ -243,28 +259,29 @@ export default defineNuxtConfig({
     // personal data got cached). Use a STATIC 2nd segment (`/*/booking-confirmation/**`),
     // which DOES outrank `/*/*/*`, and swr:false to drop the inherited swr(300) so
     // they stay pure client-side SPA and read the token in the browser.
-    '/**/cart': { ssr: false, robots: false, swr: false },
-    '/**/checkout': { ssr: false, robots: false, swr: false },
-    '/*/payment/**': { ssr: false, robots: false, swr: false },
-    '/*/booking-confirmation/**': { ssr: false, robots: false, swr: false },
-    '/**/saved': { ssr: false, robots: false, swr: false },
+    '/**/cart': { ssr: false, robots: false, isr: false },
+    '/**/checkout': { ssr: false, robots: false, isr: false },
+    '/*/payment/**': { ssr: false, robots: false, isr: false },
+    '/*/booking-confirmation/**': { ssr: false, robots: false, isr: false },
+    '/**/saved': { ssr: false, robots: false, isr: false },
 
-    // SWR — páginas públicas con cache (revalida en background). Prod-only.
-    '/': swr(900),
-    '/es': swr(900),
-    '/en': swr(900),
-    '/pt': swr(900),
-    '/fr': swr(900),
-    '/de': swr(900),
-    '/it': swr(900),
+    // ISR — páginas públicas con cache (revalida en background). Prod-only.
+    '/': isr(900),
+    '/es': isr(900),
+    '/en': isr(900),
+    '/pt': isr(900),
+    '/fr': isr(900),
+    '/de': isr(900),
+    '/it': isr(900),
     // Tour listing
-    '/**/tours': swr(300),
+    '/**/tours': isr(300),
     // Tour detail /{locale}/{city}/{slug} — was pure SSR (no cache) on every
-    // request. ISR/SWR 10 min. The more-specific SPA rules above (cart/payment/
-    // booking-confirmation) win over this 3-segment wildcard.
-    '/*/*/*': swr(300),
-    '/**/about': swr(3600),
-    '/**/contact': swr(3600),
+    // request. ISR 5 min, plus an on-demand purge when the tour is published.
+    // The more-specific SPA rules above (cart/payment/booking-confirmation)
+    // win over this 3-segment wildcard.
+    '/*/*/*': isr(300),
+    '/**/about': isr(3600),
+    '/**/contact': isr(3600),
 
     // API pass-through, sin caché
     '/api/**': { headers: { 'cache-control': 'no-cache' } }
