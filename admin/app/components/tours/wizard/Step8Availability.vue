@@ -662,10 +662,14 @@ const formatDate = (dateStr: string) => {
 const saveAvailability = async () => {
   saving.value = true
   try {
-    await store.saveCurrentProgress()
+    // saveWork routes to the draft buffer when the tour is already published,
+    // so this button can't push availability changes live on its own.
+    await store.saveWork()
     toast.add({
-      title: 'Disponibilidad guardada',
-      description: 'Los cambios se sincronizaron correctamente.',
+      title: store.isLiveTour() ? 'Guardado en borrador' : 'Disponibilidad guardada',
+      description: store.isLiveTour()
+        ? 'Se aplicará al sitio público cuando publiques los cambios.'
+        : 'Los cambios se sincronizaron correctamente.',
       icon: 'i-lucide-circle-check',
       color: 'success',
     })

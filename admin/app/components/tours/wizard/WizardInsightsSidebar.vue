@@ -237,14 +237,24 @@ const publishTour = async () => {
 
   publishing.value = true
   try {
-    store.basicInfo.status = 'published'
-    await store.saveCurrentProgress()
-    if (!store.isDirty) {
+    // Must go through publishDraft, not saveCurrentProgress: on a published
+    // tour the edits live in the draft buffer, and saving without dropping it
+    // would leave a stale draft that silently re-applies on the next load.
+    const done = await store.publishDraft('published')
+    if (done) {
       toast.add({
-        title: wasPublished ? 'Tour actualizado' : 'Tour publicado',
-        description: 'Ya es visible en el sitio público.',
+        title: wasPublished ? 'Cambios publicados' : 'Tour publicado',
+        description: 'Ya son visibles en el sitio público.',
         icon: 'i-lucide-rocket',
         color: 'success',
+      })
+    } else if (store.draftError) {
+      toast.add({
+        title: 'Revisa el resultado',
+        description: store.draftError,
+        color: 'warning',
+        icon: 'i-lucide-triangle-alert',
+        duration: 10000,
       })
     }
   } finally {

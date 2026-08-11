@@ -86,18 +86,60 @@ const publishTour = async () => {
   if (!ok) return
   publishing.value = true
   try {
-    store.basicInfo.status = 'published'
-    await store.saveCurrentProgress()
-    if (!store.isDirty) {
+    // publishDraft runs the normal save (the wizard state is already loaded,
+    // draft or not) and then drops the parked copy so it can't re-apply later.
+    const done = await store.publishDraft('published')
+    if (done) {
       toast.add({
-        title: wasPublished ? 'Tour actualizado' : 'Tour publicado',
-        description: 'Ya es visible en el sitio público.',
+        title: wasPublished ? 'Cambios publicados' : 'Tour publicado',
+        description: 'Ya son visibles en el sitio público.',
         icon: 'i-lucide-rocket',
         color: 'success',
+      })
+    } else if (store.draftError) {
+      toast.add({
+        title: 'Revisa el resultado',
+        description: store.draftError,
+        color: 'warning',
+        icon: 'i-lucide-triangle-alert',
+        duration: 10000,
       })
     }
   } finally {
     publishing.value = false
+  }
+}
+
+// Throw away parked edits and go back to what the public site is serving.
+const discardDraft = async () => {
+  const ok = await confirm({
+    title: 'Descartar cambios sin publicar',
+    description: 'Se perderán todos los cambios que no has publicado y volverás a la versión que está en vivo. Esto no se puede deshacer.',
+    confirmLabel: 'Descartar cambios',
+    cancelLabel: 'Conservarlos',
+    confirmColor: 'error',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'error',
+  })
+  if (!ok) return
+
+  if (await store.discardDraft()) {
+    // Re-read the live tour so the wizard stops showing the discarded edits.
+    await store.fetchTourData(String(route.params.id))
+    store.isDirty = false
+    toast.add({
+      title: 'Borrador descartado',
+      description: 'Estás viendo la versión publicada.',
+      color: 'success',
+      icon: 'i-lucide-undo-2',
+    })
+  } else {
+    toast.add({
+      title: 'No se pudo descartar',
+      description: store.draftError || 'Inténtalo de nuevo.',
+      color: 'error',
+      icon: 'i-lucide-circle-alert',
+    })
   }
 }
 
@@ -126,8 +168,18 @@ const currentStepLabel = computed(() => stepLabels.find(s => s.id === store.curr
 
 const autosaveLabel = computed(() => {
   if (store.autosaving) return 'Guardando...'
-  if (store.lastSavedAt) return `Guardado · ${new Date(store.lastSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+  // isDirty MUST be checked before lastSavedAt. After the first save
+  // lastSavedAt is never null again, so the old order made 'Cambios sin
+  // guardar' unreachable: with edits pending the badge turned amber (its color
+  // computed below checks isDirty first) but still read "Guardado · HH:MM".
+  // The operator saw "guardado" while holding unsaved changes. Same order as
+  // autosaveColor now.
   if (store.isDirty) return 'Cambios sin guardar'
+  if (store.lastSavedAt) {
+    const at = new Date(store.lastSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    // On a live tour "Guardado" would read as "published" — it isn't.
+    return store.isLiveTour() ? `Borrador guardado · ${at}` : `Guardado · ${at}`
+  }
   return 'Todo guardado'
 })
 const autosaveColor = computed<'warning' | 'success' | 'info' | 'neutral'>(() => {
@@ -135,6 +187,71 @@ const autosaveColor = computed<'warning' | 'success' | 'info' | 'neutral'>(() =>
   if (store.isDirty) return 'warning'
   if (store.lastSavedAt) return 'success'
   return 'neutral'
+})
+
+// --- Persistent status banner ---------------------------------------------
+// Toasts communicate EVENTS; what operators were missing is STATE. The
+// step-change toast lasts 2.5s in a corner nobody watches while pressing
+// "Siguiente", so edits on a live tour felt identical to edits on a draft.
+// They are not: autosave() ships the tour's current status, so editing a
+// published tour pushes to the public site ~2s later with no confirmation.
+// This bar never scrolls away and says which of the two is happening.
+// Class strings are static so Tailwind's scanner keeps them.
+const statusBanner = computed(() => {
+  // Parked edits win over plain "published": the operator needs to know the
+  // site is NOT showing what's on screen, and that publishing is still pending.
+  if (store.basicInfo.status === 'published' && store.hasPendingDraft) {
+    return {
+      icon: 'i-lucide-file-clock',
+      label: 'CAMBIOS SIN PUBLICAR',
+      text: 'El público sigue viendo la versión anterior. Pulsa Publicar para aplicarlos.',
+      wrapper: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-800',
+      accent: 'text-indigo-700 dark:text-indigo-400',
+      muted: 'text-indigo-800/90 dark:text-indigo-200/80',
+    }
+  }
+
+  switch (store.basicInfo.status) {
+    case 'published':
+      return {
+        icon: 'i-lucide-radio',
+        label: 'PUBLICADO',
+        text: 'Está en vivo. Lo que edites se guarda como borrador hasta que publiques.',
+        wrapper: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800',
+        accent: 'text-emerald-700 dark:text-emerald-400',
+        muted: 'text-emerald-800/90 dark:text-emerald-200/80',
+      }
+    case 'archived':
+      return {
+        icon: 'i-lucide-archive',
+        label: 'ARCHIVADO',
+        text: 'No visible al público.',
+        wrapper: 'bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700',
+        accent: 'text-slate-600 dark:text-slate-300',
+        muted: 'text-slate-600/90 dark:text-slate-400',
+      }
+    default:
+      return {
+        icon: 'i-lucide-file-pen-line',
+        label: 'BORRADOR',
+        text: 'No visible al público hasta que pulses Publicar.',
+        wrapper: 'bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700',
+        accent: 'text-slate-600 dark:text-slate-300',
+        muted: 'text-slate-600/90 dark:text-slate-400',
+      }
+  }
+})
+
+// Save state repeated inside the banner: the navbar badge sits far from where
+// the eye is when clicking through steps.
+const saveState = computed(() => {
+  if (store.autosaving) {
+    return { icon: 'i-lucide-loader-circle', spin: true, class: 'text-blue-600 dark:text-blue-400' }
+  }
+  if (store.isDirty) {
+    return { icon: 'i-lucide-circle-dot', spin: false, class: 'text-amber-600 dark:text-amber-400' }
+  }
+  return { icon: 'i-lucide-circle-check', spin: false, class: 'text-emerald-600 dark:text-emerald-400' }
 })
 
 const lastStepKey = computed(() => `wizard:lastStep:${route.params.id}`)
@@ -168,6 +285,25 @@ onMounted(async () => {
   if (route.params.id && route.params.id !== 'new') {
     store.setTourId(route.params.id as string)
     await store.fetchTourData(route.params.id as string)
+
+    // A published tour may have edits parked from a previous session (possibly
+    // by another operator). Overlay them on top of the live data so the
+    // operator resumes where they left off instead of silently seeing the
+    // live version and re-doing the work.
+    if (store.isLiveTour()) {
+      const restored = await store.loadDraft()
+      if (restored) {
+        toast.add({
+          title: 'Borrador restaurado',
+          description: store.draftUpdatedByName
+            ? `Cambios sin publicar guardados por ${store.draftUpdatedByName}.`
+            : 'Estás viendo cambios sin publicar, no la versión en vivo.',
+          color: 'info',
+          icon: 'i-lucide-file-clock',
+          duration: 6000,
+        })
+      }
+    }
 
     if (langParam) {
       store.currentLanguage = langParam
@@ -213,7 +349,9 @@ watch(() => store.currentStep, (newStep) => {
           })
         } else {
           toast.add({
-            title: 'Cambios del paso anterior guardados',
+            title: store.isLiveTour()
+              ? 'Guardado en borrador (sin publicar)'
+              : 'Cambios del paso anterior guardados',
             color: 'success',
             icon: 'i-lucide-circle-check',
             duration: 2500,
@@ -256,10 +394,14 @@ let suppressDirty = true
 let baselineJson = ''
 const slicesJson = () => {
   try {
+    // selectedCategories/selectedTags, NOT `categories`: that one is the
+    // available-category CATALOG (reference data refetched on load), so
+    // picking categories or tags in step 7 never registered as an edit and
+    // autosave skipped it unless something else happened to be dirty.
     return JSON.stringify([
       store.basicInfo, store.contentSEO, store.detailedContent,
       store.commercialRules, store.multimedia, store.bookingOptions,
-      store.categories, store.availability,
+      store.selectedCategories, store.selectedTags, store.availability,
     ])
   } catch { return '' }
 }
@@ -278,7 +420,7 @@ watch(
   () => [
     store.basicInfo, store.contentSEO, store.detailedContent,
     store.commercialRules, store.multimedia, store.bookingOptions,
-    store.categories, store.availability,
+    store.selectedCategories, store.selectedTags, store.availability,
   ],
   () => {
     if (suppressDirty || store.loading || store.isDirty) return
@@ -386,7 +528,9 @@ const onKeydown = (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault()
     if (store.tourId && store.tourId !== 'new') {
-      store.saveCurrentProgress()
+      // saveWork, not saveCurrentProgress: on a published tour Ctrl+S must
+      // park a draft, not push the edits live.
+      store.saveWork()
     }
   }
 }
@@ -475,6 +619,41 @@ onBeforeUnmount(() => {
       <div class="flex h-full min-h-0">
         <!-- Main content -->
         <main class="flex-1 flex flex-col min-h-0">
+          <!-- Persistent status bar. Sits OUTSIDE the scroll container below so
+               it stays pinned while the operator moves through the form. -->
+          <div
+            class="shrink-0 border-b px-4 lg:px-6 py-2.5 flex items-center gap-3"
+            :class="statusBanner.wrapper"
+          >
+            <UIcon :name="statusBanner.icon" class="size-5 shrink-0" :class="statusBanner.accent" />
+            <p class="min-w-0 flex-1 text-sm leading-snug">
+              <span class="font-bold" :class="statusBanner.accent">{{ statusBanner.label }}</span>
+              <span class="ml-2" :class="statusBanner.muted">{{ statusBanner.text }}</span>
+            </p>
+            <UButton
+              v-if="store.hasPendingDraft"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-undo-2"
+              class="shrink-0"
+              @click="discardDraft"
+            >
+              Descartar
+            </UButton>
+            <div
+              class="shrink-0 flex items-center gap-1.5 text-sm font-semibold"
+              :class="saveState.class"
+            >
+              <UIcon
+                :name="saveState.icon"
+                class="size-4"
+                :class="saveState.spin ? 'animate-spin' : ''"
+              />
+              <span class="hidden sm:inline">{{ autosaveLabel }}</span>
+            </div>
+          </div>
+
           <!-- pb-28 reserves space below the last field so the sticky bottom
                nav bar (~56px) never covers it; scroll-pb-28 makes keyboard /
                programmatic scroll-into-view stop above the bar too. Fixes the

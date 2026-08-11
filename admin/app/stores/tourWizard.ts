@@ -8,6 +8,11 @@ import { useAuthStore } from '~/stores/auth'
 let externalNotifier: ((title: string, description?: string) => void) | null = null
 export const setWizardErrorNotifier = (fn: typeof externalNotifier) => { externalNotifier = fn }
 
+// Shape marker for parked drafts. Bump it whenever a state slice is renamed or
+// restructured: the API drops drafts whose version doesn't match instead of
+// restoring them into fields that no longer mean the same thing.
+const DRAFT_SCHEMA_VERSION = 'v1'
+
 const notifyError = (title: string, description?: string) => {
   if (externalNotifier) return externalNotifier(title, description)
   try {
@@ -307,6 +312,20 @@ export const useTourWizardStore = defineStore('tourWizard', {
     tourId: null as string | null,
     currentLanguage: 'en',
     availableLanguages: [] as any[],
+
+    // --- Draft buffer (published tours only) ------------------------------
+    // On a published tour every save used to go live immediately. Now edits
+    // park in tour_revisions until the operator publishes them explicitly.
+    // Status as PERSISTED, independent of what the form currently shows. The
+    // routing decision (live row vs draft buffer) must not follow an unsaved
+    // edit: if it read basicInfo.status, typing "draft" into the status field
+    // would flip autosave back to writing through and unpublish the tour live.
+    persistedStatus: 'draft' as string,
+    hasPendingDraft: false,
+    draftUpdatedAt: null as string | null,
+    draftUpdatedByName: null as string | null,
+    draftError: null as string | null,
+    publishing: false,
     
     // Step 1 Data ...
     basicInfo: {
@@ -317,7 +336,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       targetAudience: 'all',
       difficulty: 'easy',
       capacityMin: 1,
-      capacityMax: 20,
+      capacityMax: 99,
       duration: 1,
       durationUnit: 'hours',
       durationDays: 0,
@@ -612,8 +631,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
             serviceType: data.service_type || 'tour',
             targetAudience: data.target_audience || 'all',
             difficulty: data.difficulty || 'easy',
-            capacityMin: 1, 
-            capacityMax: data.max_capacity || 20,
+            capacityMin: 1,
+            capacityMax: data.max_capacity || 99,
             duration: data.duration_quantity || (data.duration_days > 0 ? data.duration_days : (data.duration_hours || 1)),
             durationUnit: data.duration_unit || (data.duration_days > 0 ? 'days' : 'hours'),
             startTime: data.departure_time || '08:00',
@@ -873,6 +892,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
                offers: data.availability_data.offers || []
              }
           }
+
+          // What the API says is live right now. Drives whether autosave writes
+          // through or parks in the draft buffer, so it must come from the
+          // server response and not from the (editable) form field.
+          this.persistedStatus = data.status || 'draft'
 
           // Important: Reset isDirty after initial load
           nextTick(() => {
@@ -1189,6 +1213,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
           this.isDirty = false
           this.lastSavedAt = Date.now()
           this.autosaveError = null
+          // The write went through, so this status is now the live one — a tour
+          // published just now must route its next autosave to the draft buffer.
+          this.persistedStatus = (payload.status as string) || 'draft'
           if (isNew) {
             this.tourId = response.data.id
             // Redirect or update route if needed
@@ -1217,10 +1244,207 @@ export const useTourWizardStore = defineStore('tourWizard', {
       }
     },
 
+    // --- Draft buffer ------------------------------------------------------
+    // A published tour is live: writing to it publishes instantly. So on a
+    // published tour autosave parks the wizard state in tour_revisions and the
+    // live row is only touched when the operator hits "Publicar cambios".
+    //
+    // The draft stores WIZARD STATE, not the API payload, so publishing is just
+    // "state is already loaded → run the normal save". One write path, no
+    // second apply implementation to keep in sync with the backend.
+
     /**
-     * Silent autosave — same payload as saveCurrentProgress but never alerts the
-     * user. Skipped on new tours (the first save must be manual to create the
-     * record), when there's nothing dirty, or while a save is already running.
+     * True when edits must not reach the public site without confirmation.
+     * Reads the persisted status, never the form's — see persistedStatus.
+     */
+    isLiveTour(): boolean {
+      return this.persistedStatus === 'published'
+    },
+
+    /**
+     * The editable state of a tour. Mirrors the slices the edit page
+     * deep-watches for dirty tracking. `categories` (the available-category
+     * catalog) is deliberately excluded — it's reference data refetched on
+     * load, not the operator's work; the selection lives in selectedCategories.
+     */
+    draftSlices(): Record<string, any> {
+      return {
+        basicInfo: this.basicInfo,
+        contentSEO: this.contentSEO,
+        detailedContent: this.detailedContent,
+        commercialRules: this.commercialRules,
+        multimedia: this.multimedia,
+        bookingOptions: this.bookingOptions,
+        selectedCategories: this.selectedCategories,
+        selectedTags: this.selectedTags,
+        availability: this.availability,
+      }
+    },
+
+    /**
+     * The one entry point every "save this work" action should use (Ctrl+S,
+     * per-step save buttons, autosave). Routes to the draft buffer on a live
+     * tour so no manual save can publish by accident; writes through otherwise.
+     * Publishing is deliberately NOT here — that's publishDraft().
+     */
+    async saveWork(options: { silent?: boolean } = {}): Promise<boolean> {
+      if (this.isLiveTour()) return await this.saveDraft()
+      await this.saveCurrentProgress(options)
+      return !this.isDirty
+    },
+
+    /** Park the current state as a pending draft. Does not touch the tour row. */
+    async saveDraft(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      const auth = useAuthStore()
+      if (!auth.token) return false
+
+      const config = useRuntimeConfig()
+      try {
+        const res: any = await $fetch(`${config.public.apiUrl}/admin/tours/${this.tourId}/revision`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          body: { payload: this.draftSlices(), schema_version: DRAFT_SCHEMA_VERSION },
+        })
+        if (!res?.success) throw new Error(res?.message || 'Respuesta inesperada del servidor')
+
+        this.isDirty = false
+        this.lastSavedAt = Date.now()
+        this.hasPendingDraft = true
+        this.draftUpdatedAt = res.data?.updated_at || new Date().toISOString()
+        this.draftError = null
+        return true
+      } catch (e: any) {
+        // A 404 here means the backend has no revision endpoint yet (frontend
+        // deployed ahead of the API). Deliberately NOT falling back to a live
+        // write — that would publish the very edits the buffer exists to hold.
+        // Say so plainly instead, because the edits are currently unsaved.
+        if (e?.status === 404 || e?.response?.status === 404) {
+          this.draftError = 'El servidor no admite borradores todavía. Tus cambios NO se han guardado — no cierres esta pestaña y avisa al equipo técnico.'
+        } else {
+          this.draftError = e?.data?.message || e?.message || 'Error al guardar el borrador'
+        }
+        // Still dirty: nothing was persisted.
+        this.isDirty = true
+        return false
+      }
+    },
+
+    /**
+     * Load the pending draft over the freshly-fetched live data. Call AFTER
+     * fetchTourData — it overwrites the slices it covers.
+     */
+    async loadDraft(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      const auth = useAuthStore()
+      if (!auth.token) return false
+
+      const config = useRuntimeConfig()
+      try {
+        const res: any = await $fetch(
+          `${config.public.apiUrl}/admin/tours/${this.tourId}/revision`,
+          {
+            method: 'GET',
+            params: { schema_version: DRAFT_SCHEMA_VERSION },
+            headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          }
+        )
+
+        const draft = res?.data
+        if (!draft?.payload) {
+          this.hasPendingDraft = false
+          this.draftUpdatedAt = null
+          this.draftUpdatedByName = null
+          return false
+        }
+
+        // Assign per slice rather than wholesale, so a draft written before a
+        // slice existed restores what it has and leaves the rest as loaded.
+        const p = draft.payload
+        if (p.basicInfo) this.basicInfo = { ...this.basicInfo, ...p.basicInfo }
+        if (p.contentSEO) this.contentSEO = { ...this.contentSEO, ...p.contentSEO }
+        if (p.detailedContent) this.detailedContent = { ...this.detailedContent, ...p.detailedContent }
+        if (p.commercialRules) this.commercialRules = { ...this.commercialRules, ...p.commercialRules }
+        if (p.multimedia) this.multimedia = { ...this.multimedia, ...p.multimedia }
+        if (p.bookingOptions) this.bookingOptions = { ...this.bookingOptions, ...p.bookingOptions }
+        if (p.availability) this.availability = { ...this.availability, ...p.availability }
+        if (Array.isArray(p.selectedCategories)) this.selectedCategories = p.selectedCategories
+        if (Array.isArray(p.selectedTags)) this.selectedTags = p.selectedTags
+
+        this.hasPendingDraft = true
+        this.draftUpdatedAt = draft.updated_at || null
+        this.draftUpdatedByName = draft.updated_by_name || null
+        // Restoring a saved draft is not an unsaved edit.
+        this.isDirty = false
+        return true
+      } catch (e: any) {
+        // Reading a draft is best-effort: no endpoint (404) simply means this
+        // deployment has no drafts, which must not block opening the editor.
+        // saveDraft() is where a missing endpoint gets shouted about.
+        if (e?.status === 404 || e?.response?.status === 404) {
+          this.hasPendingDraft = false
+          return false
+        }
+        this.draftError = e?.data?.message || e?.message || 'Error al cargar el borrador'
+        return false
+      }
+    },
+
+    /** Throw the draft away. The caller reloads the live tour afterwards. */
+    async discardDraft(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      const auth = useAuthStore()
+      if (!auth.token) return false
+
+      const config = useRuntimeConfig()
+      try {
+        // POST, not DELETE: mod_security on the cPanel host blocks DELETE.
+        await $fetch(`${config.public.apiUrl}/admin/tours/${this.tourId}/revision/delete`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+        })
+        this.hasPendingDraft = false
+        this.draftUpdatedAt = null
+        this.draftUpdatedByName = null
+        this.draftError = null
+        return true
+      } catch (e: any) {
+        this.draftError = e?.data?.message || e?.message || 'Error al descartar el borrador'
+        return false
+      }
+    },
+
+    /**
+     * Push the pending draft live: the state is already in the store, so this
+     * is the ordinary save plus dropping the now-applied draft. `status` lets
+     * the caller publish a draft tour for the first time as well.
+     */
+    async publishDraft(status?: 'draft' | 'published' | 'archived'): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+
+      this.publishing = true
+      try {
+        if (status) this.basicInfo.status = status
+        await this.saveCurrentProgress()
+        // saveCurrentProgress clears isDirty only when the API accepted it.
+        if (this.isDirty) return false
+        // Applied — the parked copy is now redundant. A failure here leaves a
+        // stale draft, which would silently re-apply on next load, so surface it.
+        const dropped = await this.discardDraft()
+        if (!dropped) {
+          this.draftError = 'Los cambios se publicaron, pero el borrador no se pudo borrar. Recarga la página.'
+          return false
+        }
+        return true
+      } finally {
+        this.publishing = false
+      }
+    },
+
+    /**
+     * Silent autosave. On a published tour it targets the draft buffer instead
+     * of the live row — same debounce, same dirty gating, but nothing reaches
+     * the public site until the operator publishes.
      */
     async autosave() {
       if (!this.autosaveEnabled) return
@@ -1235,6 +1459,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
       this.autosaving = true
       this.autosaveError = null
       try {
+        if (this.isLiveTour()) {
+          const ok = await this.saveDraft()
+          if (!ok) this.autosaveError = this.draftError || 'Error al guardar el borrador'
+          return
+        }
+
         const wasDirty = this.isDirty
         await this.saveCurrentProgress({ silent: true })
         if (wasDirty && this.isDirty) {
