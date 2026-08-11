@@ -65,4 +65,14 @@ return [
         'admin_url' => env('ADMIN_URL', 'https://incalake-admin.vercel.app'),
     ],
 
+    // Public Nuxt site. Its tour pages are cached with Vercel ISR, so a publish
+    // is invisible until that cache regenerates. `revalidate_token` is the
+    // Vercel bypassToken: a GET carrying it as x-prerender-revalidate purges
+    // that path on demand. Leave it empty to disable purging entirely.
+    'frontend' => [
+        'url' => env('FRONTEND_PUBLIC_URL', env('FRONTEND_URL', 'https://incalake-frontend.vercel.app')),
+        'revalidate_token' => env('FRONTEND_REVALIDATE_TOKEN'),
+        'locales' => ['es', 'en', 'pt', 'fr', 'de', 'it'],
+    ],
+
 ];

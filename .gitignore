@@ -54,6 +54,9 @@ Thumbs.db
 /admin/.output/
 /admin/dist/
 
+# Vercel build output (NITRO_PRESET=vercel writes here on a local build)
+.vercel/
+
 # Logs
 *.log
 npm-debug.log*

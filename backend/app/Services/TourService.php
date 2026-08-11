@@ -19,15 +19,18 @@ class TourService
     protected TourPriceService $priceService;
     protected TourTranslationService $translationService;
     protected TourMediaService $mediaService;
+    protected FrontendRevalidator $revalidator;
 
     public function __construct(
         TourPriceService $priceService,
         TourTranslationService $translationService,
-        TourMediaService $mediaService
+        TourMediaService $mediaService,
+        FrontendRevalidator $revalidator
     ) {
         $this->priceService = $priceService;
         $this->translationService = $translationService;
         $this->mediaService = $mediaService;
+        $this->revalidator = $revalidator;
     }
 
     public function create(array $data): Tour
@@ -113,6 +116,17 @@ class TourService
 
             DB::commit();
             Log::info("Tour updated successfully", ['tour_id' => $tour->id, 'code' => $tour->code]);
+
+            $tour->refresh();
+
+            // A write that lands on a published tour IS the publish: edits to a
+            // live tour are held in tour_revisions and only reach this point via
+            // "Publicar". Purge the public ISR cache so the change is visible
+            // immediately instead of after the expiration window. After commit
+            // and best-effort — the tour is already saved either way.
+            if ($tour->status === 'published') {
+                $this->revalidator->revalidateTour($tour);
+            }
 
             return $tour->load(['translations', 'prices', 'categories', 'city', 'mediaGallery']);
         } catch (Exception $e) {
