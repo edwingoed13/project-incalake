@@ -29,7 +29,8 @@ class PruneOrphanTourImages extends Command
     protected $signature = 'tours:prune-images
                             {--days=7 : Only consider files older than this many days}
                             {--force : Actually delete. Without it, nothing is removed}
-                            {--limit=0 : Stop after this many deletions (0 = no limit)}';
+                            {--limit=0 : Stop after this many deletions (0 = no limit)}
+                            {--json : Print the full candidate list as JSON and stop. Implies no deletion}';
 
     protected $description = 'Delete tour image files no database row references';
 
@@ -79,6 +80,19 @@ class PruneOrphanTourImages extends Command
 
         if ($limit > 0) {
             $candidates = array_slice($candidates, 0, $limit);
+        }
+
+        // The human output truncates to 15 lines, which is fine for deciding
+        // but useless for acting — backing these up before deletion needs every
+        // path. Never deletes: this is the "let me look first" mode.
+        if ($this->option('json')) {
+            $this->line(json_encode([
+                'count' => count($candidates),
+                'skipped_recent' => $skippedRecent,
+                'paths' => array_values($candidates),
+            ]));
+
+            return self::SUCCESS;
         }
 
         if (empty($candidates)) {

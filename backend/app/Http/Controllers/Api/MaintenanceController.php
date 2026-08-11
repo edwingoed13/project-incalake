@@ -95,18 +95,34 @@ class MaintenanceController extends Controller
     {
         $force = $request->boolean('force');
         $days = max(0, (int) $request->input('days', 7));
+        // ?list=1 returns every candidate path instead of the truncated human
+        // summary, so the files can be downloaded and kept before anything is
+        // deleted. Wins over force: asking to look is never asking to delete.
+        $list = $request->boolean('list');
 
         $exit = Artisan::call('tours:prune-images', array_filter([
             '--days' => (string) $days,
-            '--force' => $force ?: null,
+            '--json' => $list ?: null,
+            '--force' => (!$list && $force) ?: null,
         ]));
+
+        $output = Artisan::output();
+
+        if ($list) {
+            return response()->json([
+                'success' => $exit === 0,
+                'dry_run' => true,
+                'days' => $days,
+                'data' => json_decode(trim($output), true),
+            ], $exit === 0 ? 200 : 500);
+        }
 
         return response()->json([
             'success' => $exit === 0,
             'dry_run' => !$force,
             'days' => $days,
             'exit_code' => $exit,
-            'output' => Artisan::output(),
+            'output' => $output,
         ], $exit === 0 ? 200 : 500);
     }
 
