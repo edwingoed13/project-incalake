@@ -60,7 +60,11 @@ class PruneOrphanTourImages extends Command
             return self::FAILURE;
         }
 
-        $this->info(sprintf('Referenced paths in DB: %d', $referenced->count()));
+        // Silent in --json mode: any human line here lands in the same stream
+        // and makes the payload unparseable for whoever asked for JSON.
+        if (!$this->option('json')) {
+            $this->info(sprintf('Referenced paths in DB: %d', $referenced->count()));
+        }
 
         $cutoff = now()->subDays($days)->getTimestamp();
         $candidates = [];
