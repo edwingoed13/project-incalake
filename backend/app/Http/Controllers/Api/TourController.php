@@ -41,6 +41,36 @@ class TourController extends Controller
     }
 
     /**
+     * Whether the caller is a signed-in admin/staff member.
+     *
+     * The read endpoints below are on the PUBLIC route group (no auth
+     * middleware), but the admin panel reads tours through them too — the
+     * list and the wizard both hit /tours. So instead of locking the routes
+     * down, resolve the bearer token when one is present and widen what the
+     * caller may see. No token, or a customer's token, means public visibility.
+     */
+    private function callerIsAdmin(): bool
+    {
+        $user = auth('sanctum')->user();
+
+        return $user
+            && method_exists($user, 'canAccessAdminPanel')
+            && $user->canAccessAdminPanel();
+    }
+
+    /**
+     * Unpublished tours must not be reachable by the public, by id or by slug.
+     * Throwing ModelNotFoundException reuses each caller's existing 404 branch,
+     * so an unpublished tour is indistinguishable from one that doesn't exist.
+     */
+    private function assertVisible(Tour $tour): void
+    {
+        if ($tour->status !== 'published' && !$this->callerIsAdmin()) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+        }
+    }
+
+    /**
      * Quick status change from the admin list (publish / archive / restore to
      * draft) without opening the wizard. Keeps `active` in sync so publishing
      * actually makes the tour visible.
@@ -102,8 +132,16 @@ class TourController extends Controller
                 ]);
             }
 
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
+            // Status filtering used to apply ONLY when ?status= was passed, so
+            // the default listing handed out drafts and archived tours to
+            // anyone hitting the API. Admins keep the filter as a filter; the
+            // public gets published-only regardless of what they ask for.
+            if ($this->callerIsAdmin()) {
+                if ($request->has('status')) {
+                    $query->where('status', $request->status);
+                }
+            } else {
+                $query->where('status', 'published');
             }
 
             if ($request->has('active')) {
@@ -366,6 +404,8 @@ class TourController extends Controller
                 'childOptions.prices:id,tour_id,age_stage_id,amount,active',
             ])->findOrFail($id);
 
+            $this->assertVisible($tour);
+
             return response()->json([
                 'success' => true,
                 'data' => new TourDetailResource($tour),
@@ -419,6 +459,8 @@ class TourController extends Controller
                 $query->where('slug', $slug);
             })
             ->firstOrFail();
+
+            $this->assertVisible($tour);
 
             return response()->json([
                 'success' => true,
