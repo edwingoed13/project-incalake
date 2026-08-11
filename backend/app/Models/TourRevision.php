@@ -15,11 +15,13 @@ class TourRevision extends Model
         'tour_id',
         'payload',
         'schema_version',
+        'version',
         'updated_by',
     ];
 
     protected $casts = [
         'payload' => 'array',
+        'version' => 'integer',
     ];
 
     public function tour(): BelongsTo

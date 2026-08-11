@@ -130,6 +130,77 @@ class TourDraftAndVisibilityTest extends TestCase
         ])->assertStatus(422);
     }
 
+    // --- Concurrent editors -----------------------------------------------
+
+    public function test_a_save_built_on_a_stale_version_is_rejected(): void
+    {
+        $tour = Tour::factory()->create();
+        $ana = User::factory()->create(['role' => 'admin', 'name' => 'Ana']);
+        $beto = User::factory()->create(['role' => 'admin', 'name' => 'Beto']);
+
+        // Both operators open the tour and read version 1.
+        Sanctum::actingAs($ana);
+        $version = $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'de Ana']],
+        ])->json('data.version');
+
+        // Beto saves on top, so the stored draft moves to version 2.
+        Sanctum::actingAs($beto);
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'de Beto']],
+            'base_version' => $version,
+        ])->assertOk();
+
+        // Ana, still holding version 1, would silently erase Beto's work.
+        Sanctum::actingAs($ana);
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'de Ana otra vez']],
+            'base_version' => $version,
+        ])
+            ->assertStatus(409)
+            ->assertJsonPath('conflict', true)
+            ->assertJsonPath('data.updated_by_name', 'Beto');
+
+        // Beto's draft is intact.
+        $this->assertSame(
+            'de Beto',
+            TourRevision::where('tour_id', $tour->id)->first()->payload['basicInfo']['title']
+        );
+    }
+
+    public function test_saving_with_the_current_version_succeeds(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $v1 = $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'uno']],
+        ])->json('data.version');
+
+        $v2 = $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'dos']],
+            'base_version' => $v1,
+        ])->assertOk()->json('data.version');
+
+        $this->assertSame($v1 + 1, $v2);
+    }
+
+    public function test_omitting_base_version_still_saves(): void
+    {
+        // An admin build older than this change sends no base_version. It must
+        // keep working rather than start 409-ing on every autosave.
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'uno']],
+        ])->assertOk();
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'payload' => ['basicInfo' => ['title' => 'dos']],
+        ])->assertOk();
+    }
+
     // --- Public visibility ------------------------------------------------
 
     public function test_public_cannot_see_an_unpublished_tour(): void

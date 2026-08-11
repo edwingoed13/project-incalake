@@ -60,6 +60,9 @@ class TourRevisionController extends Controller
             'data' => [
                 'payload' => $revision->payload,
                 'schema_version' => $revision->schema_version,
+                // The client echoes this back on save so a write built on a
+                // stale copy can be rejected instead of erasing someone.
+                'version' => $revision->version,
                 'updated_at' => $revision->updated_at,
                 'updated_by' => $revision->updated_by,
                 'updated_by_name' => $revision->editor?->name,
@@ -78,6 +81,7 @@ class TourRevisionController extends Controller
         $data = $request->validate([
             'payload' => 'required|array',
             'schema_version' => 'nullable|string|max:20',
+            'base_version' => 'nullable|integer|min:0',
         ]);
 
         $encoded = json_encode($data['payload']);
@@ -88,11 +92,37 @@ class TourRevisionController extends Controller
             ], 422);
         }
 
+        $existing = TourRevision::with('editor:id,name')
+            ->where('tour_id', $tour->id)
+            ->first();
+
+        // Optimistic concurrency. base_version is the version the client last
+        // read; if the stored draft has moved past it, someone else saved in
+        // between and writing would erase their work without a trace. Refuse
+        // and let the operator decide. Omitting base_version keeps the old
+        // last-write-wins behaviour, so an older admin build still works.
+        if ($existing && $request->filled('base_version')
+            && (int) $data['base_version'] !== $existing->version) {
+            return response()->json([
+                'success' => false,
+                'conflict' => true,
+                'message' => $existing->editor?->name
+                    ? "{$existing->editor->name} guardó cambios en este tour mientras lo editabas."
+                    : 'Otra persona guardó cambios en este tour mientras lo editabas.',
+                'data' => [
+                    'version' => $existing->version,
+                    'updated_at' => $existing->updated_at,
+                    'updated_by_name' => $existing->editor?->name,
+                ],
+            ], 409);
+        }
+
         $revision = TourRevision::updateOrCreate(
             ['tour_id' => $tour->id],
             [
                 'payload' => $data['payload'],
                 'schema_version' => $data['schema_version'] ?? 'v1',
+                'version' => ($existing?->version ?? 0) + 1,
                 'updated_by' => $request->user()?->id,
             ]
         );
@@ -101,6 +131,7 @@ class TourRevisionController extends Controller
             'success' => true,
             'message' => 'Borrador guardado.',
             'data' => [
+                'version' => $revision->version,
                 'updated_at' => $revision->updated_at,
                 'updated_by' => $revision->updated_by,
             ],
