@@ -271,6 +271,9 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.expand-anticipation-enum');
         Route::match(['get', 'post'], '/merge-tag', [\App\Http\Controllers\Api\MaintenanceController::class, 'mergeTag'])
             ->name('api.admin.maintenance.merge-tag');
+        // Dry-run unless ?force=1. See the controller for why that default matters.
+        Route::match(['get', 'post'], '/prune-tour-images', [\App\Http\Controllers\Api\MaintenanceController::class, 'pruneTourImages'])
+            ->name('api.admin.maintenance.prune-tour-images');
     });
 
     // Admin routes - Cities (Places search proxied server-side + resolve)

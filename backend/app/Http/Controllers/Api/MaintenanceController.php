@@ -80,6 +80,36 @@ class MaintenanceController extends Controller
      * Run pending migrations from the browser when cPanel doesn't allow artisan.
      * Returns the migration output for verification.
      */
+    /**
+     * Delete tour image files nothing in the database points at. cPanel has no
+     * terminal, so the artisan command needs a door.
+     *
+     * Dry-run unless ?force=1 — the command defaults that way too, but making
+     * it explicit here matters: this endpoint is a URL someone can paste into
+     * a browser, and the destructive version must never be the accidental one.
+     *
+     * ?days=N (default 7) keeps recent uploads safe; a wizard session in
+     * progress has files on disk that no row references yet.
+     */
+    public function pruneTourImages(Request $request): JsonResponse
+    {
+        $force = $request->boolean('force');
+        $days = max(0, (int) $request->input('days', 7));
+
+        $exit = Artisan::call('tours:prune-images', array_filter([
+            '--days' => (string) $days,
+            '--force' => $force ?: null,
+        ]));
+
+        return response()->json([
+            'success' => $exit === 0,
+            'dry_run' => !$force,
+            'days' => $days,
+            'exit_code' => $exit,
+            'output' => Artisan::output(),
+        ], $exit === 0 ? 200 : 500);
+    }
+
     public function runMigrations(): JsonResponse
     {
         try {
