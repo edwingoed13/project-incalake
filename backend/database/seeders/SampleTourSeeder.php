@@ -14,35 +14,49 @@ class SampleTourSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create a sample tour with full data
-        $tour = Tour::create([
-            'code' => 'LAKE001',
-            'primary_language_id' => 1,
-            'city_id' => 1,
-            'city_name' => 'Puno',
-            'service_type' => 'tour',
-            'difficulty' => 'easy',
-            'target_audience' => 'all',
-            'status' => 'published',
-            'active' => true,
-            'capacity' => 50,
-            'cupos' => 50,
-            'duration_days' => 1,
-            'duration_hours' => 8,
-            'departure_time' => '07:00:00',
-            'departure_period' => 'AM',
-            'timezone' => 'America/Lima',
-            'booking_anticipation_hours' => 24,
-            'payment_method' => json_encode(['online', 'cash']),
-            'data_requirement' => json_encode(['passport', 'id_card']),
-            'index_status' => true,
-            'follow_status' => true,
-        ]);
+        // Dependencies this seeder used to assume existed as ids 1. Nothing
+        // creates cities, so city_id => 1 failed the foreign key on a fresh
+        // install and took the whole seeder with it.
+        $language = \App\Models\Language::firstOrCreate(['code' => 'ES'], ['country' => 'Español']);
+        $city = \App\Models\City::firstOrCreate(['name' => 'Puno'], ['slug' => 'puno']);
+
+        // Create a sample tour with full data.
+        //
+        // Four columns were being written with the wrong type: payment_method
+        // and index_status/follow_status are enums (not JSON, not booleans) and
+        // data_requirement is a tinyInteger. firstOrCreate keeps re-running the
+        // seeder from blowing up on the unique code.
+        $tour = Tour::firstOrCreate(
+            ['code' => 'LAKE001'],
+            [
+                'primary_language_id' => $language->id,
+                'city_id' => $city->id,
+                'city_name' => 'Puno',
+                'service_type' => 'tour',
+                'difficulty' => 'easy',
+                'target_audience' => 'all',
+                'status' => 'published',
+                'active' => true,
+                'capacity' => 50,
+                'cupos' => 50,
+                'duration_days' => 1,
+                'duration_hours' => 8,
+                'departure_time' => '07:00:00',
+                'departure_period' => 'AM',
+                'timezone' => 'America/Lima',
+                'booking_anticipation_hours' => 24,
+                'payment_method' => 'all',
+                'data_requirement' => 1,
+                'index_status' => 'index',
+                'follow_status' => 'follow',
+            ]
+        );
 
         // Add translation
-        TourTranslation::create([
+        TourTranslation::updateOrCreate([
             'tour_id' => $tour->id,
-            'language_id' => 1,
+            'language_id' => $language->id,
+        ], [
             'h1_title' => 'Tour al Lago Titicaca - Islas Flotantes de los Uros',
             'slug' => 'tour-lago-titicaca-islas-uros',
             'meta_title' => 'Tour Lago Titicaca | Islas Flotantes Uros | Desde Puno',
@@ -114,24 +128,26 @@ class SampleTourSeeder extends Seeder
 </ul>',
         ]);
 
-        // Get or create nationalities
-        $peruano = Nationality::firstOrCreate(['code' => 'PE'], ['name' => 'Peruano']);
-        $extranjero = Nationality::firstOrCreate(['code' => 'EX'], ['name' => 'Extranjero']);
+        // Both tables label their rows with `description`, not `name`, and
+        // age_stages has no `order` column. Writing the old names produced
+        // "Unknown column 'name'".
+        $peruano = Nationality::firstOrCreate(['code' => 'PE'], ['description' => 'Peruano', 'order' => 1]);
+        $extranjero = Nationality::firstOrCreate(['code' => 'EX'], ['description' => 'Extranjero', 'order' => 2]);
 
         // Get or create age stages
         $adulto = AgeStage::firstOrCreate(
-            ['name' => 'Adulto'],
-            ['min_age' => 12, 'max_age' => 65, 'order' => 2]
+            ['description' => 'Adulto'],
+            ['min_age' => 12, 'max_age' => 65]
         );
 
         $nino = AgeStage::firstOrCreate(
-            ['name' => 'Niño'],
-            ['min_age' => 3, 'max_age' => 11, 'order' => 1]
+            ['description' => 'Niño'],
+            ['min_age' => 3, 'max_age' => 11]
         );
 
         $adultoMayor = AgeStage::firstOrCreate(
-            ['name' => 'Adulto Mayor'],
-            ['min_age' => 66, 'max_age' => 99, 'order' => 3]
+            ['description' => 'Adulto Mayor'],
+            ['min_age' => 66, 'max_age' => 99]
         );
 
         // Add prices
@@ -156,8 +172,9 @@ class SampleTourSeeder extends Seeder
                 'age_stage_id' => $price['age_stage_id'],
                 'nationality_id' => $price['nationality_id'],
                 'amount' => $price['amount'],
-                'min_participants' => 1,
-                'max_participants' => 10,
+                // Renamed to min_quantity / max_quantity in the current schema.
+                'min_quantity' => 1,
+                'max_quantity' => 10,
                 'active' => true,
             ]);
         }
@@ -202,9 +219,13 @@ class SampleTourSeeder extends Seeder
         ];
 
         foreach ($images as $image) {
-            TourMediaGallery::create([
+            // `path` became image_path, and language_id is NOT NULL — gallery
+            // rows are per language now.
+            TourMediaGallery::updateOrCreate([
                 'tour_id' => $tour->id,
-                'path' => $image['path'],
+                'image_path' => $image['path'],
+            ], [
+                'language_id' => $language->id,
                 'alt_text' => $image['alt_text'],
                 'title_text' => $image['title_text'],
                 'description' => $image['description'],

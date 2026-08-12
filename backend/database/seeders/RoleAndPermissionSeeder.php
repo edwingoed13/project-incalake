@@ -71,15 +71,23 @@ class RoleAndPermissionSeeder extends Seeder
             'view bookings',
         ]);
 
-        // Assign Role to Existing Admin (if exists)
+        // Access is granted by users.role, not by the Spatie roles above.
+        // User dropped the HasRoles trait when the project moved to the column
+        // (see EnsureAdminApi / canAccessAdminPanel), so assignRole() no longer
+        // exists and this seeder threw BadMethodCallException — which aborted
+        // `php artisan db:seed` before it could create anything else.
+        //
+        // The Spatie roles and permissions are still created above because the
+        // tables and package are still installed and nothing has decided to
+        // remove them, but they currently grant nothing on their own.
         $user = User::where('email', 'admin@incalake.com')->first();
         if ($user) {
-            $user->assignRole($superAdminRole);
+            $user->forceFill(['role' => 'admin'])->save();
         }
-        
+
         $userStaff = User::where('email', 'staff@incalake.com')->first();
         if ($userStaff) {
-            $userStaff->assignRole($sellerRole);
+            $userStaff->forceFill(['role' => 'staff'])->save();
         }
     }
 }

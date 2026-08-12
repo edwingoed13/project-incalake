@@ -26,8 +26,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Blanket allow for admins. Was $user->hasRole('Super Admin'), a Spatie
+        // call that stopped existing when User dropped the HasRoles trait in
+        // favour of the `role` column — so this closure would have thrown
+        // BadMethodCallException on the first authorize() or can() anywhere in
+        // the app. Nothing uses Gates today, which is the only reason it went
+        // unnoticed; it would have failed the moment someone added one.
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            return $user->hasRole('Super Admin') ? true : null;
+            return ($user->role ?? null) === 'admin' ? true : null;
         });
 
         // Invalidate the public tour-listing cache whenever card-visible data

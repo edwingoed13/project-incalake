@@ -22,7 +22,13 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
         ]);
 
-        // Create default admin user if not exists
+        // Create default admin user if not exists.
+        //
+        // role='admin' is what actually grants access (EnsureAdminApi reads
+        // canAccessAdminPanel, which reads this column). This used to call
+        // assignRole('Super Admin'), a Spatie method User no longer has, so a
+        // fresh `db:seed` died here and left the install without an admin —
+        // nobody could log in.
         $admin = \App\Models\User::firstOrCreate(
             ['email' => 'admin@incalake.com'],
             [
@@ -30,6 +36,6 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]
         );
-        $admin->assignRole('Super Admin');
+        $admin->forceFill(['role' => 'admin'])->save();
     }
 }
