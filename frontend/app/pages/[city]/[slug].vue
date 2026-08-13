@@ -458,14 +458,25 @@
     </div>
   </div>
 
-  <!-- Error State -->
+  <!-- Error State: un fallo transitorio (429/500/red) NO es «no existe».
+       Decirle «no encontrado» a un comprador por un hipo de la API pierde la
+       venta; aquí se le ofrece reintentar. -->
   <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
-    <div class="text-center">
-      <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
-      <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
-      <NuxtLink :to="localePath('/tours')" class="text-primary hover:underline font-bold">
-        {{ t('view_all_tours') }}
-      </NuxtLink>
+    <div class="text-center px-6">
+      <template v-if="isTransientError">
+        <ExclamationTriangleIcon class="size-16 text-amber-400 mb-4 mx-auto" aria-hidden="true" />
+        <p class="text-slate-700 text-lg font-bold mb-4">{{ t('tour_load_error') }}</p>
+        <button type="button" class="btn-primary" @click="refresh()">
+          {{ t('retry') }}
+        </button>
+      </template>
+      <template v-else>
+        <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
+        <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
+        <NuxtLink :to="localePath('/tours')" class="text-primary hover:underline font-bold">
+          {{ t('view_all_tours') }}
+        </NuxtLink>
+      </template>
     </div>
   </div>
 </template>
@@ -480,6 +491,7 @@ import {
   ChevronDownIcon,
   ChatBubbleLeftRightIcon,
   MagnifyingGlassIcon,
+  ExclamationTriangleIcon,
   ArrowRightIcon,
   ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
@@ -572,11 +584,19 @@ function getCachedData(key: string, nuxtApp: any, ctx: any) {
 }
 
 // Fetch tour data with SSR using multilang API endpoint
-const { data: response, pending, error } = await useAsyncData(
+const { data: response, pending, error, refresh } = await useAsyncData(
   `tour-${langCode.value}-${citySlug}-${slug}`,
   () => api(`/tours/${langCode.value.toLowerCase()}/${citySlug}/${slug}`),
   { getCachedData }
 )
+
+// Fallo con estado distinto de 404 = la API tuvo un problema, el tour puede
+// existir perfectamente. Gobierna tanto el mensaje como el codigo de estado.
+const isTransientError = computed(() => {
+  if (!error.value) return false
+  const s = (error.value as any)?.statusCode ?? (error.value as any)?.status
+  return s !== 404
+})
 
 // The API 404s for a tour that doesn't exist or isn't published, and the
 // template below renders a "no encontrado" block — but the response itself
@@ -584,9 +604,15 @@ const { data: response, pending, error } = await useAsyncData(
 // it indexed, so an un-published tour went on showing up in search. Send a real
 // 404 status instead. Done inline rather than with createError so the existing
 // not-found UI (inside the normal layout) is preserved.
+//
+// ONLY when the API itself said 404. The first version sent 404 whenever data
+// was missing — which includes a rate-limited (429) or momentarily-down (5xx)
+// API. A transient hiccup during a Googlebot crawl would have deindexed a
+// perfectly live tour. Transient failures answer 503 so crawlers retry later.
 if (import.meta.server && !response.value?.data) {
   const event = useRequestEvent()
-  if (event) setResponseStatus(event, 404)
+  const apiStatus = (error.value as any)?.statusCode ?? (error.value as any)?.status
+  if (event) setResponseStatus(event, apiStatus === 404 ? 404 : 503)
 }
 
 // Inline option swap: when the user picks an option on the selector we

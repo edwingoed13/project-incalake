@@ -150,7 +150,7 @@
 
               <!-- WhatsApp option -->
               <a
-                :href="`https://wa.me/51999999999?text=Hola, necesito recojo desde ${hotelValidation?.hotel_name} para la reserva ${bookingId}`"
+                :href="`https://wa.me/51982769453?text=${encodeURIComponent(`Hola, necesito recojo desde ${hotelValidation?.hotel_name} para la reserva ${bookingId}`)}`"
                 target="_blank"
                 class="flex items-center gap-2 px-3 py-2 bg-green-500/10 text-green-700 rounded-xl text-xs font-semibold hover:bg-green-500/20 transition-colors"
               >

@@ -173,7 +173,10 @@
           <NuxtLink :to="getTourLink(tour)" @mouseenter="prefetchTour(tour)" @focus="prefetchTour(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors">
             <!-- Image -->
             <div class="relative w-[42%] max-w-[150px] aspect-square rounded-xl overflow-hidden shrink-0 bg-slate-100">
-              <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
+              <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-3xl" />
+              </div>
               <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" size="xs" class="absolute top-1.5 left-1.5" />
             </div>
             <!-- Content -->
@@ -228,9 +231,12 @@
           class="group block bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
           <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
-            <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
+            <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
               format="webp" width="400" height="300" sizes="50vw lg:33vw xl:25vw" />
+            <div v-else class="w-full h-full flex items-center justify-center">
+              <Icon name="material-symbols:image-outline" class="text-slate-300 text-5xl" />
+            </div>
             <div v-if="formatDuration(tour)" class="absolute bottom-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md text-slate-700 px-2.5 py-1 rounded-full shadow text-[11px] font-bold">
               <Icon name="material-symbols:schedule-outline" class="text-sm" />{{ formatDuration(tour) }}
             </div>
@@ -276,9 +282,12 @@
           class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3"
         >
           <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0 bg-slate-100">
-            <NuxtImg v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
+            <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"
               format="webp" width="256" height="176" sizes="256px" />
+            <div v-else class="w-full h-full flex items-center justify-center">
+              <Icon name="material-symbols:image-outline" class="text-slate-300 text-4xl" />
+            </div>
             <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" class="absolute top-2 left-2" />
           </div>
           <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
@@ -676,6 +685,14 @@ function handlePageChange(page: number) {
 function getImageUrl(path: string) {
   if (!path) return ''; if (path.startsWith('http')) return path
   return `${config.public.storageBase}/${path}`
+}
+
+// Tours with no photo used to render a <NuxtImg src="">, which builds a srcset
+// of empty URLs — the browser resolved them against the current path and fired
+// 404s (/es/1w, /es/1x) while the card showed a grey box. Guard first, then
+// fall back to the same placeholder TourCard uses on the home page.
+function hasImage(tour: any) {
+  return Boolean(tour.featured_image || tour.thumbnail)
 }
 
 function formatDuration(tour: any) {

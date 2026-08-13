@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-12">
+  <!-- pt-24 clears the fixed navbar, which was slicing the title in half. -->
+  <div class="min-h-screen bg-gray-50 pt-24 pb-12 md:pt-28 md:pb-16">
     <div class="container mx-auto px-4 max-w-4xl">
       <h1 class="text-4xl font-bold text-center mb-8">Sobre Nosotros</h1>
 

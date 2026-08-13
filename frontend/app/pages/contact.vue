@@ -1,122 +1,160 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-12">
-    <div class="container mx-auto px-4 max-w-4xl">
-      <h1 class="text-4xl font-bold text-center mb-8">Contáctanos</h1>
+  <!-- pt-24 clears the fixed navbar — the page used to start at py-12 and the
+       title was sliced in half by it. -->
+  <div class="min-h-screen bg-background-light pt-24 pb-12 md:pt-28 md:pb-16">
+    <div class="max-w-5xl mx-auto px-4 md:px-6">
+      <div class="text-center mb-8 md:mb-10">
+        <h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-2">{{ t('contact_title') }}</h1>
+        <p class="text-sm md:text-base text-slate-500">{{ t('contact_subtitle') }}</p>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Contact Form -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-2xl font-bold mb-4">Envíanos un mensaje</h2>
-          <form @submit.prevent="handleSubmit" class="space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6">
+        <!-- Contact form -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 md:p-6">
+          <h2 class="text-lg md:text-xl font-bold text-slate-900 mb-4">{{ t('contact_form_title') }}</h2>
+
+          <form v-if="!success" @submit.prevent="handleSubmit" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+              <label for="contact-name" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                {{ t('contact_name') }} *
+              </label>
               <input
+                id="contact-name"
                 v-model="form.name"
                 type="text"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxlength="120"
+                autocomplete="name"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label for="contact-email" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                {{ t('contact_email') }} *
+              </label>
               <input
+                id="contact-email"
                 v-model="form.email"
                 type="email"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxlength="160"
+                autocomplete="email"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Mensaje</label>
+              <label for="contact-phone" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                {{ t('contact_phone') }}
+              </label>
+              <input
+                id="contact-phone"
+                v-model="form.phone"
+                type="tel"
+                maxlength="40"
+                autocomplete="tel"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              />
+            </div>
+
+            <div>
+              <label for="contact-message" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                {{ t('contact_message') }} *
+              </label>
               <textarea
+                id="contact-message"
                 v-model="form.message"
                 rows="5"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxlength="3000"
+                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-y"
               ></textarea>
             </div>
 
-            <button
-              type="submit"
-              :disabled="loading"
-              class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400"
-            >
-              {{ loading ? 'Enviando...' : 'Enviar Mensaje' }}
+            <button type="submit" :disabled="loading" class="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+              <Icon v-if="loading" name="material-symbols:progress-activity" class="size-5 animate-spin" />
+              {{ loading ? t('contact_sending') : t('contact_send') }}
             </button>
 
-            <p v-if="success" class="text-green-600 text-center">¡Mensaje enviado con éxito!</p>
-            <p v-if="error" class="text-red-600 text-center">{{ error }}</p>
+            <div v-if="error" class="flex items-start gap-2 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl" role="alert">
+              <Icon name="material-symbols:error-outline" class="size-4 text-red-500 shrink-0 mt-0.5" />
+              <span class="text-xs font-semibold text-red-700">{{ error }}</span>
+            </div>
           </form>
+
+          <!-- Success replaces the form: the message is really stored + emailed
+               now, so the confirmation can point at what happens next. -->
+          <div v-else class="text-center py-6">
+            <div class="size-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+              <Icon name="material-symbols:check-circle-outline" class="size-8 text-green-600" />
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1.5">{{ t('contact_success_title') }}</h3>
+            <p class="text-sm text-slate-500 mb-5">{{ t('contact_success_body') }}</p>
+            <a :href="whatsappHref" target="_blank" rel="noopener" class="btn-primary">
+              <Icon name="material-symbols:chat" class="size-5" />
+              {{ t('contact_whatsapp_cta') }}
+            </a>
+          </div>
         </div>
 
-        <!-- Contact Info -->
-        <div class="space-y-6">
-          <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold mb-4">Información de Contacto</h2>
+        <!-- Contact info -->
+        <div class="space-y-5">
+          <!-- WhatsApp first: it is how this business actually talks to travellers -->
+          <a
+            :href="whatsappHref"
+            target="_blank"
+            rel="noopener"
+            class="group flex items-center gap-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:border-primary/50 hover:shadow-md transition-all"
+          >
+            <div class="size-12 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
+              <Icon name="material-symbols:chat" class="size-6 text-green-600" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">
+                {{ t('contact_whatsapp_cta') }}
+              </p>
+              <p class="text-sm text-slate-500">{{ PHONE_DISPLAY }}</p>
+            </div>
+            <Icon name="material-symbols:arrow-forward" class="size-5 text-slate-300 ml-auto group-hover:translate-x-1 group-hover:text-primary transition-all" />
+          </a>
+
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 md:p-6">
+            <h2 class="text-lg md:text-xl font-bold text-slate-900 mb-4">{{ t('contact_info_title') }}</h2>
             <div class="space-y-4">
               <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
+                <Icon name="material-symbols:call-outline" class="size-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <h3 class="font-semibold">Dirección</h3>
-                  <p class="text-gray-600">Jr. Lima 123, Puno, Perú</p>
+                  <h3 class="text-sm font-bold text-slate-900">{{ t('contact_phone_label') }}</h3>
+                  <a :href="`tel:+51${PHONE_RAW}`" class="text-sm text-slate-500 hover:text-primary transition-colors">
+                    {{ PHONE_DISPLAY }}
+                  </a>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
+                <Icon name="material-symbols:mail-outline" class="size-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <h3 class="font-semibold">Email</h3>
-                  <p class="text-gray-600">info@incalake.com</p>
+                  <h3 class="text-sm font-bold text-slate-900">{{ t('contact_email') }}</h3>
+                  <a :href="`mailto:${EMAIL}`" class="text-sm text-slate-500 hover:text-primary transition-colors">{{ EMAIL }}</a>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                </svg>
+                <Icon name="material-symbols:location-on-outline" class="size-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <h3 class="font-semibold">Teléfono</h3>
-                  <p class="text-gray-600">+51 951 234 567</p>
+                  <h3 class="text-sm font-bold text-slate-900">{{ t('contact_location') }}</h3>
+                  <p class="text-sm text-slate-500">Puno, Perú</p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <Icon name="material-symbols:schedule-outline" class="size-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <h3 class="font-semibold">Horario de Atención</h3>
-                  <p class="text-gray-600">Lunes a Domingo: 8:00 AM - 8:00 PM</p>
+                  <h3 class="text-sm font-bold text-slate-900">{{ t('contact_hours') }}</h3>
+                  <p class="text-sm text-slate-500">{{ t('contact_hours_value') }}</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-lg p-6">
-            <h3 class="font-semibold mb-3">Síguenos en Redes Sociales</h3>
-            <div class="flex gap-4">
-              <a href="#" class="text-blue-600 hover:text-blue-700">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </a>
-              <a href="#" class="text-blue-400 hover:text-blue-500">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                </svg>
-              </a>
-              <a href="#" class="text-pink-600 hover:text-pink-700">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
-                </svg>
-              </a>
             </div>
           </div>
         </div>
@@ -126,12 +164,26 @@
 </template>
 
 <script setup lang="ts">
+const { t, locale } = useI18n()
+const { api } = useApi()
+
+// Single source for the real contact details. The page used to publish a made
+// up address and phone ("Jr. Lima 123", "+51 951 234 567") plus href="#" social
+// links — worse than showing nothing, since a traveller may actually dial it.
+const PHONE_RAW = '982769453'
+const PHONE_DISPLAY = '+51 982 769 453'
+const EMAIL = 'reservas@incalake.com'
+
+const whatsappHref = computed(() =>
+  `https://wa.me/51${PHONE_RAW}?text=${encodeURIComponent(t('contact_whatsapp_text'))}`
+)
+
 useHead({
   title: 'Contacto | Incalake Tours',
   meta: [
     {
       name: 'description',
-      content: 'Contáctanos para reservar tu tour o resolver cualquier duda. Estamos disponibles de lunes a domingo de 8 AM a 8 PM.'
+      content: 'Contáctanos para reservar tu tour en el Lago Titicaca o resolver cualquier duda. Escríbenos por WhatsApp al +51 982 769 453.'
     }
   ]
 })
@@ -139,7 +191,8 @@ useHead({
 const form = reactive({
   name: '',
   email: '',
-  message: ''
+  phone: '',
+  message: '',
 })
 
 const loading = ref(false)
@@ -148,21 +201,28 @@ const error = ref<string | null>(null)
 
 async function handleSubmit() {
   loading.value = true
-  success.value = false
   error.value = null
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Reset form
+    await api('/contact', {
+      method: 'POST',
+      body: {
+        name: form.name,
+        email: form.email,
+        phone: form.phone || null,
+        message: form.message,
+        language: locale.value,
+      },
+    })
+    success.value = true
     form.name = ''
     form.email = ''
+    form.phone = ''
     form.message = ''
-
-    success.value = true
-  } catch (err) {
-    error.value = 'Error al enviar el mensaje. Por favor intenta más tarde.'
+  } catch (e: any) {
+    // 429 = the anti-spam throttle; anything else is a genuine failure. Either
+    // way the traveller gets WhatsApp as an escape hatch, never a fake success.
+    error.value = e?.statusCode === 429 ? t('contact_error_throttled') : t('contact_error')
   } finally {
     loading.value = false
   }
