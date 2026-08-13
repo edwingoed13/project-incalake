@@ -274,6 +274,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dry-run unless ?force=1. See the controller for why that default matters.
         Route::match(['get', 'post'], '/prune-tour-images', [\App\Http\Controllers\Api\MaintenanceController::class, 'pruneTourImages'])
             ->name('api.admin.maintenance.prune-tour-images');
+        Route::match(['get', 'post'], '/tour-expiry-alerts', [\App\Http\Controllers\Api\MaintenanceController::class, 'tourExpiryAlerts'])
+            ->name('api.admin.maintenance.tour-expiry-alerts');
     });
 
     // Admin routes - Cities (Places search proxied server-side + resolve)

@@ -126,6 +126,28 @@ class MaintenanceController extends Controller
         ], $exit === 0 ? 200 : 500);
     }
 
+    /**
+     * Fire the tour expiry warnings. Meant to be called on a schedule, since
+     * this host has no cron running Laravel's scheduler.
+     *
+     * Repetition is controlled inside the command by expiry_alert_sent_at, not
+     * by how often this is called, so an extra call sends nothing extra.
+     * ?dry_run=1 reports without sending or marking.
+     */
+    public function tourExpiryAlerts(Request $request): JsonResponse
+    {
+        $exit = Artisan::call('tours:expiry-alerts', array_filter([
+            '--dry-run' => $request->boolean('dry_run') ?: null,
+        ]));
+
+        return response()->json([
+            'success' => $exit === 0,
+            'dry_run' => $request->boolean('dry_run'),
+            'exit_code' => $exit,
+            'output' => Artisan::output(),
+        ], $exit === 0 ? 200 : 500);
+    }
+
     public function runMigrations(): JsonResponse
     {
         try {

@@ -1,0 +1,47 @@
+name: Tour expiry alerts
+
+# The cPanel host runs no cron for Laravel's scheduler, so recurring work has
+# no way to fire on its own. This is the schedule.
+#
+# Runs daily even though a tour is only warned about every 15 days: the repeat
+# interval is enforced per tour by expiry_alert_sent_at, so a daily check just
+# means a tour entering the 3-month window is noticed the next day rather than
+# up to a fortnight later. Extra runs send nothing extra.
+on:
+  schedule:
+    # 12:00 UTC = 07:00 in Peru, so the warning is waiting when the desk opens.
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report what would be sent without sending or marking'
+        type: boolean
+        default: false
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger expiry alerts
+        run: |
+          DRY=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then DRY="&dry_run=1"; fi
+
+          echo "Running tour expiry alerts${DRY:+ (dry run)} ..."
+          code=$(curl -sS -o /tmp/alerts.json -w "%{http_code}" \
+            --max-time 180 --retry 3 --retry-delay 15 \
+            "https://api.incalake.com/cron.php?key=${{ secrets.DEPLOY_HOOK_KEY }}&task=expiry-alerts${DRY}" || true)
+
+          echo "HTTP $code"
+          cat /tmp/alerts.json 2>/dev/null || true
+          echo
+
+          if [ "$code" != "200" ]; then
+            echo "::error::cron.php returned HTTP $code — the alert did not run."
+            exit 1
+          fi
+          if ! grep -qE '"success"[[:space:]]*:[[:space:]]*true' /tmp/alerts.json; then
+            echo "::error::The task reported failure. Tours may be expiring unnoticed."
+            exit 1
+          fi
+          echo "OK."
