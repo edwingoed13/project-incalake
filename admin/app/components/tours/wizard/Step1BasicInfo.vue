@@ -631,10 +631,14 @@ watch(selectedLanguageId, (newLangId) => {
 
 // Initialize city query if already exists in store
 onMounted(async () => {
+  // Before any await: this used to run after fetchLanguages(), so on a slow
+  // connection the input sat empty (with the city only as loose help text
+  // below) until an unrelated request resolved.
+  cityQuery.value = store.basicInfo.nearestCity || ''
+
   await fetchLanguages()
 
   fetchCities()
-  cityQuery.value = store.basicInfo.nearestCity || ''
 
   if (!store.basicInfo.code && selectedLanguageId.value) {
     generateTourCode(selectedLanguageId.value)

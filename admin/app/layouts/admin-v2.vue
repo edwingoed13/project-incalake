@@ -34,69 +34,59 @@ onMounted(async () => {
 })
 
 const links = computed(() => {
-  // Sección "Principal"
+  // Solo destinos REALES en las secciones. Antes, 16 de los 26 ítems eran
+  // enlaces muertos «Pronto» repartidos en 7 secciones: en 1080p empujaban
+  // Usuarios/Configuración bajo el pliegue y en móvil el cajón era un túnel.
   const main = [
     { label: 'Dashboard', icon: 'i-lucide-layout-dashboard', to: '/admin/v2' },
   ]
 
-  // Sección "Reservas"
   const reservations = [
     { label: 'Clientes (Web/OTAs)', icon: 'i-lucide-users', to: '/admin/v2/bookings' },
     { label: 'Reseñas', icon: 'i-lucide-star', to: '/admin/v2/reviews' },
-    { label: 'Chatbot', icon: 'i-lucide-bot', to: '/admin/chatbot', badge: { label: 'Pronto', ...SOON } },
   ]
 
-  // Sección "Servicios" (con permisos)
   const services: any[] = []
   if (auth.hasPermission?.('tours.view')) services.push({ label: 'Tours', icon: 'i-lucide-map-pin', to: '/admin/v2/tours' })
-  services.push({ label: 'Productos', icon: 'i-lucide-shopping-bag', to: '/admin/products', badge: { label: 'Pronto', ...SOON } })
   if (auth.hasPermission?.('categories.view')) services.push({ label: 'Categorías', icon: 'i-lucide-tags', to: '/admin/v2/categories' })
   if (auth.hasPermission?.('languages.view')) services.push({ label: 'Idiomas', icon: 'i-lucide-languages', to: '/admin/v2/languages' })
-  services.push({ label: 'Paquetes', icon: 'i-lucide-package', to: '/admin/packages', badge: { label: 'Pronto', ...SOON } })
   services.push({ label: 'Página de inicio', icon: 'i-lucide-house', to: '/admin/v2/pages/home' })
   services.push({ label: 'Menú', icon: 'i-lucide-menu', to: '/admin/v2/pages/menu' })
-
-  // Sección "Finanzas"
-  const finance = [
-    { label: 'Pagos', icon: 'i-lucide-credit-card', to: '/admin/payments', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Reservas Rápidas (Culqi)', icon: 'i-lucide-zap', to: '/admin/quick-bookings', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Facturación', icon: 'i-lucide-receipt-text', to: '/admin/invoicing', badge: { label: 'Pronto', ...SOON } },
-  ]
-
-  // Sección "Operaciones"
-  const operations = [
-    { label: 'Calendario', icon: 'i-lucide-calendar-days', to: '/admin/calendar', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Disponibilidad', icon: 'i-lucide-calendar-check', to: '/admin/availability', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Proveedores', icon: 'i-lucide-store', to: '/admin/suppliers', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Guías y Recursos', icon: 'i-lucide-id-card', to: '/admin/guides', badge: { label: 'Pronto', ...SOON } },
-  ]
-
-  // Sección "Marketing"
-  const marketing = [
-    { label: 'Analytics', icon: 'i-lucide-chart-line', to: '/admin/analytics', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Preguntas Web', icon: 'i-lucide-circle-help', to: '/admin/web-questions', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Galería Web', icon: 'i-lucide-image', to: '/admin/web-gallery', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Reportes', icon: 'i-lucide-file-text', to: '/admin/reports', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Cupones', icon: 'i-lucide-ticket-percent', to: '/admin/coupons', badge: { label: 'Pronto', ...SOON } },
-  ]
-
-  // Sección "Transporte"
-  const transport = [
-    { label: 'Buses', icon: 'i-lucide-bus', to: '/admin/buses', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Aeropuerto', icon: 'i-lucide-plane', to: '/admin/airport', badge: { label: 'Pronto', ...SOON } },
-    { label: 'Traslados', icon: 'i-lucide-car', to: '/admin/transfers', badge: { label: 'Pronto', ...SOON } },
-  ]
-
-  // Integraciones / Configuración
-  const integrations = [
-    { label: 'OTA Manager', icon: 'i-lucide-globe', to: '/admin/ota-manager', badge: { label: 'Pronto', ...SOON } },
-  ]
 
   const settings: any[] = []
   if (auth.hasPermission?.('users.view')) settings.push({ label: 'Usuarios y Roles', icon: 'i-lucide-shield-user', to: '/admin/v2/users' })
   if (auth.hasPermission?.('settings.ai')) settings.push({ label: 'Traducción IA', icon: 'i-lucide-sparkles', to: '/admin/v2/settings/ai-translation', badge: { label: 'Nuevo', color: 'primary' as const, variant: 'subtle' as const } })
 
-  return { main, reservations, services, finance, operations, marketing, transport, integrations, settings }
+  // Todo lo futuro, plegado en un único grupo al fondo. Sigue visible (el
+  // roadmap comunica), pero ya no cuesta una pantalla de scroll.
+  const soon = [{
+    label: 'Próximamente',
+    icon: 'i-lucide-hourglass',
+    defaultOpen: false,
+    children: [
+      { label: 'Chatbot', icon: 'i-lucide-bot', to: '/admin/chatbot' },
+      { label: 'Productos', icon: 'i-lucide-shopping-bag', to: '/admin/products' },
+      { label: 'Paquetes', icon: 'i-lucide-package', to: '/admin/packages' },
+      { label: 'Pagos', icon: 'i-lucide-credit-card', to: '/admin/payments' },
+      { label: 'Reservas Rápidas (Culqi)', icon: 'i-lucide-zap', to: '/admin/quick-bookings' },
+      { label: 'Facturación', icon: 'i-lucide-receipt-text', to: '/admin/invoicing' },
+      { label: 'Calendario', icon: 'i-lucide-calendar-days', to: '/admin/calendar' },
+      { label: 'Disponibilidad', icon: 'i-lucide-calendar-check', to: '/admin/availability' },
+      { label: 'Proveedores', icon: 'i-lucide-store', to: '/admin/suppliers' },
+      { label: 'Guías y Recursos', icon: 'i-lucide-id-card', to: '/admin/guides' },
+      { label: 'Analytics', icon: 'i-lucide-chart-line', to: '/admin/analytics' },
+      { label: 'Preguntas Web', icon: 'i-lucide-circle-help', to: '/admin/web-questions' },
+      { label: 'Galería Web', icon: 'i-lucide-image', to: '/admin/web-gallery' },
+      { label: 'Reportes', icon: 'i-lucide-file-text', to: '/admin/reports' },
+      { label: 'Cupones', icon: 'i-lucide-ticket-percent', to: '/admin/coupons' },
+      { label: 'Buses', icon: 'i-lucide-bus', to: '/admin/buses' },
+      { label: 'Aeropuerto', icon: 'i-lucide-plane', to: '/admin/airport' },
+      { label: 'Traslados', icon: 'i-lucide-car', to: '/admin/transfers' },
+      { label: 'OTA Manager', icon: 'i-lucide-globe', to: '/admin/ota-manager' },
+    ],
+  }]
+
+  return { main, reservations, services, settings, soon }
 })
 
 const searchGroups = computed(() => [
@@ -167,7 +157,9 @@ const userMenuItems = computed(() => [
     {
       label: auth.user?.name || 'Administrador',
       type: 'label' as const,
-      avatar: { src: auth.user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${auth.user?.name || 'Admin'}` },
+      // Sin dicebear: iniciales locales via alt — nada de red externa ni de
+      // filtrar el nombre del usuario a un tercero.
+      avatar: { src: auth.user?.avatar || undefined, alt: auth.user?.name || 'Admin' },
     },
   ],
   [
@@ -229,31 +221,21 @@ const userMenuItems = computed(() => [
 
         <UNavigationMenu :collapsed="collapsed" :items="links.main" orientation="vertical" :ui="navUi" />
 
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Reservas</div>
+        <div v-if="!collapsed" class="px-3 pt-3 admin-label">Reservas</div>
         <UNavigationMenu :collapsed="collapsed" :items="links.reservations" orientation="vertical" :ui="navUi" />
 
-        <div v-if="!collapsed && links.services.length" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Servicios</div>
+        <div v-if="!collapsed && links.services.length" class="px-3 pt-3 admin-label">Servicios</div>
         <UNavigationMenu v-if="links.services.length" :collapsed="collapsed" :items="links.services" orientation="vertical" :ui="navUi" />
 
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Finanzas</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.finance" orientation="vertical" :ui="navUi" />
-
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Operaciones</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.operations" orientation="vertical" :ui="navUi" />
-
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Marketing</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.marketing" orientation="vertical" :ui="navUi" />
-
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Transporte</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.transport" orientation="vertical" :ui="navUi" />
-
-        <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Integraciones</div>
-        <UNavigationMenu :collapsed="collapsed" :items="links.integrations" orientation="vertical" :ui="navUi" />
-
         <template v-if="links.settings.length">
-          <div v-if="!collapsed" class="px-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted">Configuración</div>
+          <div v-if="!collapsed" class="px-3 pt-3 admin-label">Configuración</div>
           <UNavigationMenu :collapsed="collapsed" :items="links.settings" orientation="vertical" :ui="navUi" />
         </template>
+
+        <!-- Roadmap plegado: un grupo, no siete secciones de enlaces muertos. -->
+        <div class="mt-auto pt-3 border-t border-default">
+          <UNavigationMenu :collapsed="collapsed" :items="links.soon" orientation="vertical" :ui="navUi" />
+        </div>
       </template>
 
       <template #footer="{ collapsed }">
@@ -265,7 +247,8 @@ const userMenuItems = computed(() => [
             :class="collapsed ? 'justify-center' : 'justify-start'"
           >
             <UAvatar
-              :src="auth.user?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${auth.user?.name || 'Admin'}`"
+              :src="auth.user?.avatar || undefined"
+              :alt="auth.user?.name || 'Admin'"
               size="sm"
             />
             <template v-if="!collapsed">

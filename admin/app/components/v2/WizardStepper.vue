@@ -1,12 +1,51 @@
 <script setup lang="ts">
 import { useTourWizardStore } from '~/stores/tourWizard'
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 // `bare` drops the row chrome (border/bg/padding) so the stepper can live
 // inside the dashboard navbar, which provides its own spacing.
 withDefaults(defineProps<{ bare?: boolean }>(), { bare: false })
 
 const store = useTourWizardStore()
+
+// --- Overflow affordance ----------------------------------------------------
+// At laptop widths the 9 steps don't fit and the row scrolls — but nothing
+// SAID so: on a 1366 screen the stepper simply ended at step 7 and operators
+// had no cue that Disponibilidad/Revisión existed. Edge fades appear when
+// there is more content on that side, and the current step keeps itself
+// scrolled into view.
+const scroller = ref<HTMLElement | null>(null)
+const canLeft = ref(false)
+const canRight = ref(false)
+
+const updateEdges = () => {
+  const el = scroller.value
+  if (!el) return
+  canLeft.value = el.scrollLeft > 4
+  canRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+}
+
+const scrollCurrentIntoView = () => {
+  nextTick(() => {
+    scroller.value
+      ?.querySelector<HTMLElement>('[data-current="true"]')
+      ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  })
+}
+
+let ro: ResizeObserver | null = null
+onMounted(() => {
+  updateEdges()
+  scrollCurrentIntoView()
+  ro = new ResizeObserver(updateEdges)
+  if (scroller.value) ro.observe(scroller.value)
+})
+onBeforeUnmount(() => ro?.disconnect())
+
+watch(() => store.currentStep, () => {
+  scrollCurrentIntoView()
+  nextTick(updateEdges)
+})
 
 const steps = [
   { id: 1, label: 'Información', shortLabel: 'Info', icon: 'i-lucide-info' },
@@ -33,8 +72,11 @@ const dataStatus = (id: number): 'complete' | 'empty' | undefined =>
 </script>
 
 <template>
-  <div :class="bare ? 'w-full min-w-0 overflow-x-auto' : 'border-b border-default bg-elevated/20 px-4 lg:px-6 py-2.5'">
-    <ol class="flex items-center gap-1 overflow-x-auto">
+  <!-- Below md the navbar's right-side buttons squeeze this slot to zero width
+       anyway, so the stepper hides deliberately and the step dropdown in the
+       wizard's bottom bar takes over as navigator. -->
+  <div :class="bare ? 'hidden md:block relative w-full min-w-0' : 'relative border-b border-default bg-elevated/20 px-4 lg:px-6 py-2.5'">
+    <ol ref="scroller" class="flex items-center gap-1 overflow-x-auto" @scroll.passive="updateEdges">
       <li
         v-for="(step, idx) in steps"
         :key="step.id"
@@ -43,6 +85,7 @@ const dataStatus = (id: number): 'complete' | 'empty' | undefined =>
         <button
           type="button"
           class="group flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all hover:bg-elevated"
+          :data-current="stepState(step.id) === 'current'"
           @click="store.goToStep(step.id)"
         >
           <!-- Circle -->
@@ -102,5 +145,21 @@ const dataStatus = (id: number): 'complete' | 'empty' | undefined =>
         />
       </li>
     </ol>
+
+    <!-- Edge fades: visible only when hay más pasos hacia ese lado. -->
+    <div
+      v-if="canLeft"
+      class="pointer-events-none absolute inset-y-0 left-0 w-8 flex items-center"
+      style="background: linear-gradient(to right, var(--ui-bg), transparent)"
+    >
+      <UIcon name="i-lucide-chevron-left" class="size-3.5 text-muted" />
+    </div>
+    <div
+      v-if="canRight"
+      class="pointer-events-none absolute inset-y-0 right-0 w-8 flex items-center justify-end"
+      style="background: linear-gradient(to left, var(--ui-bg), transparent)"
+    >
+      <UIcon name="i-lucide-chevron-right" class="size-3.5 text-muted" />
+    </div>
   </div>
 </template>

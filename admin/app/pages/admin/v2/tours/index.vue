@@ -454,33 +454,40 @@ onMounted(() => {
           <!-- Tour rows -->
           <ul v-else class="divide-y divide-default">
             <li v-for="tour in tours" :key="tour.id">
-              <!-- Tour main row -->
+              <!-- Tour main row. Two groups so phones get TWO lines (title at
+                   full width, chips beneath) instead of the fixed right-side
+                   controls crushing the flexible column until the title
+                   truncated to nothing and rows became indistinguishable. -->
               <div
-                class="px-5 py-3 flex items-center gap-3 hover:bg-elevated/50 transition-colors cursor-pointer"
+                class="px-4 sm:px-5 py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 hover:bg-elevated/50 transition-colors cursor-pointer"
                 @click="toggleExpand(tour.id)"
               >
-                <UAvatar
-                  v-if="tour.thumbnail"
-                  :src="tour.thumbnail"
-                  size="md"
-                  :ui="{ root: 'rounded-lg' }"
-                />
-                <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
-                  <UIcon name="i-lucide-image" class="size-5 text-muted" />
-                </div>
-
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <p class="text-sm font-bold truncate">{{ getTourReferenceName(tour) }}</p>
-                    <UBadge color="neutral" variant="subtle" size="xs" class="font-mono">{{ tour.code }}</UBadge>
+                <div class="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
+                  <UAvatar
+                    v-if="tour.thumbnail"
+                    :src="tour.thumbnail"
+                    size="md"
+                    :ui="{ root: 'rounded-lg' }"
+                  />
+                  <div v-else class="size-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
+                    <UIcon name="i-lucide-image" class="size-5 text-muted" />
                   </div>
-                  <p class="text-[10px] text-muted font-bold uppercase tracking-wider mt-0.5">
-                    {{ tour.service_type }} ·
-                    {{ (tour.translations_summary || []).length }}
-                    {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}
-                  </p>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <p class="text-sm font-bold truncate">{{ getTourReferenceName(tour) }}</p>
+                      <UBadge color="neutral" variant="subtle" size="xs" class="font-mono shrink-0">{{ tour.code }}</UBadge>
+                    </div>
+                    <p class="text-[10px] text-muted font-bold uppercase tracking-wider mt-0.5 truncate">
+                      {{ tour.service_type }} ·
+                      {{ (tour.translations_summary || []).length }}
+                      {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}
+                    </p>
+                  </div>
                 </div>
 
+                <!-- pl aligns the second line with the title above (40px thumb + 12px gap) -->
+                <div class="flex items-center gap-2 flex-wrap pl-[52px] sm:pl-0 sm:shrink-0" @click.stop="toggleExpand(tour.id)">
                 <UBadge
                   :color="statusBadge(tour.status).color"
                   variant="subtle"
@@ -546,6 +553,7 @@ onMounted(() => {
                   class="size-4 text-muted transition-transform"
                   :class="{ 'rotate-180': expandedTours.has(tour.id) }"
                 />
+                </div>
               </div>
 
               <!-- Translations (expanded) -->

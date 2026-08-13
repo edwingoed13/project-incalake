@@ -214,6 +214,17 @@ const stepLabels = [
 
 const currentStepLabel = computed(() => stepLabels.find(s => s.id === store.currentStep) || stepLabels[0])
 
+// Menu del salto de pasos (barra inferior): un item por paso, con marca en el
+// actual. Reusa stepLabels para no duplicar títulos.
+const stepMenuItems = computed(() => [
+  stepLabels.map(s => ({
+    label: `${s.id}. ${s.title}`,
+    icon: s.id === store.currentStep ? 'i-lucide-circle-dot' : undefined,
+    color: s.id === store.currentStep ? ('primary' as const) : undefined,
+    onSelect: () => store.goToStep(s.id),
+  })),
+])
+
 const autosaveLabel = computed(() => {
   if (store.autosaving) return 'Guardando...'
   // isDirty MUST be checked before lastSavedAt. After the first save
@@ -803,7 +814,15 @@ onBeforeUnmount(() => {
                 Anterior
               </UButton>
 
-              <span class="text-xs text-muted tabular-nums">Paso {{ store.currentStep }} de {{ store.totalSteps }}</span>
+              <!-- Salto directo entre pasos. En movil el stepper del navbar no
+                   existe (lo aplastan los botones), asi que sin esto llegar al
+                   paso 8 eran siete toques de «Siguiente». -->
+              <UDropdownMenu :items="stepMenuItems" :content="{ align: 'center', side: 'top' }">
+                <UButton color="neutral" variant="ghost" size="sm" trailing-icon="i-lucide-chevrons-up-down" class="tabular-nums whitespace-nowrap shrink-0">
+                  Paso {{ store.currentStep }} de {{ store.totalSteps }}
+                  <span class="hidden sm:inline text-muted font-normal">· {{ currentStepLabel?.title }}</span>
+                </UButton>
+              </UDropdownMenu>
 
               <UButton
                 v-if="store.currentStep < store.totalSteps"

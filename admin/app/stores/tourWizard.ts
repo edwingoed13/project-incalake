@@ -319,7 +319,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
     autosaveError: null as string | null,
     lastSavedAt: null as number | null,
     tourId: null as string | null,
-    currentLanguage: 'en',
+    // El negocio es primero-español: sin ?lang en la URL el editor abría en
+    // inglés, evaluaba la calidad sobre la traducción EN (casi siempre vacía)
+    // y mostraba avisos SEO de un idioma que no es el principal.
+    currentLanguage: 'es',
     availableLanguages: [] as any[],
 
     // --- Draft buffer (published tours only) ------------------------------
@@ -934,6 +937,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
           // through or parks in the draft buffer, so it must come from the
           // server response and not from the (editable) form field.
           this.persistedStatus = data.status || 'draft'
+
+          // Abrir en el idioma primario del tour. edit.vue re-aplica ?lang
+          // después de este fetch, así que un enlace explícito sigue ganando.
+          const primaryCode = (data.primary_language?.code || '').toLowerCase()
+          if (primaryCode) this.currentLanguage = primaryCode
 
           // Important: Reset isDirty after initial load
           nextTick(() => {
