@@ -38,7 +38,12 @@ export const useGooglePlaces = () => {
 
       // Create and load script
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`
+      // The library list must match every other loader in the admin. Google
+      // Maps only honours the libraries requested by whichever script wins the
+      // race, so a loader asking for less silently disables features elsewhere:
+      // this one runs first (step 1 city search) and used to leave step 6
+      // without google.maps.drawing, so the pickup area could not be drawn.
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,drawing,geometry&callback=initGooglePlaces`
       script.async = true
       script.defer = true
 

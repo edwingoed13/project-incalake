@@ -84,10 +84,19 @@
 
                 <!-- Zona dibujada -->
                 <div v-else class="space-y-3">
+                  <div v-if="drawingUnavailable" class="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
+                    <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                      No se pudo cargar la herramienta de dibujo
+                    </p>
+                    <p class="text-[10px] text-amber-800/90 dark:text-amber-200/80 mt-1 leading-relaxed">
+                      Recarga la página con Ctrl+Shift+R y vuelve a abrir este mapa. Google Maps quedó
+                      cargado en esta pestaña sin el módulo de dibujo.
+                    </p>
+                  </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                    Usa la herramienta de polígono del mapa: haz clic en cada esquina y cierra la figura
-                    en el primer punto. Después puedes arrastrar los vértices para ajustarla.
-                    Puedes dibujar más de una zona.
+                    Pulsa el icono de polígono en la barra superior del mapa. Después haz clic en cada
+                    esquina de la zona y cierra la figura haciendo clic otra vez sobre el primer punto.
+                    Luego puedes arrastrar los vértices para ajustarla. Puedes dibujar más de una zona.
                   </p>
                   <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
                     <div>
@@ -423,15 +432,44 @@ const restorePolygons = () => {
 }
 
 /**
+ * google.maps.drawing only exists if the script that booted Maps asked for it,
+ * and Maps honours only the first loader that wins the race. Every admin loader
+ * now requests the same list, but a tab holding the old cached script would
+ * still come up without it — so try to pull it in after the fact.
+ */
+const drawingUnavailable = ref(false)
+
+const ensureDrawingLibrary = async (): Promise<boolean> => {
+  const google = (window as any).google
+  if (google?.maps?.drawing) return true
+
+  if (typeof google?.maps?.importLibrary === 'function') {
+    try {
+      await google.maps.importLibrary('drawing')
+      return !!google.maps.drawing
+    } catch { /* fall through to the visible warning */ }
+  }
+
+  return false
+}
+
+/**
  * Show only the shape that matches the selected mode, and let the drawing tool
  * run only in polygon mode — leaving it armed in radius mode would let someone
  * draw an area the tour will never use.
  */
-const applyAreaMode = () => {
+const applyAreaMode = async () => {
   const google = (window as any).google
   if (!google || props.type !== 'hotel_pickup') return
 
   const drawing = localAreaType.value === 'polygon'
+
+  if (drawing && !(await ensureDrawingLibrary())) {
+    // Better a stated reason than a map that just shows a dot.
+    drawingUnavailable.value = true
+    return
+  }
+  drawingUnavailable.value = false
 
   if (circle.value) circle.value.setMap(drawing ? null : map.value)
   if (marker.value) marker.value.setMap(drawing ? null : map.value)

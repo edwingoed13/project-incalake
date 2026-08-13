@@ -557,7 +557,11 @@ const removeDay = (index: number) => {
 const initMap = async () => {
   if (typeof (window as any).google === 'undefined') {
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCC2CAVXwufsdT5TX3UPk7hZ3HHw3NZl_c&libraries=places`
+    // Same library list as every other loader — see useGooglePlaces. Key from
+    // runtime config, with the previous literal as a fallback so no map goes
+    // dark where the env var isn't set yet.
+    const mapsKey = (useRuntimeConfig().public as any).googleMapsApiKey || 'AIzaSyCC2CAVXwufsdT5TX3UPk7hZ3HHw3NZl_c'
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${mapsKey}&libraries=places,drawing,geometry`
     script.onload = () => setupMap()
     document.head.appendChild(script)
   } else {
