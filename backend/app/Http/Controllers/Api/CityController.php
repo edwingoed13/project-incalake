@@ -45,7 +45,7 @@ class CityController extends Controller
                         ->orderBy('name')
                         ->limit(20)
                         ->get();
-                    return $cities->toArray();
+                    return $this->withCityImages($cities->toArray());
                 });
                 return response()->json(['success' => true, 'data' => $data]);
             }
@@ -54,12 +54,14 @@ class CityController extends Controller
             if (!$isAdminQuery) {
                 $lang = (string) $request->query('language', 'ES');
                 $data = $this->cacheService->getPublicCities($lang, function () {
-                    return City::query()
-                        ->where('active', true)
-                        ->orderBy('name')
-                        ->limit(20)
-                        ->get()
-                        ->toArray();
+                    return $this->withCityImages(
+                        City::query()
+                            ->where('active', true)
+                            ->orderBy('name')
+                            ->limit(20)
+                            ->get()
+                            ->toArray()
+                    );
                 });
                 return response()->json(['success' => true, 'data' => $data]);
             }
@@ -90,6 +92,42 @@ class CityController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Attach a representative photo to each city: the featured image of its
+     * newest published tour.
+     *
+     * Cities have no image column, so the home page's destination grid used a
+     * hardcoded map of Unsplash URLs — Puno and Copacabana shared one photo,
+     * Cusco and Juliaca both showed Machu Picchu, and the fallback repeated
+     * Puno's. This way the tile shows Incalake's own photography and follows
+     * the catalog without anyone maintaining a second list. One extra query;
+     * the result rides the same cache as the city list.
+     */
+    private function withCityImages(array $cities): array
+    {
+        $ids = array_values(array_filter(array_column($cities, 'id')));
+        if (!$ids) {
+            return $cities;
+        }
+
+        $images = \App\Models\Tour::query()
+            ->whereIn('city_id', $ids)
+            ->where('active', true)
+            ->where('status', 'published')
+            ->whereNotNull('featured_image')
+            ->where('featured_image', '!=', '')
+            // Ascending: pluck keys by city_id and each row overwrites the
+            // previous, so the LAST one written — the newest tour — wins.
+            ->orderBy('id')
+            ->pluck('featured_image', 'city_id');
+
+        foreach ($cities as &$city) {
+            $city['image'] = $images[$city['id']] ?? null;
+        }
+
+        return $cities;
     }
 
     /**
