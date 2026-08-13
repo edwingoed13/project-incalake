@@ -44,6 +44,21 @@ class PruneOrphanTourImages extends Command
         'tour_translations' => ['og_image_path', 'twitter_image_path'],
     ];
 
+    /**
+     * Tables whose free text and JSON can embed an image path rather than hold
+     * it in a column of its own.
+     *
+     * The rich-text editor uploads to tours/temp/ and drops the returned URL
+     * straight into the description HTML; meeting points keep theirs inside a
+     * JSON blob. Neither is a path column, so scanning only the list above
+     * declared those images orphaned — this command would have deleted content
+     * that pages were actively displaying.
+     */
+    private const SCANNED_TABLES = ['tour_translations', 'tours'];
+
+    /** Any tours/… path appearing inside text, wherever it sits. */
+    private const PATH_PATTERN = '#tours/[A-Za-z0-9_\-./%()\x{00C0}-\x{024F} ]+?\.[A-Za-z0-9]{2,5}#u';
+
     public function handle(): int
     {
         $days = max(0, (int) $this->option('days'));
@@ -201,7 +216,58 @@ class PruneOrphanTourImages extends Command
             }
         }
 
+        $this->collectEmbeddedPaths($paths);
+
         return $this->referencedCache = $paths;
+    }
+
+    /**
+     * Pull tours/… paths out of every text-ish column of the scanned tables.
+     *
+     * Deliberately broad rather than a curated column list: a new rich-text
+     * field or JSON blob holding an image would otherwise silently become
+     * deletable, and the cost of a false "referenced" is a file kept, while
+     * the cost of a miss is a photo gone from a live page.
+     */
+    private function collectEmbeddedPaths(\Illuminate\Support\Collection $paths): void
+    {
+        foreach (self::SCANNED_TABLES as $table) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+                continue;
+            }
+
+            $columns = [];
+            foreach (\Illuminate\Support\Facades\Schema::getColumnListing($table) as $column) {
+                $type = \Illuminate\Support\Facades\Schema::getColumnType($table, $column);
+                if (in_array($type, ['text', 'string', 'json', 'longtext', 'mediumtext'], true)) {
+                    $columns[] = $column;
+                }
+            }
+            if (empty($columns)) {
+                continue;
+            }
+
+            // Chunked: descriptions carry a lot of HTML and these tables hold
+            // one row per tour per language.
+            DB::table($table)->select($columns)->orderBy(
+                \Illuminate\Support\Facades\Schema::hasColumn($table, 'id') ? 'id' : $columns[0]
+            )->chunk(200, function ($rows) use ($paths) {
+                foreach ($rows as $row) {
+                    foreach ((array) $row as $value) {
+                        if (!is_string($value) || $value === '' || !str_contains($value, 'tours/')) {
+                            continue;
+                        }
+                        if (preg_match_all(self::PATH_PATTERN, $value, $matches)) {
+                            foreach ($matches[0] as $match) {
+                                // Editor URLs arrive percent-encoded and often
+                                // absolute; store what the disk listing shows.
+                                $paths->put(ltrim(urldecode($match), '/'), true);
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private function humanBytes(int $bytes): string

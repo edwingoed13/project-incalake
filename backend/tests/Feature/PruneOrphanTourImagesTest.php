@@ -74,6 +74,52 @@ class PruneOrphanTourImagesTest extends TestCase
         }
     }
 
+    public function test_never_deletes_an_image_embedded_in_description_html(): void
+    {
+        // The rich-text editor uploads to tours/temp/ and puts the URL straight
+        // into the HTML. No path column holds it, so scanning columns alone
+        // declared it an orphan and deleted a picture a live page was showing.
+        Storage::fake('public');
+        $tour = Tour::factory()->create();
+        $this->gallery($tour, "tours/{$tour->id}/keep.jpg");
+        $this->agedFile("tours/{$tour->id}/keep.jpg");
+        $this->agedFile('tours/temp/en-el-html.jpg');
+
+        DB::table('tour_translations')->insert([
+            'tour_id' => $tour->id,
+            'language_id' => $tour->primary_language_id,
+            'slug' => 'con-imagen',
+            'h1_title' => 'Con imagen',
+            'meta_title' => 'Con imagen',
+            'meta_description' => 'Con imagen',
+            'long_description' => '<p>Mira</p><img src="https://api.incalake.com/storage/tours/temp/en-el-html.jpg" alt="x">',
+        ]);
+
+        $this->artisan('tours:prune-images', ['--force' => true])->assertExitCode(0);
+
+        Storage::disk('public')->assertExists('tours/temp/en-el-html.jpg');
+    }
+
+    public function test_never_deletes_an_image_referenced_from_json(): void
+    {
+        // Meeting points keep their reference photo inside a JSON blob.
+        Storage::fake('public');
+        $tour = Tour::factory()->create();
+        $this->gallery($tour, "tours/{$tour->id}/keep.jpg");
+        $this->agedFile("tours/{$tour->id}/keep.jpg");
+        $this->agedFile("tours/{$tour->id}/punto-encuentro.jpg");
+
+        DB::table('tours')->where('id', $tour->id)->update([
+            'meeting_points' => json_encode([
+                ['lat' => -15.84, 'lng' => -70.02, 'image' => "tours/{$tour->id}/punto-encuentro.jpg"],
+            ]),
+        ]);
+
+        $this->artisan('tours:prune-images', ['--force' => true])->assertExitCode(0);
+
+        Storage::disk('public')->assertExists("tours/{$tour->id}/punto-encuentro.jpg");
+    }
+
     public function test_leaves_recent_files_alone(): void
     {
         Storage::fake('public');
