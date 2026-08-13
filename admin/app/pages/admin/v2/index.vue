@@ -118,40 +118,49 @@ const trendIcon = (trend: number) =>
 // Dashboard endpoints are admin-gated server-side now.
 const dashHeaders = () => ({ Authorization: `Bearer ${authStore.token || localStorage.getItem('auth_token') || ''}` })
 
+// Error explícito por sección. Antes, un fetch fallido apagaba el skeleton y
+// dejaba CEROS presentados como datos reales — «$0 en ventas», «Sin ventas en
+// los últimos 12 meses» — cuando lo cierto era «no se pudo cargar». El único
+// aviso era un toast que caducaba a los segundos.
+const statsError = ref(false)
+const bookingsError = ref(false)
+const chartError = ref(false)
+const anyError = computed(() => statsError.value || bookingsError.value || chartError.value)
+
 const fetchStats = async () => {
+  statsError.value = false
   try {
     const data = await $fetch<DashboardStats>(`${apiUrl}/dashboard/stats`, { headers: dashHeaders() })
     dashboardData.value = data
   } catch (error) {
     console.error('Error loading dashboard stats:', error)
-    toast.add({
-      title: 'Error al cargar estadísticas',
-      description: 'No se pudieron obtener los datos del dashboard.',
-      icon: 'i-lucide-alert-triangle',
-      color: 'error',
-    })
+    statsError.value = true
   } finally {
     loading.value = false
   }
 }
 
 const fetchRecentBookings = async () => {
+  bookingsError.value = false
   try {
     const data = await $fetch<RecentBooking[]>(`${apiUrl}/dashboard/recent-bookings`, { headers: dashHeaders() })
     recentBookings.value = data || []
   } catch (error) {
     console.error('Error loading recent bookings:', error)
+    bookingsError.value = true
   } finally {
     loadingBookings.value = false
   }
 }
 
 const fetchSalesChart = async () => {
+  chartError.value = false
   try {
     const data = await $fetch<SalesChartResponse>(`${apiUrl}/dashboard/sales-chart`, { headers: dashHeaders() })
     salesChart.value = data
   } catch (error) {
     console.error('Error loading sales chart:', error)
+    chartError.value = true
   } finally {
     loadingChart.value = false
   }
@@ -230,6 +239,18 @@ const greeting = computed(() => {
           </UBadge>
         </div>
 
+        <!-- Fallo de carga: visible y con reintento, no un toast que caduca.
+             Las secciones que fallaron muestran «—», nunca ceros falsos. -->
+        <UAlert
+          v-if="anyError"
+          color="error"
+          variant="subtle"
+          icon="i-lucide-wifi-off"
+          title="No se pudieron cargar algunos datos"
+          description="Puede ser un problema de conexión. Los valores afectados se muestran como «—»."
+          :actions="[{ label: 'Reintentar', color: 'error', variant: 'solid', size: 'xs', onClick: () => refreshAll() }]"
+        />
+
         <!-- KPIs. Revenue is the headline metric, so it's visually elevated
              (spans 2 cols until xl, primary ring + tint, larger number) while
              the rest stay equal weight — gives the page a clear scanning
@@ -246,12 +267,12 @@ const greeting = computed(() => {
               <div class="space-y-2 min-w-0">
                 <p class="admin-label">{{ stat.label }}</p>
                 <USkeleton v-if="loading" class="h-9 w-28" />
-                <p v-else class="font-black tabular-nums truncate" :class="stat.key === 'revenue' ? 'text-4xl text-primary' : 'text-3xl text-highlighted'">{{ stat.value }}</p>
+                <p v-else class="font-black tabular-nums truncate" :class="stat.key === 'revenue' ? 'text-4xl text-primary' : 'text-3xl text-highlighted'">{{ statsError ? '—' : stat.value }}</p>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <UBadge v-if="!loading" :color="trendColor(stat.trend)" variant="subtle" size="sm" :icon="trendIcon(stat.trend)">
+                  <UBadge v-if="!loading && !statsError" :color="trendColor(stat.trend)" variant="subtle" size="sm" :icon="trendIcon(stat.trend)">
                     {{ formatTrend(stat.trend) }}
                   </UBadge>
-                  <span v-if="stat.subtitle && !loading && stat.key !== 'revenue'" class="text-xs text-muted truncate">{{ stat.subtitle }}</span>
+                  <span v-if="stat.subtitle && !loading && !statsError && stat.key !== 'revenue'" class="text-xs text-muted truncate">{{ stat.subtitle }}</span>
                 </div>
               </div>
               <div :class="['size-11 rounded-xl flex items-center justify-center shrink-0', stat.bgClass]">
@@ -270,7 +291,9 @@ const greeting = computed(() => {
                   <h3 class="admin-h3">Ventas mensuales</h3>
                   <p class="text-xs text-muted mt-0.5">Últimos 12 meses · reservas pagadas</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <!-- Ocultos en error: un «$0» junto a «no se pudo cargar» se
+                     leería como dato real. -->
+                <div v-if="!chartError" class="flex items-center gap-2">
                   <UBadge color="success" variant="subtle" icon="i-lucide-dollar-sign" size="md">
                     {{ formatCurrency(salesChart.totals.revenue) }}
                   </UBadge>
@@ -284,6 +307,15 @@ const greeting = computed(() => {
             <div class="h-72 flex flex-col">
               <div v-if="loadingChart" class="flex-1 flex items-end justify-around gap-2 px-2">
                 <USkeleton v-for="i in 12" :key="i" class="flex-1" :style="{ height: `${30 + (i * 7) % 60}%` }" />
+              </div>
+
+              <!-- Error ≠ vacío: «sin ventas» solo puede afirmarse con datos. -->
+              <div v-else-if="chartError" class="flex-1 flex flex-col items-center justify-center text-center gap-1">
+                <div class="size-12 rounded-full bg-error/10 flex items-center justify-center mb-1">
+                  <UIcon name="i-lucide-wifi-off" class="size-6 text-error" />
+                </div>
+                <p class="text-sm font-semibold text-highlighted">No se pudo cargar la gráfica</p>
+                <p class="text-xs text-muted">Usa «Reintentar» arriba.</p>
               </div>
 
               <!-- Empty: no paid bookings in the whole 12-month window -->
@@ -351,6 +383,14 @@ const greeting = computed(() => {
                   <USkeleton class="h-2 w-24" />
                 </div>
               </div>
+            </div>
+
+            <div v-else-if="bookingsError" class="flex flex-col items-center justify-center py-10 text-center gap-1">
+              <div class="size-12 rounded-full bg-error/10 flex items-center justify-center mb-1">
+                <UIcon name="i-lucide-wifi-off" class="size-6 text-error" />
+              </div>
+              <p class="text-sm font-semibold text-highlighted">No se pudieron cargar las reservas</p>
+              <p class="text-xs text-muted">Usa «Reintentar» arriba.</p>
             </div>
 
             <div v-else-if="recentBookings.length === 0" class="flex flex-col items-center justify-center py-10 text-center gap-1">

@@ -212,8 +212,11 @@ const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
 })
 
+const loadError = ref(false)
+
 const loadBookings = async () => {
   loading.value = true
+  loadError.value = false
   rowSelection.value = {} // selection is page-local; reset on every (re)load
   try {
     const params = new URLSearchParams({
@@ -251,12 +254,10 @@ const loadBookings = async () => {
       .toFixed(2)
   } catch (err) {
     console.error('Error loading bookings:', err)
-    toast.add({
-      title: 'Error',
-      description: 'No se pudieron cargar las reservas.',
-      color: 'error',
-      icon: 'i-lucide-alert-triangle',
-    })
+    // Persistente, no solo un toast: sin esto, un fetch fallido dejaba el
+    // estado vacío diciendo «No hay reservas con los filtros seleccionados»
+    // — una afirmación falsa con los filtros en «Todos».
+    loadError.value = true
   } finally {
     loading.value = false
   }
@@ -672,7 +673,16 @@ onMounted(() => {
             </template>
 
             <template #empty>
-              <div class="py-12 flex flex-col items-center text-center gap-3">
+              <!-- Error ≠ vacío: «no hay reservas» solo se afirma con datos. -->
+              <div v-if="loadError" class="py-12 flex flex-col items-center text-center gap-3">
+                <UIcon name="i-lucide-wifi-off" class="size-12 text-error" />
+                <p class="text-sm text-highlighted font-semibold">No se pudieron cargar las reservas</p>
+                <p class="text-xs text-muted -mt-2">Puede ser un problema de conexión.</p>
+                <UButton variant="outline" size="sm" icon="i-lucide-refresh-cw" @click="loadBookings">
+                  Reintentar
+                </UButton>
+              </div>
+              <div v-else class="py-12 flex flex-col items-center text-center gap-3">
                 <UIcon name="i-lucide-inbox" class="size-12 text-muted" />
                 <p class="text-sm text-muted">No hay reservas con los filtros seleccionados.</p>
                 <UButton v-if="hasActiveFilters" variant="outline" size="sm" @click="resetFilters">
@@ -690,6 +700,14 @@ onMounted(() => {
             <!-- Loading skeletons -->
             <div v-if="loading" class="p-3 space-y-3">
               <USkeleton v-for="i in 5" :key="'sk-' + i" class="h-28 w-full rounded-xl" />
+            </div>
+            <!-- Error -->
+            <div v-else-if="loadError" class="py-12 flex flex-col items-center text-center gap-3 px-4">
+              <UIcon name="i-lucide-wifi-off" class="size-12 text-error" />
+              <p class="text-sm text-highlighted font-semibold">No se pudieron cargar las reservas</p>
+              <UButton variant="outline" size="sm" icon="i-lucide-refresh-cw" @click="loadBookings">
+                Reintentar
+              </UButton>
             </div>
             <!-- Empty -->
             <div v-else-if="!bookings.length" class="py-12 flex flex-col items-center text-center gap-3 px-4">

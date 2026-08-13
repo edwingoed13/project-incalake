@@ -12,7 +12,7 @@
         :disabled="store.loading || store.autosaving"
         @click="publishTour"
       >
-        {{ store.basicInfo.status === 'published' ? 'Actualizar' : 'Publicar' }}
+        {{ store.persistedStatus === 'published' ? 'Actualizar' : 'Publicar' }}
       </UButton>
       <UButton
         icon="i-lucide-arrow-left"
@@ -221,7 +221,7 @@ const cancel = async () => {
 const publishing = ref(false)
 
 const publishTour = async () => {
-  const wasPublished = store.basicInfo.status === 'published'
+  const wasPublished = store.persistedStatus === 'published'
   const ok = await confirm({
     title: wasPublished ? 'Actualizar publicación' : 'Publicar tour',
     description: wasPublished

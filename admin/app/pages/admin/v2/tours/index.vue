@@ -132,10 +132,46 @@ const toggleExpand = (tourId: number) => {
   expandedTours.value = next
 }
 
+const loadError = ref(false)
+
+// Preferencias del listado, recordadas por navegador. per_page fijo en 10
+// significaba 29 páginas para recorrer los 290 tours de producción.
+const perPageOptions = [
+  { label: '10 / pág.', value: 10 },
+  { label: '25 / pág.', value: 25 },
+  { label: '50 / pág.', value: 50 },
+]
+const sortOptions = [
+  { label: 'Recientes', value: 'created_at:desc' },
+  { label: 'Últ. modificación', value: 'updated_at:desc' },
+  { label: 'Código A-Z', value: 'code:asc' },
+  { label: 'Estado', value: 'status:asc' },
+  { label: 'Capacidad', value: 'capacity:desc' },
+]
+const perPage = ref<number>(Number(localStorage.getItem('tours:perPage')) || 10)
+const sortKey = ref<string>(localStorage.getItem('tours:sort') || 'created_at:desc')
+
+const onListPrefsChange = () => {
+  try {
+    localStorage.setItem('tours:perPage', String(perPage.value))
+    localStorage.setItem('tours:sort', sortKey.value)
+  } catch { /* almacenamiento lleno o bloqueado — no es fatal */ }
+  currentPage.value = 1
+  fetchTours(1, searchQuery.value)
+}
+
 const fetchTours = async (page = 1, search = '') => {
   loading.value = true
+  loadError.value = false
   try {
-    const params = new URLSearchParams({ page: String(page), per_page: '10', search })
+    const [sortBy, sortOrder] = sortKey.value.split(':')
+    const params = new URLSearchParams({
+      page: String(page),
+      per_page: String(perPage.value),
+      search,
+      sort_by: sortBy || 'created_at',
+      sort_order: sortOrder || 'desc',
+    })
     if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
     // Authenticated: /tours only returns published tours to anonymous callers
     // now, so without the token the admin list would show no drafts at all.
@@ -147,7 +183,7 @@ const fetchTours = async (page = 1, search = '') => {
     }
   } catch (err) {
     console.error('Error fetching tours:', err)
-    toast.add({ title: 'Error', description: 'No se pudieron cargar los tours.', color: 'error', icon: 'i-lucide-alert-triangle' })
+    loadError.value = true
   } finally {
     loading.value = false
   }
@@ -385,12 +421,31 @@ onMounted(() => {
               <span v-else>Cargando...</span>
             </p>
           </div>
+          <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <!-- 290 tours de 10 en 10 eran 29 páginas de clics: orden y tamaño
+                 de página, recordados por navegador. -->
+            <USelect
+              v-model="sortKey"
+              :items="sortOptions"
+              size="lg"
+              class="w-44"
+              icon="i-lucide-arrow-up-down"
+              @update:model-value="onListPrefsChange"
+            />
+            <USelect
+              v-model="perPage"
+              :items="perPageOptions"
+              size="lg"
+              class="w-36"
+              icon="i-lucide-rows-3"
+              @update:model-value="onListPrefsChange"
+            />
           <UInput
             v-model="searchQuery"
             placeholder="Buscar por título o código..."
             icon="i-lucide-search"
             size="lg"
-            class="w-full sm:w-96"
+            class="w-full sm:w-80"
             @input="debounceSearch"
           >
             <template v-if="searchQuery" #trailing>
@@ -403,6 +458,7 @@ onMounted(() => {
               />
             </template>
           </UInput>
+          </div>
         </div>
 
         <!-- Status filter tabs -->
@@ -440,6 +496,15 @@ onMounted(() => {
               </div>
               <USkeleton class="h-6 w-20" />
             </div>
+          </div>
+
+          <!-- Error ≠ vacío -->
+          <div v-else-if="loadError" class="p-12 flex flex-col items-center text-center gap-3">
+            <UIcon name="i-lucide-wifi-off" class="size-12 text-error" />
+            <p class="text-sm text-highlighted font-semibold">No se pudieron cargar los tours</p>
+            <UButton variant="outline" size="sm" icon="i-lucide-refresh-cw" @click="fetchTours(currentPage, searchQuery)">
+              Reintentar
+            </UButton>
           </div>
 
           <!-- Empty state -->

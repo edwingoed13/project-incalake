@@ -72,7 +72,7 @@ watch(previewUrl, (u) => { if (u) warmPreview() }, { immediate: true })
 // flow works below xl too, where the insights sidebar is hidden.
 const publishing = ref(false)
 const publishTour = async () => {
-  const wasPublished = store.basicInfo.status === 'published'
+  const wasPublished = store.persistedStatus === 'published'
   const ok = await confirm({
     title: wasPublished ? 'Actualizar publicación' : 'Publicar tour',
     description: wasPublished
@@ -511,6 +511,16 @@ watch(() => store.isDirty, (dirty) => {
 // above runs FIRST in its own watcher with the pre-switch state.)
 watch(() => store.currentStep, () => armDirtyTracking(400))
 
+// Señal determinista: cada componente de paso dispara @vue:mounted al terminar
+// su montaje (normalizaciones síncronas incluidas), y ahí re-armamos con un
+// margen mínimo. Los temporizadores de arriba se quedan como respaldo, pero ya
+// no son la única defensa: en máquinas lentas la ventana de 300-400ms se
+// quedaba corta, una normalización caía DESPUÉS del baseline y marcaba el
+// wizard como «sucio» sin que nadie tocara nada — en un tour publicado eso
+// significa un borrador espurio guardado solo. (Observado en la revisión:
+// toast «Todo guardado» sin ediciones.)
+const onStepMounted = () => armDirtyTracking(80)
+
 watch(() => store.isDirty, (dirty) => {
   if (dirty) editedThisSession = true
   if (autosaveTimer) {
@@ -659,7 +669,9 @@ onBeforeUnmount(() => {
             :disabled="store.loading || store.autosaving"
             @click="publishTour"
           >
-            {{ store.basicInfo.status === 'published' ? 'Actualizar' : 'Publicar' }}
+            <!-- persistedStatus, no el campo del formulario: el label debe
+                 reflejar lo que ESTÁ publicado, no lo que alguien tipea. -->
+            {{ store.persistedStatus === 'published' ? 'Actualizar' : 'Publicar' }}
           </UButton>
           <UButton
             to="/admin/v2/tours"
@@ -679,8 +691,20 @@ onBeforeUnmount(() => {
         <!-- Main content -->
         <main class="flex-1 flex flex-col min-h-0">
           <!-- Persistent status bar. Sits OUTSIDE the scroll container below so
-               it stays pinned while the operator moves through the form. -->
+               it stays pinned while the operator moves through the form.
+               While the tour is still loading it shows a neutral placeholder:
+               the computed banner reads the store's DEFAULTS, so a published
+               tour used to flash «BORRADOR» + «Publicar» for as long as the
+               fetch took (30-40s on a slow connection). -->
           <div
+            v-if="isInitialLoading"
+            class="shrink-0 border-b border-default bg-elevated/40 px-4 lg:px-6 py-2.5 flex items-center gap-3"
+          >
+            <USkeleton class="size-5 rounded-full" />
+            <USkeleton class="h-3.5 w-64" />
+          </div>
+          <div
+            v-else
             class="shrink-0 border-b px-4 lg:px-6 py-2.5 flex items-center gap-3"
             :class="statusBanner.wrapper"
           >
@@ -781,15 +805,15 @@ onBeforeUnmount(() => {
 
             <!-- Step components -->
             <Transition v-else name="fade" mode="out-in">
-              <Step1BasicInfo v-if="store.currentStep === 1" />
-              <Step3DetailedContent v-else-if="store.currentStep === 2" />
-              <Step2ContentSEO v-else-if="store.currentStep === 3" />
-              <Step4CommercialRules v-else-if="store.currentStep === 4" />
-              <Step5Multimedia v-else-if="store.currentStep === 5" />
-              <Step6BookingOptions v-else-if="store.currentStep === 6" />
-              <Step7Categories v-else-if="store.currentStep === 7" />
-              <Step8Availability v-else-if="store.currentStep === 8" />
-              <Step8FinalReview v-else-if="store.currentStep === 9" />
+              <Step1BasicInfo v-if="store.currentStep === 1" @vue:mounted="onStepMounted" />
+              <Step3DetailedContent v-else-if="store.currentStep === 2" @vue:mounted="onStepMounted" />
+              <Step2ContentSEO v-else-if="store.currentStep === 3" @vue:mounted="onStepMounted" />
+              <Step4CommercialRules v-else-if="store.currentStep === 4" @vue:mounted="onStepMounted" />
+              <Step5Multimedia v-else-if="store.currentStep === 5" @vue:mounted="onStepMounted" />
+              <Step6BookingOptions v-else-if="store.currentStep === 6" @vue:mounted="onStepMounted" />
+              <Step7Categories v-else-if="store.currentStep === 7" @vue:mounted="onStepMounted" />
+              <Step8Availability v-else-if="store.currentStep === 8" @vue:mounted="onStepMounted" />
+              <Step8FinalReview v-else-if="store.currentStep === 9" @vue:mounted="onStepMounted" />
               <UCard v-else>
                 <div class="flex flex-col items-center text-center py-12 gap-3">
                   <UIcon name="i-lucide-hammer" class="size-12 text-muted" />
@@ -841,7 +865,11 @@ onBeforeUnmount(() => {
         </main>
 
         <!-- Insights sidebar -->
-        <WizardInsightsSidebar />
+        <!-- Oculto durante la carga inicial: sus tarjetas (calidad, ubicación,
+             botón publicar) se calculan sobre el store vacío y mostraban
+             «20% — necesita más trabajo» y «Publicar» en tours completos y
+             ya publicados. -->
+        <WizardInsightsSidebar v-if="!isInitialLoading" />
       </div>
     </template>
   </UDashboardPanel>
