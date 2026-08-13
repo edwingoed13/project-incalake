@@ -81,6 +81,13 @@ Route::post('/availability-inquiry', [AvailabilityInquiryController::class, 'sto
     ->middleware('throttle:5,1')
     ->name('api.availability-inquiry.store');
 
+// Public route - Contact form. Same reasoning as the inquiry above: stores the
+// message AND emails reservas@, so it gets the same tight throttle.
+use App\Http\Controllers\Api\ContactController;
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('api.contact.store');
+
 // Public routes - Page content (read-only)
 use App\Http\Controllers\Api\PageContentController;
 Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');

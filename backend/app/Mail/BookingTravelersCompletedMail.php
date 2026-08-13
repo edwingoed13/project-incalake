@@ -13,11 +13,12 @@ use Illuminate\Mail\Mailables\Envelope;
  * data on the booking-confirmation page (Step "Viajeros" finalized). Recaps
  * traveler names, pickup choice, special requests, and links to the booking
  * in the admin so staff can prep the tour.
+ *
+ * Sent synchronously — see the note in AvailabilityInquiryMail: the queued
+ * declaration referenced un-imported symbols and fataled on construction.
  */
-class BookingTravelersCompletedMail extends Mailable implements ShouldQueue
+class BookingTravelersCompletedMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public Booking $booking;
     public string $adminBookingUrl;
 

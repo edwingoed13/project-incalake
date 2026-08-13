@@ -11,11 +11,16 @@ use Illuminate\Mail\Mailables\Envelope;
 /**
  * Operator notification for a new availability request (tours that require
  * availability verification before booking). Sent to reservas@incalake.com.
+ *
+ * Sent synchronously, like every other mailable here. It used to declare
+ * `implements ShouldQueue` + `use Queueable, SerializesModels` WITHOUT importing
+ * any of the three, so PHP looked for App\Mail\Queueable and the class fataled
+ * the moment it was instantiated — the caller's try/catch swallowed it and the
+ * lead was stored but nobody was ever notified. Queueing would fail a second
+ * time anyway: QUEUE_CONNECTION=database and no worker runs on the cPanel host.
  */
-class AvailabilityInquiryMail extends Mailable implements ShouldQueue
+class AvailabilityInquiryMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public AvailabilityInquiry $inquiry;
 
     public function __construct(AvailabilityInquiry $inquiry)
