@@ -223,8 +223,15 @@ class TourController extends Controller
                 });
             }
 
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
+            // Whitelisted: this used to pass the raw parameter straight into
+            // orderBy, so any unknown column 500'd the listing and anything
+            // sortable was sortable — including columns never meant to be
+            // exposed. Unknown values fall back to the default instead.
+            $sortable = ['created_at', 'updated_at', 'code', 'status', 'capacity'];
+            $sortBy = in_array($request->get('sort_by'), $sortable, true)
+                ? $request->get('sort_by')
+                : 'created_at';
+            $sortOrder = $request->get('sort_order') === 'asc' ? 'asc' : 'desc';
             $query->orderBy($sortBy, $sortOrder);
 
             // Counts per status for the admin tabs (respect the search filter
