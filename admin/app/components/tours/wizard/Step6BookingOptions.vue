@@ -373,7 +373,7 @@
             <UCheckbox v-model="store.bookingOptions.enableHotelPickup" color="primary" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-bold">Recojo en hotel</p>
-              <p class="text-[11px] text-muted">Recojo en hoteles dentro de un radio</p>
+              <p class="text-[11px] text-muted">Recojo en hoteles dentro de un radio o de una zona que dibujes</p>
             </div>
           </label>
 
@@ -385,6 +385,35 @@
                 :rows="2"
                 class="w-full"
               />
+
+              <!-- Mode lives here, not only inside the map modal: from the
+                   panel there was no sign the drawn option existed at all. -->
+              <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5">Forma del área</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <UButton
+                    :color="store.bookingOptions.pickupAreaType !== 'polygon' ? 'primary' : 'neutral'"
+                    :variant="store.bookingOptions.pickupAreaType !== 'polygon' ? 'solid' : 'outline'"
+                    icon="i-lucide-target"
+                    size="sm"
+                    block
+                    @click="setPickupAreaType('radius')"
+                  >
+                    Radio
+                  </UButton>
+                  <UButton
+                    :color="store.bookingOptions.pickupAreaType === 'polygon' ? 'primary' : 'neutral'"
+                    :variant="store.bookingOptions.pickupAreaType === 'polygon' ? 'solid' : 'outline'"
+                    icon="i-lucide-pen-tool"
+                    size="sm"
+                    block
+                    @click="setPickupAreaType('polygon')"
+                  >
+                    Zona dibujada
+                  </UButton>
+                </div>
+              </div>
+
               <div class="grid grid-cols-[1fr_2fr] gap-2 items-end">
                 <UFormField
                   v-if="store.bookingOptions.pickupAreaType !== 'polygon'"
@@ -880,6 +909,15 @@ const pickupModalData = computed(() => {
 const openPickupModal = (type: 'meeting_point' | 'hotel_pickup') => {
   pickupModalType.value = type
   isMapModalOpen.value = true
+}
+
+// Switching to a drawn zone opens the map straight away: choosing the mode and
+// then having to find a second button to actually draw is the step people miss.
+const setPickupAreaType = (type: 'radius' | 'polygon') => {
+  if (store.bookingOptions.pickupAreaType === type) return
+  store.bookingOptions.pickupAreaType = type
+  store.isDirty = true
+  if (type === 'polygon') openPickupModal('hotel_pickup')
 }
 
 const openMeetingPointModal = (idx: number) => {
