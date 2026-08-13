@@ -139,6 +139,31 @@ class TourExpiryAlertsTest extends TestCase
         $this->assertNull($tour->fresh()->expiry_alert_sent_at);
     }
 
+    public function test_the_email_actually_renders(): void
+    {
+        // Mail::fake() never renders the view, so every other test here passed
+        // while the template threw on a bad optional() call. Nothing would have
+        // been sent and the job would just have gone red.
+        $soon = $this->tourEnding(now()->addDays(12)->toDateString());
+        $old = $this->tourEnding('2019-12-31');
+
+        $mail = new \App\Mail\TourExpiryAlertMail(
+            collect([['tour' => $soon, 'days_left' => 12]]),
+            collect([['tour' => $old, 'days_overdue' => 2417]]),
+        );
+
+        $html = $mail->render();
+
+        $this->assertStringContainsString($soon->code, $html);
+        $this->assertStringContainsString($old->code, $html);
+        // The link into step 8 is the whole point: it's what makes the warning
+        // actionable instead of just informative.
+        $this->assertStringContainsString("/admin/v2/tours/{$soon->id}/edit?step=8", $html);
+        $this->assertStringContainsString('12 días', $html);
+        $this->assertStringContainsString('2019-12-31', $html);
+        $this->assertStringContainsString('por caducar', $mail->envelope()->subject);
+    }
+
     public function test_nothing_is_marked_when_the_mail_fails(): void
     {
         // Marking before a confirmed send would drop the warning silently.

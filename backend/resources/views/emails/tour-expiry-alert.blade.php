@@ -36,7 +36,7 @@
                         <span style="color:#64748b;"> · #{{ $tour->id }}</span>
                     </td>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;">
-                        {{ optional($tour->availability_data['end'] ?? null) ?: '—' }}
+                        {{ ($tour->availability_data['end'] ?? '') ?: '—' }}
                     </td>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;font-weight:bold;
                         color:{{ $row['days_left'] <= 30 ? '#dc2626' : '#0f172a' }};">
@@ -71,7 +71,7 @@
                         <span style="color:#64748b;"> · #{{ $tour->id }}</span>
                     </td>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;">
-                        {{ optional($tour->availability_data['end'] ?? null) ?: '—' }}
+                        {{ ($tour->availability_data['end'] ?? '') ?: '—' }}
                     </td>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">
                         {{ $row['days_overdue'] }} días
