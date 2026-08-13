@@ -78,6 +78,11 @@ class UpdateTourRequest extends FormRequest
             'pickup_center_lat' => 'nullable|numeric',
             'pickup_center_lng' => 'nullable|numeric',
             'pickup_radius_km' => 'nullable|numeric',
+            'pickup_area_type' => 'nullable|in:radius,polygon',
+            // A ring needs at least 3 vertices to enclose anything. Accepts one
+            // ring or a list of rings; PickupAreaService normalises both.
+            'pickup_area' => 'nullable|array',
+            'pickup_area.*' => 'array',
             'dropoff_location_description' => 'nullable|string',
             'guide_type' => 'nullable|string',
             'guide_languages' => 'nullable|array',

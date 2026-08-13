@@ -7,6 +7,7 @@ use App\Mail\BookingTravelersCompletedMail;
 use App\Models\Booking;
 use App\Models\BookingPickupDetail;
 use App\Models\Tour;
+use App\Services\PickupAreaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -105,27 +106,22 @@ class BookingConfirmationController extends Controller
                 ], 400);
             }
 
-            // Calculate distance from pickup center
-            $distance = $this->calculateDistance(
-                $request->hotel_lat,
-                $request->hotel_lng,
-                $tour->pickup_center_lat,
-                $tour->pickup_center_lng
+            // Circle or drawn area, depending on the tour. The service returns
+            // the same shape either way, so the surcharge rule below is
+            // unchanged — for a polygon, "how far outside" is the distance to
+            // the nearest edge rather than to a centre.
+            $area = app(PickupAreaService::class)->evaluate(
+                $tour,
+                (float) $request->hotel_lat,
+                (float) $request->hotel_lng
             );
 
-            $isWithinRadius = $distance <= $tour->pickup_radius_km;
+            $distance = $area['distance_km'];
+            $isWithinRadius = $area['inside'];
             $extraCost = 0;
 
             if (!$isWithinRadius) {
-                // Calculate extra cost for pickup outside radius
-                $extraDistance = $distance - $tour->pickup_radius_km;
-                $costPerKm = 5; // $5 USD per km
-                $extraCost = $extraDistance * $costPerKm;
-
-                // Apply min and max limits
-                $minCost = 15;
-                $maxCost = 50;
-                $extraCost = max($minCost, min($maxCost, $extraCost));
+                $extraCost = $this->pickupSurcharge($area['distance_outside_km']);
             }
 
             return response()->json([
@@ -188,8 +184,19 @@ class BookingConfirmationController extends Controller
 
             if ($request->final_choice === 'hotel_pickup') {
                 $tour = $booking->tour;
-                $distance = $request->distance;
-                $isWithinRadius = $distance <= $tour->pickup_radius_km;
+
+                // Recomputed from the coordinates, never read from the request.
+                // distance and extra_cost used to be taken straight from the
+                // browser, so posting distance:0 / extra_cost:0 bought pickup
+                // anywhere in the world for free. The request still carries
+                // them (the client shows a preview) but they are not trusted.
+                $area = app(PickupAreaService::class)->evaluate(
+                    $tour,
+                    (float) $request->hotel_lat,
+                    (float) $request->hotel_lng
+                );
+                $distance = $area['distance_km'];
+                $isWithinRadius = $area['inside'];
 
                 $pickupDetail->hotel_name = $request->hotel_name;
                 $pickupDetail->hotel_address = $request->hotel_address;
@@ -203,7 +210,7 @@ class BookingConfirmationController extends Controller
                     $pickupDetail->extra_pickup_cost = 0;
                 } else {
                     $pickupDetail->pickup_type = 'hotel_extra_charge';
-                    $pickupDetail->extra_pickup_cost = $request->extra_cost ?? 0;
+                    $pickupDetail->extra_pickup_cost = $this->pickupSurcharge($area['distance_outside_km']);
                     $pickupDetail->requires_logistics_approval = $distance > 5;
 
                     if ($pickupDetail->requires_logistics_approval) {
@@ -275,6 +282,23 @@ class BookingConfirmationController extends Controller
                 'message' => 'Error al obtener los detalles de recojo'
             ], 500);
         }
+    }
+
+    /**
+     * Surcharge for a pickup outside the covered area, in USD.
+     *
+     * Single definition on purpose: the quote shown while choosing a hotel and
+     * the amount stored when saving must agree, and they used to be two copies
+     * of the same arithmetic in different methods — with the saved one taking
+     * the customer's word for it.
+     */
+    private function pickupSurcharge(float $distanceOutsideKm): float
+    {
+        $costPerKm = 5;   // USD
+        $minCost = 15;
+        $maxCost = 50;
+
+        return round(max($minCost, min($maxCost, $distanceOutsideKm * $costPerKm)), 2);
     }
 
     /**

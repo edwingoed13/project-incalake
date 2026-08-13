@@ -67,6 +67,10 @@ class TourDetailResource extends JsonResource
             'pickup_center_lat' => $this->pickup_center_lat,
             'pickup_center_lng' => $this->pickup_center_lng,
             'pickup_radius_km' => $this->pickup_radius_km,
+            // 'radius' or 'polygon' — the public map draws a circle or the
+            // drawn shape accordingly.
+            'pickup_area_type' => $this->pickup_area_type ?? 'radius',
+            'pickup_area' => $this->pickup_area,
             'dropoff_location_description' => $this->dropoff_location_description,
 
             // Booking Options
