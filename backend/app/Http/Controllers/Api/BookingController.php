@@ -81,6 +81,24 @@ class BookingController extends Controller
             // Get tour information
             $tour = Tour::findOrFail($request->tour_id);
 
+            // ---- Availability window (authoritative) ------------------------
+            // Same reasoning as the anticipation check below, which was already
+            // enforced here: the storefront greys out unavailable days, but the
+            // API accepted any date that merely wasn't in the past. That left
+            // the tour's own calendar — start/end, weekdays, blocks, holidays —
+            // enforced only in the browser, so 133 tours already past their end
+            // date would still take a booking nobody could operate.
+            $availability = app(\App\Services\TourAvailabilityService::class)
+                ->check($tour, (string) $request->tour_date);
+
+            if (!$availability['available']) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => $availability['reason'] . ' Por favor elige otra fecha.',
+                ], 422);
+            }
+
             // ---- Booking-anticipation window (authoritative) ----------------
             // The storefront hides dates/times inside the tour's anticipation
             // window, but the API must enforce it too: compare the departure
