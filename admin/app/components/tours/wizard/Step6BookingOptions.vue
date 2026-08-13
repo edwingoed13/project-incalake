@@ -893,6 +893,9 @@ const pickupModalData = computed(() => {
       lat: point?.lat ?? null,
       lng: point?.lng ?? null,
       description: point?.descriptions?.[store.currentLanguage] || '',
+      // Shared across languages: the photo of the corner is the same corner
+      // whichever language the traveller reads.
+      image: point?.image ?? null,
     }
   } else {
     return {
@@ -934,6 +937,7 @@ const addMeetingPoint = () => {
     lat: null,
     lng: null,
     descriptions: {},
+    image: null,
   })
   store.isDirty = true
 }
@@ -966,6 +970,7 @@ const handlePickupSave = (data: any) => {
     if (point) {
       point.lat = data.lat
       point.lng = data.lng
+      point.image = data.image ?? null
       if (!point.descriptions) point.descriptions = {}
       if (data.description) point.descriptions[store.currentLanguage] = data.description
       // Keep legacy single-point fields in sync with the first entry so anything

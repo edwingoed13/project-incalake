@@ -223,6 +223,8 @@ export interface MeetingPoint {
   lat: number | null
   lng: number | null
   descriptions: Record<string, string>
+  /** Reference photo so the traveller recognises the spot on the day. */
+  image?: string | null
 }
 
 export interface TourStep6 {
@@ -586,6 +588,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
           lat: p.lat != null && p.lat !== '' ? Number(p.lat) : null,
           lng: p.lng != null && p.lng !== '' ? Number(p.lng) : null,
           descriptions: (p.descriptions && typeof p.descriptions === 'object') ? { ...p.descriptions } : {},
+          image: p.image || null,
         }))
       }
 

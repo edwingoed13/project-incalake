@@ -184,6 +184,28 @@
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p class="text-blue-800 text-sm font-semibold">{{ tourConfig.meeting_point_description }}</p>
         </div>
+
+        <!-- Reference photos. A map pin tells you where the spot is; the photo
+             tells you what to look for once you're standing there. -->
+        <div v-if="meetingPointPhotos.length" class="mt-3 space-y-3">
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Cómo reconocer el lugar</p>
+          <div
+            v-for="(point, i) in meetingPointPhotos"
+            :key="i"
+            class="rounded-xl overflow-hidden border border-slate-200"
+          >
+            <img
+              :src="point.url"
+              :alt="point.label || 'Referencia del punto de encuentro'"
+              class="w-full h-44 sm:h-56 object-cover bg-slate-100"
+              loading="lazy"
+            />
+            <p v-if="point.label" class="text-xs text-slate-600 font-medium px-3 py-2">
+              {{ point.label }}
+            </p>
+          </div>
+        </div>
+
         <div ref="meetingMapContainer" class="w-full h-48 sm:h-64 rounded-xl border border-slate-200 mt-3"></div>
         <button
           @click="confirmMeetingPoint"
@@ -248,6 +270,26 @@ const bothEnabled = computed(
   () => !!(tourConfig.value.enable_hotel_pickup && tourConfig.value.enable_meeting_point)
 )
 const selectedMethod = ref<'hotel' | 'meeting' | null>(null)
+
+// Reference photos of the meeting points, in the traveller's language where a
+// description exists. Paths are stored storage-relative so they survive a
+// domain change; absolute URLs (older records) are passed through untouched.
+const meetingPointPhotos = computed(() => {
+  const points = tourConfig.value.meeting_points
+  if (!Array.isArray(points)) return []
+
+  const base = (useRuntimeConfig().public.storageBase as string || '').replace(/\/+$/, '')
+  const { locale } = useI18n()
+
+  return points
+    .filter((p: any) => p?.image)
+    .map((p: any) => ({
+      url: String(p.image).startsWith('http')
+        ? p.image
+        : `${base}/${String(p.image).replace(/^\/+/, '')}`,
+      label: p?.descriptions?.[locale.value] || p?.descriptions?.es || '',
+    }))
+})
 
 const {
   hotelValidation, pickupChoice, isValidating, validationError,

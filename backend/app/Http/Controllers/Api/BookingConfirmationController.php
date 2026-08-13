@@ -267,9 +267,19 @@ class BookingConfirmationController extends Controller
                         'meeting_point_description' => $booking->tour->meeting_point_description,
                         'meeting_point_lat' => $booking->tour->meeting_point_lat,
                         'meeting_point_lng' => $booking->tour->meeting_point_lng,
+                        // The admin has supported several meeting points, each
+                        // with its own description and reference photo, but only
+                        // the legacy single point ever reached the traveller —
+                        // so the extra points and their photos were invisible
+                        // exactly where they matter, on the booking.
+                        'meeting_points' => $booking->tour->meeting_points,
                         'pickup_center_lat' => $booking->tour->pickup_center_lat,
                         'pickup_center_lng' => $booking->tour->pickup_center_lng,
                         'pickup_radius_km' => $booking->tour->pickup_radius_km,
+                        // Same gap for drawn pickup areas: without these the
+                        // hotel picker drew a circle over a polygon-shaped zone.
+                        'pickup_area_type' => $booking->tour->pickup_area_type ?? 'radius',
+                        'pickup_area' => $booking->tour->pickup_area,
                     ],
                     'pickup_detail' => $pickupDetail
                 ]

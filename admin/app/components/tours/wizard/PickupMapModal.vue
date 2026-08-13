@@ -166,6 +166,41 @@
                 </div>
               </div>
 
+              <!-- Reference photo (meeting point only) -->
+              <div v-if="type === 'meeting_point'" class="space-y-3">
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Imagen de referencia
+                </label>
+                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">
+                  La verá el pasajero en su reserva para reconocer el lugar el día del tour.
+                </p>
+
+                <div v-if="localImage" class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <img :src="imagePreviewUrl" alt="Referencia del punto de encuentro" class="w-full h-32 object-cover" />
+                  <button
+                    type="button"
+                    class="absolute top-2 right-2 rounded-lg bg-slate-900/80 text-white px-2.5 py-1 text-[10px] font-black uppercase hover:bg-red-600 transition-colors"
+                    @click="removeImage"
+                  >
+                    Quitar
+                  </button>
+                </div>
+
+                <label
+                  v-else
+                  class="flex flex-col items-center justify-center gap-1 h-32 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors"
+                  :class="uploadingImage ? 'opacity-60 pointer-events-none' : ''"
+                >
+                  <span class="material-symbols-outlined text-slate-400">{{ uploadingImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
+                  <span class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                    {{ uploadingImage ? 'Subiendo...' : 'Subir imagen' }}
+                  </span>
+                  <input type="file" accept="image/*" class="hidden" @change="onImageSelected" />
+                </label>
+
+                <p v-if="imageError" class="text-[10px] font-bold text-red-500">{{ imageError }}</p>
+              </div>
+
               <!-- Description -->
               <div class="space-y-4">
                 <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -245,7 +280,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 
 const props = defineProps<{
   isOpen: boolean
@@ -255,6 +290,7 @@ const props = defineProps<{
     lng: number | null
     radius?: number
     description: string
+    image?: string | null
     areaType?: 'radius' | 'polygon'
     area?: Array<Array<{ lat: number; lng: number }>> | null
   }
@@ -269,6 +305,67 @@ const localDescription = ref('')
 // A circle can't follow streets. 'polygon' lets the operator trace the actual
 // blocks they cover; 'radius' stays the default so nothing changes for tours
 // already configured.
+// Reference photo for a meeting point. Stored as the storage-relative path so
+// it survives a domain change; the preview builds an absolute URL for display.
+const localImage = ref<string | null>(null)
+const uploadingImage = ref(false)
+const imageError = ref<string | null>(null)
+
+const imagePreviewUrl = computed(() => {
+  const p = localImage.value
+  if (!p) return ''
+  if (p.startsWith('http')) return p
+  const base = ((useRuntimeConfig().public as any).apiUrl || '').replace(/\/api\/?$/, '')
+  return `${base}/storage/${p.replace(/^\/+/, '')}`
+})
+
+const onImageSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  imageError.value = null
+  if (!file.type.startsWith('image/')) {
+    imageError.value = 'El archivo debe ser una imagen.'
+    return
+  }
+  // Matches the limit the upload endpoint enforces.
+  if (file.size > 5 * 1024 * 1024) {
+    imageError.value = 'La imagen no puede superar 5 MB.'
+    return
+  }
+
+  uploadingImage.value = true
+  try {
+    const config = useRuntimeConfig()
+    const auth = useAuthStore()
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const res: any = await $fetch(`${(config.public as any).apiUrl}/admin/tours/upload-image`, {
+      method: 'POST',
+      body: formData,
+      headers: { Authorization: `Bearer ${auth.token}` },
+    })
+
+    if (res?.success && res.path) {
+      localImage.value = res.path
+    } else {
+      imageError.value = res?.message || 'No se pudo subir la imagen.'
+    }
+  } catch (e: any) {
+    imageError.value = e?.data?.message || e?.message || 'Error al subir la imagen.'
+  } finally {
+    uploadingImage.value = false
+    input.value = ''
+  }
+}
+
+const removeImage = () => {
+  localImage.value = null
+  imageError.value = null
+}
+
 const localAreaType = ref<'radius' | 'polygon'>('radius')
 // A list of rings: a tour can cover two separate neighbourhoods.
 const localArea = ref<Array<Array<{ lat: number; lng: number }>>>([])
@@ -286,6 +383,8 @@ watch(() => props.isOpen, (val) => {
     }
     localRadius.value = props.initialData.radius || 1
     localDescription.value = props.initialData.description || ''
+    localImage.value = props.initialData.image || null
+    imageError.value = null
     localAreaType.value = props.initialData.areaType === 'polygon' ? 'polygon' : 'radius'
     localArea.value = Array.isArray(props.initialData.area)
       ? JSON.parse(JSON.stringify(props.initialData.area))
@@ -603,6 +702,7 @@ const handleSave = () => {
     lng: localCoords.value.lng,
     radius: localRadius.value,
     description: localDescription.value,
+    image: localImage.value,
     areaType: localAreaType.value,
     // Only rings that actually enclose something; the backend rejects the rest
     // anyway and an unusable shape reads as "nowhere covered".

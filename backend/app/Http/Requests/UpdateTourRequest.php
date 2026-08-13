@@ -74,6 +74,8 @@ class UpdateTourRequest extends FormRequest
             'meeting_points.*.lat' => 'nullable|numeric',
             'meeting_points.*.lng' => 'nullable|numeric',
             'meeting_points.*.descriptions' => 'nullable|array',
+            // Reference photo so the traveller recognises the spot on the day.
+            'meeting_points.*.image' => 'nullable|string|max:500',
             'pickup_location_description' => 'nullable|string',
             'pickup_center_lat' => 'nullable|numeric',
             'pickup_center_lng' => 'nullable|numeric',
