@@ -93,7 +93,7 @@
               <UIcon name="i-lucide-youtube" class="size-10 opacity-50" />
               <p class="text-xs font-bold uppercase tracking-widest opacity-60 text-center">
                 Vista previa del video ({{ store.currentLanguage.toUpperCase() }})<br/>
-                <span class="text-[9px] font-medium normal-case tracking-normal">Ingresa una URL para ver aquí</span>
+                <span class="text-[10px] font-medium normal-case tracking-normal">Ingresa una URL para ver aquí</span>
               </p>
            </div>
 
@@ -1128,7 +1128,4 @@ onBeforeUnmount(() => {
   animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.material-symbols-outlined.filled {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 </style>

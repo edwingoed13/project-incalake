@@ -1,42 +1,42 @@
 <template>
-  <div v-if="editor" class="tiptap-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950 transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
+  <div v-if="editor" class="tiptap-editor-container border border-default rounded-xl overflow-hidden bg-white dark:bg-elevated transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
     <!-- Toolbar -->
-    <div class="flex flex-wrap items-center gap-1 p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+    <div class="flex flex-wrap items-center gap-1 p-2 border-b border-default bg-elevated/40">
       <button 
         type="button"
         @click="editor.chain().focus().toggleBold().run()"
         :class="{ 'bg-primary text-white': editor.isActive('bold') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Bold"
       >
-        <span class="material-symbols-outlined text-sm">format_bold</span>
+        <UIcon name="i-lucide-bold" class="size-4" />
       </button>
       <button 
         type="button"
         @click="editor.chain().focus().toggleItalic().run()"
         :class="{ 'bg-primary text-white': editor.isActive('italic') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Italic"
       >
-        <span class="material-symbols-outlined text-sm">format_italic</span>
+        <UIcon name="i-lucide-italic" class="size-4" />
       </button>
       <button 
         type="button"
         @click="editor.chain().focus().toggleUnderline().run()"
         :class="{ 'bg-primary text-white': editor.isActive('underline') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Underline"
       >
-        <span class="material-symbols-outlined text-sm">format_underlined</span>
+        <UIcon name="i-lucide-underline" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <button 
         type="button"
         @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
         :class="{ 'bg-primary text-white': editor.isActive('heading', { level: 2 }) }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 font-bold text-xs"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted font-bold text-xs"
         title="H2"
       >
         H2
@@ -45,95 +45,95 @@
         type="button"
         @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
         :class="{ 'bg-primary text-white': editor.isActive('heading', { level: 3 }) }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 font-bold text-xs"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted font-bold text-xs"
         title="H3"
       >
         H3
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <button 
         type="button"
         @click="editor.chain().focus().toggleBulletList().run()"
         :class="{ 'bg-primary text-white': editor.isActive('bulletList') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Bullet List"
       >
-        <span class="material-symbols-outlined text-sm">format_list_bulleted</span>
+        <UIcon name="i-lucide-list" class="size-4" />
       </button>
       <button 
         type="button"
         @click="editor.chain().focus().toggleOrderedList().run()"
         :class="{ 'bg-primary text-white': editor.isActive('orderedList') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Ordered List"
       >
-        <span class="material-symbols-outlined text-sm">format_list_numbered</span>
+        <UIcon name="i-lucide-list-ordered" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <button 
         type="button"
         @click="setLink"
         :class="{ 'bg-primary text-white': editor.isActive('link') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Link"
       >
-        <span class="material-symbols-outlined text-sm">link</span>
+        <UIcon name="i-lucide-link" class="size-4" />
       </button>
       <button
         type="button"
         @click="editor.chain().focus().unsetLink().run()"
         v-if="editor.isActive('link')"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Unlink"
       >
-        <span class="material-symbols-outlined text-sm">link_off</span>
+        <UIcon name="i-lucide-unlink" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <!-- Highlight -->
       <button
         type="button"
         @click="editor.chain().focus().toggleHighlight().run()"
         :class="{ 'bg-primary text-white': editor.isActive('highlight') }"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Resaltar texto"
       >
-        <span class="material-symbols-outlined text-sm">format_ink_highlighter</span>
+        <UIcon name="i-lucide-highlighter" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <!-- Text alignment -->
-      <button type="button" @click="editor.chain().focus().setTextAlign('left').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'left' }) }" title="Alinear a la izquierda" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-        <span class="material-symbols-outlined text-sm">format_align_left</span>
+      <button type="button" @click="editor.chain().focus().setTextAlign('left').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'left' }) }" title="Alinear a la izquierda" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+        <UIcon name="i-lucide-align-left" class="size-4" />
       </button>
-      <button type="button" @click="editor.chain().focus().setTextAlign('center').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'center' }) }" title="Centrar" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-        <span class="material-symbols-outlined text-sm">format_align_center</span>
+      <button type="button" @click="editor.chain().focus().setTextAlign('center').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'center' }) }" title="Centrar" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+        <UIcon name="i-lucide-align-center" class="size-4" />
       </button>
-      <button type="button" @click="editor.chain().focus().setTextAlign('right').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'right' }) }" title="Alinear a la derecha" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-        <span class="material-symbols-outlined text-sm">format_align_right</span>
+      <button type="button" @click="editor.chain().focus().setTextAlign('right').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'right' }) }" title="Alinear a la derecha" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+        <UIcon name="i-lucide-align-right" class="size-4" />
       </button>
-      <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'justify' }) }" title="Justificar" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-        <span class="material-symbols-outlined text-sm">format_align_justify</span>
+      <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()" :class="{ 'bg-primary text-white': editor.isActive({ textAlign: 'justify' }) }" title="Justificar" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+        <UIcon name="i-lucide-align-justify" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <!-- Image upload -->
       <button
         type="button"
         @click="triggerImageUpload"
         :disabled="uploading"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 disabled:opacity-50"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted disabled:opacity-50"
         title="Subir imagen"
       >
-        <span v-if="!uploading" class="material-symbols-outlined text-sm">image</span>
-        <span v-else class="animate-spin material-symbols-outlined text-sm">sync</span>
+        <UIcon v-if="!uploading" name="i-lucide-image" class="size-4" />
+        <UIcon v-else name="i-lucide-loader-circle" class="animate-spin size-4" />
       </button>
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onImageSelected" />
 
@@ -141,62 +141,62 @@
       <button
         type="button"
         @click="setImageByUrl"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Imagen por URL"
       >
-        <span class="material-symbols-outlined text-sm">add_photo_alternate</span>
+        <UIcon name="i-lucide-image-plus" class="size-4" />
       </button>
 
       <!-- YouTube embed -->
       <button
         type="button"
         @click="setYoutubeVideo"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Insertar video de YouTube"
       >
-        <span class="material-symbols-outlined text-sm">smart_display</span>
+        <UIcon name="i-lucide-youtube" class="size-4" />
       </button>
 
-      <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="w-px h-4 bg-accented mx-1"></div>
 
       <!-- Insert table -->
       <button
         type="button"
         @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"
-        class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
+        class="p-2 rounded hover:bg-accented transition-colors text-muted"
         title="Insertar tabla 3x3"
       >
-        <span class="material-symbols-outlined text-sm">table</span>
+        <UIcon name="i-lucide-table" class="size-4" />
       </button>
 
       <!-- Table editing controls — only visible when cursor is inside a table -->
       <template v-if="editor.isActive('table')">
-        <button type="button" @click="editor.chain().focus().addColumnBefore().run()" title="Agregar columna a la izquierda" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">format_indent_decrease</span>
+        <button type="button" @click="editor.chain().focus().addColumnBefore().run()" title="Agregar columna a la izquierda" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-indent-decrease" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().addColumnAfter().run()" title="Agregar columna a la derecha" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">format_indent_increase</span>
+        <button type="button" @click="editor.chain().focus().addColumnAfter().run()" title="Agregar columna a la derecha" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-indent-increase" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().deleteColumn().run()" title="Eliminar columna" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-rose-500">
-          <span class="material-symbols-outlined text-sm">view_column</span>
+        <button type="button" @click="editor.chain().focus().deleteColumn().run()" title="Eliminar columna" class="p-2 rounded hover:bg-accented transition-colors text-rose-500">
+          <UIcon name="i-lucide-columns-3" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().addRowBefore().run()" title="Agregar fila arriba" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">vertical_align_top</span>
+        <button type="button" @click="editor.chain().focus().addRowBefore().run()" title="Agregar fila arriba" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-arrow-up-to-line" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().addRowAfter().run()" title="Agregar fila abajo" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">vertical_align_bottom</span>
+        <button type="button" @click="editor.chain().focus().addRowAfter().run()" title="Agregar fila abajo" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-arrow-down-to-line" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().deleteRow().run()" title="Eliminar fila" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-rose-500">
-          <span class="material-symbols-outlined text-sm">table_rows</span>
+        <button type="button" @click="editor.chain().focus().deleteRow().run()" title="Eliminar fila" class="p-2 rounded hover:bg-accented transition-colors text-rose-500">
+          <UIcon name="i-lucide-rows-3" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().toggleHeaderRow().run()" title="Alternar fila de encabezado" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">view_headline</span>
+        <button type="button" @click="editor.chain().focus().toggleHeaderRow().run()" title="Alternar fila de encabezado" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-pilcrow" class="size-4" />
         </button>
-        <button type="button" @click="editor.chain().focus().mergeOrSplit().run()" title="Combinar / dividir celdas" class="p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-          <span class="material-symbols-outlined text-sm">join</span>
+        <button type="button" @click="editor.chain().focus().mergeOrSplit().run()" title="Combinar / dividir celdas" class="p-2 rounded hover:bg-accented transition-colors text-muted">
+          <UIcon name="i-lucide-table-cells-merge" class="size-4" />
         </button>
         <button type="button" @click="editor.chain().focus().deleteTable().run()" title="Eliminar tabla" class="p-2 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors text-rose-500">
-          <span class="material-symbols-outlined text-sm">delete</span>
+          <UIcon name="i-lucide-trash-2" class="size-4" />
         </button>
       </template>
     </div>

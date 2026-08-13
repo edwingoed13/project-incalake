@@ -48,16 +48,16 @@ const heroDropActive = ref(false)
 const defaultForm = (): HomeContent => ({
   hero: { title: '', subtitle: '', image: '' },
   trust_signals: [
-    { icon: 'cancel', title: '', description: '' },
-    { icon: 'verified_user', title: '', description: '' },
-    { icon: 'security', title: '', description: '' },
+    { icon: 'i-lucide-circle-x', title: '', description: '' },
+    { icon: 'i-lucide-shield-check', title: '', description: '' },
+    { icon: 'i-lucide-shield', title: '', description: '' },
   ],
   destinations: { label: '', title: '' },
   featured: { label: '', title: '' },
   why_us: [
-    { icon: 'public', title: '', description: '' },
-    { icon: 'star', title: '', description: '' },
-    { icon: 'verified', title: '', description: '' },
+    { icon: 'i-lucide-globe', title: '', description: '' },
+    { icon: 'i-lucide-star', title: '', description: '' },
+    { icon: 'i-lucide-badge-check', title: '', description: '' },
   ],
   search_placeholder: '',
   search_btn: '',
@@ -340,7 +340,7 @@ onMounted(async () => {
                       </template>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="text-[9px] font-bold text-muted uppercase shrink-0">O URL:</span>
+                      <span class="text-[10px] font-bold text-muted uppercase shrink-0">O URL:</span>
                       <UInput v-model="form.hero.image" placeholder="https://..." size="sm" class="flex-1" />
                     </div>
                     <UButton
@@ -377,7 +377,7 @@ onMounted(async () => {
                 class="bg-elevated/40"
               >
                 <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-lg">{{ signal.icon }}</span>
+                  <UIcon :name="signal.icon" class="size-5 text-primary" />
                   <UInput v-model="signal.icon" placeholder="icon name" size="xs" class="w-28 font-mono" />
                 </div>
                 <UInput v-model="signal.title" placeholder="Título" class="w-full font-semibold" size="sm" />
@@ -454,7 +454,7 @@ onMounted(async () => {
                 class="bg-elevated/40"
               >
                 <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary text-lg">{{ item.icon }}</span>
+                  <UIcon :name="item.icon" class="size-5 text-primary" />
                   <UInput v-model="item.icon" placeholder="icon" size="xs" class="w-28 font-mono" />
                 </div>
                 <UInput v-model="item.title" placeholder="Título" class="w-full font-semibold" size="sm" />

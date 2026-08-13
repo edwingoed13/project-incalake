@@ -171,7 +171,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between pb-1.5 border-b border-default">
             <p class="text-[11px] font-black uppercase tracking-widest text-muted">Información personal</p>
-            <span class="text-[9px] text-muted italic">datos básicos</span>
+            <span class="text-[10px] text-muted italic">datos básicos</span>
           </div>
           <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
             <label
@@ -193,7 +193,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between pb-1.5 border-b border-default">
             <p class="text-[11px] font-black uppercase tracking-widest text-muted">Información operacional</p>
-            <span class="text-[9px] text-muted italic">datos específicos</span>
+            <span class="text-[10px] text-muted italic">datos específicos</span>
           </div>
           <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
             <label
@@ -1447,9 +1447,6 @@ onBeforeUnmount(() => {
   background: rgba(15, 23, 42, 0.5);
 }
 
-.material-symbols-outlined.filled {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 
 .fade-enter-active, .fade-leave-active {
   transition: all 0.3s ease;

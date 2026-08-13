@@ -785,7 +785,9 @@ onBeforeUnmount(() => {
                programmatic scroll-into-view stop above the bar too. Fixes the
                recurring "dropdown / last input hidden behind the footer". -->
           <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28">
-          <div class="max-w-5xl mx-auto">
+          <!-- 2xl+: en un monitor grande, 1024px de tope dejaban pasillos de
+               margen muerto a ambos lados del formulario. -->
+          <div class="max-w-5xl 2xl:max-w-7xl mx-auto">
             <!-- Step header (the stepper already shows the step/category).
                  The tour title lives here at full content width — the navbar
                  truncated long titles next to the stepper. -->
@@ -827,7 +829,7 @@ onBeforeUnmount(() => {
 
           <!-- Bottom navigation (always visible — sidebar is hidden below xl) -->
           <div class="shrink-0 border-t border-default bg-default px-4 lg:px-6 py-3">
-            <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <div class="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-between gap-3">
               <UButton
                 icon="i-lucide-arrow-left"
                 color="neutral"

@@ -29,7 +29,7 @@
           :key="'sel-' + cat.id"
           class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-full bg-primary text-white text-xs font-bold shadow-sm"
         >
-          <span class="material-symbols-outlined text-sm">{{ cat.icon }}</span>
+          <UIcon :name="cat.icon" class="size-4" />
           <span>{{ cat.name }}</span>
           <UButton
             icon="i-lucide-x"
@@ -80,7 +80,7 @@
                 class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left text-sm hover:bg-elevated transition-colors"
                 @click="toggleCategory(cat.id)"
               >
-                <span class="material-symbols-outlined text-base text-muted">{{ cat.icon }}</span>
+                <UIcon :name="cat.icon" class="size-5 text-muted" />
                 <span class="flex-1 truncate">{{ cat.name }}</span>
                 <UIcon name="i-lucide-plus" class="size-3.5 text-muted" />
               </button>
@@ -337,7 +337,7 @@ const iconFor = (code: string, name: string): string => {
   for (const [keyword, icon] of Object.entries(iconByKeyword)) {
     if (norm.includes(keyword)) return icon
   }
-  return 'category'
+  return 'i-lucide-tag'
 }
 
 const filteredCategories = computed(() => {
@@ -396,88 +396,88 @@ onMounted(fetchCategories)
 
 // Icon lookup by code (most reliable — backend codes are stable)
 const iconByCode: Record<string, string> = {
-  'turismo-cultural': 'account_balance',
-  'turismo-vivencial': 'diversity_3',
-  'turismo-rural': 'agriculture',
-  'turismo-mistico': 'self_improvement',
-  'turismo-historico': 'history_edu',
-  'turismo-religioso': 'church',
-  'turismo-arqueologico': 'temple_hindu',
-  'turismo-etnografico': 'groups',
-  'turismo-naturaleza': 'nature_people',
-  'turismo-aventura': 'hiking',
-  'ecoturismo': 'eco',
-  'turismo-montana': 'landscape',
-  'turismo-trekking': 'hiking',
-  'turismo-aves': 'flutter_dash',
-  'turismo-fotografico': 'photo_camera',
-  'turismo-cientifico': 'biotech',
-  'turismo-sol-playa': 'beach_access',
-  'turismo-termal': 'hot_tub',
-  'turismo-spa': 'spa',
-  'turismo-romantico': 'favorite',
-  'turismo-familiar': 'family_restroom',
-  'turismo-tematico': 'theater_comedy',
-  'turismo-urbano': 'location_city',
-  'turismo-gastronomico': 'restaurant',
-  'turismo-compras': 'shopping_bag',
-  'turismo-eventos': 'event',
-  'turismo-festividades': 'celebration',
-  'turismo-musical': 'music_note',
-  'turismo-cinematografico': 'movie',
-  'turismo-educativo': 'school',
-  'turismo-academico': 'menu_book',
-  'turismo-idiomatico': 'translate',
-  'turismo-lgbtq': 'diversity_1',
-  'turismo-corporativo': 'business_center',
-  'turismo-negocios': 'monitoring',
-  'turismo-incentivos': 'workspace_premium',
-  'turismo-ferroviario': 'train',
-  'turismo-bicicleta': 'directions_bike',
-  'turismo-deportivo': 'sports_soccer',
+  'turismo-cultural': 'i-lucide-landmark',
+  'turismo-vivencial': 'i-lucide-users',
+  'turismo-rural': 'i-lucide-tractor',
+  'turismo-mistico': 'i-lucide-sparkles',
+  'turismo-historico': 'i-lucide-scroll-text',
+  'turismo-religioso': 'i-lucide-church',
+  'turismo-arqueologico': 'i-lucide-pyramid',
+  'turismo-etnografico': 'i-lucide-users',
+  'turismo-naturaleza': 'i-lucide-trees',
+  'turismo-aventura': 'i-lucide-mountain',
+  'ecoturismo': 'i-lucide-leaf',
+  'turismo-montana': 'i-lucide-mountain-snow',
+  'turismo-trekking': 'i-lucide-mountain',
+  'turismo-aves': 'i-lucide-bird',
+  'turismo-fotografico': 'i-lucide-camera',
+  'turismo-cientifico': 'i-lucide-microscope',
+  'turismo-sol-playa': 'i-lucide-umbrella',
+  'turismo-termal': 'i-lucide-bath',
+  'turismo-spa': 'i-lucide-flower-2',
+  'turismo-romantico': 'i-lucide-heart',
+  'turismo-familiar': 'i-lucide-baby',
+  'turismo-tematico': 'i-lucide-drama',
+  'turismo-urbano': 'i-lucide-building-2',
+  'turismo-gastronomico': 'i-lucide-utensils',
+  'turismo-compras': 'i-lucide-shopping-bag',
+  'turismo-eventos': 'i-lucide-calendar',
+  'turismo-festividades': 'i-lucide-party-popper',
+  'turismo-musical': 'i-lucide-music',
+  'turismo-cinematografico': 'i-lucide-film',
+  'turismo-educativo': 'i-lucide-graduation-cap',
+  'turismo-academico': 'i-lucide-book-open',
+  'turismo-idiomatico': 'i-lucide-languages',
+  'turismo-lgbtq': 'i-lucide-heart-handshake',
+  'turismo-corporativo': 'i-lucide-briefcase',
+  'turismo-negocios': 'i-lucide-chart-line',
+  'turismo-incentivos': 'i-lucide-award',
+  'turismo-ferroviario': 'i-lucide-train-front',
+  'turismo-bicicleta': 'i-lucide-bike',
+  'turismo-deportivo': 'i-lucide-volleyball',
 }
 
 // Fallback: match by keyword in name if code is not recognized
 const iconByKeyword: Record<string, string> = {
-  cultural: 'account_balance',
-  vivencial: 'diversity_3',
-  rural: 'agriculture',
-  mistic: 'self_improvement',
-  histor: 'history_edu',
-  religi: 'church',
-  arqueolog: 'temple_hindu',
-  etnograf: 'groups',
-  naturaleza: 'nature_people',
-  aventura: 'hiking',
-  ecoturismo: 'eco',
-  montana: 'landscape',
-  trekking: 'hiking',
-  ave: 'flutter_dash',
-  fotograf: 'photo_camera',
-  cientif: 'biotech',
-  playa: 'beach_access',
-  termal: 'hot_tub',
-  spa: 'spa',
-  romant: 'favorite',
-  familiar: 'family_restroom',
-  tematic: 'theater_comedy',
-  urbano: 'location_city',
-  gastron: 'restaurant',
-  compras: 'shopping_bag',
-  evento: 'event',
-  festivid: 'celebration',
-  musical: 'music_note',
-  cine: 'movie',
-  educ: 'school',
-  academ: 'menu_book',
-  idiom: 'translate',
-  lgbtq: 'diversity_1',
-  corporativ: 'business_center',
-  negocio: 'monitoring',
-  incentiv: 'workspace_premium',
-  ferrov: 'train',
-  bicicleta: 'directions_bike',
-  deport: 'sports_soccer',
+  cultural: 'i-lucide-landmark',
+  vivencial: 'i-lucide-users',
+  rural: 'i-lucide-tractor',
+  mistic: 'i-lucide-sparkles',
+  histor: 'i-lucide-scroll-text',
+  religi: 'i-lucide-church',
+  arqueolog: 'i-lucide-pyramid',
+  etnograf: 'i-lucide-users',
+  naturaleza: 'i-lucide-trees',
+  aventura: 'i-lucide-mountain',
+  ecoturismo: 'i-lucide-leaf',
+  montana: 'i-lucide-mountain-snow',
+  trekking: 'i-lucide-mountain',
+  ave: 'i-lucide-bird',
+  fotograf: 'i-lucide-camera',
+  cientif: 'i-lucide-microscope',
+  playa: 'i-lucide-umbrella',
+  termal: 'i-lucide-bath',
+  spa: 'i-lucide-flower-2',
+  romant: 'i-lucide-heart',
+  familiar: 'i-lucide-baby',
+  tematic: 'i-lucide-drama',
+  urbano: 'i-lucide-building-2',
+  gastron: 'i-lucide-utensils',
+  compras: 'i-lucide-shopping-bag',
+  evento: 'i-lucide-calendar',
+  festivid: 'i-lucide-party-popper',
+  musical: 'i-lucide-music',
+  cine: 'i-lucide-film',
+  educ: 'i-lucide-graduation-cap',
+  academ: 'i-lucide-book-open',
+  idiom: 'i-lucide-languages',
+  lgbtq: 'i-lucide-heart-handshake',
+  corporativ: 'i-lucide-briefcase',
+  negocio: 'i-lucide-chart-line',
+  incentiv: 'i-lucide-award',
+  ferrov: 'i-lucide-train-front',
+  bicicleta: 'i-lucide-bike',
+  deport: 'i-lucide-volleyball',
 }
 
 // ===== Tags catalog (fetched from /api/tags) =====
@@ -678,17 +678,6 @@ const deleteTag = async (tag: Tag) => {
   background: rgba(15, 23, 42, 0.5);
 }
 
-.material-symbols-outlined.filled {
-  font-family: 'Material Symbols Outlined' !important;
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
-}
 
 .fade-enter-active, .fade-leave-active {
   transition: all 0.3s ease;

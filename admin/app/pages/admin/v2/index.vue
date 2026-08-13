@@ -256,12 +256,14 @@ const greeting = computed(() => {
              the rest stay equal weight — gives the page a clear scanning
              anchor. sm:grid-cols-2 fills the awkward 640-768px gap where
              cards previously stayed single-column. -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- 2×2 también en móvil: cuatro tarjetas apiladas a ancho completo
+             ocupaban casi dos pantallas antes del primer contenido útil. -->
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           <UCard
             v-for="stat in stats"
             :key="stat.key"
-            :ui="{ body: 'p-5' }"
-            :class="stat.key === 'revenue' ? 'sm:col-span-2 xl:col-span-1 ring-1 ring-primary/25 bg-primary/[0.03]' : ''"
+            :ui="{ body: 'p-4 sm:p-5' }"
+            :class="stat.key === 'revenue' ? 'col-span-2 xl:col-span-1 ring-1 ring-primary/25 bg-primary/[0.03]' : ''"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="space-y-2 min-w-0">

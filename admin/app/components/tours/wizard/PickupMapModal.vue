@@ -2,51 +2,51 @@
   <Transition name="fade">
     <div v-if="isOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm" @click.self="$emit('close')">
       <Transition name="modal">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-6xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="bg-default w-full max-w-6xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <!-- Header -->
-          <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+          <div class="p-6 border-b border-default flex items-center justify-between bg-elevated/40">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span class="material-symbols-outlined filled">{{ type === 'meeting_point' ? 'location_on' : 'explore_nearby' }}</span>
+                <UIcon :name="type === 'meeting_point' ? 'i-lucide-map-pin' : 'i-lucide-target'" class="size-6" />
               </div>
-              <h3 class="text-xl font-bold dark:text-white">
+              <h3 class="text-xl font-bold text-highlighted">
                 {{ type === 'meeting_point' ? 'Configurar Punto de Encuentro' : 'Configurar Radio de Recojo' }}
               </h3>
             </div>
-            <button @click="$emit('close')" class="size-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center dark:text-white">
-              <span class="material-symbols-outlined">close</span>
+            <button @click="$emit('close')" class="size-10 rounded-xl hover:bg-elevated transition-colors flex items-center justify-center dark:text-white">
+              <UIcon name="i-lucide-x" class="size-5" />
             </button>
           </div>
 
           <!-- Content -->
           <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-3">
             <!-- Sidebar Controls -->
-            <div class="p-8 border-r border-slate-100 dark:border-slate-800 space-y-8 overflow-y-auto custom-scrollbar">
+            <div class="p-8 border-r border-default space-y-8 overflow-y-auto custom-scrollbar">
               <!-- Search -->
               <div class="space-y-4">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Buscar ubicación</label>
+                <label class="text-[10px] font-black uppercase tracking-widest text-muted">Buscar ubicación</label>
                 <div class="relative">
                   <input 
                     id="mapSearchInput"
                     type="text" 
                     placeholder="Ej: Plaza de Armas Puno"
-                    class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-4 px-12 text-sm focus:ring-2 focus:ring-primary dark:text-white font-medium shadow-inner"
+                    class="w-full bg-elevated border-none rounded-xl py-4 px-12 text-sm focus:ring-2 focus:ring-primary dark:text-white font-medium shadow-inner"
                   />
-                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                  <UIcon name="i-lucide-search" class="absolute left-4 top-1/2 -translate-y-1/2 text-muted size-5" />
                 </div>
               </div>
 
               <!-- Area mode + controls (Only for hotel_pickup) -->
               <div v-if="type === 'hotel_pickup'" class="space-y-6 animate-in slide-in-from-top-2">
                 <div class="space-y-3">
-                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Forma del área</label>
+                  <label class="text-[10px] font-black uppercase tracking-widest text-muted">Forma del área</label>
                   <div class="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       class="rounded-xl py-3 px-3 text-[11px] font-black uppercase tracking-wide transition-colors border"
                       :class="localAreaType === 'radius'
                         ? 'bg-primary text-white border-primary'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent hover:border-primary/40'"
+                        : 'bg-elevated text-muted border-transparent hover:border-primary/40'"
                       @click="localAreaType = 'radius'"
                     >
                       Radio
@@ -56,7 +56,7 @@
                       class="rounded-xl py-3 px-3 text-[11px] font-black uppercase tracking-wide transition-colors border"
                       :class="localAreaType === 'polygon'
                         ? 'bg-primary text-white border-primary'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent hover:border-primary/40'"
+                        : 'bg-elevated text-muted border-transparent hover:border-primary/40'"
                       @click="localAreaType = 'polygon'"
                     >
                       Zona dibujada
@@ -66,7 +66,7 @@
 
                 <!-- Radio -->
                 <div v-if="localAreaType === 'radius'" class="space-y-4">
-                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Radio de recojo (km)</label>
+                  <label class="text-[10px] font-black uppercase tracking-widest text-muted">Radio de recojo (km)</label>
                   <div class="flex items-center gap-4">
                     <input
                       v-model.number="localRadius"
@@ -74,12 +74,12 @@
                       step="0.1"
                       min="0.1"
                       max="20"
-                      class="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary dark:text-white font-bold"
+                      class="flex-1 bg-elevated border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-primary dark:text-white font-bold"
                       @change="updateCircleRadius"
                     />
-                    <span class="text-xs font-bold text-slate-500">km</span>
+                    <span class="text-xs font-bold text-muted">km</span>
                   </div>
-                  <p class="text-[10px] text-slate-400 font-medium">= {{ (localRadius * 1000).toFixed(0) }} metros</p>
+                  <p class="text-[10px] text-muted font-medium">= {{ (localRadius * 1000).toFixed(0) }} metros</p>
                 </div>
 
                 <!-- Zona dibujada -->
@@ -93,7 +93,7 @@
                     >
                       + Dibujar una zona
                     </button>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    <p class="text-[11px] text-muted font-medium leading-relaxed">
                       Pulsa el botón y luego haz clic en el mapa en cada esquina de la zona.
                     </p>
                   </template>
@@ -104,7 +104,7 @@
                       <p class="text-[11px] font-black uppercase tracking-wide text-primary">
                         Dibujando · {{ draftPoints.length }} punto(s)
                       </p>
-                      <p class="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      <p class="text-[10px] text-default leading-relaxed">
                         Haz clic en el mapa para añadir cada esquina. Cuando tengas al menos 3,
                         cierra la zona con el botón o haciendo clic en el punto verde.
                       </p>
@@ -138,11 +138,11 @@
 
                   <!-- Saved zones -->
                   <div v-if="localArea.length" class="space-y-1.5">
-                    <span class="block text-[8px] uppercase text-slate-400">Zonas guardadas</span>
+                    <span class="block text-[10px] uppercase text-muted">Zonas guardadas</span>
                     <div
                       v-for="(ring, i) in localArea"
                       :key="i"
-                      class="bg-slate-50 dark:bg-slate-950 py-2 px-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3"
+                      class="bg-elevated py-2 px-3 rounded-xl border border-default flex items-center justify-between gap-3"
                     >
                       <span class="text-[11px] font-black dark:text-white">
                         Zona {{ i + 1 }} · {{ ring?.length || 0 }} puntos
@@ -155,7 +155,7 @@
                         Quitar
                       </button>
                     </div>
-                    <p class="text-[10px] text-slate-400 font-medium">
+                    <p class="text-[10px] text-muted font-medium">
                       Arrastra los vértices en el mapa para ajustar una zona guardada.
                     </p>
                   </div>
@@ -168,14 +168,14 @@
 
               <!-- Reference photo (meeting point only) -->
               <div v-if="type === 'meeting_point'" class="space-y-3">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label class="text-[10px] font-black uppercase tracking-widest text-muted">
                   Imagen de referencia
                 </label>
-                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">
+                <p class="text-[10px] text-muted font-medium leading-relaxed">
                   La verá el pasajero en su reserva para reconocer el lugar el día del tour.
                 </p>
 
-                <div v-if="localImage" class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                <div v-if="localImage" class="relative rounded-2xl overflow-hidden border border-default">
                   <img :src="imagePreviewUrl" alt="Referencia del punto de encuentro" class="w-full h-32 object-cover" />
                   <button
                     type="button"
@@ -188,11 +188,11 @@
 
                 <label
                   v-else
-                  class="flex flex-col items-center justify-center gap-1 h-32 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 cursor-pointer hover:border-primary transition-colors"
+                  class="flex flex-col items-center justify-center gap-1 h-32 rounded-2xl border-2 border-dashed border-accented cursor-pointer hover:border-primary transition-colors"
                   :class="uploadingImage ? 'opacity-60 pointer-events-none' : ''"
                 >
-                  <span class="material-symbols-outlined text-slate-400">{{ uploadingImage ? 'hourglass_top' : 'add_photo_alternate' }}</span>
-                  <span class="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                  <UIcon :name="uploadingImage ? 'i-lucide-hourglass' : 'i-lucide-image-plus'" class="size-6 text-muted" />
+                  <span class="text-[10px] font-black uppercase tracking-wide text-muted">
                     {{ uploadingImage ? 'Subiendo...' : 'Subir imagen' }}
                   </span>
                   <input type="file" accept="image/*" class="hidden" @change="onImageSelected" />
@@ -203,27 +203,27 @@
 
               <!-- Description -->
               <div class="space-y-4">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <label class="text-[10px] font-black uppercase tracking-widest text-muted">
                   {{ type === 'meeting_point' ? 'Descripción del punto' : 'Descripción del área' }}
                 </label>
                 <textarea 
                   v-model="localDescription"
                   rows="3"
-                  class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-2xl p-4 text-xs focus:ring-2 focus:ring-primary dark:text-white font-medium"
+                  class="w-full bg-elevated border-none rounded-2xl p-4 text-xs focus:ring-2 focus:ring-primary dark:text-white font-medium"
                   placeholder="Ej: Plaza de Armas de Puno, frente a la Catedral"
                 ></textarea>
               </div>
 
               <!-- Coords -->
               <div class="space-y-4">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Coordenadas</label>
+                <label class="text-[10px] font-black uppercase tracking-widest text-muted">Coordenadas</label>
                 <div class="grid grid-cols-2 gap-2">
-                  <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span class="block text-[8px] uppercase text-slate-400 mb-1">Latitud</span>
+                  <div class="bg-elevated p-3 rounded-xl border border-default">
+                    <span class="block text-[10px] uppercase text-muted mb-1">Latitud</span>
                     <span class="text-[10px] font-black dark:text-white">{{ localCoords.lat.toFixed(6) }}</span>
                   </div>
-                  <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span class="block text-[8px] uppercase text-slate-400 mb-1">Longitud</span>
+                  <div class="bg-elevated p-3 rounded-xl border border-default">
+                    <span class="block text-[10px] uppercase text-muted mb-1">Longitud</span>
                     <span class="text-[10px] font-black dark:text-white">{{ localCoords.lng.toFixed(6) }}</span>
                   </div>
                 </div>
@@ -232,10 +232,10 @@
               <!-- Instructions -->
               <div class="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10 space-y-2">
                 <div class="flex items-center gap-2 text-amber-500 mb-2">
-                  <span class="material-symbols-outlined text-sm">info</span>
+                  <UIcon name="i-lucide-info" class="size-4" />
                   <span class="text-[10px] font-black uppercase tracking-widest">Instrucciones</span>
                 </div>
-                <ul class="text-[10px] text-slate-500 dark:text-slate-400 space-y-1 font-medium italic">
+                <ul class="text-[10px] text-muted space-y-1 font-medium italic">
                   <li>• Haz clic en el mapa para marcar el centro.</li>
                   <li>• Arrastra el marcador para ajustar la posición.</li>
                   <li v-if="type === 'hotel_pickup'">• El círculo muestra el área de recojo.</li>
@@ -249,20 +249,20 @@
               
               <!-- Zoom Control Placeholder or custom indicator -->
               <div class="absolute bottom-6 left-6 z-10">
-                 <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-800 p-2 shadow-2xl flex items-center gap-2">
+                 <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur rounded-xl border border-default p-2 shadow-2xl flex items-center gap-2">
                     <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_92x30dp.png" class="h-4 opacity-50" />
                     <div class="h-3 w-px bg-slate-200 dark:bg-slate-700"></div>
-                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Constructor de mapa interactivo</span>
+                    <span class="text-[10px] font-bold text-muted uppercase tracking-tighter">Constructor de mapa interactivo</span>
                  </div>
               </div>
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+          <div class="p-6 border-t border-default flex items-center justify-end gap-3 bg-elevated/40">
             <button 
               @click="$emit('close')" 
-              class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted hover:bg-elevated transition-all"
             >
               Cancelar
             </button>
@@ -745,7 +745,4 @@ const handleSave = () => {
   background: #1e293b;
 }
 
-.material-symbols-outlined.filled {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 </style>

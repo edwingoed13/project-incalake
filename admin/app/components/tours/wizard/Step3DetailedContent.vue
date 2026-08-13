@@ -134,7 +134,7 @@
               <!-- Add New Point Section -->
               <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="material-symbols-outlined text-primary text-sm">add_location</span>
+                  <UIcon name="i-lucide-map-pin-plus" class="text-primary size-4" />
                   <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Agregar nuevo punto</h5>
                 </div>
 
@@ -195,7 +195,7 @@
               <!-- Points List -->
               <div class="space-y-2">
                 <div class="flex items-center gap-2 mb-2">
-                  <span class="material-symbols-outlined text-primary text-sm">route</span>
+                  <UIcon name="i-lucide-route" class="text-primary size-4" />
                   <h5 class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">Puntos de la ruta ({{ currentLangData.mapPoints?.length || 0 }})</h5>
                 </div>
 
@@ -215,7 +215,7 @@
                           <UBadge color="neutral" variant="subtle" size="xs">{{ getPointTypeLabel(point.type) }}</UBadge>
                         </div>
                         <p v-if="point.description" class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ point.description }}</p>
-                        <p class="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{{ point.coordinates }}</p>
+                        <p class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">{{ point.coordinates }}</p>
                       </div>
                       <div class="flex items-center gap-0.5 shrink-0 opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity">
                         <UButton
@@ -308,7 +308,7 @@
                 </div>
 
                 <div v-else class="py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400">
-                  <span class="material-symbols-outlined text-3xl mb-2 opacity-30">location_off</span>
+                  <UIcon name="i-lucide-map-pin-off" class="size-8 mb-2 opacity-30" />
                   <p class="text-xs font-medium">Aún no hay puntos en el mapa</p>
                   <p class="text-[10px] opacity-60 mt-1">Agrega puntos para crear la ruta del tour</p>
                 </div>

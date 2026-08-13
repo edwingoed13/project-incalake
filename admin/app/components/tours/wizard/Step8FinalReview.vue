@@ -50,7 +50,7 @@
         <p class="text-center text-xl font-black tabular-nums leading-none" :class="stat.value > 0 ? 'text-success' : 'text-muted'">
           {{ stat.value }}
         </p>
-        <p class="text-[9px] font-black uppercase tracking-widest text-muted text-center mt-1">
+        <p class="text-[10px] font-black uppercase tracking-widest text-muted text-center mt-1">
           {{ stat.label }}
         </p>
       </UCard>
