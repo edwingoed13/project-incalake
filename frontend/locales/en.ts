@@ -347,6 +347,8 @@ export default {
       no_reviews: 'No reviews',
       tour_not_found: 'Tour not found',
       tour_load_error: "We couldn't load this tour. It may be a connection issue.",
+      tour_not_found_help: 'The link may be out of date, or this tour may no longer be available.',
+      tour_not_found_suggestions: 'You might like these tours',
       view_all_tours: 'View all tours',
       loading_tour: 'Loading tour...',
       payment_usd_notice: 'Prices are for reference. Payment is processed in USD.',
@@ -367,6 +369,19 @@ export default {
       load_more: 'Load more tours',
       previous: 'Previous',
       next: 'Next',
+      // Booking states (confirmation page)
+      booking_cancelled_title: 'Booking cancelled',
+      booking_refunded_title: 'Booking refunded',
+      booking_payment_failed_title: 'Payment did not go through',
+      booking_pending_title: 'Booking awaiting payment',
+      booking_inactive_help: 'This booking is no longer active. If you think this is a mistake, message us on WhatsApp at +51 982 769 453 with your booking code.',
+      status_cancelled: 'Cancelled',
+      status_refunded: 'Refunded',
+      status_failed: 'Payment failed',
+      status_pending_payment: 'Awaiting payment',
+      status_deposit_paid: 'Deposit paid',
+      // Checkout
+      deposit_available_next_step: 'On the next step you can choose to pay just a {pct}% deposit and the rest on the tour day.',
       // Contact page
       contact_title: 'Contact us',
       contact_subtitle: 'Ask us anything and we will help you plan your Lake Titicaca trip.',

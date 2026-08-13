@@ -16,17 +16,22 @@
 
       <!-- Content -->
       <div v-else-if="booking">
-        <!-- Success Header -->
+        <!-- Header — reflects the real booking state, not always "confirmed" -->
         <div class="text-center mb-5 md:mb-8">
-          <div class="inline-flex items-center justify-center size-12 md:size-16 bg-green-100 rounded-full mb-2">
-            <Icon name="material-symbols:check-circle-outline" class="text-green-600 text-3xl md:text-4xl" />
+          <div class="inline-flex items-center justify-center size-12 md:size-16 rounded-full mb-2" :class="stateTone.ring">
+            <Icon :name="bookingState.icon" class="text-3xl md:text-4xl" :class="stateTone.icon" />
           </div>
-          <h1 class="text-lg md:text-2xl font-black text-slate-800">{{ t('booking_confirmed') }}</h1>
+          <h1 class="text-lg md:text-2xl font-black text-slate-800">{{ bookingState.title }}</h1>
           <p class="text-xs text-slate-500 mt-0.5">{{ t('code') }}: <span class="font-mono font-bold text-primary">{{ booking.booking_code }}</span></p>
+          <!-- A dead booking needs a way forward, not a pickup wizard. -->
+          <p v-if="!bookingState.active" class="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-snug">
+            {{ t('booking_inactive_help') }}
+          </p>
         </div>
 
-        <!-- Step Indicator -->
-        <div class="flex items-center justify-between mb-5 md:mb-8 px-2">
+        <!-- Step Indicator — hidden for a cancelled/failed booking: the pickup
+             and traveler steps lead nowhere once the booking is dead. -->
+        <div v-if="bookingState.active" class="flex items-center justify-between mb-5 md:mb-8 px-2">
           <template v-for="(s, idx) in steps" :key="idx">
             <button
               @click="currentStep = idx"
@@ -154,14 +159,14 @@
               </div>
               <div class="p-3 text-center">
                 <p class="text-[10px] text-slate-400 font-semibold uppercase">{{ t('status_label') }}</p>
-                <p class="text-sm font-bold mt-0.5" :class="paymentSummary?.is_partial ? 'text-amber-600' : 'text-green-600'">
-                  {{ paymentSummary?.is_partial ? 'Adelanto pagado' : t('status_paid') }}
-                </p>
+                <p class="text-sm font-bold mt-0.5" :class="stateTone.text">{{ bookingState.status }}</p>
               </div>
             </div>
 
-            <!-- Partial payment breakdown -->
-            <div v-if="paymentSummary?.is_partial" class="border-t border-slate-100 px-3 py-2.5 bg-amber-50/60 flex items-center justify-between gap-2 flex-wrap">
+            <!-- Partial payment breakdown. Only while the booking is live and
+                 something was actually charged — it used to announce
+                 "Pagaste $0.00" on a cancelled booking. -->
+            <div v-if="bookingState.active && paymentSummary?.is_partial && paymentSummary.paid_now > 0" class="border-t border-slate-100 px-3 py-2.5 bg-amber-50/60 flex items-center justify-between gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
                 <Icon name="material-symbols:payments-outline" class="text-amber-600 text-sm" />
                 Pagaste <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
@@ -205,10 +210,16 @@
             {{ t('voucher') }}
           </button>
 
-          <button @click="currentStep = 1" class="btn-primary w-full">
+          <!-- No pickup wizard for a cancelled/failed booking; offer the way
+               back to the catalogue instead. -->
+          <button v-if="bookingState.active" @click="currentStep = 1" class="btn-primary w-full">
             {{ t('continue_pickup') }}
             <Icon name="material-symbols:arrow-forward" class="text-lg" />
           </button>
+          <NuxtLink v-else :to="localePath('/tours')" class="btn-primary w-full">
+            {{ t('view_all_tours') }}
+            <Icon name="material-symbols:arrow-forward" class="text-lg" />
+          </NuxtLink>
         </div>
 
         <!-- Step 1: Pickup Configuration -->
@@ -504,6 +515,7 @@
 <script setup lang="ts">
 const { t, te, locale } = useI18n()
 const currencyStore = useCurrencyStore()
+const localePath = useLocalePath()
 const route = useRoute()
 const { api } = useApi()
 const config = useRuntimeConfig()
@@ -568,6 +580,49 @@ const isMultiTour = computed(() => purchaseTours.value.length > 1)
 // Payment summary from the API: how much was charged now vs the balance due
 // (for tours paid with a deposit/advance).
 const paymentSummary = computed(() => (response.value as any)?.payment_summary || null)
+
+/**
+ * The page used to greet every booking with "¡Reserva Confirmada!" and a green
+ * "Adelanto pagado", reading only is_partial. A cancelled booking therefore
+ * looked alive — and showed "Adelanto pagado" next to "Pagaste $0.00". Booking
+ * status wins over payment status: a cancelled booking is cancelled no matter
+ * what was charged.
+ */
+const bookingState = computed(() => {
+  const status = String(booking.value?.status || '').toLowerCase()
+  const payment = String(booking.value?.payment_status || '').toLowerCase()
+
+  if (status === 'cancelled') {
+    return { key: 'cancelled', title: t('booking_cancelled_title'), status: t('status_cancelled'),
+             icon: 'material-symbols:cancel-outline', tone: 'red', active: false }
+  }
+  if (payment === 'refunded') {
+    return { key: 'refunded', title: t('booking_refunded_title'), status: t('status_refunded'),
+             icon: 'material-symbols:undo', tone: 'slate', active: false }
+  }
+  if (payment === 'failed') {
+    return { key: 'failed', title: t('booking_payment_failed_title'), status: t('status_failed'),
+             icon: 'material-symbols:error-outline', tone: 'red', active: false }
+  }
+  if (payment === 'pending') {
+    return { key: 'pending', title: t('booking_pending_title'), status: t('status_pending_payment'),
+             icon: 'material-symbols:schedule-outline', tone: 'amber', active: true }
+  }
+  if (paymentSummary.value?.is_partial) {
+    return { key: 'partial', title: t('booking_confirmed'), status: t('status_deposit_paid'),
+             icon: 'material-symbols:check-circle-outline', tone: 'amber', active: true }
+  }
+  return { key: 'paid', title: t('booking_confirmed'), status: t('status_paid'),
+           icon: 'material-symbols:check-circle-outline', tone: 'green', active: true }
+})
+
+const STATE_TONES: Record<string, { ring: string; icon: string; text: string }> = {
+  green: { ring: 'bg-green-100', icon: 'text-green-600', text: 'text-green-600' },
+  amber: { ring: 'bg-amber-100', icon: 'text-amber-600', text: 'text-amber-600' },
+  red:   { ring: 'bg-red-100',   icon: 'text-red-600',   text: 'text-red-600' },
+  slate: { ring: 'bg-slate-200', icon: 'text-slate-600', text: 'text-slate-600' },
+}
+const stateTone = computed(() => STATE_TONES[bookingState.value.tone] || STATE_TONES.green!)
 const grandTotal = computed(() =>
   paymentSummary.value?.grand_total ?? purchaseTours.value.reduce((s, x) => s + (x.total || 0), 0)
 )

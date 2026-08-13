@@ -34,7 +34,11 @@
         <h1 class="text-white text-3xl sm:text-5xl md:text-6xl font-black leading-[1.1] tracking-tighter mb-3 md:mb-4 drop-shadow-2xl">
           {{ c('hero', 'title', 'home_hero_title') }}
         </h1>
-        <p class="text-white/85 text-sm sm:text-lg md:text-xl font-medium max-w-2xl mx-auto line-clamp-2">
+        <!-- Was text-white/85 + line-clamp-2: over the bright water in the photo
+             it read as grey, and on a 390px screen the clamp chopped the
+             sentence mid-word. Full white with a shadow, and a third line on
+             small screens so the sentence finishes. -->
+        <p class="text-white text-sm sm:text-lg md:text-xl font-medium max-w-2xl mx-auto line-clamp-3 sm:line-clamp-2 drop-shadow-lg">
           {{ c('hero', 'subtitle', 'home_hero_subtitle') }}
         </p>
       </div>
@@ -155,22 +159,27 @@
 
     <!-- Trust Signals - Mobile: horizontal scroll pills / Desktop: full layout -->
     <section class="py-4 md:py-8 relative z-0">
-      <!-- Mobile: compact horizontal scroll -->
-      <div class="md:hidden overflow-x-auto scrollbar-hide px-4">
-        <div class="flex items-center gap-3 w-max">
-          <div v-for="(signal, idx) in trustSignals" :key="idx"
-            class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-full shrink-0"
-          >
-            <Icon :name="msIcon(signal.icon)" class="text-sm"
-              :class="[idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-green-500' : 'text-blue-500']"
-            />
-            <span class="text-[10px] font-bold text-slate-700 whitespace-nowrap">{{ signal.title }}</span>
-          </div>
-          <div class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
-            <Icon name="material-symbols:star" class="text-yellow-500 text-sm" />
-            <span class="text-[10px] font-black text-slate-700">4.9/5</span>
+      <!-- Mobile: compact horizontal scroll. The scrollbar is hidden, so the
+           last chip just looked chopped off — the right-edge fade is what says
+           "there is more, swipe". -->
+      <div class="md:hidden relative">
+        <div class="overflow-x-auto scrollbar-hide px-4">
+          <div class="flex items-center gap-3 w-max pr-6">
+            <div v-for="(signal, idx) in trustSignals" :key="idx"
+              class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-full shrink-0"
+            >
+              <Icon :name="msIcon(signal.icon)" class="text-sm"
+                :class="[idx === 0 ? 'text-orange-500' : idx === 1 ? 'text-green-500' : 'text-blue-500']"
+              />
+              <span class="text-[11px] font-bold text-slate-700 whitespace-nowrap">{{ signal.title }}</span>
+            </div>
+            <div class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
+              <Icon name="material-symbols:star" class="text-yellow-500 text-sm" />
+              <span class="text-[11px] font-black text-slate-700">4.9/5</span>
+            </div>
           </div>
         </div>
+        <div class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent"></div>
       </div>
 
       <!-- Desktop: full layout -->

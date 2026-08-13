@@ -58,6 +58,17 @@ const offerLabel = computed(() => {
   if (!o) return ''
   return o.discountType === 'percentage' ? `${o.discount}% OFF` : `$${o.discount} OFF`
 })
+
+// Transaction fee. The cart and checkout have always added it, but the tour
+// page stopped at the subtotal — so a $158 tour turned into $181.70 one screen
+// later, which is exactly the surprise that makes people abandon a cart. Shown
+// here at the point of decision instead.
+const feePercent = computed(() => {
+  const p = Number(props.tour?.tax_percentage)
+  return Number.isFinite(p) && p > 0 ? p : 0
+})
+const feeAmount = computed(() => props.total * feePercent.value / 100)
+const totalWithFee = computed(() => props.total + feeAmount.value)
 </script>
 
 <template>
@@ -163,10 +174,20 @@ const offerLabel = computed(() => {
           </span>
           <span class="text-trust font-bold tabular-nums">−{{ fmt(groupDiscount) }}</span>
         </div>
+        <div v-if="feePercent" class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+          <span class="flex items-center gap-1">
+            {{ t('transaction_fees') }}
+            <AppPopover :label="t('transaction_fees')">
+              <p class="leading-snug">{{ t('transaction_fees_info') }}</p>
+            </AppPopover>
+            <span class="tabular-nums">({{ feePercent.toFixed(2) }}%)</span>
+          </span>
+          <span class="tabular-nums font-medium">{{ fmt(feeAmount) }}</span>
+        </div>
         <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-slate-700">
-          <span class="text-sm font-bold">Subtotal</span>
+          <span class="text-sm font-bold">{{ feePercent ? t('total') : 'Subtotal' }}</span>
           <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
-            {{ fmt(total) }}
+            {{ fmt(totalWithFee) }}
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
           </span>
         </div>

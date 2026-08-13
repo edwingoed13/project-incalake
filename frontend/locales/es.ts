@@ -356,6 +356,8 @@ export default {
       no_reviews: 'Sin reseñas',
       tour_not_found: 'Tour no encontrado',
       tour_load_error: 'No pudimos cargar este tour. Puede ser un problema de conexión.',
+      tour_not_found_help: 'Puede que el enlace esté desactualizado o que este tour ya no esté disponible.',
+      tour_not_found_suggestions: 'Quizá te interesen estos tours',
       view_all_tours: 'Ver todos los tours',
       loading_tour: 'Cargando tour...',
       payment_usd_notice: 'Los precios son referenciales. El pago se procesa en USD.',
@@ -376,6 +378,19 @@ export default {
       load_more: 'Cargar más tours',
       previous: 'Anterior',
       next: 'Siguiente',
+      // Booking states (confirmation page)
+      booking_cancelled_title: 'Reserva cancelada',
+      booking_refunded_title: 'Reserva reembolsada',
+      booking_payment_failed_title: 'El pago no se completó',
+      booking_pending_title: 'Reserva pendiente de pago',
+      booking_inactive_help: 'Esta reserva ya no está activa. Si crees que es un error, escríbenos por WhatsApp al +51 982 769 453 con tu código de reserva.',
+      status_cancelled: 'Cancelada',
+      status_refunded: 'Reembolsada',
+      status_failed: 'Pago fallido',
+      status_pending_payment: 'Pendiente de pago',
+      status_deposit_paid: 'Adelanto pagado',
+      // Checkout
+      deposit_available_next_step: 'En el siguiente paso podrás elegir pagar solo el {pct}% de adelanto y el resto el día del tour.',
       // Contact page
       contact_title: 'Contáctanos',
       contact_subtitle: 'Resolvemos tus dudas y armamos tu viaje al Lago Titicaca.',

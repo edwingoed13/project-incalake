@@ -461,22 +461,34 @@
   <!-- Error State: un fallo transitorio (429/500/red) NO es «no existe».
        Decirle «no encontrado» a un comprador por un hipo de la API pierde la
        venta; aquí se le ofrece reintentar. -->
-  <div v-else class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
-    <div class="text-center px-6">
-      <template v-if="isTransientError">
-        <ExclamationTriangleIcon class="size-16 text-amber-400 mb-4 mx-auto" aria-hidden="true" />
-        <p class="text-slate-700 text-lg font-bold mb-4">{{ t('tour_load_error') }}</p>
-        <button type="button" class="btn-primary" @click="refresh()">
-          {{ t('retry') }}
-        </button>
-      </template>
-      <template v-else>
-        <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
-        <p class="text-red-600 text-lg mb-4">{{ t('tour_not_found') }}</p>
-        <NuxtLink :to="localePath('/tours')" class="text-primary hover:underline font-bold">
-          {{ t('view_all_tours') }}
-        </NuxtLink>
-      </template>
+  <div v-else class="min-h-screen bg-background-light dark:bg-background-dark pt-28 pb-16 px-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center">
+        <template v-if="isTransientError">
+          <ExclamationTriangleIcon class="size-16 text-amber-400 mb-4 mx-auto" aria-hidden="true" />
+          <p class="text-slate-700 text-lg font-bold mb-4">{{ t('tour_load_error') }}</p>
+          <button type="button" class="btn-primary" @click="refresh()">
+            {{ t('retry') }}
+          </button>
+        </template>
+        <template v-else>
+          <MagnifyingGlassIcon class="size-16 text-slate-300 mb-4 mx-auto" aria-hidden="true" />
+          <h1 class="text-xl md:text-2xl font-black text-slate-800 mb-1.5">{{ t('tour_not_found') }}</h1>
+          <p class="text-sm text-slate-500 mb-5 max-w-md mx-auto">{{ t('tour_not_found_help') }}</p>
+          <NuxtLink :to="localePath('/tours')" class="btn-primary">
+            {{ t('view_all_tours') }}
+          </NuxtLink>
+        </template>
+      </div>
+
+      <!-- A dead link is where visitors from Google land. Sending them to a
+           lone "not found" wastes the visit; these are already fetched. -->
+      <section v-if="!isTransientError && relatedTours.length" class="mt-12">
+        <h2 class="text-base md:text-lg font-bold text-slate-800 mb-4 text-center">{{ t('tour_not_found_suggestions') }}</h2>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <TourCard v-for="rt in relatedTours.slice(0, 4)" :key="rt.id" :tour="rt" />
+        </div>
+      </section>
     </div>
   </div>
 </template>

@@ -156,7 +156,6 @@ function getItemPolicies(item: any) {
   }
 }
 
-const acceptedTerms = ref(false)
 const policiesItem = ref<any>(null)
 
 function openPolicies(item: any) {
@@ -168,7 +167,6 @@ function closePolicies() {
 }
 
 function proceedToCheckout() {
-  if (!acceptedTerms.value) return
   router.push(localePath('/checkout'))
 }
 
@@ -463,22 +461,24 @@ function getImageUrl(path: string) {
               :tax-breakdown="sortedCartItems.map((ti: any) => ({ label: ti.tourTitle, percent: ti.taxPercentage || 0 }))"
             />
 
-            <!-- Terms -->
-            <label class="flex items-start gap-2 cursor-pointer mb-4 p-3 bg-slate-50 rounded-xl">
-              <input v-model="acceptedTerms" type="checkbox" class="mt-0.5 w-4 h-4 accent-primary rounded" />
-              <span class="text-[11px] text-slate-600">{{ t('terms_accept') }}
-                <button type="button" @click.stop.prevent="showAllPolicies = true" class="text-primary font-semibold hover:underline">{{ t('terms_link') }}</button>
-                {{ t('terms_policies') }}
-              </span>
-            </label>
-
+            <!-- The terms checkbox used to live here AND on the checkout page,
+                 so the same consent was demanded twice. It stays where it
+                 legally matters (checkout, right before paying); here the
+                 policies are just one click away. -->
             <button
               @click="proceedToCheckout"
-              :disabled="!acceptedTerms"
               class="btn-primary w-full"
             >
               <Icon name="material-symbols:lock-outline" class="text-lg" />
               {{ t('proceed_checkout') }}
+            </button>
+
+            <button
+              type="button"
+              @click="showAllPolicies = true"
+              class="mt-2.5 w-full text-center text-[11px] text-slate-500 hover:text-primary transition-colors"
+            >
+              {{ t('terms_conditions') }}
             </button>
 
             <!-- Trust -->

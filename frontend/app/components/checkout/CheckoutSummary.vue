@@ -21,6 +21,17 @@ const formatTime = (tr: string) => {
   return `${hour % 12 || 12}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
 }
 
+// The tour page promises "reserve with 50% now" and the deposit really does
+// exist — but the choice only appears on the payment screen, one step later.
+// Without this line the promise looks broken right where the customer is
+// deciding to hand over their data.
+const depositPct = computed(() => {
+  const pcts = cartStore.items
+    .map((i: any) => Number(i.advancePaymentPercentage))
+    .filter((p: number) => Number.isFinite(p) && p > 0 && p < 100)
+  return pcts.length === cartStore.items.length && pcts.length > 0 ? Math.max(...pcts) : null
+})
+
 const guideTypeLabels = computed<Record<string, string>>(() => ({
   live_guide: t('guide_live'), audio_guide: t('guide_audio'),
   informative_brochures: t('guide_brochures'), no_guide: t('guide_self'),
@@ -101,6 +112,11 @@ const sortedItems = computed(() =>
     <div class="flex justify-between items-center">
       <span class="font-black">{{ t('total') }}</span>
       <span class="text-xl font-black text-primary">{{ currencyStore.formatConverted(cartStore.totalAmount) }}</span>
+    </div>
+
+    <div v-if="depositPct" class="mt-3 flex items-start gap-1.5 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+      <Icon name="material-symbols:payments-outline" class="text-amber-600 text-sm mt-0.5 shrink-0" />
+      <span class="text-[11px] text-amber-800 leading-snug">{{ t('deposit_available_next_step', { pct: depositPct }) }}</span>
     </div>
 
     <div v-if="currencyStore.isForeignCurrency" class="mt-3 flex items-start gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
