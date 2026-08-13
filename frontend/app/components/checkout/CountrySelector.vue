@@ -78,13 +78,13 @@ watch(open, (val) => {
     <button
       type="button"
       @click="toggle"
-      class="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-lg transition-colors text-left"
+      class="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 border rounded-lg transition-colors text-left"
       :class="[
-        error ? 'border-red-500' : open ? 'border-primary ring-2 ring-primary/20' : 'border-slate-300 dark:border-slate-700',
+        error ? 'border-red-500' : open ? 'border-primary ring-2 ring-primary/20' : 'border-slate-300',
       ]"
     >
       <img v-if="selectedCountry" :src="countryFlagUrl(selectedCountry.code)" :alt="selectedCountry.code" class="w-5 h-4 object-cover rounded-sm" />
-      <span v-if="selectedCountry" class="flex-1 text-sm font-medium text-slate-800 dark:text-white">
+      <span v-if="selectedCountry" class="flex-1 text-sm font-medium text-slate-800">
         {{ selectedCountry.name }}
         <span class="text-slate-400 ml-1">({{ selectedCountry.dial }})</span>
       </span>
@@ -96,17 +96,17 @@ watch(open, (val) => {
     <Transition name="dropdown">
       <div
         v-if="open"
-        class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+        class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden"
       >
         <!-- Search -->
-        <div class="p-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="p-2 border-b border-slate-100">
           <div class="relative">
             <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
             <input
               ref="inputRef"
               v-model="search"
               type="text"
-              class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               placeholder="Search country..."
               @keydown.esc="open = false"
             />
@@ -126,7 +126,7 @@ watch(open, (val) => {
             ]"
           >
             <img :src="countryFlagUrl(country.code)" :alt="country.code" class="w-5 h-4 object-cover rounded-sm" />
-            <span class="flex-1 text-sm" :class="country.code === modelValue ? 'font-bold text-primary' : 'text-slate-700 dark:text-slate-300'">
+            <span class="flex-1 text-sm" :class="country.code === modelValue ? 'font-bold text-primary' : 'text-slate-700'">
               {{ country.name }}
             </span>
             <span class="text-xs text-slate-400 font-mono">{{ country.dial }}</span>

@@ -28,7 +28,7 @@ const style = computed(() => {
   <span
     class="inline-flex items-center gap-0.5 rounded-full font-bold shadow-sm whitespace-nowrap"
     :class="[
-      size === 'xs' ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-1 text-[10px]',
+      size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-[10px]',
       variant === 'tint' ? 'bg-green-500/10 text-green-600 shadow-none' : 'bg-green-500 text-white',
     ]"
     :style="style"

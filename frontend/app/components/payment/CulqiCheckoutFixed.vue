@@ -234,8 +234,8 @@ const openPayment = () => {
 <template>
   <div>
     <!-- Error Message -->
-    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-      <p class="text-sm text-red-700 dark:text-red-300">{{ errorMessage }}</p>
+    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-sm text-red-700">{{ errorMessage }}</p>
     </div>
 
     <!-- Pay Button -->

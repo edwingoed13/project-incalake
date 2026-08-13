@@ -44,7 +44,7 @@ const sortedItems = computed(() =>
 </script>
 
 <template>
-  <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-5 sticky top-24 border border-slate-200 dark:border-slate-800">
+  <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-5 sticky top-24 border border-slate-200">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-black">{{ t('booking_summary') }}</h3>
       <NuxtLink :to="localePath('/cart')" class="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
@@ -57,7 +57,7 @@ const sortedItems = computed(() =>
       <div v-for="item in sortedItems" :key="item.id" class="space-y-1.5">
         <h4 class="text-sm font-bold text-slate-800 leading-snug">{{ item.tourTitle }}</h4>
 
-        <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '15', color: item.offerColor || '#22c55e' }">
+        <div v-if="item.hasOffer" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '15', color: item.offerColor || '#22c55e' }">
           <Icon name="material-symbols:sell-outline" class="text-[10px]" />
           {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
         </div>
@@ -97,7 +97,7 @@ const sortedItems = computed(() =>
           <AppPopover :label="t('transaction_fees')" width="w-72">
             <p class="leading-snug mb-1.5">{{ t('transaction_fees_info') }}</p>
             <div class="pt-1.5 mt-1.5 border-t border-white/15">
-              <p class="text-[9px] font-bold uppercase tracking-wider text-white/60 mb-1">{{ t('transaction_fees') }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">{{ t('transaction_fees') }}</p>
               <div v-for="ti in sortedItems" :key="'tax-'+ti.id" class="flex justify-between py-0.5 gap-2">
                 <span class="flex-1 break-words">{{ ti.tourTitle }}</span>
                 <span class="shrink-0 font-semibold">{{ ti.taxPercentage || 0 }}%</span>

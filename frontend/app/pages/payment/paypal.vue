@@ -1,30 +1,30 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-8 lg:pt-28 lg:pb-12">
+  <div class="min-h-screen bg-background-light pt-24 pb-8 lg:pt-28 lg:pb-12">
     <div class="container mx-auto px-4 lg:px-6 max-w-4xl">
       <!-- Header -->
       <div class="mb-8 text-center">
-        <h1 class="text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-2">
+        <h1 class="text-3xl lg:text-4xl font-black text-primary-light mb-2">
           {{ t('payment_complete_title') }}        </h1>
-        <p class="text-secondary-light dark:text-secondary-dark">
+        <p class="text-secondary-light">
           {{ t('payment_secure_paypal') }}        </p>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
         <div class="spinner size-12 mb-4"></div>
-        <p class="text-secondary-light dark:text-secondary-dark">{{ t('loading_payment') }}</p>
+        <p class="text-secondary-light">{{ t('loading_payment') }}</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-8">
+      <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
         <div class="flex items-start gap-3">
-          <Icon name="material-symbols:error-outline" class="text-red-600 dark:text-red-400 text-2xl" />
+          <Icon name="material-symbols:error-outline" class="text-red-600 text-2xl" />
           <div>
-            <h3 class="font-bold text-red-900 dark:text-red-100 mb-1">Error Loading Payment</h3>
-            <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+            <h3 class="font-bold text-red-900 mb-1">Error Loading Payment</h3>
+            <p class="text-red-700">{{ error }}</p>
             <button
               @click="router.push(localePath('/cart'))"
-              class="mt-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              class="mt-3 text-sm font-semibold text-red-600 hover:text-red-700"
             >
               {{ t('return_cart') }}            </button>
           </div>
@@ -34,46 +34,46 @@
       <!-- Payment Content -->
       <div v-else-if="booking" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Left Column: Booking Summary -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
-          <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-4">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h3 class="text-xl font-black text-primary-light mb-4">
             {{ t('booking_details') }}          </h3>
 
           <div class="space-y-4">
             <!-- Booking Code -->
-            <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">{{ t('booking_code_label') }}</p>
+            <div class="pb-4 border-b border-slate-200">
+              <p class="text-xs text-secondary-light mb-1">{{ t('booking_code_label') }}</p>
               <p class="text-lg font-black text-primary">{{ booking.booking_code }}</p>
             </div>
 
             <!-- Tour Info -->
-            <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">Tour</p>
-              <p class="font-bold text-primary-light dark:text-primary-dark">
+            <div class="pb-4 border-b border-slate-200">
+              <p class="text-xs text-secondary-light mb-1">Tour</p>
+              <p class="font-bold text-primary-light">
                 {{ booking.tour?.title || 'Tour' }}
               </p>
             </div>
 
             <!-- Date -->
-            <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-1">{{ t('date') }}</p>
-              <p class="font-semibold text-primary-light dark:text-primary-dark">
+            <div class="pb-4 border-b border-slate-200">
+              <p class="text-xs text-secondary-light mb-1">{{ t('date') }}</p>
+              <p class="font-semibold text-primary-light">
                 {{ formatDate(booking.tour_date) }}
               </p>
             </div>
 
             <!-- Participants -->
-            <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">{{ t('travelers') }}</p>
+            <div class="pb-4 border-b border-slate-200">
+              <p class="text-xs text-secondary-light mb-2">{{ t('travelers') }}</p>
               <div class="space-y-1 text-sm">
                 <div v-if="booking.participants?.adults" class="flex justify-between">
-                  <span class="text-secondary-light dark:text-secondary-dark">{{ t('adults') }}</span>
-                  <span class="font-semibold text-primary-light dark:text-primary-dark">
+                  <span class="text-secondary-light">{{ t('adults') }}</span>
+                  <span class="font-semibold text-primary-light">
                     {{ booking.participants.adults }}
                   </span>
                 </div>
                 <div v-if="booking.participants?.children" class="flex justify-between">
-                  <span class="text-secondary-light dark:text-secondary-dark">{{ t('children_label') }}</span>
-                  <span class="font-semibold text-primary-light dark:text-primary-dark">
+                  <span class="text-secondary-light">{{ t('children_label') }}</span>
+                  <span class="font-semibold text-primary-light">
                     {{ booking.participants.children }}
                   </span>
                 </div>
@@ -81,13 +81,13 @@
             </div>
 
             <!-- Customer Info -->
-            <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
-              <p class="text-xs text-secondary-light dark:text-secondary-dark mb-2">{{ t('customer') }}</p>
+            <div class="pb-4 border-b border-slate-200">
+              <p class="text-xs text-secondary-light mb-2">{{ t('customer') }}</p>
               <div class="space-y-1 text-sm">
-                <p class="font-semibold text-primary-light dark:text-primary-dark">
+                <p class="font-semibold text-primary-light">
                   {{ booking.customer?.name }}
                 </p>
-                <p class="text-secondary-light dark:text-secondary-dark">
+                <p class="text-secondary-light">
                   {{ booking.customer?.email }}
                 </p>
               </div>
@@ -111,17 +111,17 @@
         <!-- Right Column: Payment Method -->
         <div>
           <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
-          <div v-if="hasAdvanceOption" class="mb-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
+          <div v-if="hasAdvanceOption" class="mb-4 bg-white rounded-xl border border-slate-200 p-4 space-y-2">
             <p class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ t('pay_mode_question') }}</p>
             <!-- Full payment first = the default/recommended (same as Culqi) -->
             <label
               class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
-              :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+              :class="paymentMode === 'full' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
             >
               <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
               <div class="flex-1">
-                <p class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                  {{ t('pay_full_now') }}                  <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
+                <p class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  {{ t('pay_full_now') }}                  <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[10px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
                 </p>
                 <p class="text-[11px] text-slate-500">{{ t('no_balance_due') }}</p>
               </div>
@@ -129,11 +129,11 @@
             </label>
             <label
               class="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
-              :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
+              :class="paymentMode === 'advance' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
             >
               <input type="radio" v-model="paymentMode" value="advance" class="text-primary focus:ring-primary" />
               <div class="flex-1">
-                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ t('pay_deposit') }}</p>
+                <p class="text-sm font-bold text-slate-800">{{ t('pay_deposit') }}</p>
                 <p class="text-[11px] text-slate-500">{{ t('balance_cash_day', { amount: currencyStore.formatConverted(fullTotal - advanceTotal) }) }}</p>
               </div>
               <span class="text-sm font-black text-primary">{{ currencyStore.formatConverted(advanceTotal) }}</span>
@@ -149,12 +149,12 @@
           </div>
 
           <!-- Recoverable payment error (cancellation, declined card, etc.) -->
-          <div v-if="paymentError" class="mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+          <div v-if="paymentError" class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
             <div class="flex items-start gap-3">
-              <Icon name="material-symbols:info-outline" class="text-amber-600 dark:text-amber-400 text-xl" />
+              <Icon name="material-symbols:info-outline" class="text-amber-600 text-xl" />
               <div class="flex-1">
-                <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ paymentError }}</p>
-                <p class="text-xs text-amber-700 dark:text-amber-300 mt-1">Puedes intentarlo de nuevo abajo.</p>
+                <p class="text-sm font-semibold text-amber-900">{{ paymentError }}</p>
+                <p class="text-xs text-amber-700 mt-1">Puedes intentarlo de nuevo abajo.</p>
               </div>
               <button @click="paymentError = null" class="text-amber-600 hover:text-amber-700">
                 <Icon name="material-symbols:close" class="text-lg" />
@@ -178,12 +178,12 @@
               />
             </template>
             <template v-else>
-              <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
+              <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
                 <div class="flex items-start gap-3">
-                  <Icon name="material-symbols:warning-outline" class="text-yellow-600 dark:text-yellow-400 text-2xl" />
+                  <Icon name="material-symbols:warning-outline" class="text-yellow-600 text-2xl" />
                   <div>
-                    <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-1">Configuration Error</h3>
-                    <p class="text-yellow-700 dark:text-yellow-300">Payment gateway is not configured properly.</p>
+                    <h3 class="font-bold text-yellow-900 mb-1">Configuration Error</h3>
+                    <p class="text-yellow-700">Payment gateway is not configured properly.</p>
                   </div>
                 </div>
               </div>
@@ -204,12 +204,12 @@
         v-if="processingPayment"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       >
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
           <div class="spinner size-16 mx-auto mb-4"></div>
-          <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-2">
+          <h3 class="text-xl font-black text-primary-light mb-2">
             Confirming Payment
           </h3>
-          <p class="text-secondary-light dark:text-secondary-dark">
+          <p class="text-secondary-light">
             Please wait while we confirm your payment...
           </p>
         </div>

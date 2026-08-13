@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tour" class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+  <div v-if="tour" class="bg-background-light font-display text-slate-900">
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 pb-24 lg:pb-8">
 
       <!-- Breadcrumb -->
@@ -17,7 +17,7 @@
             </NuxtLink>
           </li>
           <li class="text-slate-300" aria-hidden="true">/</li>
-          <li class="text-slate-700 dark:text-slate-200 font-medium truncate" aria-current="page">
+          <li class="text-slate-700 font-medium truncate" aria-current="page">
             {{ tour.title }}
           </li>
         </ol>
@@ -45,7 +45,7 @@
       <!-- Title & Basic Info — OTA-style: title huge & bold, meta dense -->
       <div class="flex flex-col lg:flex-row justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
         <div class="flex-1 min-w-0">
-          <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900 dark:text-white">
+          <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900">
             {{ tour.title }}
           </h1>
           <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] sm:text-[15px]">
@@ -54,19 +54,19 @@
               v-if="tourReviews.length > 0"
               type="button"
               @click="scrollToReviews"
-              class="inline-flex items-center gap-1 font-bold text-slate-900 dark:text-white hover:text-primary transition-colors"
+              class="inline-flex items-center gap-1 font-bold text-slate-900 hover:text-primary transition-colors"
             >
               <StarSolidIcon class="size-4 text-rating" aria-hidden="true" />
               <span class="tabular-nums">{{ avgRating }}</span>
               <span class="text-slate-500 underline-offset-2 hover:underline">({{ tourReviews.length }})</span>
             </button>
             <span v-if="tourReviews.length > 0" class="text-slate-300" aria-hidden="true">•</span>
-            <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+            <span class="inline-flex items-center gap-1 text-slate-600">
               <MapPinIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
               {{ cityLabel(tour) }}, Perú
             </span>
             <span class="text-slate-300" aria-hidden="true">•</span>
-            <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+            <span class="inline-flex items-center gap-1 text-slate-600">
               <ClockIcon class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
               {{ formatDuration(tour) }}
             </span>
@@ -85,7 +85,7 @@
             <!-- Target audience -->
             <template v-if="audienceLabel">
               <span class="text-slate-300" aria-hidden="true">•</span>
-              <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+              <span class="inline-flex items-center gap-1 text-slate-600">
                 <Icon name="material-symbols:groups-outline" class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
                 {{ audienceLabel }}
               </span>
@@ -93,7 +93,7 @@
             <!-- Guide -->
             <template v-if="guideSummary">
               <span class="text-slate-300" aria-hidden="true">•</span>
-              <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+              <span class="inline-flex items-center gap-1 text-slate-600">
                 <Icon name="material-symbols:record-voice-over-outline" class="size-4 shrink-0 text-primary/70" aria-hidden="true" />
                 {{ guideSummary }}
               </span>
@@ -104,7 +104,7 @@
           <button
             @click="openShare"
             type="button"
-            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-colors"
+            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 text-slate-700 hover:bg-slate-100 rounded-lg font-semibold text-sm transition-colors"
             :aria-label="t('share')"
           >
             <ShareIcon class="size-5" aria-hidden="true" />
@@ -113,8 +113,8 @@
           <button
             @click="toggleSave($event)"
             type="button"
-            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-semibold text-sm transition-all active:scale-95"
-            :class="isSaved ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'"
+            class="inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] px-3 py-2 hover:bg-slate-100 rounded-lg font-semibold text-sm transition-all active:scale-95"
+            :class="isSaved ? 'text-red-500' : 'text-slate-700'"
             :aria-label="isSaved ? 'Quitar de guardados' : 'Guardar tour'"
             :aria-pressed="isSaved"
           >
@@ -129,7 +129,7 @@
            scrolling the whole page. Hidden when there's little content. -->
       <nav
         v-if="sectionNav.length > 2"
-        class="sticky-below-nav -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800"
+        class="sticky-below-nav -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 backdrop-blur border-b border-slate-200"
       >
         <div class="flex gap-1 overflow-x-auto scrollbar-hide">
           <a
@@ -138,7 +138,7 @@
             :href="`#${s.id}`"
             @click.prevent="scrollToSection(s.id)"
             class="shrink-0 px-3.5 py-3 text-[13px] font-bold whitespace-nowrap border-b-2 -mb-px transition-colors"
-            :class="activeSection === s.id ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'"
+            :class="activeSection === s.id ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-800'"
           >
             {{ s.label }}
           </a>
@@ -214,8 +214,8 @@
           <!-- Custom additional sections (admin Step 3) -->
           <section v-if="customSections.length" class="space-y-6">
             <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
-              <h3 class="section-title dark:text-white">{{ section.title }}</h3>
-              <div class="prose prose-sm md:prose-base max-w-none dark:prose-invert" v-html="sanitizeHtml(section.content)"></div>
+              <h3 class="section-title">{{ section.title }}</h3>
+              <div class="prose prose-sm md:prose-base max-w-none" v-html="sanitizeHtml(section.content)"></div>
             </div>
           </section>
 
@@ -227,7 +227,7 @@
                 v-for="tag in tour.tags"
                 :key="tag.id"
                 :to="localePath(`/tours?tag=${tag.slug}`)"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 text-violet-700 dark:text-violet-300 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold hover:bg-violet-100 transition-colors"
               >
                 <TagIcon class="size-3.5" aria-hidden="true" />
                 {{ tag.name }}
@@ -240,7 +240,7 @@
             <TourLocation :tour="tour" />
           </div>
 
-          <hr class="border-slate-200 dark:border-slate-800" />
+          <hr class="border-slate-200" />
 
           <!-- Reviews Section -->
           <section id="reviews" class="scroll-mt-32">
@@ -248,13 +248,13 @@
 
             <!-- Rating summary -->
             <div v-if="tourReviews.length > 0" class="flex items-center gap-3 mb-5 md:mb-6">
-              <span class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{{ avgRating }}</span>
+              <span class="text-3xl md:text-4xl font-black text-slate-900 tabular-nums leading-none">{{ avgRating }}</span>
               <div class="min-w-0">
                 <div class="flex">
-                  <StarSolidIcon v-for="i in 5" :key="i" class="size-4 md:size-5" :class="i <= Math.round(avgRating) ? 'text-rating' : 'text-slate-300 dark:text-slate-600'" aria-hidden="true" />
+                  <StarSolidIcon v-for="i in 5" :key="i" class="size-4 md:size-5" :class="i <= Math.round(avgRating) ? 'text-rating' : 'text-slate-300'" aria-hidden="true" />
                 </div>
                 <p class="text-xs md:text-sm text-slate-500 mt-0.5">
-                  <span v-if="ratingLabel" class="font-bold text-slate-700 dark:text-slate-300">{{ ratingLabel }}</span>
+                  <span v-if="ratingLabel" class="font-bold text-slate-700">{{ ratingLabel }}</span>
                   <span v-if="ratingLabel"> · </span>{{ tourReviews.length }} {{ tourReviews.length === 1 ? 'opinión' : 'opiniones' }}
                 </p>
               </div>
@@ -266,7 +266,7 @@
                 <div
                   v-for="review in tourReviews.slice(0, showAllReviews ? tourReviews.length : 3)"
                   :key="review.id"
-                  class="shrink-0 w-[85%] sm:w-[55%] md:w-auto snap-start bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4 md:bg-transparent md:dark:bg-transparent md:rounded-none md:p-0 md:border-b md:border-slate-100 md:dark:border-slate-800 md:pb-6"
+                  class="shrink-0 w-[85%] sm:w-[55%] md:w-auto snap-start bg-slate-50 rounded-2xl p-4 md:bg-transparent md:md:rounded-none md:p-0 md:border-b md:border-slate-100 md:md:pb-6"
                 >
                   <div class="flex items-center gap-3 mb-2">
                     <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
@@ -282,8 +282,8 @@
                       </div>
                     </div>
                   </div>
-                  <p v-if="review.title" class="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-1">{{ review.title }}</p>
-                  <p class="text-[15px] text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-5 md:line-clamp-none">{{ review.comment }}</p>
+                  <p v-if="review.title" class="text-[15px] font-semibold text-slate-800 mb-1">{{ review.title }}</p>
+                  <p class="text-[15px] text-slate-600 leading-relaxed line-clamp-5 md:line-clamp-none">{{ review.comment }}</p>
                 </div>
               </div>
 
@@ -297,7 +297,7 @@
               </button>
             </div>
 
-            <div v-else class="py-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl">
+            <div v-else class="py-8 text-center text-slate-400 bg-slate-50 rounded-2xl">
               <ChatBubbleLeftRightIcon class="size-8 mb-2 mx-auto" aria-hidden="true" />
               <p class="text-sm font-medium">{{ t('no_reviews') }}</p>
             </div>
@@ -321,25 +321,25 @@
             />
 
             <!-- Trust signals card — OTA pattern: stacks below booking widget -->
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2.5">
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
               <div v-if="tour.free_cancellation" class="flex items-start gap-2.5">
                 <CheckCircleSolidIcon class="size-5 text-trust shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('free_cancellation') }}</p>
+                  <p class="text-sm font-bold text-slate-900">{{ t('free_cancellation') }}</p>
                   <p class="text-xs text-slate-500">{{ t('trust_cancel_hint') }}</p>
                 </div>
               </div>
               <div class="flex items-start gap-2.5">
                 <ClockIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('trust_instant') }}</p>
+                  <p class="text-sm font-bold text-slate-900">{{ t('trust_instant') }}</p>
                   <p class="text-xs text-slate-500">{{ t('trust_instant_hint') }}</p>
                 </div>
               </div>
               <div class="flex items-start gap-2.5">
                 <ShieldCheckIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
-                  <p class="text-sm font-bold text-slate-900 dark:text-white">{{ t('trust_best_price') }}</p>
+                  <p class="text-sm font-bold text-slate-900">{{ t('trust_best_price') }}</p>
                   <p class="text-xs text-slate-500">{{ t('trust_best_price_hint') }}</p>
                 </div>
               </div>
@@ -355,13 +355,13 @@
           <details
             v-for="(item, i) in faqItems"
             :key="i"
-            class="group rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden"
+            class="group rounded-xl border border-slate-200 bg-white overflow-hidden"
           >
-            <summary class="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden px-4 md:px-5 py-4 font-bold text-slate-900 dark:text-white">
+            <summary class="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden px-4 md:px-5 py-4 font-bold text-slate-900">
               <span>{{ item.q }}</span>
               <ChevronDownIcon class="size-5 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
-            <div class="px-4 md:px-5 pb-4 -mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <div class="px-4 md:px-5 pb-4 -mt-1 text-sm leading-relaxed text-slate-600">
               {{ item.a }}
             </div>
           </details>
@@ -393,14 +393,14 @@
               <TourWishlistHeartButton :tour="relatedTour" size="sm" class="absolute top-3 right-3" />
             </div>
             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ cityLabel(relatedTour) }}</p>
-            <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
+            <h4 class="font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
             <!-- Rating shown only when there are real reviews (no fabricated 4.5) -->
             <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
               <StarSolidIcon class="size-3 text-yellow-500" aria-hidden="true" />
               <span class="text-sm font-bold">{{ Number(relatedTour.rating).toFixed(1) }}</span>
               <span class="text-xs text-slate-500">({{ relatedTour.reviews_count }})</span>
             </div>
-            <p class="mt-2 font-black text-slate-900 dark:text-white">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</p>
+            <p class="mt-2 font-black text-slate-900">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</p>
           </NuxtLink>
         </div>
       </section>
@@ -417,10 +417,10 @@
       leave-from-class="translate-y-0"
       leave-to-class="translate-y-full"
     >
-    <div v-show="showStickyBar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
+    <div v-show="showStickyBar" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-40">
       <div class="flex items-center justify-between gap-3">
         <div class="leading-tight shrink-0">
-          <div class="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none">
+          <div class="text-2xl font-black text-slate-900 tabular-nums leading-none">
             {{ currencyStore.formatConverted(basePrice || 0) }}
           </div>
           <span class="text-[11px] text-slate-500">por persona</span>
@@ -451,7 +451,7 @@
   </div>
 
   <!-- Loading State -->
-  <div v-else-if="pending" class="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
+  <div v-else-if="pending" class="min-h-screen flex items-center justify-center bg-background-light">
     <div class="text-center">
       <div class="spinner size-12 inline-block"></div>
       <p class="mt-4 text-slate-600">{{ t('loading_tour') }}</p>
@@ -461,7 +461,7 @@
   <!-- Error State: un fallo transitorio (429/500/red) NO es «no existe».
        Decirle «no encontrado» a un comprador por un hipo de la API pierde la
        venta; aquí se le ofrece reintentar. -->
-  <div v-else class="min-h-screen bg-background-light dark:bg-background-dark pt-28 pb-16 px-4">
+  <div v-else class="min-h-screen bg-background-light pt-28 pb-16 px-4">
     <div class="max-w-5xl mx-auto">
       <div class="text-center">
         <template v-if="isTransientError">

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center gap-4">
     <!-- Results Info -->
-    <div class="text-sm text-secondary-light dark:text-secondary-dark text-center">
+    <div class="text-sm text-secondary-light text-center">
       Showing
       <span class="font-bold">{{ from || 1 }}</span>
       -
@@ -17,7 +17,7 @@
       <button
         @click="prevPage"
         :disabled="!hasPrev"
-        class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-primary-light dark:text-primary-dark hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-primary-light hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         :class="{ 'hover:border-primary': hasPrev }"
         aria-label="Previous page"
       >
@@ -43,7 +43,7 @@
             :class="
               page === currentPage
                 ? 'bg-primary text-white border-primary'
-                : 'bg-white dark:bg-slate-900 text-primary-light dark:text-primary-dark border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-primary'
+                : 'bg-white text-primary-light border-slate-200 hover:bg-slate-50 hover:border-primary'
             "
             :aria-label="`Go to page ${page}`"
             :aria-current="page === currentPage ? 'page' : undefined"
@@ -57,7 +57,7 @@
       <button
         @click="nextPage"
         :disabled="!hasNext"
-        class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-primary-light dark:text-primary-dark hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-primary-light hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         :class="{ 'hover:border-primary': hasNext }"
         aria-label="Next page"
       >

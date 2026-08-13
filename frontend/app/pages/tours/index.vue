@@ -199,7 +199,7 @@
               <!-- Price -->
               <div class="flex items-end justify-between mt-2">
                 <div class="leading-tight">
-                  <span class="text-[9px] text-slate-400 block">{{ t('from') }}</span>
+                  <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
                   <span class="flex items-baseline gap-1">
                     <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-500">
                       {{ currencyStore.formatConverted(tour.min_price || 0) }}
@@ -208,7 +208,7 @@
                       {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
                     </span>
                   </span>
-                  <span class="text-[9px] text-slate-400">{{ t('per_person') }}</span>
+                  <span class="text-[10px] text-slate-400">{{ t('per_person') }}</span>
                 </div>
                 <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 shrink-0">
                   {{ t('view') }}<Icon name="material-symbols:arrow-forward" class="text-sm" />

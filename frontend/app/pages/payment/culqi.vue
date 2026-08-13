@@ -121,7 +121,7 @@
                 <input type="radio" v-model="paymentMode" value="full" class="text-primary focus:ring-primary" />
                 <div class="flex-1">
                   <p class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                    {{ t('pay_full_now') }}                    <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[9px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
+                    {{ t('pay_full_now') }}                    <span class="px-1.5 py-0.5 rounded bg-trust/10 text-trust text-[10px] font-black uppercase tracking-wide">{{ t('recommended_label') }}</span>
                   </p>
                   <p class="text-[11px] text-slate-500">{{ t('no_balance_due') }}</p>
                 </div>

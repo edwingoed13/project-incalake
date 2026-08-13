@@ -221,13 +221,17 @@
           >
             <div class="w-full aspect-square rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 bg-slate-100">
               <NuxtImg
+                v-if="getCityImage(city)"
                 v-skeleton
-                :src="getCityImage(city.slug)"
+                :src="getCityImage(city)"
                 :alt="city.name"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 loading="lazy" format="webp" width="240" height="240"
                 sizes="33vw md:16vw"
               />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-3xl" />
+              </div>
             </div>
             <h5 class="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{{ city.name }}</h5>
           </NuxtLink>
@@ -323,7 +327,7 @@
                 <NuxtLink
                   v-if="review.tour_id && review.tour?.translations?.length"
                   :to="localePath(`/${review.tour.city?.slug || 'puno'}/${review.tour.translations[0].slug}`)"
-                  class="text-[9px] text-primary font-semibold truncate max-w-[140px] hover:underline flex items-center gap-0.5"
+                  class="text-[10px] text-primary font-semibold truncate max-w-[140px] hover:underline flex items-center gap-0.5"
                 >
                   {{ review.opinion || review.tour.translations[0].h1_title }}
                   <Icon name="material-symbols:arrow-forward" class="text-[10px]" />
@@ -614,20 +618,11 @@ const whyUsItems = computed(() => {
   ]
 })
 
-// City placeholder images (will be replaced with real images from admin)
-const cityImages: Record<string, string> = {
-  'puno': 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?w=800&q=80',
-  'cusco': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800&q=80',
-  'arequipa': 'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=800&q=80',
-  'lima': 'https://images.unsplash.com/photo-1531968455001-5c5272a67c71?w=800&q=80',
-  'la-paz': 'https://images.unsplash.com/photo-1591543620767-582b2e76369e?w=800&q=80',
-  'uyuni': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80',
-  'copacabana': 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?w=800&q=80',
-  'juliaca': 'https://images.unsplash.com/photo-1526392060635-9d6019884377?w=800&q=80',
-}
-
-function getCityImage(slug: string) {
-  return cityImages[slug] || 'https://images.unsplash.com/photo-1580619305218-8423a7ef79b4?w=800&q=80'
+// Each destination tile shows the photo of a real tour in that city, served by
+// /api/cities. It replaced a hardcoded Unsplash map where Puno and Copacabana
+// shared a photo and Cusco and Juliaca both showed Machu Picchu.
+function getCityImage(city: any) {
+  return city?.image ? getImageUrl(city.image) : ''
 }
 
 function getImageUrl(path: string) {

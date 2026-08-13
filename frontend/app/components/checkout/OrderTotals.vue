@@ -36,7 +36,7 @@ const currencyStore = useCurrencyStore()
           <AppPopover :label="t('transaction_fees')" :width="taxBreakdown?.length ? 'w-72' : undefined">
             <p class="leading-snug" :class="taxBreakdown?.length ? 'mb-1.5' : ''">{{ t('transaction_fees_info') }}</p>
             <div v-if="taxBreakdown?.length" class="pt-1.5 mt-1.5 border-t border-white/15">
-              <p class="text-[9px] font-bold uppercase tracking-wider text-white/60 mb-1">{{ t('transaction_fees') }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">{{ t('transaction_fees') }}</p>
               <div v-for="(row, i) in taxBreakdown" :key="i" class="flex justify-between py-0.5 gap-2">
                 <span class="flex-1 break-words">{{ row.label }}</span>
                 <span class="shrink-0 font-semibold">{{ row.percent }}%</span>

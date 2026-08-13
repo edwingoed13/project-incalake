@@ -62,17 +62,24 @@
         <div class="md:col-span-3">
            <h6 class="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-5 md:mb-6 italic">{{ t('footer_newsletter_title') }}</h6>
            <p class="text-xs font-medium text-slate-400 mb-5 leading-relaxed">{{ t('footer_newsletter_desc') }}</p>
-           <form class="space-y-3" @submit.prevent>
+           <form v-if="!subscribed" class="space-y-3" @submit.prevent="subscribe">
               <input
+                v-model="email"
                 type="email"
+                required
                 :placeholder="t('footer_email_placeholder')"
                 class="w-full bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 rounded-2xl py-3.5 px-5 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               />
-              <button class="btn-primary w-full group">
-                 {{ t('footer_subscribe') }}
+              <button type="submit" :disabled="sending" class="btn-primary w-full group disabled:opacity-60">
+                 {{ sending ? t('contact_sending') : t('footer_subscribe') }}
                  <Icon name="material-symbols:trending-flat" class="text-sm group-hover:translate-x-1 transition-transform" />
               </button>
+              <p v-if="subscribeError" class="text-xs font-semibold text-red-400">{{ subscribeError }}</p>
            </form>
+           <p v-else class="flex items-center gap-2 text-sm font-semibold text-green-400">
+              <Icon name="material-symbols:check-circle-outline" class="text-lg" />
+              {{ t('newsletter_success') }}
+           </p>
         </div>
       </div>
 
@@ -106,9 +113,35 @@ const productLinks = [
   { key: 'footer_saved', path: '/saved' },
 ]
 
+// Only links that actually go somewhere. Facebook and Instagram pointed at the
+// networks' own home pages and WhatsApp at a numberless wa.me/ — add them back
+// here once the real profile URLs are known.
 const socials = [
-  { label: 'Facebook', icon: 'public', href: 'https://facebook.com' },
-  { label: 'Instagram', icon: 'photo_camera', href: 'https://instagram.com' },
-  { label: 'WhatsApp', icon: 'chat', href: 'https://wa.me/' },
+  { label: 'WhatsApp', icon: 'chat', href: 'https://wa.me/51982769453' },
 ]
+
+// --- Newsletter ------------------------------------------------------------
+// The form used to be `@submit.prevent` with no handler: it looked like a
+// subscription and dropped every address on the floor.
+const { api } = useApi()
+const { locale } = useI18n()
+const email = ref('')
+const sending = ref(false)
+const subscribed = ref(false)
+const subscribeError = ref('')
+
+async function subscribe() {
+  if (!email.value.trim() || sending.value) return
+  sending.value = true
+  subscribeError.value = ''
+  try {
+    await api('/newsletter', { method: 'POST', body: { email: email.value, language: locale.value } })
+    subscribed.value = true
+    email.value = ''
+  } catch (e: any) {
+    subscribeError.value = e?.statusCode === 429 ? t('contact_error_throttled') : t('newsletter_error')
+  } finally {
+    sending.value = false
+  }
+}
 </script>

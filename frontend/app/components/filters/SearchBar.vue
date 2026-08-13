@@ -9,7 +9,7 @@
     <input
       v-model="searchInput"
       type="search"
-      class="w-full pl-10 md:pl-12 pr-10 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-primary-light dark:text-primary-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
+      class="w-full pl-10 md:pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-lg text-primary-light placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
       placeholder="Search tours by name, city..."
       aria-label="Search tours"
     />
@@ -18,7 +18,7 @@
     <button
       v-if="searchInput"
       @click="clearSearch"
-      class="absolute inset-y-0 right-0 pr-3 md:pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+      class="absolute inset-y-0 right-0 pr-3 md:pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
       aria-label="Clear search"
     >
       <Icon name="material-symbols:close" class="text-xl" />

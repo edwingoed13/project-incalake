@@ -8,7 +8,7 @@
         @click="toggleCalendar"
         readonly
         placeholder="Selecciona una fecha"
-        class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer"
+        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary cursor-pointer"
       />
     </div>
 
@@ -21,12 +21,12 @@
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 translate-y-1"
     >
-      <div v-if="showCalendar" class="absolute z-50 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 min-w-[320px]">
+      <div v-if="showCalendar" class="absolute z-50 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 p-4 min-w-[320px]">
         <!-- Month Navigation -->
         <div class="flex items-center justify-between mb-4">
           <button
             @click="previousMonth"
-            class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            class="p-1 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <Icon name="material-symbols:chevron-left" class="text-lg" />
           </button>
@@ -37,7 +37,7 @@
 
           <button
             @click="nextMonth"
-            class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            class="p-1 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <Icon name="material-symbols:chevron-right" class="text-lg" />
           </button>
@@ -68,22 +68,22 @@
         </div>
 
         <!-- Legend -->
-        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
           <div v-if="hasBlocks" class="flex items-center gap-2 text-xs">
             <div class="w-4 h-4 bg-red-500/20 rounded"></div>
-            <span class="text-slate-600 dark:text-slate-400">Fecha bloqueada</span>
+            <span class="text-slate-600">Fecha bloqueada</span>
           </div>
           <div v-if="hasOffers" class="flex items-center gap-2 text-xs">
             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span class="text-slate-600 dark:text-slate-400">Oferta disponible</span>
+            <span class="text-slate-600">Oferta disponible</span>
           </div>
 
           <!-- Selected Date Info -->
-          <div v-if="selectedDateInfo" class="mt-3 p-2 rounded-lg" :class="selectedDateInfo.isBlocked ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'">
-            <p class="text-xs font-semibold" :class="selectedDateInfo.isBlocked ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'">
+          <div v-if="selectedDateInfo" class="mt-3 p-2 rounded-lg" :class="selectedDateInfo.isBlocked ? 'bg-red-50' : 'bg-green-50'">
+            <p class="text-xs font-semibold" :class="selectedDateInfo.isBlocked ? 'text-red-700' : 'text-green-700'">
               {{ selectedDateInfo.message }}
             </p>
-            <p v-if="selectedDateInfo.details" class="text-xs mt-1" :class="selectedDateInfo.isBlocked ? 'text-red-600 dark:text-red-500' : 'text-green-600 dark:text-green-500'">
+            <p v-if="selectedDateInfo.details" class="text-xs mt-1" :class="selectedDateInfo.isBlocked ? 'text-red-600' : 'text-green-600'">
               {{ selectedDateInfo.details }}
             </p>
           </div>
@@ -92,7 +92,7 @@
         <!-- Close Button -->
         <button
           @click="showCalendar = false"
-          class="mt-4 w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          class="mt-4 w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700"
         >
           Cerrar
         </button>
@@ -301,19 +301,19 @@ const getDayClasses = (day: any) => {
   const classes = []
 
   if (!day.isCurrentMonth) {
-    classes.push('text-slate-300 dark:text-slate-600 cursor-not-allowed')
+    classes.push('text-slate-300 cursor-not-allowed')
   } else if (day.isPast || day.isBeforeMinDate) {
-    classes.push('text-slate-300 dark:text-slate-600 cursor-not-allowed bg-slate-50 dark:bg-slate-900/50')
+    classes.push('text-slate-300 cursor-not-allowed bg-slate-50')
   } else if (day.isBlocked) {
-    classes.push('bg-red-50 dark:bg-red-900/20 text-red-400 cursor-not-allowed line-through')
+    classes.push('bg-red-50 text-red-400 cursor-not-allowed line-through')
   } else if (day.isSelected) {
     classes.push('bg-primary text-white cursor-pointer')
   } else if (day.isToday) {
     classes.push('bg-primary/10 text-primary font-bold cursor-pointer')
   } else if (day.hasOffer) {
-    classes.push('bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 cursor-pointer')
+    classes.push('bg-green-50 hover:bg-green-100 cursor-pointer')
   } else {
-    classes.push('hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer')
+    classes.push('hover:bg-slate-100 cursor-pointer')
   }
 
   return classes.join(' ')

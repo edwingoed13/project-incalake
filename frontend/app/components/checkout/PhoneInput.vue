@@ -81,13 +81,13 @@ watch(open, (val) => {
       <button
         type="button"
         @click="toggleDropdown"
-        class="inline-flex items-center gap-1.5 px-3 bg-slate-100 dark:bg-slate-700 border border-r-0 rounded-l-lg text-sm font-medium transition-colors hover:bg-slate-200 dark:hover:bg-slate-600 shrink-0"
+        class="inline-flex items-center gap-1.5 px-3 bg-slate-100 border border-r-0 rounded-l-lg text-sm font-medium transition-colors hover:bg-slate-200 shrink-0"
         :class="[
-          phoneError || countryError ? 'border-red-500' : open ? 'border-primary' : 'border-slate-300 dark:border-slate-700',
+          phoneError || countryError ? 'border-red-500' : open ? 'border-primary' : 'border-slate-300',
         ]"
       >
         <img :src="countryFlagUrl(country)" :alt="country" class="w-5 h-4 object-cover rounded-sm" />
-        <span class="text-slate-700 dark:text-slate-300">{{ dialCode }}</span>
+        <span class="text-slate-700">{{ dialCode }}</span>
         <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm transition-transform" />
       </button>
 
@@ -98,8 +98,8 @@ watch(open, (val) => {
         @input="emit('update:phone', ($event.target as HTMLInputElement).value)"
         type="tel"
         autocomplete="tel"
-        class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border rounded-r-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors min-w-0"
-        :class="phoneError ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'"
+        class="flex-1 px-4 py-3 bg-slate-50 border rounded-r-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors min-w-0"
+        :class="phoneError ? 'border-red-500' : 'border-slate-300'"
         placeholder="999 999 999"
       />
     </div>
@@ -108,17 +108,17 @@ watch(open, (val) => {
     <Transition name="dropdown">
       <div
         v-if="open"
-        class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden"
+        class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden"
       >
         <!-- Search -->
-        <div class="p-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="p-2 border-b border-slate-100">
           <div class="relative">
             <Icon name="material-symbols:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
             <input
               ref="inputRef"
               v-model="search"
               type="text"
-              class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               placeholder="Search country..."
               @keydown.esc="open = false"
             />
@@ -136,7 +136,7 @@ watch(open, (val) => {
             :class="c.code === country ? 'bg-primary/10 active-item' : ''"
           >
             <img :src="countryFlagUrl(c.code)" :alt="c.code" class="w-5 h-4 object-cover rounded-sm" />
-            <span class="flex-1 text-sm" :class="c.code === country ? 'font-bold text-primary' : 'text-slate-700 dark:text-slate-300'">
+            <span class="flex-1 text-sm" :class="c.code === country ? 'font-bold text-primary' : 'text-slate-700'">
               {{ c.name }}
             </span>
             <span class="text-xs text-slate-400 font-mono">{{ c.dial }}</span>

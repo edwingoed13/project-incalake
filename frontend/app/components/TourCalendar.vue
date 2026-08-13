@@ -6,10 +6,10 @@
       @click="open = !open"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-left"
+      class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-left"
     >
       <Icon name="material-symbols:calendar-today-outline" class="text-slate-400 text-lg shrink-0" />
-      <span v-if="modelValue" class="text-sm font-semibold text-slate-800 dark:text-white">{{ formatSelected }}</span>
+      <span v-if="modelValue" class="text-sm font-semibold text-slate-800">{{ formatSelected }}</span>
       <span v-else class="text-sm text-slate-400">{{ t('select_date') }}</span>
       <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm ml-auto shrink-0" />
     </button>
@@ -21,31 +21,31 @@
         role="dialog"
         aria-modal="true"
         :aria-label="t('select_date')"
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto
+        class="bg-white border border-slate-200 shadow-2xl overflow-y-auto
                fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]
                lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-0 lg:mt-2 lg:rounded-2xl lg:overflow-hidden
                lg:max-h-[calc(100vh-8rem)] lg:w-[560px] lg:max-w-[calc(100vw-2rem)]"
       >
         <!-- Mobile grab handle -->
         <div class="lg:hidden flex justify-center pt-3 pb-1">
-          <div class="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+          <div class="w-10 h-1 bg-slate-300 rounded-full"></div>
         </div>
         <!-- Header: navigation -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-          <button @click="prevMonth" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <button @click="prevMonth" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <Icon name="material-symbols:chevron-left" class="text-xl" />
           </button>
           <div class="flex gap-12">
-            <h4 class="text-base font-bold text-slate-800 dark:text-white capitalize">{{ monthName(currentMonth, currentYear) }}</h4>
-            <h4 class="text-base font-bold text-slate-800 dark:text-white capitalize hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
+            <h4 class="text-base font-bold text-slate-800 capitalize">{{ monthName(currentMonth, currentYear) }}</h4>
+            <h4 class="text-base font-bold text-slate-800 capitalize hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
           </div>
-          <button @click="nextMonthNav" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+          <button @click="nextMonthNav" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <Icon name="material-symbols:chevron-right" class="text-xl" />
           </button>
         </div>
 
         <!-- Two month grid -->
-        <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800">
+        <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
           <!-- Month 1 -->
           <div class="flex-1 p-4">
             <div class="grid grid-cols-7 gap-0 mb-2">
@@ -75,7 +75,7 @@
           <!-- Month 2 -->
           <div class="flex-1 p-4">
             <div class="sm:hidden flex items-center justify-center py-2">
-              <h4 class="text-base font-bold text-slate-800 dark:text-white capitalize">{{ monthName(nextMonth, nextYear) }}</h4>
+              <h4 class="text-base font-bold text-slate-800 capitalize">{{ monthName(nextMonth, nextYear) }}</h4>
             </div>
             <div class="grid grid-cols-7 gap-0 mb-2">
               <span v-for="d in dayHeaders" :key="d" class="text-xs font-bold text-slate-400 text-center py-1">{{ d }}</span>
@@ -103,12 +103,12 @@
         </div>
 
         <!-- Legend -->
-        <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-5 text-xs font-semibold text-slate-400">
+        <div class="px-6 py-3 border-t border-slate-100 flex items-center gap-5 text-xs font-semibold text-slate-400">
           <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-amber-500"></span> {{ t('offer_legend') }}</span>
         </div>
 
         <!-- Mobile: explicit "Done" to close the sheet (selecting a day also closes) -->
-        <div class="lg:hidden sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div class="lg:hidden sticky bottom-0 bg-white border-t border-slate-100 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button type="button" @click="open = false"
             class="w-full min-h-[48px] bg-primary hover:bg-primary-dark text-white font-bold rounded-xl active:scale-[0.98] transition-transform">
             {{ t('done') || 'Listo' }}
@@ -276,10 +276,10 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
 
 function getDayClasses(day: CalDay): string {
   if (day.isSelected) return 'bg-primary text-white shadow-md'
-  if (day.disabled) return 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+  if (day.disabled) return 'text-slate-300 cursor-not-allowed'
   if (day.hasOffer) return 'offer-day'
   if (day.isToday) return 'bg-primary/10 text-primary font-bold hover:bg-primary/20'
-  return 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+  return 'text-slate-700 hover:bg-slate-100'
 }
 
 function getDayStyle(day: CalDay): Record<string, string> {

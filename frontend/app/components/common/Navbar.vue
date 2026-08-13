@@ -15,7 +15,7 @@
         </div>
         <div class="flex flex-col">
           <span class="block text-lg font-black tracking-tighter uppercase italic leading-none text-slate-900">Incalake</span>
-          <span class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Tours & Experiences</span>
+          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tours & Experiences</span>
         </div>
       </NuxtLink>
 
@@ -63,7 +63,7 @@
             </span>
           </button>
           <div v-if="langOpen" class="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Language</div>
+            <div class="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Language</div>
             <NuxtLink
               v-for="loc in locales"
               :key="loc.code"
@@ -93,7 +93,7 @@
             <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': currOpen }" class="text-xs transition-transform" />
           </button>
           <div v-if="currOpen" class="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Currency</div>
+            <div class="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Currency</div>
             <button
               v-for="currency in CURRENCIES"
               :key="currency.code"
@@ -122,7 +122,7 @@
           <Icon name="material-symbols:favorite-outline" class="text-xl" />
           <span
             v-if="wishlistStore.count > 0"
-            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
+            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm"
           >
             {{ wishlistStore.count }}
           </span>
@@ -133,7 +133,7 @@
           <Icon name="material-symbols:shopping-cart-outline" class="text-xl inline-block origin-center" :class="{ 'cart-bump': bumpCart }" />
           <span
             v-if="cartStore.itemCount > 0"
-            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm origin-center"
+            class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-black rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-sm origin-center"
             :class="{ 'cart-bump': bumpCart }"
           >
             {{ cartStore.itemCount }}
@@ -179,7 +179,7 @@
 
           <!-- Mobile Currency (language lives in the top bar already) -->
           <div class="pt-3 mt-3 border-t border-slate-100">
-            <p class="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Currency</p>
+            <p class="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Currency</p>
             <div class="flex flex-wrap gap-1.5 px-4">
               <button
                 v-for="currency in CURRENCIES"

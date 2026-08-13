@@ -1,15 +1,15 @@
 <template>
-  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-6">
+  <div class="bg-white rounded-xl shadow-lg p-6">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
         <Icon name="material-symbols:account-balance-wallet-outline" class="text-primary text-2xl" />
       </div>
       <div>
-        <h3 class="text-lg font-black text-primary-light dark:text-primary-dark">
+        <h3 class="text-lg font-black text-primary-light">
           Pay with PayPal
         </h3>
-        <p class="text-sm text-secondary-light dark:text-secondary-dark">
+        <p class="text-sm text-secondary-light">
           Pay securely with your PayPal account
         </p>
       </div>
@@ -24,8 +24,8 @@
     <div ref="paypalContainer" class="min-h-[200px]"></div>
 
     <!-- Trust Badge -->
-    <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary-light dark:text-secondary-dark">
-      <Icon name="material-symbols:verified-user-outline" class="text-green-600 dark:text-green-400 text-base" />
+    <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary-light">
+      <Icon name="material-symbols:verified-user-outline" class="text-green-600 text-base" />
       <span>PayPal buyer protection included</span>
     </div>
   </div>

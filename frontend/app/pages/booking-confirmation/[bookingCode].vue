@@ -491,7 +491,7 @@
                     <p v-for="(p, pi) in g.travelers" :key="pi" class="text-sm text-slate-700 flex items-center gap-1.5">
                       <Icon name="material-symbols:person-outline" class="text-slate-400 text-sm" />
                       {{ p.name }}
-                      <span v-if="p.isLeader" class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{{ t('leader_badge').toUpperCase() }}</span>
+                      <span v-if="p.isLeader" class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{{ t('leader_badge').toUpperCase() }}</span>
                     </p>
                   </div>
                 </div>

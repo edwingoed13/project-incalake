@@ -443,7 +443,7 @@ function getImageUrl(path: string) {
               <div v-for="item in sortedCartItems" :key="'r-'+item.id" class="flex items-start gap-2">
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-bold text-slate-700 truncate leading-snug">{{ item.tourTitle }}</p>
-                  <span v-if="item.hasOffer" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold mt-1" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
+                  <span v-if="item.hasOffer" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold mt-1" :style="{ backgroundColor: (item.offerColor || '#22c55e') + '20', color: item.offerColor || '#22c55e' }">
                     <Icon name="material-symbols:sell-outline" class="text-[10px]" />
                     {{ item.offerDiscount }}{{ item.offerDiscountType === 'percentage' ? '%' : ' USD' }} OFF
                   </span>
@@ -505,28 +505,28 @@ function getImageUrl(path: string) {
 
         <!-- Custom policies from admin -->
         <div v-if="policiesItem.policies">
-          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
             <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
             {{ t('tour_policies') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.policies)"></div>
+          <div class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.policies)"></div>
         </div>
 
         <div v-if="policiesItem.cancellationPolicy">
-          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
             <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
             {{ t('cancellation_policy') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.cancellationPolicy)"></div>
+          <div class="text-xs text-slate-600 bg-red-50 border border-red-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(policiesItem.cancellationPolicy)"></div>
         </div>
 
         <!-- Standard policy (default when nothing configured) -->
         <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType !== 'custom'">
-          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
             <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base" />
             {{ t('standard_policy') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
+          <div class="text-xs text-slate-600 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
             <p>{{ t('policy_std_1') }}</p>
             <p>{{ t('policy_std_2') }}</p>
             <p>{{ t('policy_std_3') }}</p>
@@ -536,11 +536,11 @@ function getImageUrl(path: string) {
 
         <!-- Custom type selected but no content yet -->
         <div v-if="!policiesItem.policies && !policiesItem.cancellationPolicy && policiesItem.policyType === 'custom'">
-          <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
             <Icon name="material-symbols:info-outline" class="text-amber-500 text-base" />
             {{ t('custom_policy') }}
           </h4>
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-3">
+          <div class="text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-3">
             <p>{{ t('policy_custom_contact') }}</p>
           </div>
         </div>
@@ -554,27 +554,27 @@ function getImageUrl(path: string) {
           <p class="text-xs font-bold text-primary uppercase tracking-wider">{{ p.tourTitle }}</p>
 
           <div v-if="p.policies">
-            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
               <Icon name="material-symbols:policy-outline" class="text-blue-500 text-base" />
               {{ t('tour_policies') }}
             </h4>
-            <div class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.policies)"></div>
+            <div class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.policies)"></div>
           </div>
 
           <div v-if="p.cancellationPolicy">
-            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
               <Icon name="material-symbols:cancel-outline" class="text-red-500 text-base" />
               {{ t('cancellation_policy') }}
             </h4>
-            <div class="text-xs text-slate-600 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.cancellationPolicy)"></div>
+            <div class="text-xs text-slate-600 bg-red-50 border border-red-100 rounded-xl p-3 prose prose-sm max-w-none" v-html="sanitizeHtml(p.cancellationPolicy)"></div>
           </div>
 
           <div v-if="!p.policies && !p.cancellationPolicy && p.policyType !== 'custom'">
-            <h4 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-2">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
               <Icon name="material-symbols:check-circle-outline" class="text-green-500 text-base" />
               {{ t('standard_policy') }}
             </h4>
-            <div class="text-xs text-slate-600 dark:text-slate-300 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/40 rounded-xl p-3 space-y-2">
+            <div class="text-xs text-slate-600 bg-green-50 border border-green-100 rounded-xl p-3 space-y-2">
               <p>{{ t('policy_std_1') }}</p>
               <p>{{ t('policy_std_2') }}</p>
               <p>{{ t('policy_std_3') }}</p>

@@ -72,12 +72,12 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 </script>
 
 <template>
-  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md">
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-md">
     <!-- Price header — dominant, OTA pattern -->
-    <div class="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+    <div class="px-4 pt-4 pb-3 border-b border-slate-100">
       <div class="flex items-baseline gap-1.5 flex-wrap">
         <span
-          class="font-black text-slate-900 dark:text-white tabular-nums tracking-tight leading-none"
+          class="font-black text-slate-900 tabular-nums tracking-tight leading-none"
           :class="isInline ? 'text-3xl sm:text-4xl' : 'text-[32px]'"
         >
           {{ fmt(basePrice) }}
@@ -90,7 +90,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
     <div class="p-4 space-y-3">
       <!-- Travelers (group first, before date) -->
       <div>
-        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
           <Icon name="material-symbols:group-outline" class="size-4 text-primary" />
           Viajeros
         </label>
@@ -119,7 +119,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 
       <!-- Date -->
       <div>
-        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
           <Icon name="material-symbols:calendar-today-outline" class="size-4 text-primary" />
           Fecha
         </label>
@@ -145,7 +145,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       <!-- Time -->
       <div>
         <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-          <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
             <Icon name="material-symbols:schedule-outline" class="size-4 text-primary" />
             Horario
           </label>
@@ -158,12 +158,12 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       </div>
 
       <!-- Total -->
-      <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 space-y-1.5">
-        <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+      <div class="rounded-lg bg-slate-50 p-3 space-y-1.5">
+        <div class="flex justify-between text-xs text-slate-600">
           <span>{{ fmt(adultPrice) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
           <span class="tabular-nums font-medium">{{ fmt(adultPrice * adults) }}</span>
         </div>
-        <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+        <div v-if="hasChildPricing && children > 0" class="flex justify-between text-xs text-slate-600">
           <span>{{ fmt(childPrice) }} × {{ children }} {{ children === 1 ? 'niño' : 'niños' }}</span>
           <span class="tabular-nums font-medium">{{ fmt(childPrice * children) }}</span>
         </div>
@@ -174,7 +174,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           </span>
           <span class="text-trust font-bold tabular-nums">−{{ fmt(groupDiscount) }}</span>
         </div>
-        <div v-if="feePercent" class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+        <div v-if="feePercent" class="flex justify-between text-xs text-slate-600">
           <span class="flex items-center gap-1">
             {{ t('transaction_fees') }}
             <AppPopover :label="t('transaction_fees')">
@@ -184,9 +184,9 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           </span>
           <span class="tabular-nums font-medium">{{ fmt(feeAmount) }}</span>
         </div>
-        <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-slate-700">
+        <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200">
           <span class="text-sm font-bold">{{ feePercent ? t('total') : 'Subtotal' }}</span>
-          <span class="text-xl font-black text-slate-900 dark:text-white tabular-nums">
+          <span class="text-xl font-black text-slate-900 tabular-nums">
             {{ fmt(totalWithFee) }}
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
           </span>
@@ -234,7 +234,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </button>
         <button
           @click="$emit('add-to-cart')"
-          class="btn-outline-primary w-full mt-2 dark:bg-slate-800"
+          class="btn-outline-primary w-full mt-2"
         >
           <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
           Agregar al carrito
@@ -251,7 +251,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 
       <!-- Trust signals — inline variant only (the desktop sidebar keeps its own
            separate trust card below the widget). -->
-      <div v-if="isInline" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+      <div v-if="isInline" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
         <div v-if="tour?.free_cancellation" class="flex items-center gap-1.5 text-xs">
           <Icon name="material-symbols:check-circle" class="size-4 text-trust shrink-0" />
           <span class="text-slate-600 font-medium">Cancelación gratuita</span>

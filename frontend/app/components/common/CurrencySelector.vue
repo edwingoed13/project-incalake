@@ -3,7 +3,7 @@
     <!-- Trigger Button -->
     <button
       @click="isOpen = !isOpen"
-      class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
       :aria-expanded="isOpen"
       aria-haspopup="true"
     >
@@ -16,12 +16,12 @@
     <Transition name="dropdown">
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50"
+        class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50"
         role="menu"
       >
         <!-- Header -->
-        <div class="px-4 py-2 border-b border-slate-200 dark:border-slate-700">
-          <p class="text-xs font-bold text-secondary-light dark:text-secondary-dark uppercase tracking-wide">
+        <div class="px-4 py-2 border-b border-slate-200">
+          <p class="text-xs font-bold text-secondary-light uppercase tracking-wide">
             Select Currency
           </p>
         </div>
@@ -32,19 +32,19 @@
             v-for="currency in currencyStore.CURRENCIES"
             :key="currency.code"
             @click="selectCurrency(currency.code)"
-            class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
+            class="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors text-left"
             :class="{
-              'bg-primary/10 dark:bg-primary/20': currency.code === currencyStore.selectedCurrency
+              'bg-primary/10': currency.code === currencyStore.selectedCurrency
             }"
             role="menuitem"
           >
             <div class="flex items-center gap-3">
               <span class="text-2xl font-bold text-primary w-8">{{ currency.symbol }}</span>
               <div>
-                <p class="font-bold text-sm text-primary-light dark:text-primary-dark">
+                <p class="font-bold text-sm text-primary-light">
                   {{ currency.code }}
                 </p>
-                <p class="text-xs text-secondary-light dark:text-secondary-dark">
+                <p class="text-xs text-secondary-light">
                   {{ currency.name }}
                 </p>
               </div>
@@ -54,24 +54,24 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="currencyStore.loading" class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
-          <p class="text-xs text-secondary-light dark:text-secondary-dark flex items-center gap-2">
+        <div v-if="currencyStore.loading" class="px-4 py-2 border-t border-slate-200">
+          <p class="text-xs text-secondary-light flex items-center gap-2">
             <span class="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></span>
             Updating rates...
           </p>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="currencyStore.error" class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
-          <p class="text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
+        <div v-else-if="currencyStore.error" class="px-4 py-2 border-t border-slate-200">
+          <p class="text-xs text-red-600 flex items-center gap-2">
             <Icon name="material-symbols:error-outline" class="text-sm" />
             {{ currencyStore.error }}
           </p>
         </div>
 
         <!-- Info -->
-        <div v-else class="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
-          <p class="text-xs text-secondary-light dark:text-secondary-dark">
+        <div v-else class="px-4 py-2 border-t border-slate-200">
+          <p class="text-xs text-secondary-light">
             Rates updated from live exchange data
           </p>
         </div>

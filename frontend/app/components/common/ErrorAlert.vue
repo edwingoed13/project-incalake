@@ -83,60 +83,60 @@ const iconName = computed(() => {
 
 const typeClasses = computed(() => {
   const classes = {
-    error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-    warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800',
-    success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+    error: 'bg-red-50 border-red-200',
+    warning: 'bg-yellow-50 border-yellow-200',
+    success: 'bg-green-50 border-green-200',
+    info: 'bg-blue-50 border-blue-200'
   }
   return classes[props.type]
 })
 
 const iconClass = computed(() => {
   const classes = {
-    error: 'text-red-600 dark:text-red-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    success: 'text-green-600 dark:text-green-400',
-    info: 'text-blue-600 dark:text-blue-400'
+    error: 'text-red-600',
+    warning: 'text-yellow-600',
+    success: 'text-green-600',
+    info: 'text-blue-600'
   }
   return classes[props.type]
 })
 
 const titleClass = computed(() => {
   const classes = {
-    error: 'text-red-900 dark:text-red-100',
-    warning: 'text-yellow-900 dark:text-yellow-100',
-    success: 'text-green-900 dark:text-green-100',
-    info: 'text-blue-900 dark:text-blue-100'
+    error: 'text-red-900',
+    warning: 'text-yellow-900',
+    success: 'text-green-900',
+    info: 'text-blue-900'
   }
   return classes[props.type]
 })
 
 const messageClass = computed(() => {
   const classes = {
-    error: 'text-red-700 dark:text-red-300',
-    warning: 'text-yellow-700 dark:text-yellow-300',
-    success: 'text-green-700 dark:text-green-300',
-    info: 'text-blue-700 dark:text-blue-300'
+    error: 'text-red-700',
+    warning: 'text-yellow-700',
+    success: 'text-green-700',
+    info: 'text-blue-700'
   }
   return classes[props.type] + ' text-sm'
 })
 
 const actionClass = computed(() => {
   const classes = {
-    error: 'text-red-600 dark:text-red-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    success: 'text-green-600 dark:text-green-400',
-    info: 'text-blue-600 dark:text-blue-400'
+    error: 'text-red-600',
+    warning: 'text-yellow-600',
+    success: 'text-green-600',
+    info: 'text-blue-600'
   }
   return classes[props.type]
 })
 
 const dismissClass = computed(() => {
   const classes = {
-    error: 'text-red-600 dark:text-red-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    success: 'text-green-600 dark:text-green-400',
-    info: 'text-blue-600 dark:text-blue-400'
+    error: 'text-red-600',
+    warning: 'text-yellow-600',
+    success: 'text-green-600',
+    info: 'text-blue-600'
   }
   return classes[props.type]
 })

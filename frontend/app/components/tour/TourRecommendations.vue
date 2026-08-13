@@ -3,17 +3,17 @@
        content from admin Step 3. No generic hardcoded fallback. -->
   <section
     v-if="sanitizedRecommendations || sanitizedWhatToBring"
-    class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8"
+    class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8"
   >
     <button type="button" @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between gap-2 text-left">
-      <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+      <h2 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2">
         <LightBulbIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
         {{ t('important_info') }}
       </h2>
       <Icon name="material-symbols:expand-more" class="size-6 text-slate-400 transition-transform shrink-0" :class="{ '-rotate-180': open }" aria-hidden="true" />
     </button>
 
-    <div v-show="open" class="prose md:prose-lg max-w-2xl text-slate-600 dark:text-slate-400 mt-5 md:mt-6">
+    <div v-show="open" class="prose md:prose-lg max-w-2xl text-slate-600 mt-5 md:mt-6">
       <div v-if="sanitizedRecommendations" v-html="sanitizedRecommendations" class="mb-6"></div>
       <div v-if="sanitizedWhatToBring" v-html="sanitizedWhatToBring"></div>
     </div>
@@ -42,13 +42,13 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 @reference "../../assets/css/main.css";
 
 .prose {
-  @apply text-slate-600 dark:text-slate-400 leading-relaxed;
+  @apply text-slate-600 leading-relaxed;
 }
 
 .prose :deep(h1),
 .prose :deep(h2),
 .prose :deep(h3) {
-  @apply font-black text-slate-800 dark:text-slate-100;
+  @apply font-black text-slate-800
 }
 
 .prose :deep(h1) {
@@ -81,11 +81,11 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 }
 
 .prose :deep(li) {
-  @apply text-slate-600 dark:text-slate-400;
+  @apply text-slate-600
 }
 
 .prose :deep(strong) {
-  @apply font-bold text-slate-800 dark:text-slate-100;
+  @apply font-bold text-slate-800
 }
 
 .prose :deep(a) {
@@ -93,6 +93,6 @@ const sanitizedWhatToBring = computed(() => sanitizeHtml(props.tour.what_to_brin
 }
 
 .prose :deep(blockquote) {
-  @apply border-l-4 border-primary pl-4 italic text-slate-600 dark:text-slate-400 my-4 bg-slate-50 dark:bg-slate-800 py-2;
+  @apply border-l-4 border-primary pl-4 italic text-slate-600 my-4 bg-slate-50 py-2;
 }
 </style>

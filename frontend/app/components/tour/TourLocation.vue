@@ -283,30 +283,30 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-primary-light dark:text-primary-dark mb-4 md:mb-6 flex items-center">
+  <section class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
+    <h2 class="text-xl md:text-2xl font-bold text-primary-light mb-4 md:mb-6 flex items-center">
       <MapPinIcon class="size-6 md:size-8 text-primary mr-2 md:mr-3" aria-hidden="true" />
       Ubicación
     </h2>
 
     <!-- Map Container (solo cuando no hay timeline) -->
-    <div v-if="hasMap && coordsValid && mapPoints.length <= 1" ref="mapContainer" class="rounded-xl overflow-hidden h-96 mb-4 border border-slate-200 dark:border-slate-700"></div>
+    <div v-if="hasMap && coordsValid && mapPoints.length <= 1" ref="mapContainer" class="rounded-xl overflow-hidden h-96 mb-4 border border-slate-200"></div>
 
     <!-- Placeholder when there's no map data or the coordinates are unusable
          (only for the single/no-point case; the timeline below renders its own) -->
-    <div v-else-if="(!hasMap || !coordsValid) && mapPoints.length <= 1" class="bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
+    <div v-else-if="(!hasMap || !coordsValid) && mapPoints.length <= 1" class="bg-slate-100 rounded-xl overflow-hidden h-96 flex items-center justify-center mb-4">
       <div class="text-center">
-        <MapIcon class="size-24 text-slate-400 dark:text-slate-600 mb-4 mx-auto" aria-hidden="true" />
-        <p class="text-slate-500 dark:text-slate-400 text-lg font-bold">Mapa no disponible</p>
-        <p class="text-sm text-slate-400 dark:text-slate-500 mt-2">{{ cityName }}, Perú</p>
+        <MapIcon class="size-24 text-slate-400 mb-4 mx-auto" aria-hidden="true" />
+        <p class="text-slate-500 text-lg font-bold">Mapa no disponible</p>
+        <p class="text-sm text-slate-400 mt-2">{{ cityName }}, Perú</p>
       </div>
     </div>
 
     <!-- Meeting Point Info -->
-    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
       <div class="flex items-start space-x-3">
         <MapPinIcon class="size-5 text-blue-500 mt-0.5 shrink-0" aria-hidden="true" />
-        <div class="text-sm text-slate-700 dark:text-slate-300">
+        <div class="text-sm text-slate-700">
           <strong>Punto de encuentro:</strong> {{ pickupDescription }}
         </div>
       </div>
@@ -317,8 +317,8 @@ onBeforeUnmount(() => {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Timeline - Left Side (1/3) -->
         <div class="lg:col-span-1">
-          <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
+          <div class="relative bg-white rounded-xl border border-slate-200 p-4">
+            <h3 class="text-lg font-black text-primary-light mb-4 flex items-center">
               <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Itinerario
             </h3>
@@ -351,11 +351,11 @@ onBeforeUnmount(() => {
 
                   <!-- Content -->
                   <div>
-                    <h4 class="font-bold text-primary-light dark:text-primary-dark text-sm">{{ point.name }}</h4>
-                    <p v-if="point.description" class="text-xs text-secondary-light dark:text-secondary-dark mt-1 line-clamp-2">
+                    <h4 class="font-bold text-primary-light text-sm">{{ point.name }}</h4>
+                    <p v-if="point.description" class="text-xs text-secondary-light mt-1 line-clamp-2">
                       {{ point.description }}
                     </p>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    <p class="text-xs text-slate-400 mt-1">
                       {{ point.type_label }}
                     </p>
                   </div>
@@ -366,7 +366,7 @@ onBeforeUnmount(() => {
             <!-- Expand/Collapse Button -->
             <div
               v-if="mapPoints.length > 4"
-              class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-center"
+              class="mt-4 pt-4 border-t border-slate-200 text-center"
             >
               <button
                 @click="isExpanded = !isExpanded"
@@ -380,22 +380,22 @@ onBeforeUnmount(() => {
 
         <!-- Map - Right Side (2/3) -->
         <div class="lg:col-span-2">
-          <div class="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <h3 class="text-lg font-black text-primary-light dark:text-primary-dark mb-4 flex items-center">
+          <div class="relative bg-white rounded-xl border border-slate-200 p-4">
+            <h3 class="text-lg font-black text-primary-light mb-4 flex items-center">
               <MapIcon class="size-5 text-primary mr-2" aria-hidden="true" />
               Mapa
             </h3>
-            <div ref="mapContainer" class="rounded-xl overflow-hidden h-[450px] border border-slate-200 dark:border-slate-700"></div>
+            <div ref="mapContainer" class="rounded-xl overflow-hidden h-[450px] border border-slate-200"></div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Dropoff Location (if exists) -->
-    <div v-if="tour?.dropoff_location_description" class="mt-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+    <div v-if="tour?.dropoff_location_description" class="mt-3 p-4 bg-green-50 rounded-lg border border-green-200">
       <div class="flex items-start space-x-3">
         <ArrowRightIcon class="size-5 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
-        <div class="text-sm text-slate-700 dark:text-slate-300">
+        <div class="text-sm text-slate-700">
           <strong>Punto de retorno:</strong> {{ tour.dropoff_location_description }}
         </div>
       </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4">
+  <div class="min-h-screen bg-background-light flex items-center justify-center px-4">
     <div class="max-w-2xl w-full text-center">
       <!-- Error Code -->
       <div class="mb-8">
@@ -10,16 +10,16 @@
 
       <!-- Icon -->
       <div class="mb-6">
-        <Icon :name="msIcon(errorIcon)" class="text-slate-300 dark:text-slate-600" style="font-size: 120px;" />
+        <Icon :name="msIcon(errorIcon)" class="text-slate-300" style="font-size: 120px;" />
       </div>
 
       <!-- Title -->
-      <h2 class="text-3xl md:text-4xl font-black text-primary-light dark:text-primary-dark mb-4">
+      <h2 class="text-3xl md:text-4xl font-black text-primary-light mb-4">
         {{ errorTitle }}
       </h2>
 
       <!-- Description -->
-      <p class="text-lg text-secondary-light dark:text-secondary-dark mb-8 max-w-md mx-auto">
+      <p class="text-lg text-secondary-light mb-8 max-w-md mx-auto">
         {{ errorDescription }}
       </p>
 
@@ -34,7 +34,7 @@
         </button>
         <NuxtLink
           to="/"
-          class="inline-flex items-center justify-center gap-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-primary-light dark:text-primary-dark font-bold py-3 px-6 rounded-lg transition-colors"
+          class="inline-flex items-center justify-center gap-2 bg-slate-200 hover:bg-slate-300 text-primary-light font-bold py-3 px-6 rounded-lg transition-colors"
         >
           <Icon name="material-symbols:home-outline" class="text-2xl" />
           Go Home
@@ -42,19 +42,19 @@
       </div>
 
       <!-- Help Links -->
-      <div class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
-        <p class="text-sm text-secondary-light dark:text-secondary-dark mb-4">
+      <div class="mt-12 pt-8 border-t border-slate-200">
+        <p class="text-sm text-secondary-light mb-4">
           Need help? Try these:
         </p>
         <div class="flex flex-wrap gap-4 justify-center text-sm">
           <NuxtLink to="/tours" class="text-primary hover:underline font-semibold">
             Browse Tours
           </NuxtLink>
-          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-slate-300">•</span>
           <NuxtLink to="/contact" class="text-primary hover:underline font-semibold">
             Contact Support
           </NuxtLink>
-          <span class="text-slate-300 dark:text-slate-700">•</span>
+          <span class="text-slate-300">•</span>
           <NuxtLink to="/about" class="text-primary hover:underline font-semibold">
             About Us
           </NuxtLink>
@@ -62,12 +62,12 @@
       </div>
 
       <!-- Error Details (Development Only) -->
-      <div v-if="isDev && error.stack" class="mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-left">
+      <div v-if="isDev && error.stack" class="mt-8 p-4 bg-red-50 border border-red-200 rounded-xl text-left">
         <details>
-          <summary class="cursor-pointer font-bold text-red-900 dark:text-red-100 mb-2">
+          <summary class="cursor-pointer font-bold text-red-900 mb-2">
             Error Details (Dev Mode)
           </summary>
-          <pre class="text-xs text-red-700 dark:text-red-300 overflow-auto">{{ error.stack }}</pre>
+          <pre class="text-xs text-red-700 overflow-auto">{{ error.stack }}</pre>
         </details>
       </div>
     </div>

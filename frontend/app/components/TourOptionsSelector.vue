@@ -37,7 +37,7 @@
         ]"
       >
         <span v-if="opt.is_current"
-          class="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary text-white text-[9px] font-black rounded-full">
+          class="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary text-white text-[10px] font-black rounded-full">
           <Icon name="material-symbols:check" class="text-[10px]" />
           {{ t('options_selected') }}
         </span>
@@ -50,7 +50,7 @@
         <p class="text-[11px] text-slate-500 leading-snug line-clamp-2 pr-8">{{ optionDescription(opt) }}</p>
         <div class="mt-auto pt-2 border-t border-slate-100 flex items-baseline justify-between gap-1.5">
           <div class="leading-tight">
-            <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-semibold">{{ t('from') }}</span>
+            <span class="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">{{ t('from') }}</span>
             <span class="text-base font-black"
               :class="opt.is_current ? 'text-primary' : 'text-slate-900'">
               {{ opt.min_price ? currencyStore.formatConverted(opt.min_price, false) : '—' }}
@@ -89,7 +89,7 @@
         ]"
       >
         <span v-if="opt.is_current"
-          class="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary text-white text-[9px] font-black rounded-full">
+          class="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary text-white text-[10px] font-black rounded-full">
           <Icon name="material-symbols:check" class="text-[10px]" />
           {{ t('options_selected') }}
         </span>

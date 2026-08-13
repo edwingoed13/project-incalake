@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-background-light dark:bg-background-dark pt-24 pb-8 lg:pt-28 lg:pb-12">
+  <div class="min-h-screen bg-background-light pt-24 pb-8 lg:pt-28 lg:pb-12">
     <div class="container mx-auto px-4 lg:px-6 max-w-7xl">
       <!-- Header -->
       <div class="mb-6 lg:mb-8">
-        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-primary-light dark:text-primary-dark mb-1.5">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-primary-light mb-1.5">
           {{ t('checkout.title') }}
         </h1>
-        <p class="text-sm sm:text-base text-secondary-light dark:text-secondary-dark">
+        <p class="text-sm sm:text-base text-secondary-light">
           {{ t('checkout.subtitle') }}
         </p>
       </div>
@@ -17,15 +17,15 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-8">
+      <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
         <div class="flex items-start gap-3">
-          <Icon name="material-symbols:error-outline" class="text-red-600 dark:text-red-400 text-2xl" />
+          <Icon name="material-symbols:error-outline" class="text-red-600 text-2xl" />
           <div>
-            <h3 class="font-bold text-red-900 dark:text-red-100 mb-1">Error</h3>
-            <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+            <h3 class="font-bold text-red-900 mb-1">Error</h3>
+            <p class="text-red-700">{{ error }}</p>
             <button
               @click="error = null"
-              class="mt-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              class="mt-3 text-sm font-semibold text-red-600 hover:text-red-700"
             >
               {{ t('checkout.dismiss') }}
             </button>
@@ -34,12 +34,12 @@
       </div>
 
       <!-- Empty Cart State -->
-      <div v-else-if="cartStore.isEmpty" class="bg-white dark:bg-slate-900 rounded-xl p-12 text-center shadow-lg">
-        <Icon name="material-symbols:shopping-cart-outline" style="font-size: 96px;" class="text-slate-300 dark:text-slate-600 mb-4 block" />
-        <h2 class="text-2xl font-black text-primary-light dark:text-primary-dark mb-2">
+      <div v-else-if="cartStore.isEmpty" class="bg-white rounded-xl p-12 text-center shadow-lg">
+        <Icon name="material-symbols:shopping-cart-outline" style="font-size: 96px;" class="text-slate-300 mb-4 block" />
+        <h2 class="text-2xl font-black text-primary-light mb-2">
           {{ t('checkout.empty_cart') }}
         </h2>
-        <p class="text-secondary-light dark:text-secondary-dark mb-6">
+        <p class="text-secondary-light mb-6">
           {{ t('checkout.empty_cart_desc') }}
         </p>
         <button
@@ -74,12 +74,12 @@
         v-if="processingPayment"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       >
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
           <div class="spinner size-16 mx-auto mb-4"></div>
-          <h3 class="text-xl font-black text-primary-light dark:text-primary-dark mb-2">
+          <h3 class="text-xl font-black text-primary-light mb-2">
             {{ t('checkout.processing') }}
           </h3>
-          <p class="text-secondary-light dark:text-secondary-dark">
+          <p class="text-secondary-light">
             {{ t('checkout.processing_desc') }}
           </p>
         </div>

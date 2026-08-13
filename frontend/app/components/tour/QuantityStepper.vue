@@ -17,9 +17,9 @@ function inc() { if (!props.atMax) model.value++ }
 </script>
 
 <template>
-  <div class="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+  <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
     <div class="leading-tight min-w-0">
-      <span class="font-bold text-sm text-slate-800 dark:text-slate-100">{{ label }}</span>
+      <span class="font-bold text-sm text-slate-800">{{ label }}</span>
       <span v-if="hint" class="block text-xs text-slate-500">{{ hint }}</span>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
@@ -27,7 +27,7 @@ function inc() { if (!props.atMax) model.value++ }
         type="button"
         @click="dec"
         :disabled="model <= (min ?? 0)"
-        class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
         :aria-label="`Quitar ${label}`"
       >
         <Icon name="material-symbols:remove" class="size-5" />
@@ -37,7 +37,7 @@ function inc() { if (!props.atMax) model.value++ }
         type="button"
         @click="inc"
         :disabled="atMax"
-        class="w-11 h-11 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
         :aria-label="`Agregar ${label}`"
       >
         <Icon name="material-symbols:add" class="size-5" />

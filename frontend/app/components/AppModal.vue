@@ -47,18 +47,18 @@ onBeforeUnmount(() => {
       >
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="close"></div>
         <div
-          class="relative w-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[90vh] sm:max-h-[85vh]"
+          class="relative w-full bg-white shadow-2xl flex flex-col rounded-t-2xl sm:rounded-2xl max-h-[90vh] sm:max-h-[85vh]"
           :class="maxWidth"
         >
           <!-- Header -->
-          <div class="flex items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-            <h3 class="text-base font-bold text-slate-800 dark:text-white truncate">
+          <div class="flex items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-100 shrink-0">
+            <h3 class="text-base font-bold text-slate-800 truncate">
               <slot name="title">{{ title }}</slot>
             </h3>
             <button
               type="button"
               @click="close"
-              class="-mr-1 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+              class="-mr-1 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
               aria-label="Cerrar"
             >
               <Icon name="material-symbols:close" class="text-2xl" />
@@ -71,7 +71,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Footer (optional) -->
-          <div v-if="$slots.footer" class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 shrink-0">
+          <div v-if="$slots.footer" class="p-4 sm:p-5 border-t border-slate-100 shrink-0">
             <slot name="footer" />
           </div>
         </div>
