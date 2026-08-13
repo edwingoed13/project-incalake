@@ -84,37 +84,83 @@
 
                 <!-- Zona dibujada -->
                 <div v-else class="space-y-3">
-                  <div v-if="drawingUnavailable" class="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
-                    <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-                      No se pudo cargar la herramienta de dibujo
-                    </p>
-                    <p class="text-[10px] text-amber-800/90 dark:text-amber-200/80 mt-1 leading-relaxed">
-                      Recarga la página con Ctrl+Shift+R y vuelve a abrir este mapa. Google Maps quedó
-                      cargado en esta pestaña sin el módulo de dibujo.
-                    </p>
-                  </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                    Pulsa el icono de polígono en la barra superior del mapa. Después haz clic en cada
-                    esquina de la zona y cierra la figura haciendo clic otra vez sobre el primer punto.
-                    Luego puedes arrastrar los vértices para ajustarla. Puedes dibujar más de una zona.
-                  </p>
-                  <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                    <div>
-                      <span class="block text-[8px] uppercase text-slate-400 mb-1">Zonas dibujadas</span>
-                      <span class="text-[11px] font-black dark:text-white">
-                        {{ localArea.length }} ({{ localArea.reduce((n, r) => n + (r?.length || 0), 0) }} puntos)
-                      </span>
-                    </div>
+                  <!-- Not drawing yet -->
+                  <template v-if="!isDrawing">
                     <button
                       type="button"
-                      class="text-[10px] font-black uppercase tracking-wide text-red-500 hover:text-red-600 disabled:opacity-40"
-                      :disabled="!localArea.length"
-                      @click="clearPolygons"
+                      class="w-full rounded-xl bg-primary text-white py-3 px-4 text-[11px] font-black uppercase tracking-wide hover:opacity-90 transition-opacity"
+                      @click="startZone"
                     >
-                      Borrar
+                      + Dibujar una zona
                     </button>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                      Pulsa el botón y luego haz clic en el mapa en cada esquina de la zona.
+                    </p>
+                  </template>
+
+                  <!-- Drawing in progress -->
+                  <template v-else>
+                    <div class="rounded-xl border-2 border-primary bg-primary/5 p-3 space-y-2">
+                      <p class="text-[11px] font-black uppercase tracking-wide text-primary">
+                        Dibujando · {{ draftPoints.length }} punto(s)
+                      </p>
+                      <p class="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Haz clic en el mapa para añadir cada esquina. Cuando tengas al menos 3,
+                        cierra la zona con el botón o haciendo clic en el punto verde.
+                      </p>
+                      <div class="grid grid-cols-3 gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          class="rounded-lg bg-emerald-600 text-white py-2 text-[10px] font-black uppercase disabled:opacity-40"
+                          :disabled="draftPoints.length < 3"
+                          @click="finishZone"
+                        >
+                          Cerrar
+                        </button>
+                        <button
+                          type="button"
+                          class="rounded-lg bg-slate-200 dark:bg-slate-700 dark:text-white py-2 text-[10px] font-black uppercase disabled:opacity-40"
+                          :disabled="!draftPoints.length"
+                          @click="undoPoint"
+                        >
+                          Deshacer
+                        </button>
+                        <button
+                          type="button"
+                          class="rounded-lg bg-slate-200 dark:bg-slate-700 dark:text-white py-2 text-[10px] font-black uppercase"
+                          @click="cancelZone"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Saved zones -->
+                  <div v-if="localArea.length" class="space-y-1.5">
+                    <span class="block text-[8px] uppercase text-slate-400">Zonas guardadas</span>
+                    <div
+                      v-for="(ring, i) in localArea"
+                      :key="i"
+                      class="bg-slate-50 dark:bg-slate-950 py-2 px-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3"
+                    >
+                      <span class="text-[11px] font-black dark:text-white">
+                        Zona {{ i + 1 }} · {{ ring?.length || 0 }} puntos
+                      </span>
+                      <button
+                        type="button"
+                        class="text-[10px] font-black uppercase tracking-wide text-red-500 hover:text-red-600"
+                        @click="removeZone(i)"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 font-medium">
+                      Arrastra los vértices en el mapa para ajustar una zona guardada.
+                    </p>
                   </div>
-                  <p v-if="!localArea.length" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+
+                  <p v-if="!localArea.length && !isDrawing" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">
                     Sin zona dibujada no se podrá recoger en ningún hotel.
                   </p>
                 </div>
@@ -230,7 +276,6 @@ const localArea = ref<Array<Array<{ lat: number; lng: number }>>>([])
 const map = ref<any>(null)
 const marker = ref<any>(null)
 const circle = ref<any>(null)
-const drawingManager = ref<any>(null)
 const polygons = ref<any[]>([])
 
 watch(() => props.isOpen, (val) => {
@@ -342,8 +387,14 @@ const initMap = async () => {
     applyAreaMode()
   }
 
-  // Click on map to move marker
+  // Click on map: adds a vertex while drawing a zone, otherwise moves the
+  // centre marker as before.
   map.value.addListener('click', (e: any) => {
+    if (isDrawing.value) {
+      draftPoints.value.push({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+      renderDraft()
+      return
+    }
     updatePosition(e.latLng)
   })
 
@@ -431,77 +482,119 @@ const restorePolygons = () => {
   })
 }
 
-/**
- * google.maps.drawing only exists if the script that booted Maps asked for it,
- * and Maps honours only the first loader that wins the race. Every admin loader
- * now requests the same list, but a tab holding the old cached script would
- * still come up without it — so try to pull it in after the fact.
- */
-const drawingUnavailable = ref(false)
+// --- Drawing, without Google's DrawingManager -------------------------------
+//
+// DrawingManager lives in the optional `drawing` library, and Maps honours only
+// the library list of whichever loader boots it first. With three loaders in
+// this app that race was unwinnable: the toolbar silently never appeared and
+// the map came up showing nothing but a dot. Clicking to place vertices needs
+// only Polygon/Polyline/Marker, all core, so it cannot break that way — and a
+// labelled button in the panel is easier to find than an icon on the map.
 
-const ensureDrawingLibrary = async (): Promise<boolean> => {
-  const google = (window as any).google
-  if (google?.maps?.drawing) return true
+const isDrawing = ref(false)
+const draftPoints = ref<Array<{ lat: number; lng: number }>>([])
+let draftLine: any = null
+let draftMarkers: any[] = []
 
-  if (typeof google?.maps?.importLibrary === 'function') {
-    try {
-      await google.maps.importLibrary('drawing')
-      return !!google.maps.drawing
-    } catch { /* fall through to the visible warning */ }
-  }
-
-  return false
+const clearDraftOverlays = () => {
+  if (draftLine) { draftLine.setMap(null); draftLine = null }
+  draftMarkers.forEach((m) => m.setMap(null))
+  draftMarkers = []
 }
 
-/**
- * Show only the shape that matches the selected mode, and let the drawing tool
- * run only in polygon mode — leaving it armed in radius mode would let someone
- * draw an area the tour will never use.
- */
-const applyAreaMode = async () => {
+/** Redraw the in-progress outline after every click. */
+const renderDraft = () => {
   const google = (window as any).google
-  if (!google || props.type !== 'hotel_pickup') return
+  clearDraftOverlays()
+  if (!draftPoints.value.length) return
 
-  const drawing = localAreaType.value === 'polygon'
+  draftLine = new google.maps.Polyline({
+    map: map.value,
+    path: draftPoints.value,
+    strokeColor: '#330df2',
+    strokeOpacity: 0.9,
+    strokeWeight: 2,
+  })
 
-  if (drawing && !(await ensureDrawingLibrary())) {
-    // Better a stated reason than a map that just shows a dot.
-    drawingUnavailable.value = true
-    return
+  draftPoints.value.forEach((p, i) => {
+    draftMarkers.push(new google.maps.Marker({
+      map: map.value,
+      position: p,
+      // The first vertex is highlighted: clicking it closes the shape.
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: i === 0 ? 7 : 5,
+        fillColor: i === 0 ? '#16a34a' : '#330df2',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      },
+      clickable: i === 0,
+      title: i === 0 ? 'Clic aquí para cerrar la zona' : undefined,
+      zIndex: 10,
+    }))
+  })
+
+  if (draftMarkers[0]) {
+    draftMarkers[0].addListener('click', () => finishZone())
   }
-  drawingUnavailable.value = false
+}
+
+const startZone = () => {
+  localAreaType.value = 'polygon'
+  isDrawing.value = true
+  draftPoints.value = []
+  renderDraft()
+}
+
+const cancelZone = () => {
+  isDrawing.value = false
+  draftPoints.value = []
+  clearDraftOverlays()
+}
+
+const undoPoint = () => {
+  draftPoints.value.pop()
+  renderDraft()
+}
+
+const finishZone = () => {
+  if (draftPoints.value.length < 3) return
+  const google = (window as any).google
+  const poly = new google.maps.Polygon({
+    ...polygonStyle,
+    paths: [...draftPoints.value],
+    map: map.value,
+  })
+  trackPolygon(poly)
+  syncPolygons()
+  cancelZone()
+}
+
+const removeZone = (index: number) => {
+  const poly = polygons.value[index]
+  if (poly) poly.setMap(null)
+  polygons.value.splice(index, 1)
+  syncPolygons()
+}
+
+/** Show only the shape that matches the selected mode. */
+const applyAreaMode = () => {
+  if (props.type !== 'hotel_pickup') return
+  const drawing = localAreaType.value === 'polygon'
 
   if (circle.value) circle.value.setMap(drawing ? null : map.value)
   if (marker.value) marker.value.setMap(drawing ? null : map.value)
   polygons.value.forEach((p: any) => p.setMap(drawing ? map.value : null))
 
-  if (!drawingManager.value) {
-    drawingManager.value = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: true,
-      drawingControlOptions: {
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [google.maps.drawing.OverlayType.POLYGON],
-      },
-      polygonOptions: polygonStyle,
-    })
-    drawingManager.value.addListener('polygoncomplete', (poly: any) => {
-      trackPolygon(poly)
-      syncPolygons()
-      // Back to panning: staying in draw mode makes every later click start a
-      // new shape, which is never what someone wants after closing one.
-      drawingManager.value.setDrawingMode(null)
-    })
-  }
-
-  drawingManager.value.setMap(drawing ? map.value : null)
-  if (!drawing) drawingManager.value.setDrawingMode(null)
+  if (!drawing) cancelZone()
 }
 
 const clearPolygons = () => {
   polygons.value.forEach((p: any) => p.setMap(null))
   polygons.value = []
   localArea.value = []
+  cancelZone()
 }
 
 const handleSave = () => {
