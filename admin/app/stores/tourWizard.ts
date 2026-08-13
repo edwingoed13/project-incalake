@@ -297,6 +297,9 @@ export interface TourStep8Availability {
   requireAvailability: boolean
   start: string
   end: string
+  // No end date at all: the calendar never closes and the tour is left out of
+  // the expiry warnings sent to reservations.
+  neverExpires: boolean
   activeDays: number[]
   specialDays: string[]
   blocks?: AvailabilityBlock[]
@@ -474,6 +477,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
       requireAvailability: false,
       start: new Date().toISOString().split('T')[0],
       end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      neverExpires: false,
       activeDays: [1, 2, 3, 4, 5, 6, 0], // Monday to Sunday
       specialDays: [],
       blocks: [],
@@ -913,7 +917,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
              this.availability = {
                requireAvailability: data.require_availability || false,
                start: data.availability_data.start || new Date().toISOString().split('T')[0],
-               end: data.availability_data.end || defaultEnd,
+               neverExpires: !!data.availability_data.neverExpires,
+               // Don't substitute the +1y default when the tour never expires:
+               // that is what would silently give it an end date again.
+               end: data.availability_data.neverExpires
+                 ? ''
+                 : (data.availability_data.end || defaultEnd),
                activeDays: (data.availability_data.activeDays || [1, 2, 3, 4, 5, 6, 0]).map((d: any) => Number(d)),
                specialDays: data.availability_data.specialDays || [],
                blocks: data.availability_data.blocks || [],
@@ -1138,7 +1147,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
         require_availability: this.availability.requireAvailability,
         availability_data: {
           start: this.availability.start,
-          end: this.availability.end,
+          // Blank when the tour never expires, so every consumer that already
+          // treats "no end" as unlimited keeps working untouched.
+          end: this.availability.neverExpires ? '' : this.availability.end,
+          neverExpires: !!this.availability.neverExpires,
           activeDays: this.availability.activeDays,
           specialDays: this.availability.specialDays,
           blocks: this.availability.blocks || [],

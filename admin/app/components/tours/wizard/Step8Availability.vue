@@ -147,9 +147,28 @@
                 :min="store.availability.start || todayISO"
                 icon="i-lucide-calendar"
                 class="w-full"
+                :disabled="store.availability.neverExpires"
               />
+              <template v-if="store.availability.neverExpires" #help>
+                <span class="text-muted">Sin fecha final: el tour no caduca.</span>
+              </template>
             </UFormField>
           </div>
+
+          <!-- Every new tour gets an automatic end date of today + 1 year, and
+               nobody revisits it — which is how 133 of 290 tours ended up past
+               their date, some since 2019. This is the way out for tours that
+               simply run all year. -->
+          <UCheckbox
+            v-model="store.availability.neverExpires"
+            label="Este tour no caduca"
+            :ui="{ label: 'font-bold' }"
+            @update:model-value="onNeverExpiresChange"
+          />
+          <p class="text-[11px] text-muted -mt-2">
+            Sin fecha final el calendario no se cierra nunca, y el tour queda fuera de los
+            avisos de caducidad que se envían a reservas@incalake.com.
+          </p>
 
           <!-- Active Days — compact pills -->
           <UFormField label="Días de la semana disponibles">
@@ -398,6 +417,21 @@ const store = useTourWizardStore()
 const toast = useToast()
 
 const todayISO = new Date().toISOString().split('T')[0]
+
+// Remember the date while "no caduca" is on, so unticking it doesn't leave the
+// field blank and force the operator to type it again from memory.
+const lastEndDate = ref<string>('')
+
+const onNeverExpiresChange = (value: boolean) => {
+  if (value) {
+    if (store.availability.end) lastEndDate.value = store.availability.end
+    store.availability.end = ''
+  } else if (!store.availability.end) {
+    store.availability.end = lastEndDate.value
+      || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+  }
+  store.isDirty = true
+}
 const activeTab = ref<'availability' | 'blocks' | 'offers'>('availability')
 const saving = ref(false)
 
