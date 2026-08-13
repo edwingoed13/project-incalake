@@ -112,16 +112,23 @@ class CityController extends Controller
             return $cities;
         }
 
-        $images = \App\Models\Tour::query()
+        // `featured_image` is not a column — it is resolved per tour from the
+        // legacy featured_image_path or, failing that, the media gallery. Same
+        // rule the tour cards use, so a city tile and its tour card agree.
+        $tours = \App\Models\Tour::query()
             ->whereIn('city_id', $ids)
             ->where('active', true)
             ->where('status', 'published')
-            ->whereNotNull('featured_image')
-            ->where('featured_image', '!=', '')
-            // Ascending: pluck keys by city_id and each row overwrites the
-            // previous, so the LAST one written — the newest tour — wins.
-            ->orderBy('id')
-            ->pluck('featured_image', 'city_id');
+            ->with('mediaGallery')
+            ->orderBy('id')                 // ascending: the newest tour wins below
+            ->get(['id', 'city_id', 'featured_image_path']);
+
+        $images = [];
+        foreach ($tours as $tour) {
+            if ($url = $tour->resolveImageUrl()) {
+                $images[$tour->city_id] = $url;
+            }
+        }
 
         foreach ($cities as &$city) {
             $city['image'] = $images[$city['id']] ?? null;

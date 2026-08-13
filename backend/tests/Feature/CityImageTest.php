@@ -30,13 +30,13 @@ class CityImageTest extends TestCase
             'timezone' => 'America/Lima', 'active' => true,
         ]);
 
-        Tour::factory()->create(['city_id' => $city->id, 'featured_image' => 'tours/vieja.jpg']);
-        Tour::factory()->create(['city_id' => $city->id, 'featured_image' => 'tours/nueva.jpg']);
+        Tour::factory()->create(['city_id' => $city->id, 'featured_image_path' => 'tours/vieja.jpg']);
+        Tour::factory()->create(['city_id' => $city->id, 'featured_image_path' => 'tours/nueva.jpg']);
 
         $row = collect($this->getJson('/api/cities')->assertOk()->json('data'))
             ->firstWhere('slug', 'puno');
 
-        $this->assertSame('tours/nueva.jpg', $row['image']);
+        $this->assertStringContainsString('tours/nueva.jpg', $row['image']);
     }
 
     public function test_it_ignores_unpublished_tours_and_reports_null_when_there_is_no_photo(): void
@@ -46,8 +46,8 @@ class CityImageTest extends TestCase
             'timezone' => 'America/Lima', 'active' => true,
         ]);
 
-        Tour::factory()->draft()->create(['city_id' => $city->id, 'featured_image' => 'tours/borrador.jpg']);
-        Tour::factory()->create(['city_id' => $city->id, 'featured_image' => null]);
+        Tour::factory()->draft()->create(['city_id' => $city->id, 'featured_image_path' => 'tours/borrador.jpg']);
+        Tour::factory()->create(['city_id' => $city->id, 'featured_image_path' => null]);
 
         $row = collect($this->getJson('/api/cities')->assertOk()->json('data'))
             ->firstWhere('slug', 'juliaca');
