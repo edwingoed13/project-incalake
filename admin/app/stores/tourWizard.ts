@@ -244,6 +244,10 @@ export interface TourStep6 {
   pickupRadiusKm: number
   pickupCenterLat: number | null
   pickupCenterLng: number | null
+  // 'radius' keeps the circle; 'polygon' uses pickupArea, a list of rings so a
+  // tour can cover separate neighbourhoods.
+  pickupAreaType: 'radius' | 'polygon'
+  pickupArea: Array<Array<{ lat: number; lng: number }>>
   dropoffLocationDescription: string
   guideType: 'live_guide' | 'audio_guide' | 'informative_brochures' | 'no_guide' | 'none'
   guideLanguages: number[]
@@ -449,6 +453,8 @@ export const useTourWizardStore = defineStore('tourWizard', {
       pickupRadiusKm: 5,
       pickupCenterLat: null,
       pickupCenterLng: null,
+      pickupAreaType: 'radius' as 'radius' | 'polygon',
+      pickupArea: [] as Array<Array<{ lat: number; lng: number }>>,
       dropoffLocationDescription: '',
       guideType: 'live_guide',
       guideLanguages: [1, 2], // Spanish, English
@@ -870,6 +876,13 @@ export const useTourWizardStore = defineStore('tourWizard', {
             pickupCenterLat: data.pickup_center_lat ? Number(data.pickup_center_lat) : null,
             pickupCenterLng: data.pickup_center_lng ? Number(data.pickup_center_lng) : null,
             pickupRadiusKm: data.pickup_radius_km ? Number(data.pickup_radius_km) : 5,
+            pickupAreaType: data.pickup_area_type === 'polygon' ? 'polygon' : 'radius',
+            // The API may return a single ring; normalise to a list of rings.
+            pickupArea: (() => {
+              const a = data.pickup_area
+              if (!Array.isArray(a) || !a.length) return []
+              return Array.isArray(a[0]) ? a : [a]
+            })(),
             dropoffLocationDescription: data.dropoff_location_description || '',
             guideType: data.guide_type || 'live_guide',
             guideLanguages: (data.guide_languages || [1, 2]).map((id: any) => Number(id)),
@@ -1094,6 +1107,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
         pickup_center_lat: this.bookingOptions.pickupCenterLat,
         pickup_center_lng: this.bookingOptions.pickupCenterLng,
         pickup_radius_km: this.bookingOptions.pickupRadiusKm,
+        pickup_area_type: this.bookingOptions.pickupAreaType || 'radius',
+        pickup_area: this.bookingOptions.pickupAreaType === 'polygon'
+          ? (this.bookingOptions.pickupArea || [])
+          : null,
         dropoff_location_description: this.bookingOptions.dropoffLocationDescription,
         guide_type: this.bookingOptions.guideType,
         guide_languages: this.bookingOptions.guideLanguages,

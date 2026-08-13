@@ -36,14 +36,41 @@
                 </div>
               </div>
 
-              <!-- Radius Controls (Only for hotel_pickup) -->
+              <!-- Area mode + controls (Only for hotel_pickup) -->
               <div v-if="type === 'hotel_pickup'" class="space-y-6 animate-in slide-in-from-top-2">
-                <div class="space-y-4">
+                <div class="space-y-3">
+                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Forma del área</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      class="rounded-xl py-3 px-3 text-[11px] font-black uppercase tracking-wide transition-colors border"
+                      :class="localAreaType === 'radius'
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent hover:border-primary/40'"
+                      @click="localAreaType = 'radius'"
+                    >
+                      Radio
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-xl py-3 px-3 text-[11px] font-black uppercase tracking-wide transition-colors border"
+                      :class="localAreaType === 'polygon'
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent hover:border-primary/40'"
+                      @click="localAreaType = 'polygon'"
+                    >
+                      Zona dibujada
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Radio -->
+                <div v-if="localAreaType === 'radius'" class="space-y-4">
                   <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Radio de recojo (km)</label>
                   <div class="flex items-center gap-4">
-                    <input 
+                    <input
                       v-model.number="localRadius"
-                      type="number" 
+                      type="number"
                       step="0.1"
                       min="0.1"
                       max="20"
@@ -53,6 +80,34 @@
                     <span class="text-xs font-bold text-slate-500">km</span>
                   </div>
                   <p class="text-[10px] text-slate-400 font-medium">= {{ (localRadius * 1000).toFixed(0) }} metros</p>
+                </div>
+
+                <!-- Zona dibujada -->
+                <div v-else class="space-y-3">
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    Usa la herramienta de polígono del mapa: haz clic en cada esquina y cierra la figura
+                    en el primer punto. Después puedes arrastrar los vértices para ajustarla.
+                    Puedes dibujar más de una zona.
+                  </p>
+                  <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                    <div>
+                      <span class="block text-[8px] uppercase text-slate-400 mb-1">Zonas dibujadas</span>
+                      <span class="text-[11px] font-black dark:text-white">
+                        {{ localArea.length }} ({{ localArea.reduce((n, r) => n + (r?.length || 0), 0) }} puntos)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      class="text-[10px] font-black uppercase tracking-wide text-red-500 hover:text-red-600 disabled:opacity-40"
+                      :disabled="!localArea.length"
+                      @click="clearPolygons"
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                  <p v-if="!localArea.length" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                    Sin zona dibujada no se podrá recoger en ningún hotel.
+                  </p>
                 </div>
               </div>
 
@@ -145,6 +200,8 @@ const props = defineProps<{
     lng: number | null
     radius?: number
     description: string
+    areaType?: 'radius' | 'polygon'
+    area?: Array<Array<{ lat: number; lng: number }>> | null
   }
 }>()
 
@@ -154,9 +211,18 @@ const localCoords = ref({ lat: -15.8402, lng: -70.0219 }) // Puno default
 const localRadius = ref(1)
 const localDescription = ref('')
 
+// A circle can't follow streets. 'polygon' lets the operator trace the actual
+// blocks they cover; 'radius' stays the default so nothing changes for tours
+// already configured.
+const localAreaType = ref<'radius' | 'polygon'>('radius')
+// A list of rings: a tour can cover two separate neighbourhoods.
+const localArea = ref<Array<Array<{ lat: number; lng: number }>>>([])
+
 const map = ref<any>(null)
 const marker = ref<any>(null)
 const circle = ref<any>(null)
+const drawingManager = ref<any>(null)
+const polygons = ref<any[]>([])
 
 watch(() => props.isOpen, (val) => {
   if (val) {
@@ -166,11 +232,21 @@ watch(() => props.isOpen, (val) => {
     }
     localRadius.value = props.initialData.radius || 1
     localDescription.value = props.initialData.description || ''
-    
+    localAreaType.value = props.initialData.areaType === 'polygon' ? 'polygon' : 'radius'
+    localArea.value = Array.isArray(props.initialData.area)
+      ? JSON.parse(JSON.stringify(props.initialData.area))
+      : []
+
     nextTick(() => {
       loadGoogleMaps()
     })
   }
+})
+
+// Switching mode swaps which shape the map is showing and editing.
+watch(localAreaType, () => {
+  if (!map.value) return
+  applyAreaMode()
 })
 
 const loadGoogleMaps = () => {
@@ -189,9 +265,16 @@ const loadGoogleMaps = () => {
     return
   }
 
+  // Key comes from runtime config so it can be rotated or restricted per
+  // environment; the literal stays as a fallback because it is what shipped and
+  // removing it outright would black out the map wherever the env var isn't set.
+  const config = useRuntimeConfig()
+  const apiKey = (config.public as any).googleMapsApiKey || 'AIzaSyCC2CAVXwufsdT5TX3UPk7hZ3HHw3NZl_c'
+
   const script = document.createElement('script')
   script.id = 'google-maps-script'
-  script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCC2CAVXwufsdT5TX3UPk7hZ3HHw3NZl_c&libraries=places`
+  // `drawing` is what provides DrawingManager; without it polygon mode can't load.
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,drawing,geometry`
   script.async = true
   script.defer = true
   script.onload = () => {
@@ -245,6 +328,9 @@ const initMap = async () => {
       center: localCoords.value,
       radius: localRadius.value * 1000 // Convert km to meters
     })
+
+    restorePolygons()
+    applyAreaMode()
   }
 
   // Click on map to move marker
@@ -295,12 +381,101 @@ const updateCircleRadius = () => {
   }
 }
 
+// --- Drawn area -------------------------------------------------------------
+
+/** Read the live shapes back into localArea. Called after every edit. */
+const syncPolygons = () => {
+  localArea.value = polygons.value.map((poly: any) =>
+    poly.getPath().getArray().map((p: any) => ({ lat: p.lat(), lng: p.lng() }))
+  )
+}
+
+/** Wire a shape so dragging a vertex updates what will be saved. */
+const trackPolygon = (poly: any) => {
+  const path = poly.getPath()
+  // set_at fires on vertex drag, insert_at/remove_at on add/delete.
+  ;['set_at', 'insert_at', 'remove_at'].forEach((ev) => path.addListener(ev, syncPolygons))
+  poly.addListener('dragend', syncPolygons)
+  polygons.value.push(poly)
+}
+
+const polygonStyle = {
+  strokeColor: '#330df2',
+  strokeOpacity: 0.9,
+  strokeWeight: 2,
+  fillColor: '#330df2',
+  fillOpacity: 0.15,
+  editable: true,
+  draggable: true,
+}
+
+/** Rebuild saved rings as editable shapes when the modal reopens. */
+const restorePolygons = () => {
+  const google = (window as any).google
+  polygons.value.forEach((p: any) => p.setMap(null))
+  polygons.value = []
+
+  localArea.value.forEach((ring) => {
+    if (!Array.isArray(ring) || ring.length < 3) return
+    const poly = new google.maps.Polygon({ ...polygonStyle, paths: ring, map: null })
+    trackPolygon(poly)
+  })
+}
+
+/**
+ * Show only the shape that matches the selected mode, and let the drawing tool
+ * run only in polygon mode — leaving it armed in radius mode would let someone
+ * draw an area the tour will never use.
+ */
+const applyAreaMode = () => {
+  const google = (window as any).google
+  if (!google || props.type !== 'hotel_pickup') return
+
+  const drawing = localAreaType.value === 'polygon'
+
+  if (circle.value) circle.value.setMap(drawing ? null : map.value)
+  if (marker.value) marker.value.setMap(drawing ? null : map.value)
+  polygons.value.forEach((p: any) => p.setMap(drawing ? map.value : null))
+
+  if (!drawingManager.value) {
+    drawingManager.value = new google.maps.drawing.DrawingManager({
+      drawingMode: null,
+      drawingControl: true,
+      drawingControlOptions: {
+        position: google.maps.ControlPosition.TOP_CENTER,
+        drawingModes: [google.maps.drawing.OverlayType.POLYGON],
+      },
+      polygonOptions: polygonStyle,
+    })
+    drawingManager.value.addListener('polygoncomplete', (poly: any) => {
+      trackPolygon(poly)
+      syncPolygons()
+      // Back to panning: staying in draw mode makes every later click start a
+      // new shape, which is never what someone wants after closing one.
+      drawingManager.value.setDrawingMode(null)
+    })
+  }
+
+  drawingManager.value.setMap(drawing ? map.value : null)
+  if (!drawing) drawingManager.value.setDrawingMode(null)
+}
+
+const clearPolygons = () => {
+  polygons.value.forEach((p: any) => p.setMap(null))
+  polygons.value = []
+  localArea.value = []
+}
+
 const handleSave = () => {
   emit('save', {
     lat: localCoords.value.lat,
     lng: localCoords.value.lng,
     radius: localRadius.value,
-    description: localDescription.value
+    description: localDescription.value,
+    areaType: localAreaType.value,
+    // Only rings that actually enclose something; the backend rejects the rest
+    // anyway and an unusable shape reads as "nowhere covered".
+    area: localArea.value.filter((r) => Array.isArray(r) && r.length >= 3),
   })
 }
 </script>

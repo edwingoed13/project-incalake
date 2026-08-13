@@ -42,17 +42,37 @@ export function useHotelPickupValidation(bookingId: Ref<number | string>, tourCo
       streetViewControl: false,
     })
 
-    if (tourConfig.value.enable_hotel_pickup && tourConfig.value.pickup_radius_km) {
+    // Show the real coverage while the customer picks a hotel: a drawn zone if
+    // the tour has one, otherwise the circle. Seeing a circle over an area that
+    // is actually polygon-shaped would promise pickups that get surcharged.
+    const areaStyle = {
+      fillColor: '#10B981',
+      fillOpacity: 0.15,
+      strokeColor: '#10B981',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+    }
+
+    if (tourConfig.value.enable_hotel_pickup && tourConfig.value.pickup_area_type === 'polygon' && tourConfig.value.pickup_area) {
+      const raw = tourConfig.value.pickup_area
+      const rings = Array.isArray(raw?.[0]) ? raw : [raw]
+      const bounds = new google.maps.LatLngBounds()
+
+      for (const ring of rings) {
+        if (!Array.isArray(ring) || ring.length < 3) continue
+        const path = ring.map((p: any) => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng) }))
+        new google.maps.Polygon({ map, paths: path, ...areaStyle })
+        path.forEach((p: any) => bounds.extend(p))
+      }
+
+      if (!bounds.isEmpty()) map.fitBounds(bounds)
+    } else if (tourConfig.value.enable_hotel_pickup && tourConfig.value.pickup_radius_km) {
       const radiusKm = parseFloat(tourConfig.value.pickup_radius_km) || 1
       radiusCircle = new google.maps.Circle({
         map,
         center: { lat: centerLat, lng: centerLng },
         radius: radiusKm * 1000,
-        fillColor: '#10B981',
-        fillOpacity: 0.15,
-        strokeColor: '#10B981',
-        strokeOpacity: 0.8,
-        strokeWeight: 2
+        ...areaStyle
       })
     }
 

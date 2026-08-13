@@ -386,21 +386,42 @@
                 class="w-full"
               />
               <div class="grid grid-cols-[1fr_2fr] gap-2 items-end">
-                <UFormField label="Radio (km)" :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }">
+                <UFormField
+                  v-if="store.bookingOptions.pickupAreaType !== 'polygon'"
+                  label="Radio (km)"
+                  :ui="{ label: 'text-[10px] font-black uppercase tracking-widest text-muted' }"
+                >
                   <UInputNumber v-model="store.bookingOptions.pickupRadiusKm" :min="1" :max="100" class="w-full" />
                 </UFormField>
                 <UButton
-                  icon="i-lucide-target"
+                  :icon="store.bookingOptions.pickupAreaType === 'polygon' ? 'i-lucide-pen-tool' : 'i-lucide-target'"
                   color="neutral"
                   size="sm"
                   block
+                  :class="store.bookingOptions.pickupAreaType === 'polygon' ? 'col-span-2' : ''"
                   @click="openPickupModal('hotel_pickup')"
                 >
-                  Configurar radio
+                  {{ store.bookingOptions.pickupAreaType === 'polygon' ? 'Editar zona dibujada' : 'Configurar radio' }}
                 </UButton>
               </div>
+              <!-- A drawn area with no shape covers nowhere, so it must not
+                   read as configured. -->
               <UAlert
-                v-if="store.bookingOptions.pickupCenterLat && store.bookingOptions.pickupCenterLng"
+                v-if="store.bookingOptions.pickupAreaType === 'polygon' && !store.bookingOptions.pickupArea?.length"
+                color="warning"
+                variant="subtle"
+                icon="i-lucide-triangle-alert"
+                description="Zona dibujada seleccionada pero sin dibujar: no se podrá recoger en ningún hotel."
+              />
+              <UAlert
+                v-else-if="store.bookingOptions.pickupAreaType === 'polygon'"
+                color="success"
+                variant="subtle"
+                icon="i-lucide-circle-check"
+                :description="`${store.bookingOptions.pickupArea.length} zona(s) dibujada(s)`"
+              />
+              <UAlert
+                v-else-if="store.bookingOptions.pickupCenterLat && store.bookingOptions.pickupCenterLng"
                 color="success"
                 variant="subtle"
                 icon="i-lucide-circle-check"
@@ -850,6 +871,8 @@ const pickupModalData = computed(() => {
       lng: store.bookingOptions.pickupCenterLng,
       radius: store.bookingOptions.pickupRadiusKm,
       description: currentBookingTexts.value.pickupLocationDescription || '',
+      areaType: store.bookingOptions.pickupAreaType || 'radius',
+      area: store.bookingOptions.pickupArea || [],
     }
   }
 })
@@ -919,6 +942,10 @@ const handlePickupSave = (data: any) => {
     store.bookingOptions.pickupCenterLat = data.lat
     store.bookingOptions.pickupCenterLng = data.lng
     store.bookingOptions.pickupRadiusKm = data.radius
+    store.bookingOptions.pickupAreaType = data.areaType === 'polygon' ? 'polygon' : 'radius'
+    // Keep whatever was drawn even when saving in radius mode, so switching
+    // back doesn't silently discard the operator's shape.
+    if (Array.isArray(data.area)) store.bookingOptions.pickupArea = data.area
     currentBookingTexts.value.pickupLocationDescription = data.description
     store.isDirty = true
   }

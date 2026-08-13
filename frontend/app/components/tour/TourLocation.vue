@@ -221,8 +221,25 @@ async function initMap() {
     markers.push(marker)
   }
 
-    // Agregar círculo de radio si existe pickup_radius_km
-    if (props.tour?.pickup_type === 'hotel_pickup' && props.tour?.pickup_radius_km && props.tour?.pickup_center_lat && props.tour?.pickup_center_lng) {
+    // Área de recojo: círculo o zona dibujada, según configure el tour.
+    // pickup_area puede venir como un anillo o como varios (barrios separados).
+    if (props.tour?.pickup_type === 'hotel_pickup' && props.tour?.pickup_area_type === 'polygon' && props.tour?.pickup_area) {
+      const raw = props.tour.pickup_area
+      const rings = Array.isArray(raw?.[0]) ? raw : [raw]
+
+      for (const ring of rings) {
+        if (!Array.isArray(ring) || ring.length < 3) continue
+        new google.maps.Polygon({
+          strokeColor: '#0077cc',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#60a5fa',
+          fillOpacity: 0.2,
+          map: map!,
+          paths: ring.map((p: any) => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng) })),
+        })
+      }
+    } else if (props.tour?.pickup_type === 'hotel_pickup' && props.tour?.pickup_radius_km && props.tour?.pickup_center_lat && props.tour?.pickup_center_lng) {
       mapCircle = new google.maps.Circle({
         strokeColor: '#0077cc',
         strokeOpacity: 0.8,
