@@ -135,6 +135,11 @@ class Tour extends Model
         return $this->hasMany(TourMediaGallery::class)->orderBy('order');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(CategoryNew::class, 'tour_categories', 'tour_id', 'category_id')

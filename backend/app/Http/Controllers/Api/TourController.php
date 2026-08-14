@@ -121,6 +121,11 @@ class TourController extends Controller
                     'mediaGallery:id,tour_id,image_path,order',
                     'mapPoints:id,tour_id,name,type,order',
                 ]);
+                // Social proof for the cards: average + count of PUBLISHED
+                // reviews, aggregated in the same query. The card only renders
+                // stars when reviews_count > 0 — no fabricated ratings.
+                $query->withAvg(['reviews as rating_avg' => fn ($q) => $q->where('published', true)], 'rating')
+                    ->withCount(['reviews as reviews_count' => fn ($q) => $q->where('published', true)]);
             } else {
                 $query->with([
                     'translations.language',

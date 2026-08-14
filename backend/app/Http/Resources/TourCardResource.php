@@ -138,6 +138,13 @@ class TourCardResource extends JsonResource
             'min_price' => $minPrice !== null ? (float) $minPrice : 0,
             'offer' => $offer,
             'places' => $places,
+            // Present only when the listing query aggregated them (?light=1).
+            // rating is null when a tour has no published reviews, so the
+            // frontend can't render fake stars.
+            'rating' => isset($this->rating_avg) && $this->rating_avg !== null
+                ? round((float) $this->rating_avg, 1)
+                : null,
+            'reviews_count' => (int) ($this->reviews_count ?? 0),
         ];
     }
 }
