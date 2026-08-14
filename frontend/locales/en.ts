@@ -11,7 +11,7 @@ export default {
       policy_std_2: 'No refund within 48 hours of the tour start.',
       policy_std_3: 'No-shows will be charged in full.',
       policy_std_4: 'All tours are subject to weather conditions and minimum participant requirements.',
-      policy_custom_contact: 'This tour has custom policies. Please contact us at reservas@incalake.com for specific terms and conditions.',
+      policy_custom_contact: "This tour has custom policies. Please contact us at reservas{'@'}incalake.com for specific terms and conditions.",
       trust_cancel_hint: 'Up to 24h before the tour',
       trust_instant: 'Instant confirmation',
       trust_instant_hint: 'Get your booking instantly',

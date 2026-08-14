@@ -159,12 +159,12 @@
 
     <!-- Trust Signals - Mobile: horizontal scroll pills / Desktop: full layout -->
     <section class="py-4 md:py-8 relative z-0">
-      <!-- Mobile: compact horizontal scroll. The scrollbar is hidden, so the
-           last chip just looked chopped off — the right-edge fade is what says
-           "there is more, swipe". -->
+      <!-- Mobile: the chips WRAP instead of scrolling. The hidden-scrollbar
+           row (even with an edge fade) still read as a chopped-off chip, and
+           four short chips fit comfortably in two centered lines. -->
       <div class="md:hidden relative">
-        <div class="overflow-x-auto scrollbar-hide px-4">
-          <div class="flex items-center gap-3 w-max pr-6">
+        <div class="px-4">
+          <div class="flex flex-wrap items-center justify-center gap-2">
             <div v-for="(signal, idx) in trustSignals" :key="idx"
               class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-full shrink-0"
             >
@@ -173,13 +173,14 @@
               />
               <span class="text-[11px] font-bold text-slate-700 whitespace-nowrap">{{ signal.title }}</span>
             </div>
-            <div class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
+            <!-- Real Google rating — this used to be a hardcoded 4.9 sitting a
+                 few scrolls above the genuine Google section saying 4.8. -->
+            <div v-if="googleRating" class="flex items-center gap-1 px-3 py-2 bg-yellow-50 rounded-full shrink-0">
               <Icon name="material-symbols:star" class="text-yellow-500 text-sm" />
-              <span class="text-[11px] font-black text-slate-700">4.9/5</span>
+              <span class="text-[11px] font-black text-slate-700">{{ Number(googleRating).toFixed(1) }}/5</span>
             </div>
           </div>
         </div>
-        <div class="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent"></div>
       </div>
 
       <!-- Desktop: full layout -->
@@ -196,9 +197,9 @@
                 <p class="text-xs text-slate-500 font-medium">{{ signal.description }}</p>
               </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <CommonStarRating :value="5" :total="5" />
-              <span class="text-[10px] font-black text-slate-500 ml-1">4.9/5</span>
+            <div v-if="googleRating" class="flex items-center gap-1.5">
+              <CommonStarRating :value="Number(googleRating)" :total="5" />
+              <span class="text-[10px] font-black text-slate-500 ml-1">{{ Number(googleRating).toFixed(1) }}/5</span>
             </div>
           </div>
         </div>
@@ -258,12 +259,15 @@
         </div>
 
         <div v-else class="flex md:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+          <!-- md shows 3 columns, so the 4th card would sit orphaned on its
+               own row — it hides in that window and returns at lg (4 cols). -->
           <TourCard
-            v-for="tour in tours.slice(0, 4)"
+            v-for="(tour, idx) in recommendedTours"
             :key="tour.id"
             :tour="tour"
             show-difficulty
             class="shrink-0 w-[78%] sm:w-[45%] md:w-auto snap-start"
+            :class="idx === 3 ? 'md:max-lg:hidden' : ''"
           />
         </div>
       </div>
@@ -422,7 +426,9 @@
         <h3 class="section-title text-center mb-6 md:mb-10">{{ c('why_title', '', 'home_why_title') }}</h3>
         <div class="flex md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <div v-for="(item, idx) in whyUsItems" :key="idx" class="flex flex-col items-center text-center shrink-0 w-[80%] sm:w-[55%] md:w-auto snap-start bg-slate-50 md:bg-transparent rounded-2xl md:rounded-none p-6 md:p-0">
-            <div class="size-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-6 shadow-xl">
+            <!-- Was bg-slate-900: the only black element on a blue-and-white
+                 page; primary keeps the section on brand. -->
+            <div class="size-16 rounded-2xl bg-primary text-white flex items-center justify-center mb-6 shadow-xl shadow-primary/20">
               <Icon :name="msIcon(item.icon)" class="text-3xl" />
             </div>
             <h4 class="text-lg font-black mb-3">{{ item.title }}</h4>
@@ -516,6 +522,15 @@ const tours = computed(() => {
   const data = (toursData.value as any)?.data
   return Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
 })
+
+// The showcase used to be raw API order (newest first), which put the one
+// imageless tour in the most visible slot on the page. Merchandise instead:
+// photo + reviews beat photo alone beat neither; ties keep API order.
+const recommendedTours = computed(() => {
+  const score = (t: any) =>
+    (t.featured_image ? 2 : 0) + (t.reviews_count > 0 && t.rating ? 1 : 0)
+  return [...tours.value].sort((a, b) => score(b) - score(a)).slice(0, 4)
+})
 const toursPending = computed(() => toursStatus.value === 'pending')
 
 // Tours with active offers (lazy, non-blocking)
@@ -553,7 +568,17 @@ const { data: reviewsData } = useAsyncData(
   },
   { lazy: true, default: () => [], getCachedData }
 )
-const featuredReviews = computed(() => reviewsData.value || [])
+// Imported reviews sometimes carry platform usernames like
+// "Roving41150014391" — a long digit tail reads as a fake review. Keep the
+// human part; if the name is ONLY digits, sign it as "Viajero".
+function cleanReviewerName(raw: string): string {
+  const name = String(raw || '').replace(/\d{5,}$/, '').trim()
+  return name || t('traveler_word')
+}
+
+const featuredReviews = computed(() =>
+  (reviewsData.value || []).map((r: any) => ({ ...r, name: cleanReviewerName(r.name) }))
+)
 
 // Google Places reviews (cached 12h server-side). Lazy so it never blocks the
 // homepage; the section hides itself when the integration isn't configured.
