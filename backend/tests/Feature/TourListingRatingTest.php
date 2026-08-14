@@ -50,7 +50,9 @@ class TourListingRatingTest extends TestCase
 
         $card = $this->listedCard($tour->id);
 
-        $this->assertSame(5.0, $card['rating']);
+        // assertEquals, not assertSame: a whole-number average (5.0) loses its
+        // decimal in the JSON round-trip and arrives as int 5.
+        $this->assertEquals(5, $card['rating']);
         $this->assertSame(1, $card['reviews_count']);
     }
 
