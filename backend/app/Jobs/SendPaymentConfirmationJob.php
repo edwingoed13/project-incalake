@@ -109,17 +109,19 @@ class SendPaymentConfirmationJob implements ShouldQueue
             }
         }
 
-        // 2) Confirmation emails — one for customer + one for admin. The
-        // customer email BCCs reservas@ so the office keeps an EXACT copy of
-        // what the customer received (the admin version is a different,
-        // ops-oriented rendering and doesn't serve as backup of it).
+        // 2) Confirmation emails — one to the customer, ONE to the office.
+        // The office used to get two per booking (a BCC of the customer's
+        // plus a separate ops-styled rendering). Now the admin variant IS the
+        // customer email with an ops strip prepended and the "Nueva Reserva
+        // Confirmada" subject — the office sees exactly what the customer got,
+        // in a single message, so the BCC became redundant.
         try {
             if ($bookings->count() === 1) {
                 $single = $bookings->first();
-                Mail::to($single->customer_email)->bcc(config('services.incalake.reservations_email'))->send(new BookingConfirmationEmail($single, false, $this->paidNow));
+                Mail::to($single->customer_email)->send(new BookingConfirmationEmail($single, false, $this->paidNow));
                 Mail::to(config('services.incalake.reservations_email'))->send(new BookingConfirmationEmail($single, true, $this->paidNow));
             } else {
-                Mail::to($bookings->first()->customer_email)->bcc(config('services.incalake.reservations_email'))->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
+                Mail::to($bookings->first()->customer_email)->send(new GroupBookingConfirmationEmail($bookings, false, $this->paidNow));
                 Mail::to(config('services.incalake.reservations_email'))->send(new GroupBookingConfirmationEmail($bookings, true, $this->paidNow));
             }
             Log::info('Confirmation emails sent (job)', [
