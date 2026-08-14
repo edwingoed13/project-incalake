@@ -602,8 +602,12 @@ const heroImage = computed(() => pageContent.value?.hero?.image || defaultHeroIm
 // Dynamic content from API with i18n fallback
 const trustSignals = computed(() => {
   if (pageContent.value?.trust_signals?.length) return pageContent.value.trust_signals
+  // "Cancelación Gratuita 24h" was dropped by request: the real standard
+  // policy is 20% up to 48h before / no refund inside 48h, so the chip
+  // promised something the checkout would contradict. Local-operator cred
+  // is true and differentiating, so it takes the slot.
   return [
-    { icon: 'cancel', title: t('home_trust_cancellation'), description: t('home_trust_cancellation_desc') },
+    { icon: 'location_on', title: t('home_trust_local'), description: t('home_trust_local_desc') },
     { icon: 'verified_user', title: t('home_trust_guides'), description: t('home_trust_guides_desc') },
     { icon: 'security', title: t('home_trust_payments'), description: t('home_trust_payments_desc') },
   ]
