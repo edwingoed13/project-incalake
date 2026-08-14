@@ -32,7 +32,8 @@
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
-          <span v-if="tours.length" class="text-xs font-bold text-slate-400 shrink-0 whitespace-nowrap">{{ t('tours_found', { count: filteredTours.length }) }}</span>
+          <!-- The count already lives in the hero right above — repeating it
+               here read as clutter. -->
           <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden shrink-0">
             <button @click="viewMode = 'grid'" class="p-2 transition-colors" :aria-label="t('view')"
               :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
@@ -184,7 +185,9 @@
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 inline-flex items-center gap-0.5">
                 <Icon name="material-symbols:location-on-outline" class="text-[12px]" />{{ cityLabel(tour) }}
               </p>
-              <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug mb-1.5">{{ tour.title }}</h3>
+              <!-- Three lines on mobile: enough for the variant suffix without
+                   letting an extreme title take over the compact card. -->
+              <h3 class="text-[13px] font-bold text-slate-800 line-clamp-3 leading-snug mb-1.5">{{ tour.title }}</h3>
               <!-- Attributes -->
               <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-slate-500 mb-auto">
                 <span v-if="formatDuration(tour)" class="inline-flex items-center gap-0.5">
@@ -199,16 +202,14 @@
               <!-- Price -->
               <div class="flex items-end justify-between mt-2">
                 <div class="leading-tight">
-                  <span class="text-[10px] text-slate-400 block">{{ t('from') }}</span>
-                  <span class="flex items-baseline gap-1">
-                    <span v-if="showDiscountedPrice(tour)" class="text-[10px] line-through text-slate-500">
-                      {{ currencyStore.formatConverted(tour.min_price || 0) }}
-                    </span>
-                    <span class="text-base font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-slate-900'">
-                      {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
-                    </span>
+                  <span class="text-[10px] text-slate-400 block whitespace-nowrap">
+                    {{ t('from') }}
+                    <s v-if="showDiscountedPrice(tour)" class="text-slate-500 ml-0.5">{{ currencyStore.formatConverted(tour.min_price || 0) }}</s>
                   </span>
-                  <span class="text-[10px] text-slate-400">{{ t('per_person') }}</span>
+                  <span class="text-base font-black whitespace-nowrap" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-slate-900'">
+                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 block">{{ t('per_person') }}</span>
                 </div>
                 <span class="text-[11px] font-bold text-primary inline-flex items-center gap-0.5 shrink-0">
                   {{ t('view') }}<Icon name="material-symbols:arrow-forward" class="text-sm" />
@@ -222,15 +223,18 @@
       </div>
 
       <!-- DESKTOP: Grid cards -->
+      <!-- Cards are grid-stretched + flex columns so every card in a row is the
+           same height and the price row sits on the same baseline, no matter
+           how long each title runs. -->
       <div v-if="filteredTours.length > 0 && viewMode === 'grid'" class="hidden md:grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
         <div v-for="tour in paginatedTours.data" :key="'d-'+tour.id" class="relative">
         <NuxtLink
           :to="getTourLink(tour)"
           @mouseenter="prefetchTour(tour)"
           @focus="prefetchTour(tour)"
-          class="group block bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          class="group flex flex-col h-full bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
         >
-          <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
+          <div class="relative aspect-[4/3] shrink-0 overflow-hidden bg-slate-100">
             <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
               format="webp" width="400" height="300" sizes="50vw lg:33vw xl:25vw" />
@@ -242,21 +246,25 @@
             </div>
             <TourOfferBadge v-if="hasActiveOffer(tour)" :label="getOfferLabel(tour)" class="absolute top-3 left-3" />
           </div>
-          <div class="p-4">
+          <div class="p-4 flex-1 flex flex-col">
             <div class="flex items-center gap-1 text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
               <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
             </div>
-            <h3 class="text-[15px] md:text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
-            <div class="flex items-end justify-between pt-3 border-t border-slate-100">
+            <!-- Full title, no clamp: buyers compare tours by their variant
+                 suffixes ("- Compartido", "lancha rapida"), which is exactly
+                 the part the ellipsis was eating. -->
+            <h3 class="text-[15px] md:text-base font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+            <!-- mt-auto pins the price row to the card's bottom edge. The old
+                 price sits inline next to "Desde", so a discount never makes
+                 the block taller than a regular card's. -->
+            <div class="mt-auto flex items-end justify-between pt-3 border-t border-slate-100">
               <div>
-                <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
-                <span class="flex items-baseline gap-1.5">
-                  <span v-if="showDiscountedPrice(tour)" class="text-xs line-through text-slate-400">
-                    {{ currencyStore.formatConverted(tour.min_price || 0) }}
-                  </span>
-                  <span class="text-lg font-black" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
-                    {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
-                  </span>
+                <span class="text-[11px] text-slate-500 font-medium block whitespace-nowrap">
+                  {{ t('from') }}
+                  <s v-if="showDiscountedPrice(tour)" class="text-slate-400 ml-0.5">{{ currencyStore.formatConverted(tour.min_price || 0) }}</s>
+                </span>
+                <span class="text-lg font-black whitespace-nowrap" :class="showDiscountedPrice(tour) ? 'text-trust' : 'text-primary'">
+                  {{ currencyStore.formatConverted(showDiscountedPrice(tour) ? tour.offer.discounted_min_price : (tour.min_price || 0)) }}
                 </span>
               </div>
               <!-- "Ver" stays visible on touch; only mouse devices get the
@@ -295,7 +303,7 @@
               <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
               </div>
-              <h3 class="text-base font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+              <h3 class="text-base font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
               <p v-if="tour.short_description" class="text-xs text-slate-500 line-clamp-2 mb-3">{{ tour.short_description }}</p>
               <div class="flex items-center gap-3 text-xs text-slate-500">
                 <span v-if="formatDuration(tour)" class="flex items-center gap-1">
