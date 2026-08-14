@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 const { t } = useI18n()
 
@@ -35,8 +35,22 @@ const processing = ref(false)
 const errorMessage = ref<string | null>(null)
 const culqiReady = ref(false)
 
-// Culqi amount must be in cents
-const amountInCents = Math.round(props.amount * 100)
+// Culqi amount must be in cents. Computed, NOT a const captured at setup: the
+// payment page mounts this component in "pay full" mode and the customer can
+// then pick the deposit — with a frozen const the modal kept showing (and
+// promising to charge) the full total while the page said the deposit. The
+// backend always recomputed the real charge server-side, so nobody was
+// overcharged, but the modal's "Pagar ahora $X" showed double the button.
+const amountInCents = computed(() => Math.round(props.amount * 100))
+
+// The cents the current window.Culqi instance was configured with — lets us
+// detect drift and rebuild before opening.
+const configuredCents = ref<number | null>(null)
+
+// Rebuild the Culqi instance whenever the amount changes (mode toggle).
+watch(() => props.amount, () => {
+  if (culqiReady.value) initializeCulqi()
+})
 
 // Load the Culqi Checkout V4 SDK — it exposes window.CulqiCheckout, which the
 // polling below waits for. Without this the page showed "Payment system failed
@@ -80,7 +94,7 @@ const initializeCulqi = () => {
     const settings = {
       title: 'Inca Lake Travel',
       currency: props.currency || 'USD',
-      amount: amountInCents,
+      amount: amountInCents.value,
     }
 
     // Culqi Checkout v4 `client` schema only accepts `email`. Passing
@@ -141,6 +155,7 @@ const initializeCulqi = () => {
 
     // Create instance according to documentation
     window.Culqi = new window.CulqiCheckout(props.publicKey, config)
+    configuredCents.value = amountInCents.value
     console.log('✅ Culqi instance created')
 
     // IMPORTANT: Set callback according to documentation
@@ -211,6 +226,13 @@ const openPayment = () => {
     console.error('Culqi instance not found')
     errorMessage.value = 'Payment not initialized'
     return
+  }
+
+  // Belt and braces: if the amount changed through any path the watcher
+  // missed, rebuild before showing the modal — it must never display a
+  // different figure than the button the customer just clicked.
+  if (configuredCents.value !== amountInCents.value) {
+    initializeCulqi()
   }
 
   processing.value = true
