@@ -32,8 +32,18 @@
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
-          <!-- The count already lives in the hero right above — repeating it
-               here read as clutter. -->
+          <!-- Sort: a plain native select — keyboard/screen-reader accessible
+               for free, and the OS picker on touch devices. -->
+          <label class="flex items-center gap-1.5 shrink-0">
+            <span class="sr-only">{{ t('sort_by') }}</span>
+            <Icon name="material-symbols:swap-vert" class="text-slate-400 text-lg" aria-hidden="true" />
+            <select
+              v-model="sortKey"
+              class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg py-2 pl-2 pr-7 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+            >
+              <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </label>
           <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden shrink-0">
             <button @click="viewMode = 'grid'" class="p-2 transition-colors" :aria-label="t('view')"
               :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
@@ -63,6 +73,16 @@
               <button v-if="hasActiveFilters" @click="clearFilters" class="text-xs font-bold text-red-500">{{ t('clear_all') }}</button>
             </div>
             <div class="flex-1 overflow-y-auto px-5 py-4">
+              <!-- Sort lives at the top of the sheet on mobile -->
+              <div class="mb-4">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{{ t('sort_by') }}</p>
+                <select
+                  v-model="sortKey"
+                  class="w-full text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+                </select>
+              </div>
               <FiltersToursFilterPanel
                 :cities="cities"
                 :place-options="placeOptions"
@@ -171,7 +191,7 @@
           :key="'m-'+tour.id"
           class="relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
         >
-          <NuxtLink :to="getTourLink(tour)" @mouseenter="prefetchTour(tour)" @focus="prefetchTour(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors">
+          <NuxtLink :to="getTourLink(tour)" @mouseenter="prefetchTour(tour)" @focus="prefetchTour(tour)" class="flex gap-3 p-2.5 active:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded-2xl">
             <!-- Image -->
             <div class="relative w-[42%] max-w-[150px] aspect-square rounded-xl overflow-hidden shrink-0 bg-slate-100">
               <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title" class="w-full h-full object-cover" loading="lazy" format="webp" width="150" height="150" />
@@ -187,7 +207,12 @@
               </p>
               <!-- Three lines on mobile: enough for the variant suffix without
                    letting an extreme title take over the compact card. -->
-              <h3 class="text-[13px] font-bold text-slate-800 line-clamp-3 leading-snug mb-1.5">{{ tour.title }}</h3>
+              <h3 class="text-[13px] font-bold text-slate-800 line-clamp-3 leading-snug mb-1">{{ tour.title }}</h3>
+              <div v-if="tour.reviews_count > 0 && tour.rating" class="flex items-center gap-1 mb-1">
+                <Icon name="material-symbols:star" class="text-rating text-[13px]" />
+                <span class="text-[11px] font-bold text-slate-700">{{ Number(tour.rating).toFixed(1) }}</span>
+                <span class="text-[11px] text-slate-400">({{ tour.reviews_count }})</span>
+              </div>
               <!-- Attributes -->
               <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-slate-500 mb-auto">
                 <span v-if="formatDuration(tour)" class="inline-flex items-center gap-0.5">
@@ -232,7 +257,7 @@
           :to="getTourLink(tour)"
           @mouseenter="prefetchTour(tour)"
           @focus="prefetchTour(tour)"
-          class="group flex flex-col h-full bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          class="group flex flex-col h-full bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
         >
           <div class="relative aspect-[4/3] shrink-0 overflow-hidden bg-slate-100">
             <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
@@ -253,7 +278,14 @@
             <!-- Full title, no clamp: buyers compare tours by their variant
                  suffixes ("- Compartido", "lancha rapida"), which is exactly
                  the part the ellipsis was eating. -->
-            <h3 class="text-[15px] md:text-base font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+            <h3 class="text-[15px] md:text-base font-bold text-slate-800 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+            <!-- Social proof — only with real reviews, never fabricated. -->
+            <div v-if="tour.reviews_count > 0 && tour.rating" class="flex items-center gap-1 mt-1 mb-2">
+              <Icon name="material-symbols:star" class="text-rating text-sm" />
+              <span class="text-xs font-bold text-slate-700">{{ Number(tour.rating).toFixed(1) }}</span>
+              <span class="text-xs text-slate-400">({{ tour.reviews_count }})</span>
+            </div>
+            <div v-else class="mb-2"></div>
             <!-- mt-auto pins the price row to the card's bottom edge. The old
                  price sits inline next to "Desde", so a discount never makes
                  the block taller than a regular card's. -->
@@ -287,7 +319,7 @@
           :to="getTourLink(tour)"
           @mouseenter="prefetchTour(tour)"
           @focus="prefetchTour(tour)"
-          class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3"
+          class="group flex gap-5 bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
         >
           <div class="relative w-64 h-44 rounded-xl overflow-hidden shrink-0 bg-slate-100">
             <NuxtImg v-if="hasImage(tour)" v-skeleton :src="getImageUrl(tour.featured_image || tour.thumbnail)" :alt="tour.title"
@@ -303,7 +335,12 @@
               <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1">
                 <Icon name="material-symbols:location-on-outline" class="text-xs" />{{ cityLabel(tour) }}
               </div>
-              <h3 class="text-base font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+              <h3 class="text-base font-bold text-slate-800 mb-1 group-hover:text-primary transition-colors leading-snug">{{ tour.title }}</h3>
+              <div v-if="tour.reviews_count > 0 && tour.rating" class="flex items-center gap-1 mb-1.5">
+                <Icon name="material-symbols:star" class="text-rating text-sm" />
+                <span class="text-xs font-bold text-slate-700">{{ Number(tour.rating).toFixed(1) }}</span>
+                <span class="text-xs text-slate-400">({{ tour.reviews_count }})</span>
+              </div>
               <p v-if="tour.short_description" class="text-xs text-slate-500 line-clamp-2 mb-3">{{ tour.short_description }}</p>
               <div class="flex items-center gap-3 text-xs text-slate-500">
                 <span v-if="formatDuration(tour)" class="flex items-center gap-1">
@@ -431,9 +468,40 @@ const mobileFiltersOpen = ref(false)
 const searchQuery = ref((route.query.search as string) || '')
 const selectedCitySlug = ref((route.query.city as string) || '')
 const selectedTagSlug = ref((route.query.tag as string) || '')
-const selectedDuration = ref('')
-const selectedPrice = ref('')
-const selectedPlaces = ref<string[]>([])
+const selectedDuration = ref((route.query.duration as string) || '')
+const selectedPrice = ref((route.query.price as string) || '')
+const selectedPlaces = ref<string[]>(
+  typeof route.query.places === 'string' && route.query.places
+    ? route.query.places.split(',').filter(Boolean)
+    : []
+)
+
+// Declared here (before the URL-sync watcher below reads it); the comparators
+// and options that give it meaning live next to filteredTours.
+type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'duration'
+const sortKey = ref<SortKey>((route.query.sort as SortKey) || 'relevance')
+
+// ── Filters ⇄ URL ────────────────────────────────────────────────────────
+// Every filter is written back as a query param, so a filtered view survives
+// refresh and the back button, and can be shared ("Puno under $40" travels
+// over WhatsApp as a link). replace() — not push() — so each keystroke in the
+// search box doesn't pile onto the history stack.
+const router = useRouter()
+watch(
+  [searchQuery, selectedCitySlug, selectedTagSlug, selectedDuration, selectedPrice, selectedPlaces, () => sortKey.value],
+  () => {
+    const q: Record<string, string> = {}
+    if (searchQuery.value) q.search = searchQuery.value
+    if (selectedCitySlug.value) q.city = selectedCitySlug.value
+    if (selectedTagSlug.value) q.tag = selectedTagSlug.value
+    if (selectedDuration.value) q.duration = selectedDuration.value
+    if (selectedPrice.value) q.price = selectedPrice.value
+    if (selectedPlaces.value.length) q.places = selectedPlaces.value.join(',')
+    if (sortKey.value !== 'relevance') q.sort = sortKey.value
+    router.replace({ query: q })
+  },
+  { deep: true }
+)
 const currentPage = ref(1)
 const perPage = 12
 // Mobile uses a "load more" pattern (more fluid than numbered pages).
@@ -639,8 +707,49 @@ const filteredTours = computed(() => {
       .sort((a, b) => b.score - a.score)
     result = scored.map(x => x.tour)
   }
+  // Explicit sort beats everything, including search relevance — if the user
+  // asked for cheapest-first, cheapest-first is what they get.
+  if (sortKey.value !== 'relevance') {
+    result = [...result].sort(sortComparators[sortKey.value])
+  }
   return result
 })
+
+// ── Sorting ──────────────────────────────────────────────────────────────
+// 'relevance' = the natural order (search score when searching, API order
+// otherwise). Price sorts use the effective price a buyer would pay, so a
+// discounted tour competes with its discounted figure, not the crossed-out one.
+function effectivePrice(tour: any): number {
+  const p = tour.offer?.is_active && tour.offer?.discounted_min_price != null
+    ? tour.offer.discounted_min_price
+    : (tour.min_price || 0)
+  return Number(p) || 0
+}
+
+function durationMinutes(tour: any): number {
+  if (tour.duration_quantity && tour.duration_unit) {
+    const q = Number(tour.duration_quantity) || 0
+    if (tour.duration_unit === 'minutes') return q
+    if (tour.duration_unit === 'hours') return q * 60
+    if (tour.duration_unit === 'days') return q * 24 * 60
+  }
+  return (Number(tour.duration_days) || 0) * 24 * 60 + (Number(tour.duration_hours) || 0) * 60
+}
+
+const sortComparators: Record<Exclude<SortKey, 'relevance'>, (a: any, b: any) => number> = {
+  // A $0 price is missing data, not a bargain — cheapest-first must not open
+  // with unpriced tours, so 0 sorts last in both price directions.
+  price_asc: (a, b) => (effectivePrice(a) || Infinity) - (effectivePrice(b) || Infinity),
+  price_desc: (a, b) => effectivePrice(b) - effectivePrice(a),
+  duration: (a, b) => durationMinutes(a) - durationMinutes(b),
+}
+
+const sortOptions = computed(() => [
+  { value: 'relevance', label: t('sort_relevance') },
+  { value: 'price_asc', label: t('sort_price_asc') },
+  { value: 'price_desc', label: t('sort_price_desc') },
+  { value: 'duration', label: t('sort_duration') },
+])
 
 const paginatedTours = computed(() => {
   const start = (currentPage.value - 1) * perPage
