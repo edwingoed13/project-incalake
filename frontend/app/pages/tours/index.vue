@@ -477,21 +477,38 @@ const viewMode = ref<'grid' | 'list'>('grid')
 // Filter state
 const route = useRoute()
 const mobileFiltersOpen = ref(false)
-const searchQuery = ref((route.query.search as string) || '')
-const selectedCitySlug = ref((route.query.city as string) || '')
-const selectedTagSlug = ref((route.query.tag as string) || '')
-const selectedDuration = ref((route.query.duration as string) || '')
-const selectedPrice = ref((route.query.price as string) || '')
-const selectedPlaces = ref<string[]>(
-  typeof route.query.places === 'string' && route.query.places
-    ? route.query.places.split(',').filter(Boolean)
-    : []
-)
+// Filter state starts EMPTY on both server and client, and the URL's query is
+// applied in onMounted. It used to be read here in setup — but this page is
+// ISR-cached BY PATH, so /es/tours?city=cusco was served the UNFILTERED
+// /es/tours HTML while the client hydrated against the filtered array: Vue
+// patched the mismatched cards half-way and titles ended up on other tours'
+// photos and ratings. Rendering unfiltered first makes hydration always match;
+// the filters then apply as a normal keyed re-render.
+const searchQuery = ref('')
+const selectedCitySlug = ref('')
+const selectedTagSlug = ref('')
+const selectedDuration = ref('')
+const selectedPrice = ref('')
+const selectedPlaces = ref<string[]>([])
 
 // Declared here (before the URL-sync watcher below reads it); the comparators
 // and options that give it meaning live next to filteredTours.
 type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'duration'
-const sortKey = ref<SortKey>((route.query.sort as SortKey) || 'relevance')
+const sortKey = ref<SortKey>('relevance')
+
+// Apply the shared/bookmarked URL's filters AFTER hydration (see note above).
+onMounted(() => {
+  searchQuery.value = (route.query.search as string) || ''
+  selectedCitySlug.value = (route.query.city as string) || ''
+  selectedTagSlug.value = (route.query.tag as string) || ''
+  selectedDuration.value = (route.query.duration as string) || ''
+  selectedPrice.value = (route.query.price as string) || ''
+  selectedPlaces.value = typeof route.query.places === 'string' && route.query.places
+    ? route.query.places.split(',').filter(Boolean)
+    : []
+  const s = route.query.sort as SortKey
+  if (['price_asc', 'price_desc', 'duration'].includes(s)) sortKey.value = s
+})
 
 // ── Filters ⇄ URL ────────────────────────────────────────────────────────
 // Every filter is written back as a query param, so a filtered view survives
