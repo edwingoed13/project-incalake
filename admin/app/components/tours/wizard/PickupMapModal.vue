@@ -519,6 +519,10 @@ const initMap = async () => {
       }
     })
   }
+
+  // Belt and braces: whatever branch built the shapes above, leave the map
+  // showing exactly one mode before the operator sees it.
+  applyAreaMode()
 }
 
 const updatePosition = (latLng: any) => {
@@ -530,6 +534,12 @@ const updatePosition = (latLng: any) => {
   if (circle.value) {
     circle.value.setCenter(latLng)
   }
+  // Idempotent re-assert: whatever moved the center (map click, marker drag,
+  // the search box), only the active mode's shapes may be on the map. The
+  // operator's screenshot showed radius circle + drawn zone overlapping — no
+  // single code path reproduces it today, so every mutation re-applies the
+  // mode instead of trusting the last switch.
+  applyAreaMode()
 }
 
 const updateCircleRadius = () => {
@@ -668,6 +678,7 @@ const finishZone = () => {
   trackPolygon(poly)
   syncPolygons()
   cancelZone()
+  applyAreaMode()
 }
 
 const removeZone = (index: number) => {
@@ -679,7 +690,7 @@ const removeZone = (index: number) => {
 
 /** Show only the shape that matches the selected mode. */
 const applyAreaMode = () => {
-  if (props.type !== 'hotel_pickup') return
+  if (props.type !== 'hotel_pickup' || !map.value) return
   const drawing = localAreaType.value === 'polygon'
 
   if (circle.value) circle.value.setMap(drawing ? null : map.value)
