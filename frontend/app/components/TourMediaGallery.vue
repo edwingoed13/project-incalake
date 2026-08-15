@@ -293,7 +293,7 @@ function getImageUrl(path: string) {
     </div>
 
     <!-- LAYOUT 1: MOSAICO (1 grande + 4 pequeñas) - DESKTOP ONLY -->
-    <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[500px] overflow-hidden rounded-xl">
+    <div v-if="galleryLayout === 'hero_mosaic' && images.length > 0" class="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-[400px] xl:h-[480px] overflow-hidden rounded-xl">
       <!-- Hero Image (primera imagen grande). LCP candidate on the tour
            detail page — `sizes` lets the browser pick the right responsive
            variant instead of always pulling the 800w copy on mobile. -->
@@ -363,11 +363,11 @@ function getImageUrl(path: string) {
 
     <!-- LAYOUT 2: VIDEO VERTICAL (SHORT) + 3 IMÁGENES CURADAS - DESKTOP ONLY -->
     <div v-else-if="galleryLayout === 'video_image' && youtubeVideoId && images.length > 0" class="hidden md:block">
-      <div class="grid grid-cols-[300px_1fr] gap-2 rounded-xl overflow-hidden h-[500px]">
+      <div class="grid grid-cols-[300px_1fr] gap-2 rounded-xl overflow-hidden h-[400px] xl:h-[480px]">
         <!-- Video Column (Left). Shorts player loads YouTube JS (~600 KB)
              on first interaction only — until then we render a thumbnail
              facade that costs ~30 KB total. -->
-        <div class="relative bg-black rounded-l-xl overflow-hidden h-[500px] w-[300px]">
+        <div class="relative bg-black rounded-l-xl overflow-hidden h-full w-[300px]">
           <CommonYouTubeFacade
             :video-id="youtubeVideoId.id"
             :title="tour.title"

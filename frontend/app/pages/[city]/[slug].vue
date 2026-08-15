@@ -1,9 +1,11 @@
 <template>
   <div v-if="tour" class="bg-background-light font-display text-slate-900">
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 pb-24 lg:pb-8">
+    <!-- Compact header rhythm: on a 768px-tall laptop every saved pixel means
+         the booking card's CTA gets closer to the fold. -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-24 lg:pb-8">
 
       <!-- Breadcrumb -->
-      <nav aria-label="Breadcrumb" class="mb-3 lg:mb-4">
+      <nav aria-label="Breadcrumb" class="mb-2">
         <ol class="flex items-center gap-1 text-xs text-slate-500 overflow-x-auto whitespace-nowrap">
           <li>
             <NuxtLink :to="localePath('/')" class="hover:text-primary transition-colors">
@@ -23,32 +25,33 @@
         </ol>
       </nav>
 
-      <!-- Trust badges row (OTA-style — visible immediately above title) -->
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span
-          v-if="(tourReviews.length || 0) >= 20"
-          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-bestseller/10 text-bestseller text-xs font-bold uppercase tracking-wide"
-        >
-          <BookmarkSolidIcon class="size-3.5" aria-hidden="true" />
-          {{ t('badge_best_seller') }}        </span>
-        <span v-if="tour.free_cancellation" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-trust-soft text-trust text-xs font-bold">
-          <CheckCircleSolidIcon class="size-3.5" aria-hidden="true" />
-          {{ t('free_cancellation') }}        </span>
-        <span
-          v-if="tour.capacity && tour.cupos != null && tour.cupos / Math.max(tour.capacity, 1) < 0.3"
-          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-urgency-soft text-urgency text-xs font-bold"
-        >
-          <FireSolidIcon class="size-3.5" aria-hidden="true" />
-          {{ t('badge_few_spots') }}        </span>
-      </div>
-
-      <!-- Title & Basic Info — OTA-style: title huge & bold, meta dense -->
-      <div class="flex flex-col lg:flex-row justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
+      <!-- Title & Basic Info — the badges live INSIDE the meta row now: their
+           own row above the title cost ~40px of laptop fold for three small
+           chips. -->
+      <div class="flex flex-col lg:flex-row justify-between gap-4 lg:gap-6 mb-4 lg:mb-5">
         <div class="flex-1 min-w-0">
-          <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-4xl font-extrabold leading-[1.15] tracking-tight mb-3 text-slate-900">
+          <h1 class="text-[22px] sm:text-[26px] md:text-3xl lg:text-[32px] font-extrabold leading-[1.15] tracking-tight mb-2 text-slate-900">
             {{ tour.title }}
           </h1>
-          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] sm:text-[15px]">
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[13px] sm:text-[15px]">
+            <span
+              v-if="(tourReviews.length || 0) >= 20"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-bestseller/10 text-bestseller text-[11px] font-bold uppercase tracking-wide"
+            >
+              <BookmarkSolidIcon class="size-3" aria-hidden="true" />
+              {{ t('badge_best_seller') }}
+            </span>
+            <span v-if="tour.free_cancellation" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-trust-soft text-trust text-[11px] font-bold">
+              <CheckCircleSolidIcon class="size-3" aria-hidden="true" />
+              {{ t('free_cancellation') }}
+            </span>
+            <span
+              v-if="tour.capacity && tour.cupos != null && tour.cupos / Math.max(tour.capacity, 1) < 0.3"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-urgency-soft text-urgency text-[11px] font-bold"
+            >
+              <FireSolidIcon class="size-3" aria-hidden="true" />
+              {{ t('badge_few_spots') }}
+            </span>
             <!-- Rating -->
             <button
               v-if="tourReviews.length > 0"
@@ -129,7 +132,7 @@
            scrolling the whole page. Hidden when there's little content. -->
       <nav
         v-if="sectionNav.length > 2"
-        class="sticky-below-nav -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6 bg-white/95 backdrop-blur border-b border-slate-200"
+        class="sticky-below-nav -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-4 bg-white/95 backdrop-blur border-b border-slate-200"
       >
         <div class="flex gap-1 overflow-x-auto scrollbar-hide">
           <a
@@ -349,7 +352,7 @@
       </div>
 
       <!-- FAQ (derived from tour data — visible answers match the FAQPage JSON-LD) -->
-      <section v-if="faqItems.length" class="mt-16 md:mt-20">
+      <section v-if="faqItems.length" class="mt-10 md:mt-14">
         <h2 class="section-title mb-5 md:mb-8">{{ faqL.title }}</h2>
         <div class="space-y-3 max-w-3xl">
           <details
@@ -369,7 +372,7 @@
       </section>
 
       <!-- Related Tours (Full Width) -->
-      <section class="mt-16 md:mt-20" v-if="relatedTours.length > 0">
+      <section class="mt-10 md:mt-14" v-if="relatedTours.length > 0">
         <h2 class="section-title mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
         <div class="flex md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           <!-- Same card language as the listing and the home: white card,
