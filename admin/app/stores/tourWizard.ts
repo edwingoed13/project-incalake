@@ -339,7 +339,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
     draftVersion: null as number | null,
     // Set when that rejection happens: autosave stops and the operator has to
     // choose, because silently retrying is exactly the overwrite we're avoiding.
-    draftConflict: null as { message: string; updatedByName: string | null } | null,
+    draftConflict: null as { message: string; updatedByName: string | null; updatedAt: string | null; otherTab: boolean } | null,
     draftUpdatedAt: null as string | null,
     draftUpdatedByName: null as string | null,
     draftError: null as string | null,
@@ -1345,8 +1345,24 @@ export const useTourWizardStore = defineStore('tourWizard', {
       return !this.isDirty
     },
 
+    /**
+     * Stable id for THIS browser tab. The whole team shares one admin login,
+     * so user attribution can't distinguish editors — the tab id is what lets
+     * a 409 tell "my own save racing itself" (adopt silently) apart from
+     * "another tab or computer" (real conflict).
+     */
+    tabId(): string {
+      if (typeof window === 'undefined') return ''
+      let id = sessionStorage.getItem('wizard_tab_id')
+      if (!id) {
+        id = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)).slice(0, 36)
+        sessionStorage.setItem('wizard_tab_id', id)
+      }
+      return id
+    },
+
     /** Park the current state as a pending draft. Does not touch the tour row. */
-    async saveDraft(): Promise<boolean> {
+    async saveDraft(retryAfterSelfConflict = true): Promise<boolean> {
       if (!this.tourId || this.tourId === 'new') return false
       const auth = useAuthStore()
       if (!auth.token) return false
@@ -1364,6 +1380,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
             payload: this.draftSlices(),
             schema_version: DRAFT_SCHEMA_VERSION,
             base_version: this.draftVersion,
+            tab_id: this.tabId(),
           },
         })
         if (!res?.success) throw new Error(res?.message || 'Respuesta inesperada del servidor')
@@ -1376,12 +1393,27 @@ export const useTourWizardStore = defineStore('tourWizard', {
         this.draftError = null
         return true
       } catch (e: any) {
-        // 409: someone else saved while this tab was editing.
+        // 409: the stored draft moved past our base_version.
         if (e?.status === 409 || e?.response?.status === 409) {
           const data = e?.data ?? e?.response?._data
+          const winnerTab = data?.data?.updated_by_tab ?? null
+
+          // Our OWN tab won the race (double-fire, reconnect, replay): nothing
+          // to decide — adopt the server's version and save again on top of
+          // our own work instead of bothering the operator.
+          if (retryAfterSelfConflict && winnerTab && winnerTab === this.tabId()) {
+            this.draftVersion = data?.data?.version ?? this.draftVersion
+            return await this.saveDraft(false)
+          }
+
           this.draftConflict = {
-            message: data?.message || 'Otra persona guardó cambios en este tour mientras lo editabas.',
+            message: data?.message || 'Se guardaron cambios en este tour desde otro lugar.',
             updatedByName: data?.data?.updated_by_name ?? null,
+            updatedAt: data?.data?.updated_at ?? null,
+            // Shared account: a different (or missing) tab id means another
+            // tab or another computer — the UI words it that way instead of
+            // the useless "Admin guardó cambios".
+            otherTab: true,
           }
           this.draftError = this.draftConflict.message
           this.isDirty = true
@@ -1463,6 +1495,43 @@ export const useTourWizardStore = defineStore('tourWizard', {
           return false
         }
         this.draftError = e?.data?.message || e?.message || 'Error al cargar el borrador'
+        return false
+      }
+    },
+
+    /**
+     * Silent catch-up for CLEAN tabs. Called when the tab regains focus: if
+     * this tab has no unsaved edits and no open conflict, and the server draft
+     * moved ahead (someone saved from another tab/computer), just load the
+     * newer draft — asking "which version do you want" when you have nothing
+     * to lose is the annoying version of a conflict.
+     * Returns true when a newer draft was loaded.
+     */
+    async refreshDraftIfClean(): Promise<boolean> {
+      if (!this.tourId || this.tourId === 'new') return false
+      if (this.isDirty || this.draftConflict) return false
+      const auth = useAuthStore()
+      if (!auth.token) return false
+
+      const config = useRuntimeConfig()
+      try {
+        const res: any = await $fetch(
+          `${config.public.apiUrl}/admin/tours/${this.tourId}/revision`,
+          {
+            method: 'GET',
+            params: { schema_version: DRAFT_SCHEMA_VERSION },
+            headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          }
+        )
+        const server = res?.data
+        if (!server?.payload) return false
+        const serverVersion = Number(server.version ?? 0)
+        const mine = Number(this.draftVersion ?? 0)
+        if (serverVersion <= mine) return false
+        // Re-check: an autosave may have started while we were fetching.
+        if (this.isDirty || this.draftConflict) return false
+        return await this.loadDraft()
+      } catch {
         return false
       }
     },

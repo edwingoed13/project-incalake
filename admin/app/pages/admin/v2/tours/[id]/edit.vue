@@ -115,6 +115,35 @@ const publishTour = async () => {
 // keeping mine erases theirs, taking theirs erases mine.
 const resolvingConflict = ref(false)
 
+// "hace 4 min" beats an ISO timestamp for deciding which version to keep.
+const conflictTimeAgo = computed(() => {
+  const iso = store.draftConflict?.updatedAt
+  if (!iso) return ''
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
+  if (mins < 1) return 'unos segundos'
+  if (mins < 60) return `${mins} min`
+  const h = Math.round(mins / 60)
+  return h === 1 ? '1 hora' : `${h} horas`
+})
+
+// A CLEAN tab that regains focus silently catches up with drafts saved from
+// another tab/computer instead of waiting to collide later — most "conflicts"
+// with a shared account are just this: a stale passive tab.
+const onFocusCatchUp = async () => {
+  if (document.visibilityState !== 'visible') return
+  const refreshed = await store.refreshDraftIfClean()
+  if (refreshed) {
+    toast.add({
+      title: 'Borrador actualizado',
+      description: 'Se cargaron cambios guardados desde otra pestaña o equipo.',
+      color: 'info',
+      icon: 'i-lucide-refresh-cw',
+    })
+  }
+}
+onMounted(() => document.addEventListener('visibilitychange', onFocusCatchUp))
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onFocusCatchUp))
+
 const keepTheirs = async () => {
   const ok = await confirm({
     title: 'Descartar tus cambios',
@@ -748,11 +777,15 @@ onBeforeUnmount(() => {
               <UIcon name="i-lucide-users" class="size-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-bold text-red-700 dark:text-red-400">
-                  Conflicto de edición
+                  Este tour se guardó desde otro lugar
                 </p>
+                <!-- The whole team shares one login, so naming the user
+                     ("Admin guardó...") tells the operator nothing. Where and
+                     when is what helps them decide. -->
                 <p class="text-sm text-red-800/90 dark:text-red-200/80 leading-snug mt-0.5">
-                  {{ store.draftConflict.message }}
-                  El guardado automático está detenido: elige qué versión conservar.
+                  Alguien guardó cambios{{ conflictTimeAgo ? ` hace ${conflictTimeAgo}` : '' }} desde
+                  otra pestaña o equipo con esta misma cuenta. Tu guardado automático está en pausa
+                  para no pisar ese trabajo.
                 </p>
                 <div class="flex flex-wrap items-center gap-2 mt-2.5">
                   <UButton
@@ -763,7 +796,7 @@ onBeforeUnmount(() => {
                     :loading="resolvingConflict"
                     @click="keepTheirs"
                   >
-                    Cargar la versión más reciente
+                    Usar la versión más reciente (descarta lo que escribí aquí)
                   </UButton>
                   <UButton
                     size="xs"
@@ -773,7 +806,7 @@ onBeforeUnmount(() => {
                     :loading="resolvingConflict"
                     @click="keepMine"
                   >
-                    Sobrescribir con lo mío
+                    Conservar lo mío (reemplaza lo del otro lugar)
                   </UButton>
                 </div>
               </div>

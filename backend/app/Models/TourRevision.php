@@ -17,6 +17,7 @@ class TourRevision extends Model
         'schema_version',
         'version',
         'updated_by',
+        'updated_by_tab',
     ];
 
     protected $casts = [

@@ -66,6 +66,7 @@ class TourRevisionController extends Controller
                 'updated_at' => $revision->updated_at,
                 'updated_by' => $revision->updated_by,
                 'updated_by_name' => $revision->editor?->name,
+                'updated_by_tab' => $revision->updated_by_tab,
             ],
         ]);
     }
@@ -82,6 +83,10 @@ class TourRevisionController extends Controller
             'payload' => 'required|array',
             'schema_version' => 'nullable|string|max:20',
             'base_version' => 'nullable|integer|min:0',
+            // Per-browser-tab id: with one shared admin account, this is the
+            // only way to tell "my own save racing itself" from "someone at
+            // another computer" — the 409 handler treats them very differently.
+            'tab_id' => 'nullable|string|max:40',
         ]);
 
         $encoded = json_encode($data['payload']);
@@ -113,6 +118,7 @@ class TourRevisionController extends Controller
                     'version' => $existing->version,
                     'updated_at' => $existing->updated_at,
                     'updated_by_name' => $existing->editor?->name,
+                    'updated_by_tab' => $existing->updated_by_tab,
                 ],
             ], 409);
         }
@@ -124,6 +130,7 @@ class TourRevisionController extends Controller
                 'schema_version' => $data['schema_version'] ?? 'v1',
                 'version' => ($existing?->version ?? 0) + 1,
                 'updated_by' => $request->user()?->id,
+                'updated_by_tab' => $data['tab_id'] ?? null,
             ]
         );
 

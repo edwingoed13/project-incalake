@@ -149,17 +149,22 @@ class TourDraftAndVisibilityTest extends TestCase
         $this->postJson("/api/admin/tours/{$tour->id}/revision", [
             'payload' => ['basicInfo' => ['title' => 'de Beto']],
             'base_version' => $version,
+            'tab_id' => 'tab-de-beto',
         ])->assertOk();
 
-        // Ana, still holding version 1, would silently erase Beto's work.
+        // Ana, still holding version 1, would silently erase Beto's work. The
+        // 409 carries the winner's tab id so the wizard can tell a same-tab
+        // race (auto-resolve) from a genuinely different editor.
         Sanctum::actingAs($ana);
         $this->postJson("/api/admin/tours/{$tour->id}/revision", [
             'payload' => ['basicInfo' => ['title' => 'de Ana otra vez']],
             'base_version' => $version,
+            'tab_id' => 'tab-de-ana',
         ])
             ->assertStatus(409)
             ->assertJsonPath('conflict', true)
-            ->assertJsonPath('data.updated_by_name', 'Beto');
+            ->assertJsonPath('data.updated_by_name', 'Beto')
+            ->assertJsonPath('data.updated_by_tab', 'tab-de-beto');
 
         // Beto's draft is intact.
         $this->assertSame(
