@@ -32,28 +32,10 @@
             <input v-model="searchQuery" type="text" :placeholder="t('search_placeholder')"
               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
-          <!-- Sort: a plain native select — keyboard/screen-reader accessible
-               for free, and the OS picker on touch devices. -->
-          <label class="flex items-center gap-1.5 shrink-0">
-            <span class="sr-only">{{ t('sort_by') }}</span>
-            <Icon name="material-symbols:swap-vert" class="text-slate-400 text-lg" aria-hidden="true" />
-            <select
-              v-model="sortKey"
-              class="text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg py-2 pl-2 pr-7 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-            >
-              <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
-          </label>
-          <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden shrink-0">
-            <button @click="viewMode = 'grid'" class="p-2 transition-colors" :aria-label="t('view')"
-              :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
-              <Icon name="material-symbols:grid-view-outline" class="text-base" />
-            </button>
-            <button @click="viewMode = 'list'" class="p-2 transition-colors" :aria-label="t('view')"
-              :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
-              <Icon name="material-symbols:view-list-outline" class="text-base" />
-            </button>
-          </div>
+          <!-- (Sort + view toggle live in the results header now — they
+               describe the RESULTS, and next to the round search pill the
+               squared controls read as floating. GYG pattern: sticky search
+               alone; sort at the top of the results column.) -->
         </div>
       </div>
     </div>
@@ -116,9 +98,13 @@
       <!-- Main column -->
       <div class="flex-1 min-w-0 order-2">
 
+      <!-- Results header: active-filter chips on the left, sort + view toggle
+           on the right (desktop). One row, one place for everything that
+           shapes the result set — the sort used to float in the search bar. -->
+      <div class="flex items-start justify-between gap-3 mb-3">
       <!-- Active filters badges. Chips are taller (py-1) and the × is a real
            20px tap target inside the chip, so they're removable with a thumb. -->
-      <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5 mb-3">
+      <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5 min-w-0">
         <span v-if="selectedCitySlug" class="inline-flex items-center gap-0.5 pl-2.5 pr-1 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
           {{ formatCityName(selectedCitySlug) }}
           <button @click="selectedCitySlug = ''" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
@@ -142,6 +128,32 @@
           <button @click="selectedPlaces = selectedPlaces.filter(n => n !== name)" class="size-5 inline-flex items-center justify-center rounded-full hover:bg-primary/20 active:scale-90" :aria-label="t('clear_all')"><Icon name="material-symbols:close" class="text-sm" /></button>
         </span>
         <button @click="clearFilters" class="ml-1 px-2 py-1 text-xs font-bold text-red-500 hover:underline">{{ t('clear_all') }}</button>
+      </div>
+      <div v-else class="min-w-0"></div>
+
+      <!-- Sort + view toggle (desktop; mobile has sort inside the filter sheet) -->
+      <div class="hidden lg:flex items-center gap-2 shrink-0">
+        <label class="flex items-center gap-1.5">
+          <span class="sr-only">{{ t('sort_by') }}</span>
+          <Icon name="material-symbols:swap-vert" class="text-slate-400 text-lg" aria-hidden="true" />
+          <select
+            v-model="sortKey"
+            class="text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg py-2 pl-2 pr-7 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+          >
+            <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+          </select>
+        </label>
+        <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white">
+          <button @click="viewMode = 'grid'" class="p-2 transition-colors" :aria-label="t('view')"
+            :class="viewMode === 'grid' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
+            <Icon name="material-symbols:grid-view-outline" class="text-base" />
+          </button>
+          <button @click="viewMode = 'list'" class="p-2 transition-colors" :aria-label="t('view')"
+            :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-white text-slate-400 hover:text-slate-600'">
+            <Icon name="material-symbols:view-list-outline" class="text-base" />
+          </button>
+        </div>
+      </div>
       </div>
 
       <!-- Loading: skeleton SOLO para las tarjetas (el título y los filtros de arriba ya están visibles) -->
