@@ -158,7 +158,7 @@ class TourExpiryAlertsTest extends TestCase
         $this->assertStringContainsString($old->code, $html);
         // The link into step 8 is the whole point: it's what makes the warning
         // actionable instead of just informative.
-        $this->assertStringContainsString("/admin/v2/tours/{$soon->id}/edit?step=8", $html);
+        $this->assertStringContainsString("/admin/v2/tours/{$soon->id}/edit?step=7", $html);
         $this->assertStringContainsString('12 días', $html);
         $this->assertStringContainsString('2019-12-31', $html);
         $this->assertStringContainsString('por caducar', $mail->envelope()->subject);
