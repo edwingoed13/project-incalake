@@ -120,6 +120,34 @@ const getTourReferenceName = (tour: Tour) => {
   return primaryTr?.title || tour.title || tour.code
 }
 
+/**
+ * city.name is free text from the wizard, so some tours carry a whole
+ * location ("Isla de los Uros, Puno, Perú") next to siblings that just say
+ * "Puno". Keep the first segment so the column scans as one column.
+ */
+const cityLabel = (tour: Tour) => String((tour as any).city?.name || '').split(',')[0]!.trim()
+
+const formatPrice = (value: number | string | null) => {
+  const n = Number(value)
+  if (!Number.isFinite(n) || n <= 0) return ''
+  return `$${n % 1 === 0 ? n : n.toFixed(2)}`
+}
+
+/** "hace 3 días" reads faster than a timestamp when scanning a long list. */
+const timeAgo = (iso?: string | null) => {
+  if (!iso) return '—'
+  const diff = Date.now() - new Date(iso).getTime()
+  if (!Number.isFinite(diff) || diff < 0) return '—'
+  const mins = Math.round(diff / 60000)
+  if (mins < 60) return mins <= 1 ? 'recién' : `hace ${mins} min`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return hours === 1 ? 'hace 1 h' : `hace ${hours} h`
+  const days = Math.round(hours / 24)
+  if (days < 30) return days === 1 ? 'ayer' : `hace ${days} días`
+  const months = Math.round(days / 30)
+  return months === 1 ? 'hace 1 mes' : `hace ${months} meses`
+}
+
 const cloneAvailableLanguages = computed<Language[]>(() => {
   if (!selectedTour.value || !selectedTour.value.available_languages) return allLanguages.value
   const existing = selectedTour.value.available_languages.map(l => l.id)
@@ -542,11 +570,31 @@ onMounted(() => {
                     <div class="flex items-center gap-2 min-w-0">
                       <p class="text-sm font-bold truncate">{{ getTourReferenceName(tour) }}</p>
                       <UBadge color="neutral" variant="subtle" size="xs" class="font-mono shrink-0">{{ tour.code }}</UBadge>
+                      <!-- Shell tours (zero translations) used to be invisible
+                           here; now that they list, say what's wrong with them
+                           instead of showing a row with a code and nothing else. -->
+                      <UBadge
+                        v-if="!(tour.translations_summary || []).length"
+                        color="warning"
+                        variant="subtle"
+                        size="xs"
+                        icon="i-lucide-triangle-alert"
+                        class="shrink-0"
+                      >
+                        Sin contenido
+                      </UBadge>
                     </div>
-                    <p class="text-[10px] text-muted font-bold uppercase tracking-wider mt-0.5 truncate">
-                      {{ tour.service_type }} ·
-                      {{ (tour.translations_summary || []).length }}
-                      {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}
+                    <!-- The row had ~500px of dead space on a wide screen while
+                         the data an operator needs to triage 290 tours (where,
+                         how much, when was it last touched) lived only inside
+                         the editor. -->
+                    <p class="text-[11px] text-muted mt-0.5 truncate">
+                      <span v-if="cityLabel(tour)" class="font-semibold text-default">{{ cityLabel(tour) }}</span>
+                      <span v-if="cityLabel(tour)"> · </span>
+                      <span v-if="tour.min_price">{{ formatPrice(tour.min_price) }}</span>
+                      <span v-if="tour.min_price"> · </span>
+                      <span>{{ (tour.translations_summary || []).length }} {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}</span>
+                      <span class="hidden sm:inline"> · editado {{ timeAgo(tour.updated_at) }}</span>
                     </p>
                   </div>
                 </div>

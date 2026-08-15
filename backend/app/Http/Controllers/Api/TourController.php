@@ -206,11 +206,22 @@ class TourController extends Controller
                 });
             }
 
-            if ($request->has('search')) {
+            // filled(), not has(): the admin list always sends `search`, empty
+            // when nobody typed anything. has() accepted that empty string and
+            // ran whereHas(translations, LIKE '%%'), which quietly required a
+            // translation row to exist — hiding 23 translation-less tours from
+            // the only screen that could fix or delete them.
+            // The code is searchable too: operators read it off the badge in
+            // the list and off invoices, and it was the one thing the
+            // placeholder promised ("título o código") but never matched.
+            if ($request->filled('search')) {
                 $search = $request->search;
-                $query->whereHas('translations', function ($q) use ($search) {
-                    $q->where('h1_title', 'like', "%{$search}%")
-                      ->orWhere('short_description', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                      ->orWhereHas('translations', function ($t) use ($search) {
+                          $t->where('h1_title', 'like', "%{$search}%")
+                            ->orWhere('short_description', 'like', "%{$search}%");
+                      });
                 });
             }
 
@@ -262,9 +273,14 @@ class TourController extends Controller
                 $countQuery = Tour::query();
                 if ($request->filled('search')) {
                     $s = $request->search;
-                    $countQuery->whereHas('translations', function ($q) use ($s) {
-                        $q->where('h1_title', 'like', "%{$s}%")
-                          ->orWhere('short_description', 'like', "%{$s}%");
+                    // Same shape as the listing filter above, or the tab
+                    // numbers stop matching what the list shows.
+                    $countQuery->where(function ($q) use ($s) {
+                        $q->where('code', 'like', "%{$s}%")
+                          ->orWhereHas('translations', function ($t) use ($s) {
+                              $t->where('h1_title', 'like', "%{$s}%")
+                                ->orWhere('short_description', 'like', "%{$s}%");
+                          });
                     });
                 }
                 $rawCounts = $countQuery->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
