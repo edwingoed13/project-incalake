@@ -43,7 +43,10 @@ class AppServiceProvider extends ServiceProvider
         // The version bump is guarded to fire once per request even if a save
         // touches many child rows.
         $bump = static fn () => CacheService::bumpToursVersion();
-        foreach ([Tour::class, TourTranslation::class, TourPrice::class, TourMediaGallery::class] as $model) {
+        // Review is here since ratings/counts became part of the listing cards
+        // and the tour-detail header: moving or publishing a review must show
+        // up on those cached surfaces in seconds, not after the 24h TTL.
+        foreach ([Tour::class, TourTranslation::class, TourPrice::class, TourMediaGallery::class, \App\Models\Review::class] as $model) {
             $model::saved($bump);
             $model::deleted($bump);
         }

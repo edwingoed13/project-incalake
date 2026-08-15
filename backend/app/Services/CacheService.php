@@ -129,7 +129,7 @@ class CacheService
     //     option_color; the previous projection broke the city belongsTo
     //     relation (FK missing) and dropped the parent's label/color from
     //     the option-selector payload.
-    private const LISTING_CODE_VERSION = 11;  // 11: detail carries rating/reviews_count/is_best_seller
+    private const LISTING_CODE_VERSION = 12;  // 12: reviews bump toursVersion; flush post review-move
 
     // 24h backstop TTL. Real freshness comes from bumpToursVersion (fires on every
     // tour/translation/price/media save), so a long TTL just avoids cold rebuilds
