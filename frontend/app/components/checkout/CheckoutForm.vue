@@ -183,7 +183,7 @@ const modalTitle = computed(() => {
             v-model="customerFirstName"
             type="text"
             autocomplete="given-name"
-            class="w-full px-4 py-3 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             :class="errors.customer_first_name ? 'border-red-500' : 'border-slate-300'"
             :placeholder="t('checkout.first_name_placeholder')"
           />
@@ -200,7 +200,7 @@ const modalTitle = computed(() => {
             v-model="customerLastName"
             type="text"
             autocomplete="family-name"
-            class="w-full px-4 py-3 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             :class="errors.customer_last_name ? 'border-red-500' : 'border-slate-300'"
             :placeholder="t('checkout.last_name_placeholder')"
           />
@@ -210,41 +210,44 @@ const modalTitle = computed(() => {
         </div>
       </div>
 
-      <!-- Customer Email -->
-      <div>
-        <label for="customer_email" class="form-label">
-          {{ t('checkout.email') }} *
-        </label>
-        <input
-          id="customer_email"
-          v-model="customerEmail"
-          type="email"
-          class="w-full px-4 py-3 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-          :class="errors.customer_email ? 'border-red-500' : 'border-slate-300'"
-          placeholder="john@example.com"
-        />
-        <p v-if="errors.customer_email" class="mt-1 text-sm text-red-600">
-          {{ errors.customer_email }}
-        </p>
-      </div>
+      <!-- Email + Phone share a row from md up — full-width singles made each
+           field look enormous on a laptop and doubled the form's height. -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="customer_email" class="form-label">
+            {{ t('checkout.email') }} *
+          </label>
+          <input
+            id="customer_email"
+            v-model="customerEmail"
+            type="email"
+            autocomplete="email"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            :class="errors.customer_email ? 'border-red-500' : 'border-slate-300'"
+            placeholder="john@example.com"
+          />
+          <p v-if="errors.customer_email" class="mt-1 text-sm text-red-600">
+            {{ errors.customer_email }}
+          </p>
+        </div>
 
-      <!-- Phone / WhatsApp with integrated country selector -->
-      <div>
-        <label class="form-label">
-          {{ t('checkout.phone_whatsapp') }} *
-        </label>
-        <CheckoutPhoneInput
-          v-model:phone="customerPhone"
-          v-model:country="customerCountry"
-          :phone-error="errors.customer_phone"
-          :country-error="errors.customer_country"
-        />
-        <p v-if="errors.customer_phone" class="mt-1 text-sm text-red-600">
-          {{ errors.customer_phone }}
-        </p>
-        <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600">
-          {{ errors.customer_country }}
-        </p>
+        <div>
+          <label class="form-label">
+            {{ t('checkout.phone_whatsapp') }} *
+          </label>
+          <CheckoutPhoneInput
+            v-model:phone="customerPhone"
+            v-model:country="customerCountry"
+            :phone-error="errors.customer_phone"
+            :country-error="errors.customer_country"
+          />
+          <p v-if="errors.customer_phone" class="mt-1 text-sm text-red-600">
+            {{ errors.customer_phone }}
+          </p>
+          <p v-if="errors.customer_country" class="mt-1 text-sm text-red-600">
+            {{ errors.customer_country }}
+          </p>
+        </div>
       </div>
 
       <!-- Pickup Location (if available) -->
@@ -256,7 +259,7 @@ const modalTitle = computed(() => {
           id="pickup_location"
           v-model="pickupLocation"
           type="text"
-          class="w-full px-4 py-3 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+          class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           :class="errors.pickup_location ? 'border-red-500' : 'border-slate-300'"
           :placeholder="t('checkout.pickup_placeholder')"
         />

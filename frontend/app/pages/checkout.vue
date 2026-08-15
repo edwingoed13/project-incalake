@@ -3,7 +3,8 @@
     <div class="container mx-auto px-4 lg:px-6 max-w-7xl">
       <!-- Header -->
       <div class="mb-6 lg:mb-8">
-        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-primary-light mb-1.5">
+        <!-- Same title cap as the rest of the funnel — 4xl dwarfed the form. -->
+        <h1 class="text-2xl sm:text-3xl font-black text-primary-light mb-1.5">
           {{ t('checkout.title') }}
         </h1>
         <p class="text-sm sm:text-base text-secondary-light">
