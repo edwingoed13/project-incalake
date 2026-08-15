@@ -155,8 +155,6 @@ const stats = computed(() => {
   return [
     { label: 'Idiomas', value: langs.length },
     { label: 'Fotos', value: (store.multimedia?.images || []).length },
-    { label: 'Categorías', value: (store.selectedCategories || []).length },
-    { label: 'Etiquetas', value: (store.selectedTags || []).length },
     { label: 'Bloqueos', value: (store.availability?.blocks || []).length },
     { label: 'Ofertas', value: (store.availability?.offers || []).length },
   ]
@@ -211,12 +209,6 @@ const checklist = computed(() => {
     },
     {
       step: 7,
-      label: 'Categorías',
-      ok: (store.selectedCategories || []).length > 0,
-      detail: `${(store.selectedCategories || []).length} categorías · ${(store.selectedTags || []).length} etiquetas`,
-    },
-    {
-      step: 8,
       label: 'Disponibilidad',
       ok: hasAvailability,
       detail: hasAvailability

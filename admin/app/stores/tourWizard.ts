@@ -311,7 +311,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
     currentStep: 1,
     // 9 steps: Info, SEO, Detalle, Precios, Multimedia, Reservas, Categorías, Calendario, Revisión final
 
-    totalSteps: 9,
+    totalSteps: 8,
     isDirty: false,
     loading: false,
     autosaveEnabled: true,

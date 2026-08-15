@@ -11,7 +11,6 @@ import Step3DetailedContent from '~/components/tours/wizard/Step3DetailedContent
 import Step4CommercialRules from '~/components/tours/wizard/Step4CommercialRules.vue'
 import Step5Multimedia from '~/components/tours/wizard/Step5Multimedia.vue'
 import Step6BookingOptions from '~/components/tours/wizard/Step6BookingOptions.vue'
-import Step7Categories from '~/components/tours/wizard/Step7Categories.vue'
 import Step8Availability from '~/components/tours/wizard/Step8Availability.vue'
 import Step8FinalReview from '~/components/tours/wizard/Step8FinalReview.vue'
 
@@ -236,9 +235,12 @@ const stepLabels = [
   { id: 4, category: 'Reglas comerciales', title: 'Precios y rangos', description: 'Configura precios por etapa de edad, nacionalidad y cantidad de pasajeros.' },
   { id: 5, category: 'Multimedia', title: 'Galería y video', description: 'Sube fotos de calidad y un video que muestren lo mejor de la experiencia.' },
   { id: 6, category: 'Reservas', title: 'Opciones de reserva', description: 'Define políticas, anticipación, datos requeridos, recojo, guía y otras reglas de la reserva.' },
-  { id: 7, category: 'Clasificación', title: 'Categorías y etiquetas', description: 'Asigna categorías y etiquetas para que los viajeros encuentren el tour mediante filtros.' },
-  { id: 8, category: 'Operación', title: 'Disponibilidad y calendario', description: 'Define fechas activas, bloqueos por temporada baja, ofertas y restricciones de capacidad.' },
-  { id: 9, category: 'Publicar', title: 'Revisión final', description: 'Resumen del tour. Revisa cada paso y publica.' },
+  // El paso de Categorías y etiquetas se retiró: nada público las mostraba
+  // (8 de 100 tours con categorías, 1 con etiquetas) y pedir ese trabajo sin
+  // efecto visible era tiempo perdido del operador. Los datos existentes se
+  // conservan en la base por si algún día se les da un uso visible.
+  { id: 7, category: 'Operación', title: 'Disponibilidad y calendario', description: 'Define fechas activas, bloqueos por temporada baja, ofertas y restricciones de capacidad.' },
+  { id: 8, category: 'Publicar', title: 'Revisión final', description: 'Resumen del tour. Revisa cada paso y publica.' },
 ]
 
 const currentStepLabel = computed(() => stepLabels.find(s => s.id === store.currentStep) || stepLabels[0])
@@ -846,9 +848,8 @@ onBeforeUnmount(() => {
               <Step4CommercialRules v-else-if="store.currentStep === 4" @vue:mounted="onStepMounted" />
               <Step5Multimedia v-else-if="store.currentStep === 5" @vue:mounted="onStepMounted" />
               <Step6BookingOptions v-else-if="store.currentStep === 6" @vue:mounted="onStepMounted" />
-              <Step7Categories v-else-if="store.currentStep === 7" @vue:mounted="onStepMounted" />
-              <Step8Availability v-else-if="store.currentStep === 8" @vue:mounted="onStepMounted" />
-              <Step8FinalReview v-else-if="store.currentStep === 9" @vue:mounted="onStepMounted" />
+              <Step8Availability v-else-if="store.currentStep === 7" @vue:mounted="onStepMounted" />
+              <Step8FinalReview v-else-if="store.currentStep === 8" @vue:mounted="onStepMounted" />
               <UCard v-else>
                 <div class="flex flex-col items-center text-center py-12 gap-3">
                   <UIcon name="i-lucide-hammer" class="size-12 text-muted" />

@@ -11,7 +11,7 @@ definePageMeta({
       if (rest === 'dashboard') rest = ''
       // Old availability editor is v2's wizard step 8.
       const avail = rest.match(/^tours\/(\d+)\/availability$/)
-      if (avail) return navigateTo(`/admin/v2/tours/${avail[1]}/edit?step=8`, { redirectCode: 301 })
+      if (avail) return navigateTo(`/admin/v2/tours/${avail[1]}/edit?step=7`, { redirectCode: 301 })
 
       return navigateTo(`/admin/v2${rest ? '/' + rest : ''}`, { redirectCode: 301 })
     },

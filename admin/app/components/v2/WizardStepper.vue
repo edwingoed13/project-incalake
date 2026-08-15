@@ -54,9 +54,8 @@ const steps = [
   { id: 4, label: 'Precios', shortLabel: 'Precios', icon: 'i-lucide-dollar-sign' },
   { id: 5, label: 'Multimedia', shortLabel: 'Media', icon: 'i-lucide-image' },
   { id: 6, label: 'Reservas', shortLabel: 'Reservas', icon: 'i-lucide-calendar-check' },
-  { id: 7, label: 'Categorías', shortLabel: 'Tags', icon: 'i-lucide-tags' },
-  { id: 8, label: 'Disponibilidad', shortLabel: 'Calendario', icon: 'i-lucide-calendar-days' },
-  { id: 9, label: 'Revisión', shortLabel: 'Final', icon: 'i-lucide-check-circle' },
+  { id: 7, label: 'Disponibilidad', shortLabel: 'Calendario', icon: 'i-lucide-calendar-days' },
+  { id: 8, label: 'Revisión', shortLabel: 'Final', icon: 'i-lucide-check-circle' },
 ]
 
 const stepState = (id: number): 'completed' | 'current' | 'pending' => {

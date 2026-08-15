@@ -29,7 +29,7 @@
                 @php $tour = $row['tour']; @endphp
                 <tr>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;">
-                        <a href="{{ $adminUrl }}/admin/v2/tours/{{ $tour->id }}/edit?step=8"
+                        <a href="{{ $adminUrl }}/admin/v2/tours/{{ $tour->id }}/edit?step=7"
                            style="color:#4f46e5;text-decoration:none;font-weight:bold;">
                             {{ $tour->code }}
                         </a>
@@ -64,7 +64,7 @@
                 @php $tour = $row['tour']; @endphp
                 <tr>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;">
-                        <a href="{{ $adminUrl }}/admin/v2/tours/{{ $tour->id }}/edit?step=8"
+                        <a href="{{ $adminUrl }}/admin/v2/tours/{{ $tour->id }}/edit?step=7"
                            style="color:#4f46e5;text-decoration:none;font-weight:bold;">
                             {{ $tour->code }}
                         </a>
