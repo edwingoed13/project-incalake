@@ -259,21 +259,44 @@ async function initMap() {
   }
 }
 
+// Google Maps JS is 375 KB — the single heaviest resource on the tour page —
+// and the map lives below the fold. Load it only when the section is about to
+// scroll into view (600px margin so it's usually ready by the time it shows).
+const mapsWanted = ref(false)
+let io: IntersectionObserver | null = null
+
 onMounted(() => {
-  if (hasMap.value && coordsValid.value) {
+  if (!(hasMap.value && coordsValid.value)) return
+  const host = document.getElementById('ubicacion') || mapContainer.value
+  if (!host || !('IntersectionObserver' in window)) {
+    mapsWanted.value = true
     nextTick(() => initMap())
+    return
   }
+  io = new IntersectionObserver((entries) => {
+    if (entries.some(e => e.isIntersecting)) {
+      io?.disconnect()
+      io = null
+      mapsWanted.value = true
+      nextTick(() => initMap())
+    }
+  }, { rootMargin: '600px 0px' })
+  io.observe(host)
 })
 
 // Re-init when the tour (or selected variant) changes. coordsValid gates out
 // tours without usable coordinates, and initMap rebuilds on the right container.
+// Only once the visitor has reached the map — otherwise the observer above
+// will do the first init with the fresh tour data anyway.
 watch(() => props.tour, () => {
-  if (hasMap.value && coordsValid.value) {
+  if (mapsWanted.value && hasMap.value && coordsValid.value) {
     nextTick(() => initMap())
   }
 }, { deep: true })
 
 onBeforeUnmount(() => {
+  io?.disconnect()
+  io = null
   markers.forEach(m => m.setMap(null))
   if (routeLine) routeLine.setMap(null)
   if (mapCircle) mapCircle.setMap(null)

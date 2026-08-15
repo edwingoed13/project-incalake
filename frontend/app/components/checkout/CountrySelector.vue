@@ -83,7 +83,7 @@ watch(open, (val) => {
         error ? 'border-red-500' : open ? 'border-primary ring-2 ring-primary/20' : 'border-slate-300',
       ]"
     >
-      <img v-if="selectedCountry" :src="countryFlagUrl(selectedCountry.code)" :alt="selectedCountry.code" class="w-5 h-4 object-cover rounded-sm" />
+      <img loading="lazy" decoding="async" v-if="selectedCountry" :src="countryFlagUrl(selectedCountry.code)" :alt="selectedCountry.code" class="w-5 h-4 object-cover rounded-sm" />
       <span v-if="selectedCountry" class="flex-1 text-sm font-medium text-slate-800">
         {{ selectedCountry.name }}
         <span class="text-slate-400 ml-1">({{ selectedCountry.dial }})</span>
@@ -125,7 +125,7 @@ watch(open, (val) => {
               country.code === modelValue ? 'bg-primary/10 active-country' : '',
             ]"
           >
-            <img :src="countryFlagUrl(country.code)" :alt="country.code" class="w-5 h-4 object-cover rounded-sm" />
+            <img loading="lazy" decoding="async" :src="countryFlagUrl(country.code)" :alt="country.code" class="w-5 h-4 object-cover rounded-sm" />
             <span class="flex-1 text-sm" :class="country.code === modelValue ? 'font-bold text-primary' : 'text-slate-700'">
               {{ country.name }}
             </span>

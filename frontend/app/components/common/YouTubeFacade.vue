@@ -14,12 +14,12 @@
       <img
         :src="thumbnailUrl"
         :alt="title"
-        class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-        @error="thumbFailed = true"
         loading="lazy"
         decoding="async"
         width="480"
         height="360"
+        class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+        @error="thumbFailed = true"
       />
       <span class="absolute inset-0 flex items-center justify-center">
         <span class="flex items-center justify-center size-16 md:size-20 rounded-full bg-red-600 text-white shadow-2xl transition-transform group-hover:scale-110 group-active:scale-95">

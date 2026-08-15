@@ -108,6 +108,10 @@ class FrontendRevalidator
 
         foreach (array_keys($locales) as $locale) {
             $urls[] = "{$base}/{$locale}/tours";
+            // The home shows recommended tours, destination photos and offer
+            // cards — with its 15-minute ISR window it was the surface where
+            // "publiqué y no se ve" kept happening after the listing got fast.
+            $urls[] = "{$base}/{$locale}";
         }
 
         return array_values(array_unique($urls));

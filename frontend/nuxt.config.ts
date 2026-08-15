@@ -56,6 +56,10 @@ export default defineNuxtConfig({
   srcDir: 'app',
 
   modules: [
+    // Self-hosts Inter at build time (immutable /_nuxt assets): kills the
+    // render-blocking fonts.googleapis.com CSS + gstatic round-trips and the
+    // occasional stale-hash woff2 404 Google served us.
+    '@nuxt/fonts',
     '@nuxt/icon',
     '@nuxt/image',
     '@pinia/nuxt',

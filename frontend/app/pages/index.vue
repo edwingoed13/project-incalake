@@ -120,6 +120,8 @@
                 <img
                   v-if="result.featured_image"
                   :src="getImageUrl(result.featured_image)"
+                  :alt="result.title || ''"
+                  width="40" height="40" loading="lazy" decoding="async"
                   class="w-10 h-10 rounded-lg object-cover shrink-0"
                 />
                 <div v-else class="size-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">

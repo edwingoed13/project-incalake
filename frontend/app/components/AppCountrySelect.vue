@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
       class="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-left focus:ring-2 focus:ring-primary/20 focus:border-primary"
       :class="open ? 'ring-2 ring-primary/20 border-primary' : ''"
     >
-      <img v-if="selected" :src="countryFlagUrl(selected.code, 24)" :alt="selected.name" class="w-5 h-auto rounded-sm shrink-0" />
+      <img loading="lazy" decoding="async" v-if="selected" :src="countryFlagUrl(selected.code, 24)" :alt="selected.name" class="w-5 h-auto rounded-sm shrink-0" />
       <span class="flex-1 truncate" :class="selected ? 'text-slate-800' : 'text-slate-400'">
         {{ selected ? selected.name : (modelValue || placeholder) }}
       </span>

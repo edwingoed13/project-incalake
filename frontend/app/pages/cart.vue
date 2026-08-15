@@ -305,11 +305,12 @@ function getImageUrl(path: string) {
             </label>
             <div class="flex gap-4 p-4">
               <!-- Image -->
-              <img
+              <NuxtImg
                 v-if="item.tourImage"
                 :src="getImageUrl(item.tourImage)"
                 :alt="item.tourTitle"
                 class="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-xl shrink-0"
+                width="112" height="112" format="webp" loading="lazy"
               />
               <div v-else class="w-20 h-20 sm:w-28 sm:h-28 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
                 <Icon name="material-symbols:image-outline" class="text-slate-300 text-3xl" />

@@ -27,6 +27,7 @@
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@iconify-json/material-symbols": "^1.2.74",
+    "@nuxt/fonts": "^0.14.0",
     "@nuxt/icon": "^2.2.2",
     "@nuxt/image": "^1.10.1",
     "@paypal/paypal-js": "^9.4.0",

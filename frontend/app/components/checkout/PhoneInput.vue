@@ -86,7 +86,7 @@ watch(open, (val) => {
           phoneError || countryError ? 'border-red-500' : open ? 'border-primary' : 'border-slate-300',
         ]"
       >
-        <img :src="countryFlagUrl(country)" :alt="country" class="w-5 h-4 object-cover rounded-sm" />
+        <img loading="lazy" decoding="async" :src="countryFlagUrl(country)" :alt="country" class="w-5 h-4 object-cover rounded-sm" />
         <span class="text-slate-700">{{ dialCode }}</span>
         <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm transition-transform" />
       </button>
@@ -135,7 +135,7 @@ watch(open, (val) => {
             class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-primary/5 transition-colors"
             :class="c.code === country ? 'bg-primary/10 active-item' : ''"
           >
-            <img :src="countryFlagUrl(c.code)" :alt="c.code" class="w-5 h-4 object-cover rounded-sm" />
+            <img loading="lazy" decoding="async" :src="countryFlagUrl(c.code)" :alt="c.code" class="w-5 h-4 object-cover rounded-sm" />
             <span class="flex-1 text-sm" :class="c.code === country ? 'font-bold text-primary' : 'text-slate-700'">
               {{ c.name }}
             </span>
