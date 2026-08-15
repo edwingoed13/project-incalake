@@ -94,6 +94,15 @@ class TourDetailResource extends JsonResource
             'special_days' => $this->availability_data['specialDays'] ?? [],
 
             'featured_image' => $this->featured_image_path,
+            // Aggregates over ALL published reviews (the page only fetches one
+            // page of review bodies) and a sales-based best-seller flag — the
+            // threshold intentionally stays server-side, the raw sales number
+            // is not public.
+            'rating' => isset($this->rating_avg) && $this->rating_avg !== null
+                ? round((float) $this->rating_avg, 1)
+                : null,
+            'reviews_count' => (int) ($this->reviews_count ?? 0),
+            'is_best_seller' => (int) ($this->sales_count ?? 0) >= 5,
             'thumbnail' => $this->thumbnail_path,
             // Video: per-translation only (no fallback to other languages)
             'youtube_url' => $translation?->youtube_url ?? '',

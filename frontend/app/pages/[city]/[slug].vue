@@ -35,7 +35,7 @@
           </h1>
           <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[13px] sm:text-[15px]">
             <span
-              v-if="(tourReviews.length || 0) >= 20"
+              v-if="tour.is_best_seller"
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-bestseller/10 text-bestseller text-[11px] font-bold uppercase tracking-wide"
             >
               <BookmarkSolidIcon class="size-3" aria-hidden="true" />
@@ -61,7 +61,7 @@
             >
               <StarSolidIcon class="size-4 text-rating" aria-hidden="true" />
               <span class="tabular-nums">{{ avgRating }}</span>
-              <span class="text-slate-500 underline-offset-2 hover:underline">({{ tourReviews.length }})</span>
+              <span class="text-slate-500 underline-offset-2 hover:underline">({{ reviewsTotal }})</span>
             </button>
             <span v-if="tourReviews.length > 0" class="text-slate-300" aria-hidden="true">•</span>
             <span class="inline-flex items-center gap-1 text-slate-600">
@@ -258,7 +258,7 @@
                 </div>
                 <p class="text-xs md:text-sm text-slate-500 mt-0.5">
                   <span v-if="ratingLabel" class="font-bold text-slate-700">{{ ratingLabel }}</span>
-                  <span v-if="ratingLabel"> · </span>{{ tourReviews.length }} {{ tourReviews.length === 1 ? 'opinión' : 'opiniones' }}
+                  <span v-if="ratingLabel"> · </span>{{ reviewsTotal }} {{ reviewsTotal === 1 ? 'opinión' : 'opiniones' }}
                 </p>
               </div>
             </div>
@@ -722,7 +722,7 @@ const relatedTours = computed(() => {
 // Reviews for this tour — cached so returning to a tour doesn't refetch them.
 const { data: reviewsData } = await useAsyncData(
   `reviews-${citySlug}-${slug}`,
-  () => tour.value?.id ? api(`/reviews?tour_id=${tour.value.id}&per_page=20`) : Promise.resolve({ data: [] }),
+  () => tour.value?.id ? api(`/reviews?tour_id=${tour.value.id}&per_page=60`) : Promise.resolve({ data: [] }),
   { lazy: true, default: () => ({ data: [] }), getCachedData }
 )
 // Imported reviewer names arrive with scraper artifacts — "Maria del
@@ -741,7 +741,14 @@ const tourReviews = computed<any[]>(() =>
 )
 const showAllReviews = ref(false)
 
+// Server aggregate over ALL published reviews; the client-side average of the
+// first fetched page stays as fallback only. A tour with 57 reviews used to
+// show "20 opiniones" because that's the page size.
+const reviewsTotal = computed(() =>
+  Number(tour.value?.reviews_count ?? 0) || tourReviews.value.length
+)
 const avgRating = computed(() => {
+  if (tour.value?.rating != null) return Number(tour.value.rating).toFixed(1)
   if (tourReviews.value.length === 0) return 0
   const sum = tourReviews.value.reduce((acc: number, r: any) => acc + r.rating, 0)
   return (sum / tourReviews.value.length).toFixed(1)

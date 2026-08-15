@@ -1058,6 +1058,21 @@ class TourController extends Controller
                     ->where('active', true)
                     ->firstOrFail();
 
+                // Truthful header numbers + an honest best-seller badge. The
+                // page used to compute the rating from its first PAGE of
+                // reviews and to award "MÁS VENDIDO" for having ≥20 of them —
+                // which crowned a tour whose 57 reviews belonged to another
+                // tour entirely. Aggregate over ALL published reviews, and let
+                // the badge follow real paid sales, same rule as the listing's
+                // default order.
+                $tour->loadAvg(['reviews as rating_avg' => fn ($q) => $q->where('published', true)], 'rating');
+                $tour->loadCount([
+                    'reviews as reviews_count' => fn ($q) => $q->where('published', true),
+                    'bookings as sales_count' => fn ($q) => $q
+                        ->where('payment_status', 'paid')
+                        ->where('status', '!=', 'cancelled'),
+                ]);
+
                 return (new TourDetailResource($tour))->resolve($request);
             });
 
