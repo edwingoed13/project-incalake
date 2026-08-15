@@ -612,7 +612,11 @@ const buildCells = (base: Date) => {
     const outOfMonth = d.getMonth() !== base.getMonth()
     const iso = isoDate(d)
     const dow = d.getDay() // 0=Sun..6=Sat
-    const mmdd = `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    // DD-MM, the same shape the holiday buttons store ('25-12'), the public
+    // calendar compares and the server validates. This used to be built as
+    // MM-DD, so the preview never painted a holiday and operators reasonably
+    // concluded the whole feature was broken — while the real blocking worked.
+    const mmdd = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
     const inAvailability = !!(availStart && availEnd && d >= availStart && d <= availEnd)
     const activeWeekday = activeDays.includes(dow)
