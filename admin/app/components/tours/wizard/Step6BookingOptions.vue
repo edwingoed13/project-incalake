@@ -554,8 +554,8 @@
 
       <div class="space-y-4">
         <p class="text-xs text-muted">
-          Si la actividad tiene varias modalidades (e.g. <em>Compartido</em>, <em>+Guía Privado</em>, <em>Privado</em>),
-          cada una vive como un tour aparte y se agrupan aquí. <strong>El cliente las ve como cards en la página del tour padre.</strong>
+          Si este tour se vende en varias modalidades (por ejemplo <em>Compartido</em>, <em>+Guía Privado</em>, <em>Privado</em>),
+          cada modalidad es un tour aparte y aquí se agrupan. <strong>El viajero las verá como opciones para elegir dentro de la página del tour principal.</strong>
         </p>
 
         <!-- Tipo: 3 modos -->
@@ -569,8 +569,8 @@
               <div v-if="variantMode === 'standalone'" class="size-2 bg-white rounded-full" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'standalone' ? 'text-primary' : ''">Tour independiente</span>
-              <span class="text-[11px] text-muted">Sin variantes. Aparece solo en el listado público.</span>
+              <span class="text-sm font-bold" :class="variantMode === 'standalone' ? 'text-primary' : ''">Tour único</span>
+              <span class="text-[11px] text-muted">No tiene modalidades. Se muestra solo en el listado público.</span>
             </div>
           </button>
           <button
@@ -582,8 +582,8 @@
               <div v-if="variantMode === 'parent'" class="size-2 bg-white rounded-full" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'parent' ? 'text-primary' : ''">Opción principal de actividad</span>
-              <span class="text-[11px] text-muted">Es el tour "canónico" que ve el público. Otras variantes le apuntan a este.</span>
+              <span class="text-sm font-bold" :class="variantMode === 'parent' ? 'text-primary' : ''">Tour principal</span>
+              <span class="text-[11px] text-muted">Es la página que ve el viajero. Las demás modalidades se muestran dentro de ella.</span>
             </div>
           </button>
           <button
@@ -595,8 +595,8 @@
               <div v-if="variantMode === 'child'" class="size-2 bg-white rounded-full" />
             </div>
             <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'child' ? 'text-primary' : ''">Variante de otra actividad</span>
-              <span class="text-[11px] text-muted">Se muestra como card dentro del padre. Oculto del listado.</span>
+              <span class="text-sm font-bold" :class="variantMode === 'child' ? 'text-primary' : ''">Modalidad de otro tour</span>
+              <span class="text-[11px] text-muted">Aparece como opción dentro del tour principal. No sale en el listado.</span>
             </div>
           </button>
         </div>
@@ -605,7 +605,7 @@
         <div v-if="variantMode !== 'standalone'" class="space-y-4 pt-2 border-t border-default">
 
           <!-- Padre selector (solo para 'child') -->
-          <UFormField v-if="variantMode === 'child'" label="Actividad padre" hint="Busca el tour canónico que agrupa esta variante" required>
+          <UFormField v-if="variantMode === 'child'" label="Tour principal" hint="Busca el tour principal al que pertenece esta modalidad" required>
             <div ref="parentSearchWrapperEl" class="relative" @keydown.esc="parentDropdownOpen = false">
               <UInput
                 v-model="parentSearchQuery"
@@ -668,12 +668,12 @@
           </UFormField>
 
           <!-- Etiqueta -->
-          <UFormField label="Etiqueta de esta opción" hint="Texto corto que verá el cliente en el badge (e.g. Compartido, Privado, + Guía Privado)" required>
+          <UFormField label="Nombre de esta modalidad" hint="Texto corto que verá el viajero (por ejemplo: Compartido, Privado, + Guía Privado)" required>
             <UInput v-model="store.bookingOptions.optionLabel" placeholder="Ej: Compartido / + Guía Privado / Privado" maxlength="50" />
           </UFormField>
 
           <!-- Color -->
-          <UFormField label="Color del badge" hint="Se asigna automáticamente según la etiqueta (Compartido=azul, +Guía=violeta, Privado=ámbar). Puedes cambiarlo.">
+          <UFormField label="Color de la etiqueta" hint="Se elige solo según el nombre (Compartido=azul, +Guía=violeta, Privado=ámbar). Puedes cambiarlo.">
             <div class="grid grid-cols-6 gap-2">
               <button
                 v-for="c in availableColors"
@@ -686,19 +686,19 @@
                 @click="pickColor(c.token)"
               >
                 <span :class="['inline-block size-6 rounded-full', c.swatch]"></span>
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-muted">{{ c.token }}</span>
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-muted">{{ c.name }}</span>
               </button>
             </div>
           </UFormField>
 
           <!-- Preview -->
           <div class="rounded-xl border border-default bg-elevated p-3">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Vista previa del badge</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Así verá el viajero la etiqueta</p>
             <span
               class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider"
               :class="previewBadgeClass"
             >
-              {{ store.bookingOptions.optionLabel || 'Sin etiqueta' }}
+              {{ store.bookingOptions.optionLabel || 'Sin nombre' }}
             </span>
           </div>
 
@@ -726,7 +726,7 @@
                   <span v-if="c.option_label" class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider" :class="badgeClassFor(c.option_color)">
                     {{ c.option_label }}
                   </span>
-                  <span v-else class="text-[11px] text-warning">Sin etiqueta — edítala en ese tour</span>
+                  <span v-else class="text-[11px] text-warning">Sin nombre — edítalo en ese tour</span>
                 </div>
                 <UButton
                   icon="i-lucide-unlink" color="error" variant="ghost" size="xs"
@@ -741,7 +741,7 @@
             <div ref="childSearchWrapperEl" class="relative" @keydown.esc="childDropdownOpen = false">
               <UInput
                 v-model="childSearchQuery"
-                placeholder="Buscar tour para agregar como variante…"
+                placeholder="Buscar tour para agregar como modalidad…"
                 icon="i-lucide-search"
                 :loading="childSearching"
                 @focus="childDropdownOpen = true"
@@ -777,7 +777,7 @@
               </div>
             </div>
             <p class="text-[11px] text-muted">
-              Solo aparecen tours activos, sin variantes propias y sin padre. Tras vincular, ponle su etiqueta (Compartido/Privado…) editando ese tour.
+              Solo aparecen tours activos que aún no tienen modalidades ni pertenecen a otro tour. Tras vincular, ponle su nombre (Compartido/Privado…) editando ese tour.
             </p>
           </div>
         </div>
@@ -1089,13 +1089,16 @@ type ParentCandidate = {
 const parentCandidates = ref<ParentCandidate[]>([])
 const parentSearching = ref(false)
 
+// `token` is what gets stored (the public page maps it to classes); `name` is
+// what the operator reads — the swatch said BLUE/AMBER while the hint next to
+// it spoke Spanish.
 const availableColors = [
-  { token: 'blue',    swatch: 'bg-blue-500' },
-  { token: 'violet',  swatch: 'bg-violet-500' },
-  { token: 'amber',   swatch: 'bg-amber-500' },
-  { token: 'rose',    swatch: 'bg-rose-500' },
-  { token: 'emerald', swatch: 'bg-emerald-500' },
-  { token: 'sky',     swatch: 'bg-sky-500' },
+  { token: 'blue',    name: 'Azul',     swatch: 'bg-blue-500' },
+  { token: 'violet',  name: 'Violeta',  swatch: 'bg-violet-500' },
+  { token: 'amber',   name: 'Ámbar',    swatch: 'bg-amber-500' },
+  { token: 'rose',    name: 'Rosa',     swatch: 'bg-rose-500' },
+  { token: 'emerald', name: 'Verde',    swatch: 'bg-emerald-500' },
+  { token: 'sky',     name: 'Celeste',  swatch: 'bg-sky-500' },
 ] as const
 
 // Site-wide color standard for the common variant labels — matches what the
@@ -1206,7 +1209,7 @@ async function attachChild(cand: { id: number; h1_title: string }) {
     await loadChildren()
   } catch (e: any) {
     console.error('attach child failed', e)
-    useToast().add({ title: 'No se pudo vincular la variante', description: e?.data?.message, color: 'error', icon: 'i-lucide-circle-alert' })
+    useToast().add({ title: 'No se pudo vincular la modalidad', description: e?.data?.message, color: 'error', icon: 'i-lucide-circle-alert' })
   } finally {
     attachingId.value = null
   }
@@ -1337,7 +1340,7 @@ function modeRadioClass(m: VariantMode): string {
 const variantBadgeColor = computed(() => variantMode.value === 'standalone' ? 'neutral' as const : 'primary' as const)
 const variantBadgeLabel = computed(() => {
   if (variantMode.value === 'parent') return 'Actividad principal'
-  if (variantMode.value === 'child') return 'Variante'
+  if (variantMode.value === 'child') return 'Modalidad'
   return 'Tour independiente'
 })
 
@@ -1391,9 +1394,9 @@ function selectParent(cand: ParentCandidate) {
 // ambiguous, and "variante(s)" mixed singular/plural in one string.
 // Branch by count instead.
 function formatChildCount(n: number): string {
-  if (!n || n <= 0) return 'sin variantes vinculadas'
-  if (n === 1) return '1 variante vinculada'
-  return `${n} variantes vinculadas`
+  if (!n || n <= 0) return 'sin modalidades vinculadas'
+  if (n === 1) return '1 modalidad vinculada'
+  return `${n} modalidades vinculadas`
 }
 
 // Ref to the search wrapper so the outside-click handler can scope to it.
