@@ -237,7 +237,21 @@ class TourController extends Controller
                 ? $request->get('sort_by')
                 : 'created_at';
             $sortOrder = $request->get('sort_order') === 'asc' ? 'asc' : 'desc';
-            $query->orderBy($sortBy, $sortOrder);
+
+            if ($light && !$request->filled('sort_by')) {
+                // Public default order = best sellers first, by REAL sales:
+                // paid, non-cancelled bookings; published reviews break ties
+                // (newest tours last of all). The frontend's "Recomendados"
+                // option maps to exactly this order.
+                $query->withCount(['bookings as sales_count' => fn ($q) => $q
+                        ->where('payment_status', 'paid')
+                        ->where('status', '!=', 'cancelled')])
+                    ->orderByDesc('sales_count')
+                    ->orderByDesc('reviews_count')
+                    ->orderByDesc('created_at');
+            } else {
+                $query->orderBy($sortBy, $sortOrder);
+            }
 
             // Counts per status for the admin tabs (respect the search filter
             // but NOT the status filter, so every tab shows its own total).

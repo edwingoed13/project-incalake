@@ -85,7 +85,7 @@ export default {
       all_places: 'Todos los lugares',
       search_place: 'Buscar lugar…',
       sort_by: 'Ordenar',
-      sort_relevance: 'Relevancia',
+      sort_relevance: 'Recomendados',
       sort_price_asc: 'Precio: menor a mayor',
       sort_price_desc: 'Precio: mayor a menor',
       sort_duration: 'Duración: más corta',

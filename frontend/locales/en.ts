@@ -84,7 +84,7 @@ export default {
       all_places: 'All places',
       search_place: 'Search place…',
       sort_by: 'Sort',
-      sort_relevance: 'Relevance',
+      sort_relevance: 'Recommended',
       sort_price_asc: 'Price: low to high',
       sort_price_desc: 'Price: high to low',
       sort_duration: 'Duration: shortest',

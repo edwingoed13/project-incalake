@@ -140,6 +140,11 @@ class Tour extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(CategoryNew::class, 'tour_categories', 'tour_id', 'category_id')
