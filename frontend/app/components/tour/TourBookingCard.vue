@@ -74,7 +74,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 <template>
   <div class="bg-white border border-slate-200 rounded-2xl shadow-md">
     <!-- Price header — dominant, OTA pattern -->
-    <div class="px-4 pt-4 pb-3 border-b border-slate-100">
+    <div class="px-4 py-3 border-b border-slate-100">
       <div class="flex items-baseline gap-1.5 flex-wrap">
         <span
           class="font-black text-slate-900 tabular-nums tracking-tight leading-none"
@@ -87,7 +87,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       </div>
     </div>
 
-    <div class="p-4 space-y-3">
+    <div class="p-4 space-y-2.5">
       <!-- Travelers (group first, before date) -->
       <div>
         <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
@@ -117,44 +117,40 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </p>
       </div>
 
-      <!-- Date -->
-      <div>
-        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-          <Icon name="material-symbols:calendar-today-outline" class="size-4 text-primary" />
-          Fecha
-        </label>
-        <TourCalendar
-          v-model="selectedDate"
-          :min-date="minDate"
-          :offers="tour?.offers_data || []"
-          :blocks="tour?.blocks_data || []"
-          :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-          :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-          :availability-start="tour?.availability_data?.start || ''"
-          :availability-end="tour?.availability_data?.end || ''"
-        />
-        <!-- (The date-specific offer badge was removed here — the discount % now
-             lives on the "Descuento" line of the breakdown, so it isn't redundant.) -->
-        <!-- Policy reassurance at the point of decision -->
-        <p v-if="tour?.free_cancellation" class="mt-2 flex items-center gap-1.5 text-xs text-trust font-semibold">
-          <Icon name="material-symbols:check-circle" class="size-4 shrink-0" />
-          {{ t('booking_cancel_hint') }}
-        </p>
-      </div>
-
-      <!-- Time -->
+      <!-- Date + Time: one labeled row, two fields side by side. As stacked
+           blocks with their own labels this pair cost ~180px of a phone's
+           booking panel; the short placeholders keep the half-width fields
+           readable. -->
       <div>
         <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
           <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
-            <Icon name="material-symbols:schedule-outline" class="size-4 text-primary" />
-            Horario
+            <Icon name="material-symbols:calendar-today-outline" class="size-4 text-primary" />
+            Fecha y horario
           </label>
           <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
             <Icon name="material-symbols:language" class="size-3" />
             {{ tzInfo.code }} ({{ tzInfo.gmt }})
           </span>
         </div>
-        <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />
+        <div class="grid grid-cols-2 gap-2">
+          <TourCalendar
+            v-model="selectedDate"
+            :min-date="minDate"
+            :offers="tour?.offers_data || []"
+            :blocks="tour?.blocks_data || []"
+            :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+            :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+            :availability-start="tour?.availability_data?.start || ''"
+            :availability-end="tour?.availability_data?.end || ''"
+            placeholder="Fecha"
+          />
+          <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Horario" />
+        </div>
+        <!-- Policy reassurance at the point of decision -->
+        <p v-if="tour?.free_cancellation" class="mt-2 flex items-center gap-1.5 text-xs text-trust font-semibold">
+          <Icon name="material-symbols:check-circle" class="size-4 shrink-0" />
+          {{ t('booking_cancel_hint') }}
+        </p>
       </div>
 
       <!-- Total -->

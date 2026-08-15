@@ -264,6 +264,7 @@ export default {
       not_included: 'Qué NO Incluye',
       important_info: 'Información Importante',
       duration_label: 'Duración',
+      hour: 'hora', hours: 'horas', day: 'día', days: 'días',
       date_unavailable: 'Fecha no disponible',
       offers_available: 'Hay ofertas disponibles en algunas fechas',
       dates_restricted: 'Algunas fechas tienen restricciones',

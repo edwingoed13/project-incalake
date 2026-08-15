@@ -6,11 +6,12 @@
       @click="open = !open"
       :aria-expanded="open"
       aria-haspopup="dialog"
-      class="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-left"
+      class="w-full flex items-center bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-primary/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-left"
+      :class="placeholder ? 'gap-2 px-3 py-3.5' : 'gap-3 px-4 py-3.5'"
     >
       <Icon name="material-symbols:calendar-today-outline" class="text-slate-400 text-lg shrink-0" />
-      <span v-if="modelValue" class="text-sm font-semibold text-slate-800">{{ formatSelected }}</span>
-      <span v-else class="text-sm text-slate-400">{{ t('select_date') }}</span>
+      <span v-if="modelValue" class="text-sm font-semibold text-slate-800 truncate">{{ formatSelected }}</span>
+      <span v-else class="text-sm text-slate-400 truncate">{{ placeholder || t('select_date') }}</span>
       <Icon name="material-symbols:expand-more" :class="{ 'rotate-180': open }" class="text-slate-400 text-sm ml-auto shrink-0" />
     </button>
 
@@ -148,6 +149,9 @@ interface Props {
   blocks?: Array<{ startDate: string; endDate: string }>
   activeDays?: number[]
   specialDays?: string[]  // Holidays in "DD-MM" format (e.g. "25-12")
+  /** Trigger text when no date is picked. The default full sentence does not
+      fit when the field shares a row with the time select. */
+  placeholder?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -159,6 +163,7 @@ const props = withDefaults(defineProps<Props>(), {
   blocks: () => [],
   activeDays: () => [0, 1, 2, 3, 4, 5, 6],
   specialDays: () => [],
+  placeholder: '',
 })
 
 const emit = defineEmits<{
@@ -187,7 +192,12 @@ const formatSelected = computed(() => {
   if (!props.modelValue) return ''
   const [y, m, d] = props.modelValue.split('-').map(Number)
   const date = new Date(y, m - 1, d)
-  return cap(date.toLocaleDateString(intlLocale.value, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))
+  // Compact usage (custom placeholder = half-width field): drop the year so
+  // "Jue, 20 ago" fits — the full date is visible in the calendar itself.
+  const opts: Intl.DateTimeFormatOptions = props.placeholder
+    ? { weekday: 'short', day: 'numeric', month: 'short' }
+    : { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }
+  return cap(date.toLocaleDateString(intlLocale.value, opts))
 })
 
 function monthName(month: number, year: number) {

@@ -43,7 +43,7 @@ const selectedLabel = computed(() => {
         class="relative w-full pl-10 pr-9 py-3 bg-slate-50 border border-slate-200 rounded-lg text-left text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary min-h-[48px]"
       >
         <ClockIcon class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" aria-hidden="true" />
-        <span :class="modelValue ? 'text-slate-900' : 'text-slate-400'">
+        <span class="block truncate" :class="modelValue ? 'text-slate-900' : 'text-slate-400'">
           {{ selectedLabel }}
         </span>
         <ChevronDownIcon class="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" aria-hidden="true" />
@@ -54,8 +54,11 @@ const selectedLabel = computed(() => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
+        <!-- w-max + right-0: the trigger can sit in a half-width column now,
+             and hour labels ("6:45 AM - Duración 10h") need their own width —
+             the panel grows leftward into the card instead of squeezing. -->
         <ListboxOptions
-          class="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none border border-slate-200"
+          class="absolute right-0 z-30 mt-1 max-h-60 w-max min-w-full max-w-[min(320px,calc(100vw-2rem))] overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none border border-slate-200"
         >
           <ListboxOption
             v-for="opt in options"

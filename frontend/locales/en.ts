@@ -261,6 +261,7 @@ export default {
       not_included: 'What\'s NOT Included',
       important_info: 'Important Information',
       duration_label: 'Duration',
+      hour: 'hour', hours: 'hours', day: 'day', days: 'days',
       date_unavailable: 'Date unavailable',
       offers_available: 'Offers available on some dates',
       dates_restricted: 'Some dates have restrictions',

@@ -17,7 +17,7 @@ function inc() { if (!props.atMax) model.value++ }
 </script>
 
 <template>
-  <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2 bg-white">
+  <div class="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-1.5 bg-white">
     <div class="leading-tight min-w-0">
       <span class="font-bold text-sm text-slate-800">{{ label }}</span>
       <span v-if="hint" class="block text-xs text-slate-500">{{ hint }}</span>
