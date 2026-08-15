@@ -12,7 +12,7 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center items-center py-20">
+      <div v-if="loading || !hydrated" key="checkout-loading" class="flex justify-center items-center py-20">
         <div class="spinner size-12"></div>
       </div>
 
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Empty Cart State -->
-      <div v-else-if="cartStore.isEmpty" class="bg-white rounded-xl p-12 text-center shadow-lg">
+      <div v-else-if="cartStore.isEmpty" key="checkout-empty" class="bg-white rounded-xl p-12 text-center shadow-lg">
         <Icon name="material-symbols:shopping-cart-outline" style="font-size: 96px;" class="text-slate-300 mb-4 block" />
         <h2 class="text-2xl font-black text-primary-light mb-2">
           {{ t('checkout.empty_cart') }}
@@ -52,7 +52,7 @@
       </div>
 
       <!-- Checkout Content -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div v-else key="checkout-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <!-- Left Column: Checkout Form -->
         <div class="lg:col-span-2">
           <CheckoutForm
@@ -119,9 +119,16 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const processingPayment = ref(false)
 
+// Same hydration guard as the cart page: the store fills from localStorage in
+// onMounted, so the first client frame is always "empty" — without the flag
+// the empty state flashed, and the production build could patch its div in
+// place into the form branch (see cart.vue for the full story).
+const hydrated = ref(false)
+
 // Load cart from localStorage on mount
 onMounted(() => {
   cartStore.loadFromLocalStorage()
+  hydrated.value = true
 
   // Redirect if cart is empty after loading
   if (cartStore.isEmpty) {

@@ -279,7 +279,7 @@ export default {
       terms_accept: 'I accept the',
       terms_link: 'terms and conditions',
       terms_policies: 'and cancellation policies',
-      proceed_checkout: 'Complete purchase',
+      proceed_checkout: 'Continue with your booking',
       secure_payment: 'Secure payment',
       instant_confirmation: 'Instant confirmation',
       edit_booking: 'Edit Booking',

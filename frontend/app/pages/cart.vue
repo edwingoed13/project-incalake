@@ -24,8 +24,18 @@ const uniformTaxPercent = computed<number | null>(() => {
 // Tour details cache (for policies, guide info not in cart)
 const tourDetails = ref<Record<number, any>>({})
 
+// The cart hydrates from localStorage in onMounted, so the very first client
+// frame always sees an EMPTY store. Without this flag the empty-state card
+// flashed before the items appeared — and worse, in the production build Vue
+// patched the empty-state div IN PLACE into the grid branch, keeping the old
+// `p-12 text-center` classes and dropping `lg:grid-cols-3`: the whole cart
+// rendered stacked inside a centered white box. The explicit keys on the
+// branches below force a real element swap instead of that in-place patch.
+const hydrated = ref(false)
+
 onMounted(async () => {
   cartStore.loadFromLocalStorage()
+  hydrated.value = true
   // Fetch full tour details for each cart item (for policies)
   for (const item of cartStore.items) {
     if (!tourDetails.value[item.tourId]) {
@@ -244,8 +254,14 @@ function getImageUrl(path: string) {
         <p class="text-sm text-slate-500">{{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? t('tour') : t('tours') }}</p>
       </div>
 
+      <!-- Hydrating: neutral skeleton — never flash "your cart is empty" at
+           someone whose cart is full. -->
+      <div v-if="!hydrated" key="cart-loading" class="bg-white rounded-2xl p-12 shadow-sm animate-pulse">
+        <div class="h-24 bg-slate-100 rounded-xl"></div>
+      </div>
+
       <!-- Empty -->
-      <div v-if="cartStore.isEmpty" class="bg-white rounded-2xl p-12 text-center shadow-sm">
+      <div v-else-if="cartStore.isEmpty" key="cart-empty" class="bg-white rounded-2xl p-12 text-center shadow-sm">
         <Icon name="material-symbols:shopping-cart-outline" class="text-slate-300 text-6xl mb-4" />
         <h2 class="text-xl font-bold text-slate-800 mb-2">{{ t('your_cart_empty') }}</h2>
         <p class="text-sm text-slate-500 mb-6">{{ t('explore_tours_hint') }}</p>
@@ -255,7 +271,7 @@ function getImageUrl(path: string) {
       </div>
 
       <!-- Cart Content -->
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div v-else key="cart-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Items (2 cols) -->
         <div class="lg:col-span-2 space-y-4">
           <!-- Bulk select toolbar (only with 2+ items) -->
