@@ -135,6 +135,9 @@ class TourController extends Controller
                     'categories',
                     'tags',
                 ]);
+                // Lets the admin list flag "cambios sin publicar" per row
+                // without opening each tour. One EXISTS subquery, no join.
+                $query->withExists('revision');
             }
 
             // Status filtering used to apply ONLY when ?status= was passed, so

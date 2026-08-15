@@ -87,6 +87,12 @@ class TourResource extends JsonResource
             'difficulty' => $this->difficulty,
             'status' => $this->status,
             'active' => $this->active,
+            // Unpublished wizard edits. Present only when the listing asked
+            // for it (withExists), so other callers pay nothing.
+            'has_pending_draft' => $this->when(
+                isset($this->revision_exists),
+                fn () => (bool) $this->revision_exists
+            ),
             'duration_days' => $this->duration_days,
             'duration_hours' => $this->duration_hours,
             'duration_quantity' => $this->duration_quantity,

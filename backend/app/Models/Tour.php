@@ -145,6 +145,12 @@ class Tour extends Model
         return $this->hasMany(Booking::class);
     }
 
+    /** Pending wizard draft, if the tour has unpublished edits. */
+    public function revision(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TourRevision::class);
+    }
+
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(CategoryNew::class, 'tour_categories', 'tour_id', 'category_id')

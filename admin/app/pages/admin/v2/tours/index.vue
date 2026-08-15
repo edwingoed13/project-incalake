@@ -179,6 +179,95 @@ const sortOptions = [
 const perPage = ref<number>(Number(localStorage.getItem('tours:perPage')) || 10)
 const sortKey = ref<string>(localStorage.getItem('tours:sort') || 'created_at:desc')
 
+// --- City / language filters ------------------------------------------------
+// 'all' as the sentinel, not '': Nuxt UI's Select rejects an empty-string
+// option value (it reserves it for "cleared / show placeholder").
+const cityFilter = ref<string>('all')
+const languageFilter = ref<string>('all')
+const cities = ref<Array<{ id: number; name: string; slug: string }>>([])
+
+const cityOptions = computed(() => [
+  { label: 'Todas las ciudades', value: 'all' },
+  ...cities.value.map(c => ({ label: c.name, value: c.slug })),
+])
+
+const languageOptions = computed(() => [
+  { label: 'Todos los idiomas', value: 'all' },
+  ...allLanguages.value.map(l => ({ label: `Con ${l.code.toUpperCase()}`, value: l.code.toUpperCase() })),
+])
+
+const onFilterChange = () => {
+  currentPage.value = 1
+  selectedIds.value = []
+  fetchTours(1, searchQuery.value)
+}
+
+// --- Bulk selection ---------------------------------------------------------
+// Publishing or archiving 30 tours meant 30 round trips through the editor.
+const selectedIds = ref<number[]>([])
+const bulkWorking = ref(false)
+
+const isSelected = (id: number) => selectedIds.value.includes(id)
+const toggleSelect = (id: number) => {
+  const i = selectedIds.value.indexOf(id)
+  if (i >= 0) selectedIds.value.splice(i, 1)
+  else selectedIds.value.push(id)
+}
+const allOnPageSelected = computed(() =>
+  tours.value.length > 0 && tours.value.every(t => selectedIds.value.includes(t.id))
+)
+const toggleSelectAll = () => {
+  selectedIds.value = allOnPageSelected.value ? [] : tours.value.map(t => t.id)
+}
+
+/**
+ * Reuses the per-tour status endpoint instead of adding a bulk one: that
+ * endpoint already purges the public cache on every change, and duplicating
+ * that logic is how a tour ends up taken down but still served.
+ */
+const bulkSetStatus = async (status: 'published' | 'draft' | 'archived') => {
+  if (!selectedIds.value.length || bulkWorking.value) return
+  const labels: Record<string, string> = { published: 'Publicar', draft: 'Pasar a borrador', archived: 'Archivar' }
+  const ids = [...selectedIds.value]
+  const ok = await confirm({
+    title: `${labels[status]} ${ids.length} tour(s)`,
+    description: status === 'published'
+      ? 'Se publicarán y quedarán visibles en la web.'
+      : 'Dejarán de mostrarse en la web pública.',
+    confirmLabel: labels[status],
+  })
+  if (!ok) return
+
+  bulkWorking.value = true
+  let done = 0
+  let failed = 0
+  for (const id of ids) {
+    try {
+      await $fetch(`${API_BASE_URL}/admin/tours/${id}/status`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: { status },
+      })
+      done++
+    } catch { failed++ }
+  }
+  bulkWorking.value = false
+  selectedIds.value = []
+  toast.add({
+    title: failed ? `${done} actualizados, ${failed} con error` : `${done} tour(s) actualizados`,
+    color: failed ? 'warning' : 'success',
+    icon: failed ? 'i-lucide-triangle-alert' : 'i-lucide-check',
+  })
+  fetchTours(currentPage.value, searchQuery.value)
+}
+
+const fetchCities = async () => {
+  try {
+    const res: any = await $fetch(`${API_BASE_URL}/cities`, { headers: authHeaders() })
+    cities.value = (res?.data || []).filter((c: any) => c?.slug)
+  } catch { /* el filtro simplemente queda con "Todas" */ }
+}
+
 const onListPrefsChange = () => {
   try {
     localStorage.setItem('tours:perPage', String(perPage.value))
@@ -201,6 +290,8 @@ const fetchTours = async (page = 1, search = '') => {
       sort_order: sortOrder || 'desc',
     })
     if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
+    if (cityFilter.value !== 'all') params.set('city_slug', cityFilter.value)
+    if (languageFilter.value !== 'all') params.set('language', languageFilter.value)
     // Authenticated: /tours only returns published tours to anonymous callers
     // now, so without the token the admin list would show no drafts at all.
     const response: any = await $fetch(`${API_BASE_URL}/tours?${params}`, { headers: authHeaders() })
@@ -413,6 +504,9 @@ const rowActions = (tour: Tour) => {
 
 onMounted(() => {
   fetchTours()
+  // Both feed the filter dropdowns; neither blocks the list.
+  fetchCities()
+  fetchLanguages()
 })
 </script>
 
@@ -450,6 +544,25 @@ onMounted(() => {
             </p>
           </div>
           <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <!-- Con 290 tours, las 4 pestañas de estado no alcanzan: "los de
+                 Cusco" o "los que no están en inglés" son las preguntas
+                 reales. El API ya soportaba ambos filtros. -->
+            <USelect
+              v-model="cityFilter"
+              :items="cityOptions"
+              size="lg"
+              class="w-44"
+              icon="i-lucide-map-pin"
+              @update:model-value="onFilterChange"
+            />
+            <USelect
+              v-model="languageFilter"
+              :items="languageOptions"
+              size="lg"
+              class="w-40"
+              icon="i-lucide-languages"
+              @update:model-value="onFilterChange"
+            />
             <!-- 290 tours de 10 en 10 eran 29 páginas de clics: orden y tamaño
                  de página, recordados por navegador. -->
             <USelect
@@ -512,6 +625,40 @@ onMounted(() => {
           </button>
         </div>
 
+        <!-- Bulk actions: appears only with a selection, so the list stays
+             calm when nobody is doing batch work. -->
+        <div
+          v-if="selectedIds.length"
+          class="flex items-center justify-between gap-3 flex-wrap rounded-xl border border-primary/30 bg-primary/5 px-3 py-2"
+        >
+          <span class="text-xs font-bold text-primary">
+            {{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}
+          </span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <UButton size="xs" color="success" variant="soft" icon="i-lucide-globe" :loading="bulkWorking" @click="bulkSetStatus('published')">
+              Publicar
+            </UButton>
+            <UButton size="xs" color="neutral" variant="soft" icon="i-lucide-file-text" :loading="bulkWorking" @click="bulkSetStatus('draft')">
+              Pasar a borrador
+            </UButton>
+            <UButton size="xs" color="warning" variant="soft" icon="i-lucide-archive" :loading="bulkWorking" @click="bulkSetStatus('archived')">
+              Archivar
+            </UButton>
+            <UButton size="xs" color="neutral" variant="ghost" @click="selectedIds = []">
+              Cancelar
+            </UButton>
+          </div>
+        </div>
+
+        <!-- Select-all for the current page -->
+        <label
+          v-if="tours.length"
+          class="flex items-center gap-2 px-1 text-xs font-semibold text-muted cursor-pointer select-none"
+        >
+          <UCheckbox :model-value="allOnPageSelected" @update:model-value="toggleSelectAll" />
+          Seleccionar los {{ tours.length }} de esta página
+        </label>
+
         <!-- Tours list -->
         <UCard :ui="{ body: 'p-0' }">
           <!-- Loading state -->
@@ -544,7 +691,6 @@ onMounted(() => {
             </UButton>
           </div>
 
-          <!-- Tour rows -->
           <ul v-else class="divide-y divide-default">
             <li v-for="tour in tours" :key="tour.id">
               <!-- Tour main row. Two groups so phones get TWO lines (title at
@@ -556,6 +702,13 @@ onMounted(() => {
                 @click="toggleExpand(tour.id)"
               >
                 <div class="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
+                  <!-- @click.stop so ticking a row doesn't also expand it -->
+                  <UCheckbox
+                    :model-value="isSelected(tour.id)"
+                    class="shrink-0"
+                    @click.stop
+                    @update:model-value="toggleSelect(tour.id)"
+                  />
                   <UAvatar
                     v-if="tour.thumbnail"
                     :src="tour.thumbnail"
@@ -582,6 +735,18 @@ onMounted(() => {
                         class="shrink-0"
                       >
                         Sin contenido
+                      </UBadge>
+                      <!-- "Publiqué y no se ve" suele ser esto: el borrador
+                           quedó sin publicar. Visible sin abrir el tour. -->
+                      <UBadge
+                        v-if="(tour as any).has_pending_draft"
+                        color="info"
+                        variant="subtle"
+                        size="xs"
+                        icon="i-lucide-file-clock"
+                        class="shrink-0"
+                      >
+                        Sin publicar
                       </UBadge>
                     </div>
                     <!-- The row had ~500px of dead space on a wide screen while
