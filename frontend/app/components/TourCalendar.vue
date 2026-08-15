@@ -36,8 +36,8 @@
             <Icon name="material-symbols:chevron-left" class="text-xl" />
           </button>
           <div class="flex gap-12">
-            <h4 class="text-base font-bold text-slate-800 capitalize">{{ monthName(currentMonth, currentYear) }}</h4>
-            <h4 class="text-base font-bold text-slate-800 capitalize hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
+            <h4 class="text-base font-bold text-slate-800">{{ monthName(currentMonth, currentYear) }}</h4>
+            <h4 class="text-base font-bold text-slate-800 hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
           </div>
           <button @click="nextMonthNav" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <Icon name="material-symbols:chevron-right" class="text-xl" />
@@ -75,7 +75,7 @@
           <!-- Month 2 -->
           <div class="flex-1 p-4">
             <div class="sm:hidden flex items-center justify-center py-2">
-              <h4 class="text-base font-bold text-slate-800 capitalize">{{ monthName(nextMonth, nextYear) }}</h4>
+              <h4 class="text-base font-bold text-slate-800">{{ monthName(nextMonth, nextYear) }}</h4>
             </div>
             <div class="grid grid-cols-7 gap-0 mb-2">
               <span v-for="d in dayHeaders" :key="d" class="text-xs font-bold text-slate-400 text-center py-1">{{ d }}</span>

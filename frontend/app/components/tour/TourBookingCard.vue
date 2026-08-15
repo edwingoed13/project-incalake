@@ -151,7 +151,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           </label>
           <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
             <Icon name="material-symbols:language" class="size-3" />
-            {{ tzInfo.code }} {{ tzInfo.gmt }}
+            {{ tzInfo.code }} ({{ tzInfo.gmt }})
           </span>
         </div>
         <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Selecciona horario" />

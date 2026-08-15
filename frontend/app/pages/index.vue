@@ -568,12 +568,16 @@ const { data: reviewsData } = useAsyncData(
   },
   { lazy: true, default: () => [], getCachedData }
 )
-// Imported reviews sometimes carry platform usernames like
-// "Roving41150014391" — a long digit tail reads as a fake review. Keep the
-// human part; if the name is ONLY digits, sign it as "Viajero".
+// Imported reviews carry scraper artifacts: platform usernames with a long
+// digit tail ("Roving41150014391") and mid-name ellipses ("Maria del
+// Rosar... F"). Both read as fake reviews — keep the human part; if nothing
+// survives, sign it as "Viajero".
 function cleanReviewerName(raw: string): string {
-  const name = String(raw || '').replace(/\d{5,}$/, '').trim()
-  return name || t('traveler_word')
+  return String(raw || '')
+    .replace(/\.{3,}|…/g, ' ')
+    .replace(/\d{5,}$/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim() || t('traveler_word')
 }
 
 const featuredReviews = computed(() =>

@@ -372,14 +372,18 @@
       <section class="mt-16 md:mt-20" v-if="relatedTours.length > 0">
         <h2 class="section-title mb-5 md:mb-8">{{ t('you_might_like') }}</h2>
         <div class="flex md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+          <!-- Same card language as the listing and the home: white card,
+               image guard, real stars, blue price pinned to the bottom. -->
           <NuxtLink
             v-for="relatedTour in relatedTours.slice(0, 4)"
             :key="relatedTour.id"
             :to="`/${locale}/${relatedTour.city?.slug || 'puno'}/${relatedTour.slug}`"
-            class="group cursor-pointer shrink-0 w-[75%] sm:w-[48%] md:w-auto snap-start"
+            class="group flex flex-col shrink-0 w-[75%] sm:w-[48%] md:w-auto snap-start bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
-            <div class="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative bg-slate-100">
+            <div class="aspect-[4/3] shrink-0 overflow-hidden relative bg-slate-100">
               <NuxtImg
+                v-if="relatedTour.featured_image"
+                v-skeleton
                 :src="getImageUrl(relatedTour.featured_image)"
                 :alt="relatedTour.title"
                 format="webp"
@@ -390,17 +394,25 @@
                 decoding="async"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <Icon name="material-symbols:image-outline" class="text-slate-300 text-5xl" />
+              </div>
               <TourWishlistHeartButton :tour="relatedTour" size="sm" class="absolute top-3 right-3" />
             </div>
-            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{{ cityLabel(relatedTour) }}</p>
-            <h4 class="font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-2">{{ relatedTour.title }}</h4>
-            <!-- Rating shown only when there are real reviews (no fabricated 4.5) -->
-            <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
-              <StarSolidIcon class="size-3 text-yellow-500" aria-hidden="true" />
-              <span class="text-sm font-bold">{{ Number(relatedTour.rating).toFixed(1) }}</span>
-              <span class="text-xs text-slate-500">({{ relatedTour.reviews_count }})</span>
+            <div class="p-4 flex-1 flex flex-col">
+              <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">{{ cityLabel(relatedTour) }}</p>
+              <h4 class="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors leading-snug">{{ relatedTour.title }}</h4>
+              <!-- Rating shown only when there are real reviews (no fabricated 4.5) -->
+              <div v-if="relatedTour.reviews_count > 0 && relatedTour.rating" class="flex items-center gap-1 mt-1">
+                <Icon name="material-symbols:star" class="text-rating text-sm" />
+                <span class="text-xs font-bold text-slate-700">{{ Number(relatedTour.rating).toFixed(1) }}</span>
+                <span class="text-xs text-slate-400">({{ relatedTour.reviews_count }})</span>
+              </div>
+              <div class="mt-auto pt-3 border-t border-slate-100">
+                <span class="text-[11px] text-slate-500 font-medium block">{{ t('from') }}</span>
+                <span class="text-lg font-black text-primary whitespace-nowrap">{{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</span>
+              </div>
             </div>
-            <p class="mt-2 font-black text-slate-900">{{ t('from') }} {{ currencyStore.formatConverted(relatedTour.min_price || 0) }}</p>
           </NuxtLink>
         </div>
       </section>
@@ -684,17 +696,24 @@ const customSections = computed(() => {
   return Array.isArray(sections) ? sections.filter((s: any) => (s.title || '').trim() || (s.content || '').trim()) : []
 })
 
-// Fetch related tours (lazy - doesn't block navigation)
+// Fetch related tours (lazy - doesn't block navigation).
+// This used to be `/tours?limit=4`: `limit` is not even an API parameter, the
+// payload had no rating fields (so the stars markup below never rendered),
+// and no city/language filter — "you may also like" was just "the 4 newest
+// tours", including imageless ones. light=1 brings the same card fields the
+// listing uses; we overfetch 8 and pick the best 4 client-side.
 const { data: relatedResponse } = await useAsyncData(
-  `related-tours-${slug}`,
-  () => api('/tours?limit=4'),
+  `related-tours-${langCode.value}-${slug}`,
+  () => api(`/tours?light=1&per_page=8&language=${langCode.value}&city_slug=${citySlug}`).catch(() => ({ data: [] })),
   { lazy: true, default: () => ({ data: [] }), getCachedData }
 )
 
 const relatedTours = computed(() => {
-  const tours = relatedResponse.value?.data || []
-  // Filter out current tour
-  return tours.filter((t: any) => t.slug !== slug)
+  const tours = (relatedResponse.value?.data || []).filter((t: any) => t.slug !== slug)
+  // Same merchandising rule as the home showcase: photo + reviews first.
+  const score = (t: any) =>
+    (t.featured_image ? 2 : 0) + (t.reviews_count > 0 && t.rating ? 1 : 0)
+  return [...tours].sort((a, b) => score(b) - score(a))
 })
 
 // Reviews for this tour — cached so returning to a tour doesn't refetch them.
@@ -703,7 +722,20 @@ const { data: reviewsData } = await useAsyncData(
   () => tour.value?.id ? api(`/reviews?tour_id=${tour.value.id}&per_page=20`) : Promise.resolve({ data: [] }),
   { lazy: true, default: () => ({ data: [] }), getCachedData }
 )
-const tourReviews = computed<any[]>(() => (reviewsData.value as any)?.data || [])
+// Imported reviewer names arrive with scraper artifacts — "Maria del
+// Rosar... F" (mid-name ellipsis) or "Roving41150014391" (digit tail). Both
+// read as fake reviews; keep the human part.
+function cleanReviewerName(raw: string): string {
+  return String(raw || '')
+    .replace(/\.{3,}|…/g, ' ')
+    .replace(/\d{5,}$/, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim() || t('traveler_word')
+}
+
+const tourReviews = computed<any[]>(() =>
+  ((reviewsData.value as any)?.data || []).map((r: any) => ({ ...r, name: cleanReviewerName(r.name) }))
+)
 const showAllReviews = ref(false)
 
 const avgRating = computed(() => {
@@ -986,8 +1018,10 @@ const faqItems = computed<Array<{ q: string; a: string }>>(() =>
 
 const tzInfo = computed(() => {
   const tz = tour.value?.timezone
-  if (tz === 'America/Lima') return { code: 'HP', gmt: 'GMT-5', name: t('peruvian_time') }
-  if (tz === 'America/La_Paz') return { code: 'HB', gmt: 'GMT-4', name: t('bolivian_time') }
+  // The badge used to read "HP GMT-5" — an internal code nobody outside the
+  // office recognizes. The country name is what a traveller understands.
+  if (tz === 'America/Lima') return { code: 'Perú', gmt: 'GMT-5', name: t('peruvian_time') }
+  if (tz === 'America/La_Paz') return { code: 'Bolivia', gmt: 'GMT-4', name: t('bolivian_time') }
   return null
 })
 
