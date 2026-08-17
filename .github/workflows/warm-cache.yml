@@ -26,6 +26,9 @@ concurrency:
 jobs:
   warm:
     runs-on: ubuntu-latest
+    # The hourly pass walks ~200 pages at one every 4s; the default 6h ceiling
+    # is plenty, but a stuck curl should not hold a runner all day.
+    timeout-minutes: 30
     steps:
       - name: Warm the pages travellers actually land on
         env:
@@ -49,10 +52,21 @@ jobs:
             done
           fi
 
-          # The API already ranks tours by real paid sales, so "most likely to
-          # be visited next" is simply the top of the default listing.
-          top_es=$(curl -s "$API/tours?light=1&per_page=20&language=ES" --max-time 90 | jq -r '.data[]? | select(.slug) | "/es/" + (.city.slug // "puno") + "/" + .slug' || true)
-          top_en=$(curl -s "$API/tours?light=1&per_page=10&language=EN" --max-time 90 | jq -r '.data[]? | select(.slug) | "/en/" + (.city.slug // "puno") + "/" + .slug' || true)
+          # After a push everything is cold and the sooner the top pages are
+          # back the better, so warm the best sellers only (~2 min). The hourly
+          # run has no such hurry and covers EVERY Spanish tour page, because
+          # "the tour nobody warmed" is exactly the one a traveller opens from
+          # a Google result — measured cold at ~1.9s versus 0.3s warm.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            es_count=20
+          else
+            es_count=200
+          fi
+
+          # The API already ranks tours by real paid sales, so the first ones
+          # warmed are also the most likely to be opened next.
+          top_es=$(curl -s "$API/tours?light=1&per_page=$es_count&language=ES" --max-time 90 | jq -r '.data[]? | select(.slug) | "/es/" + (.city.slug // "puno") + "/" + .slug' || true)
+          top_en=$(curl -s "$API/tours?light=1&per_page=20&language=EN" --max-time 90 | jq -r '.data[]? | select(.slug) | "/en/" + (.city.slug // "puno") + "/" + .slug' || true)
 
           # Landing pages in every locale, then the best sellers.
           urls="/es /en /pt /fr /de /it /es/tours /en/tours /pt/tours /fr/tours /de/tours /it/tours $top_es $top_en"
