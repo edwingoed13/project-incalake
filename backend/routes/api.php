@@ -98,8 +98,17 @@ Route::post('/newsletter', [NewsletterController::class, 'store'])
 use App\Http\Controllers\Api\PageContentController;
 Route::get('/pages/{page}', [PageContentController::class, 'show'])->name('api.pages.show');
 
-// Public routes - Tours (read-only) - Rate Limited
-Route::middleware(['throttle:60,1'])->prefix('tours')->group(function () {
+// Public routes - Tours (read-only).
+//
+// 300/min, raised from 60. These are cached read-only reads, and 60 was low
+// enough to punish legitimate traffic: rendering ONE tour page costs several
+// calls (detail, reviews, related, cities), so the deploy-time prerender of
+// 175 pages and the hourly cache warmer both tripped it and silently gave up
+// — the prerender produced 29 of 175 Spanish pages before this. A visitor
+// clicking quickly through the listing could hit it too, and the tour page
+// then shows its "no pudimos cargar" state. 300 still stops scraping while
+// leaving real use, and our own infrastructure, room to breathe.
+Route::middleware(['throttle:300,1'])->prefix('tours')->group(function () {
     Route::get('/', [TourController::class, 'index'])->name('api.tours.index');
     Route::get('/slug/{slug}', [TourController::class, 'showBySlug'])->name('api.tours.show-by-slug');
 
