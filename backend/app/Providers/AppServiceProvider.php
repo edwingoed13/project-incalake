@@ -10,6 +10,7 @@ use App\Models\TourTranslation;
 use App\Models\TourPrice;
 use App\Models\TourMediaGallery;
 use App\Services\CacheService;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -60,6 +61,25 @@ class AppServiceProvider extends ServiceProvider
         foreach ([City::class, Tag::class, \App\Models\CategoryNew::class, \App\Models\Review::class, \App\Models\PageContent::class] as $model) {
             $model::saved($bumpSupport);
             $model::deleted($bumpSupport);
+        }
+
+        // Bumping the version above only clears OUR cache — the public pages
+        // are also cached by Vercel, and publishing a tour is not the only
+        // thing that changes them: a review moves a rating on the cards, home
+        // copy is edited in the admin, a city gets renamed. Those had no purge
+        // at all, which only showed up as "a few minutes late" while the ISR
+        // window was short. It is an hour now, so they get purged properly.
+        $purgeShared = static function () {
+            try {
+                app(\App\Services\FrontendRevalidator::class)->revalidateSharedSurfaces();
+            } catch (\Throwable $e) {
+                // Never let a cache purge break a save.
+                Log::warning('Shared-surface revalidation failed', ['error' => $e->getMessage()]);
+            }
+        };
+        foreach ([City::class, \App\Models\Review::class, \App\Models\PageContent::class] as $model) {
+            $model::saved($purgeShared);
+            $model::deleted($purgeShared);
         }
     }
 }

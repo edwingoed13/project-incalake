@@ -36,8 +36,46 @@ class FrontendRevalidator
             return;
         }
 
-        $urls = $this->urlsFor($tour);
-        if (empty($urls)) {
+        $this->purge($this->urlsFor($tour), ['tour_id' => $tour->id]);
+    }
+
+    /**
+     * Purge the surfaces that belong to no single tour: every locale's home and
+     * tour listing.
+     *
+     * Needed because things OTHER than publishing a tour change what those
+     * pages show — a review that moves a rating, home copy edited in the admin,
+     * a city renamed. Publishing purges through revalidateTour(); these had
+     * nothing, and with the ISR window now at an hour they would have sat
+     * stale for up to that long instead of the old few minutes.
+     */
+    public function revalidateSharedSurfaces(): void
+    {
+        $token = config('services.frontend.revalidate_token');
+        $base = rtrim((string) config('services.frontend.url'), '/');
+        if (empty($token) || $base === '') {
+            return;
+        }
+
+        $urls = [];
+        foreach (['es', 'en', 'pt', 'fr', 'de', 'it'] as $locale) {
+            $urls[] = "{$base}/{$locale}";
+            $urls[] = "{$base}/{$locale}/tours";
+        }
+
+        $this->purge($urls, ['scope' => 'shared-surfaces']);
+    }
+
+    /**
+     * Fire the revalidation GETs. Best-effort: a save must never fail because
+     * the public site was slow to answer.
+     *
+     * @param string[] $urls
+     */
+    private function purge(array $urls, array $logContext = []): void
+    {
+        $token = config('services.frontend.revalidate_token');
+        if (empty($token) || empty($urls)) {
             return;
         }
 
@@ -60,16 +98,10 @@ class FrontendRevalidator
             }
 
             if ($failed) {
-                Log::warning('ISR revalidation failed for some tour URLs', [
-                    'tour_id' => $tour->id,
-                    'failed' => $failed,
-                ]);
+                Log::warning('ISR revalidation failed for some URLs', $logContext + ['failed' => $failed]);
             }
         } catch (\Throwable $e) {
-            Log::warning('ISR revalidation threw', [
-                'tour_id' => $tour->id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::warning('ISR revalidation threw', $logContext + ['error' => $e->getMessage()]);
         }
     }
 
