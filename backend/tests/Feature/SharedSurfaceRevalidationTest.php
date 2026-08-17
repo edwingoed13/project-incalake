@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\City;
+use App\Models\Language;
 use App\Models\PageContent;
 use App\Models\Review;
 use App\Models\Tour;
@@ -61,9 +62,12 @@ class SharedSurfaceRevalidationTest extends TestCase
 
     public function test_editing_home_content_purges_the_homes(): void
     {
+        // The column is a real FK, so the language has to exist.
+        $language = Language::factory()->create(['code' => 'ES']);
+
         PageContent::create([
             'page' => 'home',
-            'language_id' => 1,
+            'language_id' => $language->id,
             'content' => ['trust_signals' => []],
             'published' => true,
         ]);
