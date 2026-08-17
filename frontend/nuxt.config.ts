@@ -243,8 +243,83 @@ export default defineNuxtConfig({
     // Pre-render páginas estáticas para SEO
     prerender: {
       crawlLinks: false,
+      // Filled by the nitro:config hook below with every public page. A tour
+      // that fails to prerender (API hiccup mid-build) must not fail the
+      // deploy — it just falls back to being generated on first request.
+      failOnError: false,
       routes: []
     }
+  },
+
+  hooks: {
+    /**
+     * Build every public page into static HTML at deploy time.
+     *
+     * Without this, a page only exists once someone asks for it, and Vercel
+     * caches per EDGE REGION — so the first visitor in each region waits
+     * 1.3–2.5s while it is generated, and a purge only refreshes the region
+     * that receives it. Warming from one place cannot fix that: there is
+     * nothing to copy until a region generates its own.
+     *
+     * Prerendered pages are uploaded as static files and served from Vercel's
+     * global CDN, so page one exists everywhere the moment the deploy
+     * finishes — Lima, Madrid or Sydney, first visitor included. The ISR
+     * window on top keeps them fresh.
+     */
+    async 'nitro:config'(nitroConfig) {
+      // Only for the real deploy: `nuxt dev` would pay this on every restart.
+      if (nitroConfig.dev) return
+
+      const api = process.env.NUXT_PUBLIC_API_BASE || ''
+      const locales = ['es', 'en', 'pt', 'fr', 'de', 'it']
+      const routes = new Set<string>(['/'])
+
+      for (const l of locales) {
+        routes.add(`/${l}`)
+        routes.add(`/${l}/tours`)
+        routes.add(`/${l}/about`)
+        routes.add(`/${l}/contact`)
+      }
+
+      if (!api) {
+        console.warn('[prerender] NUXT_PUBLIC_API_BASE unset — only static pages will be prerendered')
+        nitroConfig.prerender!.routes = [...routes]
+        return
+      }
+
+      // How many tour pages per locale. Deliberately NOT all 175: prerendering
+      // ~200 pages ran Node out of heap and aborted the build (exit 134), and
+      // a build that dies is a site that cannot be updated — a far worse
+      // problem than a slow first load. These counts land around 60 pages,
+      // the size that built cleanly. The listing is ordered by real sales, so
+      // the ones baked in are the ones travellers open most; the rest stay on
+      // ISR and are kept warm by the hourly workflow.
+      const perLocale: Record<string, number> = { es: 30, en: 10, pt: 5, fr: 5, de: 5, it: 5 }
+
+      // Ask per locale: the listing only returns a tour in a language it has
+      // been translated into, so this yields exactly the URLs that resolve —
+      // no 404s baked into the build.
+      for (const l of locales) {
+        try {
+          const res = await fetch(
+            `${api}/tours?light=1&per_page=${perLocale[l] ?? 5}&language=${l.toUpperCase()}`,
+            { signal: AbortSignal.timeout(60_000) }
+          )
+          if (!res.ok) continue
+          const body: any = await res.json()
+          for (const tour of body?.data ?? []) {
+            const city = tour?.city?.slug || 'puno'
+            if (tour?.slug) routes.add(`/${l}/${city}/${tour.slug}`)
+          }
+        } catch (e: any) {
+          // A locale that fails simply keeps being rendered on demand.
+          console.warn(`[prerender] skipping ${l}: ${e?.message || e}`)
+        }
+      }
+
+      console.log(`[prerender] ${routes.size} public pages will be built as static HTML`)
+      nitroConfig.prerender!.routes = [...routes]
+    },
   },
 
   // SSR activado para SEO (IPC fix applied via non-blocking data fetching)
