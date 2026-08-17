@@ -1,0 +1,85 @@
+name: Warm public cache
+
+# Vercel caches each rendered page per edge region, and EVERY deploy throws
+# that cache away. The next visitor to each page then pays for regenerating
+# it: measured on production, a cold tour page answers in 1.3–2.5s versus
+# 0.4s once warm — and a sample of 10 tour pages found 10 cold. That first
+# visitor is a real traveller, so this job volunteers to be first instead.
+#
+# Two triggers, same work:
+#  - after a push to master, once Vercel has served the new build (a deploy is
+#    exactly when everything is cold);
+#  - hourly, matching the 1h ISR window, so a page nobody visited in the last
+#    hour is warm before someone does.
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  # A push during an hourly run should not double-warm.
+  group: warm-cache
+  cancel-in-progress: false
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warm the pages travellers actually land on
+        env:
+          SITE: https://incalake-frontend.vercel.app
+          API: https://api.incalake.com/api
+        run: |
+          set -uo pipefail
+
+          # On a push, wait for Vercel to serve the NEW build before warming —
+          # warming the old one just fills a cache the deploy will discard.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Waiting for the new Vercel build to go live..."
+            before=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1)
+            for i in $(seq 1 40); do
+              sleep 30
+              now=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1)
+              if [ -n "$now" ] && [ "$now" != "$before" ]; then
+                echo "New build live after $((i * 30))s"
+                break
+              fi
+            done
+          fi
+
+          # The API already ranks tours by real paid sales, so "most likely to
+          # be visited next" is simply the top of the default listing.
+          top_es=$(curl -s "$API/tours?light=1&per_page=20&language=ES" --max-time 90 | jq -r '.data[]? | select(.slug) | "/es/" + (.city.slug // "puno") + "/" + .slug' || true)
+          top_en=$(curl -s "$API/tours?light=1&per_page=10&language=EN" --max-time 90 | jq -r '.data[]? | select(.slug) | "/en/" + (.city.slug // "puno") + "/" + .slug' || true)
+
+          # Landing pages in every locale, then the best sellers.
+          urls="/es /en /pt /fr /de /it /es/tours /en/tours /pt/tours /fr/tours /de/tours /it/tours $top_es $top_en"
+
+          # Success is judged by the HTTP status — the request itself is what
+          # warms the page. x-vercel-cache is read only for the report, and it
+          # is occasionally absent mid-regeneration, so it must not decide
+          # whether a page counted as warmed.
+          ok=0; failed=0; was_cold=0; was_warm=0
+          for u in $urls; do
+            [ -z "$u" ] && continue
+            code=$(curl -s -o /dev/null -D /tmp/h.txt -w '%{http_code}' "$SITE$u" --max-time 90 || echo 000)
+            state=$(grep -i '^x-vercel-cache' /tmp/h.txt 2>/dev/null | tr -d '\r' | awk '{print $2}')
+            if [ "$code" = "200" ]; then
+              ok=$((ok+1))
+              if [ "$state" = "HIT" ]; then was_warm=$((was_warm+1)); else was_cold=$((was_cold+1)); fi
+            else
+              failed=$((failed+1))
+              echo "  !! $u -> HTTP $code"
+            fi
+          done
+
+          echo "-----------------------------------------"
+          echo "Pages requested OK: $ok  (were cold: $was_cold, already warm: $was_warm)"
+          echo "Failed:             $failed"
+          echo "-----------------------------------------"
+
+          # Never fail the workflow: a cold cache is a slow page, not an
+          # outage, and a red X here would cry wolf on every deploy.
+          exit 0

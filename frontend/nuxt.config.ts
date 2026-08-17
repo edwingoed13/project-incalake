@@ -270,22 +270,32 @@ export default defineNuxtConfig({
     '/**/saved': { ssr: false, robots: false, isr: false },
 
     // ISR — páginas públicas con cache (revalida en background). Prod-only.
-    '/': isr(900),
-    '/es': isr(900),
-    '/en': isr(900),
-    '/pt': isr(900),
-    '/fr': isr(900),
-    '/de': isr(900),
-    '/it': isr(900),
+    //
+    // Windows are ONE HOUR, not minutes, because freshness no longer depends
+    // on them: publishing a tour purges its detail page, the listing AND every
+    // locale's home on demand (FrontendRevalidator), so an edit is live in
+    // seconds regardless. Short windows bought nothing and cost a
+    // regeneration every few minutes — measured on production, 10 of 10 tour
+    // pages sampled were cold (1.3–2.5s) versus 0.4s when cached.
+    // What the window still covers is the slow drift nobody purges for:
+    // new reviews changing a rating, a price edited through another path.
+    // An hour is short enough for those and long enough to stay warm.
+    '/': isr(3600),
+    '/es': isr(3600),
+    '/en': isr(3600),
+    '/pt': isr(3600),
+    '/fr': isr(3600),
+    '/de': isr(3600),
+    '/it': isr(3600),
     // Tour listing
-    '/**/tours': isr(300),
-    // Tour detail /{locale}/{city}/{slug} — was pure SSR (no cache) on every
-    // request. ISR 5 min, plus an on-demand purge when the tour is published.
-    // The more-specific SPA rules above (cart/payment/booking-confirmation)
-    // win over this 3-segment wildcard.
-    '/*/*/*': isr(300),
-    '/**/about': isr(3600),
-    '/**/contact': isr(3600),
+    '/**/tours': isr(3600),
+    // Tour detail /{locale}/{city}/{slug}. The more-specific SPA rules above
+    // (cart/payment/booking-confirmation) win over this 3-segment wildcard.
+    '/*/*/*': isr(3600),
+    // Static copy: nothing here changes without a deploy, and a deploy clears
+    // the cache anyway.
+    '/**/about': isr(86400),
+    '/**/contact': isr(86400),
 
     // API pass-through, sin caché
     '/api/**': { headers: { 'cache-control': 'no-cache' } }
