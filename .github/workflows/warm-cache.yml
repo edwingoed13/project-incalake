@@ -61,10 +61,28 @@ jobs:
           # warms the page. x-vercel-cache is read only for the report, and it
           # is occasionally absent mid-regeneration, so it must not decide
           # whether a page counted as warmed.
+          # Pace: /api/tours is throttled at 60 requests/minute and rendering
+          # ONE page costs several API calls (tour, reviews, related, cities).
+          # The first version fired as fast as it could and tripped that limit
+          # on itself — 12 of 42 pages came back 503, the tour page's own
+          # "API unavailable" response. Vercel refuses to cache 5xx, so no
+          # error page was ever served to a traveller, but those pages simply
+          # did not get warmed. One page every 4s keeps the whole job under
+          # the limit and still finishes in ~3 minutes.
+          warm_one() {
+            curl -s -o /dev/null -D /tmp/h.txt -w '%{http_code}' "$SITE$1" --max-time 90 || echo 000
+          }
+
           ok=0; failed=0; was_cold=0; was_warm=0
           for u in $urls; do
             [ -z "$u" ] && continue
-            code=$(curl -s -o /dev/null -D /tmp/h.txt -w '%{http_code}' "$SITE$u" --max-time 90 || echo 000)
+            code=$(warm_one "$u")
+            # A 5xx here is almost always the throttle catching up with us;
+            # back off once and give the page a second chance.
+            if [ "$code" != "200" ]; then
+              sleep 15
+              code=$(warm_one "$u")
+            fi
             state=$(grep -i '^x-vercel-cache' /tmp/h.txt 2>/dev/null | tr -d '\r' | awk '{print $2}')
             if [ "$code" = "200" ]; then
               ok=$((ok+1))
@@ -73,6 +91,7 @@ jobs:
               failed=$((failed+1))
               echo "  !! $u -> HTTP $code"
             fi
+            sleep 4
           done
 
           echo "-----------------------------------------"
