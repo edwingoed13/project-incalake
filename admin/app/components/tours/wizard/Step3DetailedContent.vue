@@ -42,7 +42,18 @@
             class="w-full"
           />
         </UFormField>
-        <UFormField v-if="seoData" label="Descripción corta" hint="Resumen que se muestra en las tarjetas del catálogo del sitio">
+        <UFormField v-if="seoData" label="Descripción corta">
+          <!-- The old hint claimed "se muestra en las tarjetas del catálogo",
+               which the frontend does not do on the default grid view. The
+               hover preview shows the three surfaces that really use it. -->
+          <template #hint>
+            <ToursWizardFieldUsagePreview
+              :text="seoData.shortDescription"
+              :title="seoData.title"
+              :city-slug="store.basicInfo?.citySlug"
+              :slug="seoData.slug"
+            />
+          </template>
           <UTextarea
             v-model="seoData.shortDescription"
             :rows="3"
