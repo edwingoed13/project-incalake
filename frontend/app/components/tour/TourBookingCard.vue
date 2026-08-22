@@ -162,16 +162,9 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
            booking panel; the short placeholders keep the half-width fields
            readable. -->
       <div>
-        <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1">
-          <label class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
-            <Icon name="material-symbols:calendar-today-outline" class="size-4 text-primary" />
-            Fecha y horario
-          </label>
-          <span v-if="tzInfo" class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500" :title="`${tzInfo.name} (${tzInfo.gmt})`">
-            <Icon name="material-symbols:language" class="size-3" />
-            {{ tzInfo.code }} ({{ tzInfo.gmt }})
-          </span>
-        </div>
+        <!-- No "Fecha y horario" label: a month grid announces itself, and the
+             row cost height the calendar wanted. The timezone qualifies the
+             TIME, not the date, so it now travels with the time select. -->
         <!-- The month sits open in the panel. Picking a date is the main job
              of this widget, and a click to reveal the calendar was a step in
              the way of it. -->
@@ -188,13 +181,22 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         />
         <!-- Times only once there is a date. An empty time select next to an
              empty date asks two questions at once and answers neither. -->
-        <TourTimeSelect
-          v-if="selectedDate"
-          v-model="selectedTime"
-          :options="availableTimes"
-          placeholder="Horario"
-          class="mt-2"
-        />
+        <div v-if="selectedDate" class="mt-2 flex items-center gap-2">
+          <TourTimeSelect
+            v-model="selectedTime"
+            :options="availableTimes"
+            placeholder="Horario"
+            class="flex-1"
+          />
+          <span
+            v-if="tzInfo"
+            class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 shrink-0"
+            :title="`${tzInfo.name} (${tzInfo.gmt})`"
+          >
+            <Icon name="material-symbols:language" class="size-3" />
+            {{ tzInfo.code }} ({{ tzInfo.gmt }})
+          </span>
+        </div>
         <!-- The free-cancellation promise lives in the trust card right below
              this one; saying it twice cost a row of the calendar. -->
       </div>
@@ -267,20 +269,28 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </p>
       </template>
       <template v-else>
-        <button
-          @click="$emit('book')"
-          class="btn-primary btn-lg w-full hover:shadow-xl hover:shadow-primary/30"
-        >
-          Reservar ahora
-          <Icon name="material-symbols:arrow-forward" class="size-5" />
-        </button>
-        <button
-          @click="$emit('add-to-cart')"
-          class="btn-outline-primary w-full mt-2"
-        >
-          <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
-          Agregar al carrito
-        </button>
+        <!-- One row: the cart is a secondary action and does not need to match
+             the width of the primary one. It keeps a real button box and its
+             full name in the tooltip and the aria-label, because a bare icon
+             is only obvious to people who already know what it does — and the
+             cart is how someone books two tours in one go. -->
+        <div class="flex items-stretch gap-2">
+          <button
+            @click="$emit('book')"
+            class="btn-primary btn-lg flex-1 hover:shadow-xl hover:shadow-primary/30"
+          >
+            Reservar ahora
+            <Icon name="material-symbols:arrow-forward" class="size-5" />
+          </button>
+          <button
+            @click="$emit('add-to-cart')"
+            class="btn-outline-primary shrink-0 !px-0 w-14"
+            title="Agregar al carrito"
+            aria-label="Agregar al carrito"
+          >
+            <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
+          </button>
+        </div>
         <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
           <Icon name="material-symbols:check-circle" class="size-4" />
           Agregado al carrito — puedes seguir navegando
