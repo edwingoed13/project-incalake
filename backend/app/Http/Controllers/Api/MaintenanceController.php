@@ -428,12 +428,26 @@ class MaintenanceController extends Controller
     public function revalidationCheck(Request $request): JsonResponse
     {
         $base = rtrim((string) config('services.frontend.url'), '/');
-        $token = (string) config('services.frontend.revalidate_token');
+
+        // ?token= tests a value WITHOUT storing it, so the operator can paste
+        // what Vercel shows and find out in one call which of the two copies
+        // is the wrong one, instead of changing both and hoping.
+        $override = trim((string) $request->query('token', ''));
+        $token = $override !== '' ? $override : (string) config('services.frontend.revalidate_token');
+
+        // Enough of the token to compare against the Vercel dashboard by eye,
+        // never enough to use. A mismatch is usually a stray quote, a trailing
+        // space, or one side never updated.
+        $hint = strlen($token) > 8
+            ? substr($token, 0, 4) . '...' . substr($token, -4)
+            : '(demasiado corto para mostrar)';
 
         $out = [
             'frontend_url' => $base !== '' ? $base : '(sin configurar)',
+            'token_probado' => $override !== '' ? 'el pasado por ?token=' : 'el configurado en la API',
             'token_configurado' => $token !== '',
             'token_longitud' => strlen($token),
+            'token_pista' => $token !== '' ? $hint : null,
         ];
 
         if ($base === '' || $token === '') {
