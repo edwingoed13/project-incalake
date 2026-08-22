@@ -107,10 +107,12 @@
 
       <!-- Compact summary -->
       <div
-        v-if="store.availability.start && store.availability.end"
+        v-if="store.availability.start && (store.availability.neverExpires || store.availability.end)"
         class="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-[11px] leading-snug"
       >
-        Disponible <span class="font-bold">{{ formatDate(store.availability.start) }} → {{ formatDate(store.availability.end) }}</span>
+        Disponible
+        <span v-if="store.availability.neverExpires" class="font-bold">desde {{ formatDate(store.availability.start) }} · sin caducidad</span>
+        <span v-else class="font-bold">{{ formatDate(store.availability.start) }} → {{ formatDate(store.availability.end) }}</span>
         · <span class="font-bold">{{ store.availability.activeDays.length }} días/semana</span>
         <span v-if="(store.availability.blocks || []).length"> · <span class="text-error font-bold">{{ store.availability.blocks.length }} bloqueos</span></span>
         <span v-if="(store.availability.offers || []).length"> · <span class="text-success font-bold">{{ store.availability.offers.length }} ofertas</span></span>
@@ -498,8 +500,14 @@ const newOffer = reactive({
   color: '#449d44',
 })
 
+// A tour that never expires has no end date on purpose, so requiring one here
+// left the step reading "Sin configurar" forever however carefully it was set up.
 const hasAnyAvailability = computed(() =>
-  !!(store.availability?.start && store.availability?.end && (store.availability?.activeDays || []).length > 0),
+  !!(
+    store.availability?.start
+    && (store.availability?.neverExpires || store.availability?.end)
+    && (store.availability?.activeDays || []).length > 0
+  ),
 )
 
 const addBlock = () => {

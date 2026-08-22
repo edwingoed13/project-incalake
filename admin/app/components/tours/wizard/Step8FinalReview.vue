@@ -160,6 +160,8 @@ const stats = computed(() => {
   ]
 })
 
+const plural = (n: number, singular: string) => `${n} ${singular}${n === 1 ? '' : 's'}`
+
 const checklist = computed(() => {
   const seo = currentSeo.value || {}
   const detail = currentDetail.value || {}
@@ -168,7 +170,16 @@ const checklist = computed(() => {
     s.active && (s.nationalities || []).some((n: any) => (n.ranges || []).some((r: any) => Number(r.price) > 0))
   )
   const availability = store.availability || {}
-  const hasAvailability = !!(availability.start && availability.end && (availability.activeDays || []).length > 0)
+  // "Este tour no caduca" stores end as '', which this read as a missing
+  // field: the step stayed permanently incomplete and, because publishing
+  // requires every check to pass, an open-ended tour could never be reported
+  // as ready. No end date is a deliberate answer, not an unanswered question.
+  const neverExpires = !!availability.neverExpires
+  const hasAvailability = !!(
+    availability.start
+    && (neverExpires || availability.end)
+    && (availability.activeDays || []).length > 0
+  )
 
   return [
     {
@@ -212,7 +223,7 @@ const checklist = computed(() => {
       label: 'Disponibilidad',
       ok: hasAvailability,
       detail: hasAvailability
-        ? `Activo del ${availability.start} al ${availability.end} · ${(availability.blocks || []).length} bloqueos · ${(availability.offers || []).length} ofertas`
+        ? `${neverExpires ? `Activo desde ${availability.start}, sin caducidad` : `Activo del ${availability.start} al ${availability.end}`} · ${plural((availability.blocks || []).length, 'bloqueo')} · ${plural((availability.offers || []).length, 'oferta')}`
         : 'Configura el rango de fechas y días activos',
     },
   ]
