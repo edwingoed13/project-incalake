@@ -74,14 +74,14 @@
                 // Bookable days carry the fill. /10 was invisible on a dark
                 // background, so dark mode gets its own weight rather than the
                 // same value on both grounds.
-                cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth
+                cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth && !cell.isPast
                   ? 'bg-primary/15 dark:bg-primary/25 border-primary/50 text-primary' : '',
-                cell.blocked && !cell.outOfMonth ? 'bg-error/10 border-error/40 text-error line-through' : '',
-                cell.isHoliday && !cell.outOfMonth ? 'ring-2 ring-error/40 ring-inset' : '',
+                cell.blocked && !cell.outOfMonth && !cell.isPast ? 'bg-error/10 border-error/40 text-error line-through' : '',
+                cell.isHoliday && !cell.outOfMonth && !cell.isPast ? 'ring-2 ring-error/40 ring-inset' : '',
                 cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
                 // A weekday the tour does not run is as unbookable as a date
                 // outside the range, and must not read as available.
-                (!cell.inAvailability || !cell.activeWeekday) && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
+                (!cell.inAvailability || !cell.activeWeekday || cell.isPast) && !cell.outOfMonth && (!cell.blocked || cell.isPast) ? 'text-muted' : '',
               ]"
               :title="cell.tooltip"
             >
@@ -671,10 +671,16 @@ const buildCells = (base: Date) => {
     }
 
     const isToday = d.getTime() === today.getTime()
+    // Yesterday is not bookable no matter what the range says. The public
+    // calendar has always disabled past dates, so painting them as available
+    // here made the preview disagree with the very thing it previews — and on
+    // the 22nd it showed three weeks of August as bookable.
+    const isPast = d.getTime() < today.getTime()
 
     const tooltipParts: string[] = []
     tooltipParts.push(d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }))
-    if (blocked) tooltipParts.push(`Bloqueo: ${blockReason}`)
+    if (isPast) tooltipParts.push('Fecha pasada')
+    else if (blocked) tooltipParts.push(`Bloqueo: ${blockReason}`)
     else if (!inAvailability) tooltipParts.push('Fuera del rango')
     else if (!activeWeekday) tooltipParts.push('Día semanal no activo')
     else tooltipParts.push('Disponible')
@@ -687,6 +693,7 @@ const buildCells = (base: Date) => {
       outOfMonth,
       inAvailability,
       activeWeekday,
+      isPast,
       blocked: blocked || (isHoliday && inAvailability),
       isHoliday,
       offerColor,
