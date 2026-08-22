@@ -828,7 +828,7 @@ onBeforeUnmount(() => {
                nav bar (~56px) never covers it; scroll-pb-28 makes keyboard /
                programmatic scroll-into-view stop above the bar too. Fixes the
                recurring "dropdown / last input hidden behind the footer". -->
-          <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28">
+          <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28 xl:pb-6 xl:scroll-pb-6">
           <!-- 2xl+: en un monitor grande, 1024px de tope dejaban pasillos de
                margen muerto a ambos lados del formulario. -->
           <div class="max-w-5xl 2xl:max-w-7xl mx-auto">
@@ -868,45 +868,50 @@ onBeforeUnmount(() => {
               </UCard>
             </Transition>
           </div>
-          </div>
-
-          <!-- Bottom navigation (always visible — sidebar is hidden below xl) -->
-          <div class="shrink-0 border-t border-default bg-default px-4 lg:px-6 py-2">
-            <div class="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-between gap-3">
-              <UButton
-                icon="i-lucide-arrow-left"
-                color="neutral"
-                variant="ghost"
-                :disabled="store.currentStep <= 1"
-                @click="store.prevStep"
-              >
-                Anterior
-              </UButton>
-
-              <!-- Salto directo entre pasos. En movil el stepper del navbar no
-                   existe (lo aplastan los botones), asi que sin esto llegar al
-                   paso 8 eran siete toques de «Siguiente». -->
-              <UDropdownMenu :items="stepMenuItems" :content="{ align: 'center', side: 'top' }">
-                <UButton color="neutral" variant="ghost" size="sm" trailing-icon="i-lucide-chevrons-up-down" class="tabular-nums whitespace-nowrap shrink-0">
-                  Paso {{ store.currentStep }} de {{ store.totalSteps }}
-                  <span class="hidden sm:inline text-muted font-normal">· {{ currentStepLabel?.title }}</span>
+            <!-- Bottom navigation. Below xl it sticks to the bottom of the scroll
+               area, because the stepper in the top bar is hidden there and this
+               is the only way to move between steps. From xl it flows at the end
+               of the form instead: the stepper above already jumps anywhere, so a
+               permanently pinned bar was charging 49px for an affordance the page
+               already had — and "Siguiente" belongs where the form ends. -->
+            <div class="sticky bottom-0 xl:static -mx-4 lg:-mx-6 mt-6 border-t border-default bg-default px-4 lg:px-6 py-2">
+              <div class="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-between gap-3">
+                <UButton
+                  icon="i-lucide-arrow-left"
+                  color="neutral"
+                  variant="ghost"
+                  :disabled="store.currentStep <= 1"
+                  @click="store.prevStep"
+                >
+                  Anterior
                 </UButton>
-              </UDropdownMenu>
 
-              <UButton
-                v-if="store.currentStep < store.totalSteps"
-                trailing-icon="i-lucide-arrow-right"
-                color="primary"
-                @click="store.nextStep"
-              >
-                Siguiente
-              </UButton>
-              <span v-else class="text-xs text-muted inline-flex items-center gap-1">
-                <UIcon name="i-lucide-check" class="size-3.5 text-success" />
-                Último paso · revisa y publica
-              </span>
+                <!-- Salto directo entre pasos. En movil el stepper del navbar no
+                     existe (lo aplastan los botones), asi que sin esto llegar al
+                     paso 8 eran siete toques de «Siguiente». -->
+                <UDropdownMenu :items="stepMenuItems" :content="{ align: 'center', side: 'top' }">
+                  <UButton color="neutral" variant="ghost" size="sm" trailing-icon="i-lucide-chevrons-up-down" class="tabular-nums whitespace-nowrap shrink-0">
+                    Paso {{ store.currentStep }} de {{ store.totalSteps }}
+                    <span class="hidden sm:inline text-muted font-normal">· {{ currentStepLabel?.title }}</span>
+                  </UButton>
+                </UDropdownMenu>
+
+                <UButton
+                  v-if="store.currentStep < store.totalSteps"
+                  trailing-icon="i-lucide-arrow-right"
+                  color="primary"
+                  @click="store.nextStep"
+                >
+                  Siguiente
+                </UButton>
+                <span v-else class="text-xs text-muted inline-flex items-center gap-1">
+                  <UIcon name="i-lucide-check" class="size-3.5 text-success" />
+                  Último paso · revisa y publica
+                </span>
+              </div>
             </div>
           </div>
+
         </main>
 
         <!-- Insights sidebar -->
