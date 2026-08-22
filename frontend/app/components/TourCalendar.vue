@@ -1,7 +1,8 @@
 <template>
-  <div ref="root" class="select-none relative">
+  <div ref="root" class="select-none" :class="inline ? '' : 'relative'">
     <!-- Trigger button — real button semantics + keyboard + aria-expanded -->
     <button
+      v-if="!inline"
       type="button"
       @click="open = !open"
       :aria-expanded="open"
@@ -18,33 +19,35 @@
     <!-- Calendar: bottom-sheet on mobile (doesn't push the page), popover on desktop -->
     <Transition name="cal">
       <div
-        v-if="open"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="t('select_date')"
+        v-if="inline || open"
+        :role="inline ? undefined : 'dialog'"
+        :aria-modal="inline ? undefined : 'true'"
+        :aria-label="inline ? undefined : t('select_date')"
         :class="[
-          'bg-white border border-slate-200 shadow-2xl overflow-y-auto',
-          'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]',
-          'lg:absolute lg:inset-x-auto lg:right-0 lg:rounded-2xl lg:w-[560px] lg:max-w-[calc(100vw-2rem)]',
+          inline
+            ? 'bg-white rounded-xl border border-slate-200'
+            : 'bg-white border border-slate-200 shadow-2xl overflow-y-auto',
+          inline ? '' : 'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]',
+          inline ? '' : 'lg:absolute lg:inset-x-auto lg:right-0 lg:rounded-2xl lg:w-[560px] lg:max-w-[calc(100vw-2rem)]',
           // Flip above the field when the space under it is too short. Anchored
           // downwards always, the panel ran off the bottom of the window on a
           // 31-day month and the offer legend went with it.
-          dropUp ? 'lg:bottom-full lg:mb-2' : 'lg:bottom-auto lg:mt-2',
+          inline ? '' : (dropUp ? 'lg:bottom-full lg:mb-2' : 'lg:bottom-auto lg:mt-2'),
         ]"
         :style="panelStyle"
       >
         <!-- Mobile grab handle -->
-        <div class="lg:hidden flex justify-center pt-3 pb-1">
+        <div v-if="!inline" class="lg:hidden flex justify-center pt-3 pb-1">
           <div class="w-10 h-1 bg-slate-300 rounded-full"></div>
         </div>
         <!-- Header: navigation -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div class="flex items-center justify-between border-b border-slate-100" :class="inline ? 'px-2 py-1.5' : 'px-6 py-4'">
           <button @click="prevMonth" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <Icon name="material-symbols:chevron-left" class="text-xl" />
           </button>
           <div class="flex gap-12">
             <h4 class="text-base font-bold text-slate-800">{{ monthName(currentMonth, currentYear) }}</h4>
-            <h4 class="text-base font-bold text-slate-800 hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
+            <h4 v-if="!inline" class="text-base font-bold text-slate-800 hidden sm:block">{{ monthName(nextMonth, nextYear) }}</h4>
           </div>
           <button @click="nextMonthNav" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
             <Icon name="material-symbols:chevron-right" class="text-xl" />
@@ -54,7 +57,7 @@
         <!-- Two month grid -->
         <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
           <!-- Month 1 -->
-          <div class="flex-1 p-4">
+          <div class="flex-1" :class="inline ? 'px-2 pb-2 pt-1' : 'p-4'">
             <div class="grid grid-cols-7 gap-0 mb-2">
               <span v-for="d in dayHeaders" :key="d" class="text-xs font-bold text-slate-400 text-center py-1">{{ d }}</span>
             </div>
@@ -66,21 +69,22 @@
                   :disabled="day.disabled"
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
-                  class="relative h-11 w-full text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="getDayClasses(day)"
+                  class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  :class="[inline ? 'h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else class="h-11"></span>
+                <span v-else :class="inline ? 'h-8' : 'h-11'"></span>
               </template>
             </div>
           </div>
 
-          <!-- Month 2 -->
-          <div class="flex-1 p-4">
+          <!-- Month 2 — dropped inline: the sidebar has room for one month,
+               and the arrows still reach the rest. -->
+          <div v-if="!inline" class="flex-1 p-4">
             <div class="sm:hidden flex items-center justify-center py-2">
               <h4 class="text-base font-bold text-slate-800">{{ monthName(nextMonth, nextYear) }}</h4>
             </div>
@@ -95,27 +99,31 @@
                   :disabled="day.disabled"
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
-                  class="relative h-11 w-full text-sm font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="getDayClasses(day)"
+                  class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  :class="[inline ? 'h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else class="h-11"></span>
+                <span v-else :class="inline ? 'h-8' : 'h-11'"></span>
               </template>
             </div>
           </div>
         </div>
 
         <!-- Legend -->
-        <div class="px-6 py-3 border-t border-slate-100 flex items-center gap-5 text-xs font-semibold text-slate-400">
+        <div
+          v-if="offers.length"
+          class="border-t border-slate-100 flex items-center gap-5 font-semibold text-slate-400"
+          :class="inline ? 'px-3 py-1.5 text-[11px]' : 'px-6 py-3 text-xs'"
+        >
           <span class="flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-amber-500"></span> {{ t('offer_legend') }}</span>
         </div>
 
         <!-- Mobile: explicit "Done" to close the sheet (selecting a day also closes) -->
-        <div class="lg:hidden sticky bottom-0 bg-white border-t border-slate-100 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div v-if="!inline" class="lg:hidden sticky bottom-0 bg-white border-t border-slate-100 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button type="button" @click="open = false"
             class="w-full min-h-[48px] bg-primary hover:bg-primary-dark text-white font-bold rounded-xl active:scale-[0.98] transition-transform">
             {{ t('done') || 'Listo' }}
@@ -126,7 +134,7 @@
 
     <!-- Click-outside / dim backdrop: real overlay (was z-[-1], which sat behind
          the page and never caught clicks). Dim on mobile, invisible on desktop. -->
-    <div v-if="open" class="fixed inset-0 z-40 bg-black/40 lg:bg-transparent" @click="open = false"></div>
+    <div v-if="!inline && open" class="fixed inset-0 z-40 bg-black/40 lg:bg-transparent" @click="open = false"></div>
   </div>
 </template>
 
@@ -158,6 +166,11 @@ interface Props {
   /** Trigger text when no date is picked. The default full sentence does not
       fit when the field shares a row with the time select. */
   placeholder?: string
+  /** Render the grid straight into the page instead of behind a trigger.
+      The booking sidebar shows the month permanently: a traveller picking a
+      date is the main thing that panel is for, and hiding it behind a click
+      cost a step at exactly the wrong moment. */
+  inline?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -168,6 +181,7 @@ const props = withDefaults(defineProps<Props>(), {
   offers: () => [],
   blocks: () => [],
   activeDays: () => [0, 1, 2, 3, 4, 5, 6],
+  inline: false,
   specialDays: () => [],
   placeholder: '',
 })
@@ -196,7 +210,7 @@ const EDGE_GAP = 16
 const MIN_USABLE = 280
 
 function place() {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || props.inline) return
   isDesktop.value = window.matchMedia('(min-width: 1024px)').matches
   // Mobile is a bottom sheet — nothing to measure.
   if (!isDesktop.value || !open.value) return

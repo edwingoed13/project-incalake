@@ -72,35 +72,43 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 </script>
 
 <template>
-  <div class="bg-white border border-slate-200 rounded-2xl shadow-md">
+  <!-- No inner scroll. Capping this to the viewport and scrolling the body was
+       tried: with the month open there is no height left for it, and the
+       calendar — the whole reason the panel exists — showed two rows out of
+       six. A nested scrollbar inside a sticky sidebar also reads as broken in
+       a way a tall panel does not. So the card is as tall as its content and
+       scrolls with the page, and the density work goes into keeping it short. -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col">
     <!-- Price header — dominant, OTA pattern -->
-    <div class="px-4 py-3 border-b border-slate-100">
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0">
       <div class="flex items-baseline gap-1.5 flex-wrap">
         <span
-          class="font-black text-slate-900 tabular-nums tracking-tight leading-none"
-          :class="isInline ? 'text-3xl sm:text-4xl' : 'text-[32px]'"
+          class="text-3xl font-black text-slate-900 tabular-nums tracking-tight leading-none"
         >
           {{ fmt(basePrice) }}
         </span>
-        <span class="text-sm font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
+        <span class="text-[11px] font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
         <span class="text-[11px] text-slate-500 font-medium">por persona</span>
       </div>
     </div>
 
-    <div class="p-4 space-y-2.5">
+    <div class="p-4 pt-3 space-y-1.5">
       <!-- Travelers (group first, before date) -->
       <div>
-        <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+        <label class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2">
           <Icon name="material-symbols:group-outline" class="size-4 text-primary" />
           Viajeros
         </label>
         <div class="space-y-2">
+          <!-- No per-unit hint: the header two rows up already says the price
+               per person, so repeating it here only added noise. The child row
+               keeps its hint — that price is NOT in the header. -->
           <TourQuantityStepper
             v-model="adults"
             :label="`Adultos${adultAgeLabel ? ' ' + adultAgeLabel : ''}`"
-            :hint="`${fmt(adultPrice)} c/u`"
             :min="1"
             :at-max="atMax"
+            :dense="!isInline"
           />
           <TourQuantityStepper
             v-if="hasChildPricing"
@@ -109,6 +117,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
             :hint="children > 0 ? `${fmt(childPrice)} c/u` : 'Opcional'"
             :min="0"
             :at-max="atMax"
+            :dense="!isInline"
           />
         </div>
         <!-- Why the + is disabled -->
@@ -122,8 +131,8 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
            booking panel; the short placeholders keep the half-width fields
            readable. -->
       <div>
-        <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
-          <label class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+        <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+          <label class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
             <Icon name="material-symbols:calendar-today-outline" class="size-4 text-primary" />
             Fecha y horario
           </label>
@@ -132,27 +141,41 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
             {{ tzInfo.code }} ({{ tzInfo.gmt }})
           </span>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <TourCalendar
-            v-model="selectedDate"
-            :min-date="minDate"
-            :offers="tour?.offers_data || []"
-            :blocks="tour?.blocks_data || []"
-            :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-            :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-            :availability-start="tour?.availability_data?.start || ''"
-            :availability-end="tour?.availability_data?.end || ''"
-            placeholder="Fecha"
-          />
-          <TourTimeSelect v-model="selectedTime" :options="availableTimes" placeholder="Horario" />
-        </div>
-        <!-- Policy reassurance at the point of decision -->
-        <p v-if="tour?.free_cancellation" class="mt-2 flex items-center gap-1.5 text-xs text-trust font-semibold">
-          <Icon name="material-symbols:check-circle" class="size-4 shrink-0" />
-          {{ t('booking_cancel_hint') }}
-        </p>
+        <!-- The month sits open in the panel. Picking a date is the main job
+             of this widget, and a click to reveal the calendar was a step in
+             the way of it. -->
+        <TourCalendar
+          v-model="selectedDate"
+          inline
+          :min-date="minDate"
+          :offers="tour?.offers_data || []"
+          :blocks="tour?.blocks_data || []"
+          :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+          :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+          :availability-start="tour?.availability_data?.start || ''"
+          :availability-end="tour?.availability_data?.end || ''"
+        />
+        <!-- Times only once there is a date. An empty time select next to an
+             empty date asks two questions at once and answers neither. -->
+        <TourTimeSelect
+          v-if="selectedDate"
+          v-model="selectedTime"
+          :options="availableTimes"
+          placeholder="Horario"
+          class="mt-2"
+        />
+        <!-- The free-cancellation promise lives in the trust card right below
+             this one; saying it twice cost a row of the calendar. -->
       </div>
 
+
+    </div>
+
+    <!-- Money and actions, grouped and set apart by the rule above them. -->
+    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5">
+      <!-- The money and the button stay pinned together. A total that
+           scrolls out of view while the traveller is picking a date asks
+           them to commit without seeing what they are committing to. -->
       <!-- Total -->
       <div class="rounded-lg bg-slate-50 p-3 space-y-1.5">
         <div class="flex justify-between text-xs text-slate-600">
@@ -170,20 +193,11 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           </span>
           <span class="text-trust font-bold tabular-nums">−{{ fmt(groupDiscount) }}</span>
         </div>
-        <div v-if="feePercent" class="flex justify-between text-xs text-slate-600">
-          <span class="flex items-center gap-1">
-            {{ t('transaction_fees') }}
-            <AppPopover :label="t('transaction_fees')">
-              <p class="leading-snug">{{ t('transaction_fees_info') }}</p>
-            </AppPopover>
-            <span class="tabular-nums">({{ feePercent.toFixed(2) }}%)</span>
-          </span>
-          <span class="tabular-nums font-medium">{{ fmt(feeAmount) }}</span>
-        </div>
+        <!-- The transaction fee moved to checkout, where it is charged. -->
         <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200">
-          <span class="text-sm font-bold">{{ feePercent ? t('total') : 'Subtotal' }}</span>
-          <span class="text-xl font-black text-slate-900 tabular-nums">
-            {{ fmt(totalWithFee) }}
+          <span class="text-sm font-bold text-slate-900">Total</span>
+          <span class="text-lg font-black text-slate-900 tabular-nums">
+            {{ fmt(total) }}
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
           </span>
         </div>
@@ -193,8 +207,8 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       <div v-if="partialPct && !requiresInquiry" class="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
         <Icon name="material-symbols:payments-outline" class="size-4 text-amber-600 shrink-0 mt-0.5" />
         <p class="text-xs text-amber-800 leading-snug">
-          <span class="font-bold">Pago parcial disponible:</span>
-          reserva con el <span class="font-bold">{{ partialPct }}%</span> ahora y paga el resto el día del tour en efectivo.
+          <span class="font-bold">Reserva con el {{ partialPct }}% de adelanto.</span>
+          Pagas el resto el día del tour.
         </p>
       </div>
 
@@ -202,7 +216,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
            booking flow, not the availability inquiry. -->
       <div v-if="error && !requiresInquiry" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg" role="alert">
         <Icon name="material-symbols:error-outline" class="size-4 text-red-500 shrink-0" />
-        <span class="text-xs font-semibold text-red-700">{{ error }}</span>
+        <span class="text-[11px] font-semibold text-red-700">{{ error }}</span>
       </div>
 
       <!-- CTAs — tours that require availability verification can't be booked
@@ -215,7 +229,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           Consultar disponibilidad
           <Icon name="material-symbols:event-available-outline" class="size-5" />
         </button>
-        <p class="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+        <p class="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
           <Icon name="material-symbols:info-outline" class="size-4 text-primary shrink-0" />
           Este tour requiere confirmar disponibilidad
         </p>
@@ -225,7 +239,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           @click="$emit('book')"
           class="btn-primary btn-lg w-full hover:shadow-xl hover:shadow-primary/30"
         >
-          RESERVAR AHORA
+          Reservar ahora
           <Icon name="material-symbols:arrow-forward" class="size-5" />
         </button>
         <button

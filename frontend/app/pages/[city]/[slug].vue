@@ -339,28 +339,22 @@
               @inquire="inquiryOpen = true"
             />
 
-            <!-- Trust signals card — OTA pattern: stacks below booking widget -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
-              <div v-if="tour.free_cancellation" class="flex items-start gap-2.5">
-                <CheckCircleSolidIcon class="size-5 text-trust shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <p class="text-sm font-bold text-slate-900">{{ t('free_cancellation') }}</p>
-                  <p class="text-xs text-slate-500">{{ t('trust_cancel_hint') }}</p>
-                </div>
+            <!-- Trust signals card. Titles only: each hint underneath restated
+                 its own title in more words, and three of them together made
+                 this card taller than the promises were worth — on a laptop it
+                 was pushing the booking widget's own content off the screen. -->
+            <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 space-y-2">
+              <div v-if="tour.free_cancellation" class="flex items-center gap-2.5">
+                <CheckCircleSolidIcon class="size-5 text-trust shrink-0" aria-hidden="true" />
+                <p class="text-xs font-bold text-slate-900">{{ t('free_cancellation') }}</p>
               </div>
-              <div class="flex items-start gap-2.5">
-                <ClockIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <p class="text-sm font-bold text-slate-900">{{ t('trust_instant') }}</p>
-                  <p class="text-xs text-slate-500">{{ t('trust_instant_hint') }}</p>
-                </div>
+              <div class="flex items-center gap-2.5">
+                <ClockIcon class="size-5 text-primary shrink-0" aria-hidden="true" />
+                <p class="text-xs font-bold text-slate-900">{{ t('trust_instant') }}</p>
               </div>
-              <div class="flex items-start gap-2.5">
-                <ShieldCheckIcon class="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <p class="text-sm font-bold text-slate-900">{{ t('trust_best_price') }}</p>
-                  <p class="text-xs text-slate-500">{{ t('trust_best_price_hint') }}</p>
-                </div>
+              <div class="flex items-center gap-2.5">
+                <ShieldCheckIcon class="size-5 text-primary shrink-0" aria-hidden="true" />
+                <p class="text-xs font-bold text-slate-900">{{ t('trust_best_price') }}</p>
               </div>
             </div>
           </div>

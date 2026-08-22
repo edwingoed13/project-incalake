@@ -8,6 +8,9 @@ const props = defineProps<{
   hint?: string
   min?: number
   atMax?: boolean
+  /** Mouse-only context (desktop sidebar): 36px targets instead of the 44px
+      the touch guidance asks for, which buys back a row of the calendar. */
+  dense?: boolean
 }>()
 
 const model = defineModel<number>({ required: true })
@@ -27,7 +30,8 @@ function inc() { if (!props.atMax) model.value++ }
         type="button"
         @click="dec"
         :disabled="model <= (min ?? 0)"
-        class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        class="flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        :class="dense ? 'w-9 h-9' : 'w-11 h-11'"
         :aria-label="`Quitar ${label}`"
       >
         <Icon name="material-symbols:remove" class="size-5" />
@@ -37,7 +41,8 @@ function inc() { if (!props.atMax) model.value++ }
         type="button"
         @click="inc"
         :disabled="atMax"
-        class="w-11 h-11 flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        class="flex items-center justify-center bg-slate-100 rounded-full hover:bg-slate-200 active:scale-95 transition disabled:opacity-40 disabled:active:scale-100"
+        :class="dense ? 'w-9 h-9' : 'w-11 h-11'"
         :aria-label="`Agregar ${label}`"
       >
         <Icon name="material-symbols:add" class="size-5" />
