@@ -21,7 +21,7 @@ class BookingCodeTest extends TestCase
         $code = Booking::generateBookingCode();
 
         $this->assertMatchesRegularExpression('/^BK-\d{2}-\d{4}-\d{4}$/', $code);
-        $this->assertSame('BK-' . date('y') . '-' . date('md'), substr($code, 0, 11));
+        $this->assertStringStartsWith('BK-' . date('y') . '-' . date('md') . '-', $code);
         $this->assertLessThanOrEqual(20, strlen($code), 'the column is string(20)');
     }
 
