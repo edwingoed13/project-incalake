@@ -81,7 +81,10 @@ class Booking extends Model
                 $booking->confirmation_token_expires_at = now()->addDays(30);
             }
 
-            // Extract security token from booking_code if it was generated
+            // Legacy column. The tail of the code used to be treated as a
+            // security token; nothing ever verified it, and the format no
+            // longer produces one. Kept in step for the rows that predate the
+            // change rather than left to drift.
             if (!empty($booking->booking_code) && strpos($booking->booking_code, '-') !== false) {
                 $parts = explode('-', $booking->booking_code);
                 if (count($parts) === 4) {
@@ -161,24 +164,37 @@ class Booking extends Model
     }
 
     // Helper methods
+    /**
+     * BK-26-0822-1234 — year, month+day, and four random digits.
+     *
+     * Replaces BK-2026-0174-c2b9408b, which nobody could read over the phone.
+     * The old eight-hex tail was introduced as a security token, but nothing
+     * ever checked it: access to a booking is gated on the customer's email
+     * (see BookingController::show, which 403s without a match), so the tail
+     * was buying length rather than protection.
+     *
+     * The tail still has a job — it is what keeps two bookings on the same day
+     * apart, now that the running number is gone. Four digits is 10,000 codes
+     * per day, and on a day with 30 bookings roughly a 4% chance that two land
+     * on the same one, which is far too likely to leave to chance against a
+     * unique index. So it asks the database rather than trusting the odds.
+     */
     public static function generateBookingCode()
     {
-        $year = date('Y');
-        $lastBooking = self::whereYear('created_at', $year)->latest('id')->first();
+        $prefix = sprintf('BK-%s-%s', date('y'), date('md'));
 
-        // Extract number from existing code format (BK-YYYY-NNNN or BK-YYYY-NNNN-TTTTTTTT)
-        if ($lastBooking) {
-            $parts = explode('-', $lastBooking->booking_code);
-            $number = isset($parts[2]) ? (int) $parts[2] + 1 : 1;
-        } else {
-            $number = 1;
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $code = $prefix . '-' . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+
+            if (!self::where('booking_code', $code)->exists()) {
+                return $code;
+            }
         }
 
-        // Generate 8-character security token (4 bytes hex)
-        $securityToken = bin2hex(random_bytes(4));
-
-        // Format: BK-2026-0123-a8f3e9d4
-        return sprintf('BK-%s-%04d-%s', $year, $number, $securityToken);
+        // Twenty collisions means the day is busy enough that four digits no
+        // longer fit. Widen the tail rather than hand back a code the unique
+        // index will reject on insert.
+        return $prefix . '-' . bin2hex(random_bytes(3));
     }
 
     public static function generateConfirmationToken()
