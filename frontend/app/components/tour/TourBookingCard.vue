@@ -44,6 +44,13 @@ const currencyStore = useCurrencyStore()
 const fmt = (v: number) => currencyStore.formatConverted(v || 0)
 
 const isInline = computed(() => props.variant !== 'sidebar')
+// Party size lives behind the header count.
+const paxOpen = ref(false)
+const paxSummary = computed(() => {
+  const parts = [`${adults.value} ${adults.value === 1 ? 'adulto' : 'adultos'}`]
+  if (children.value > 0) parts.push(`${children.value} ${children.value === 1 ? 'niño' : 'niños'}`)
+  return parts.join(', ')
+})
 const atMax = computed(() => props.totalPax >= props.maxPax)
 // Tours flagged require_availability replace instant booking with an inquiry.
 const requiresInquiry = computed(() => !!props.tour?.require_availability)
@@ -79,9 +86,12 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
        a way a tall panel does not. So the card is as tall as its content and
        scrolls with the page, and the density work goes into keeping it short. -->
   <div class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col">
-    <!-- Price header — dominant, OTA pattern -->
-    <div class="px-4 py-3 border-b border-slate-100 shrink-0">
-      <div class="flex items-baseline gap-1.5 flex-wrap">
+    <!-- Price header — dominant, OTA pattern. The party size rides here as a
+         count behind a popover instead of two stepper rows in the body: the
+         steppers were ~150px of panel spent on a number most travellers never
+         change, and that height is what the calendar needed. -->
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-center justify-between gap-3">
+      <div class="flex items-baseline gap-1.5 flex-wrap min-w-0">
         <span
           class="text-3xl font-black text-slate-900 tabular-nums tracking-tight leading-none"
         >
@@ -90,25 +100,38 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <span class="text-[11px] font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
         <span class="text-[11px] text-slate-500 font-medium">por persona</span>
       </div>
-    </div>
 
-    <div class="p-4 pt-3 space-y-1.5">
-      <!-- Travelers (group first, before date) -->
-      <div>
-        <label class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2">
+      <div class="relative shrink-0">
+        <button
+          type="button"
+          @click="paxOpen = !paxOpen"
+          :aria-expanded="paxOpen"
+          aria-haspopup="dialog"
+          :aria-label="`Viajeros: ${paxSummary}`"
+          class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+        >
           <Icon name="material-symbols:group-outline" class="size-4 text-primary" />
-          Viajeros
-        </label>
-        <div class="space-y-2">
-          <!-- No per-unit hint: the header two rows up already says the price
-               per person, so repeating it here only added noise. The child row
-               keeps its hint — that price is NOT in the header. -->
+          <span class="text-sm font-bold text-slate-800 tabular-nums">{{ totalPax }}</span>
+          <Icon
+            name="material-symbols:expand-more"
+            class="size-4 text-slate-400 transition-transform"
+            :class="{ 'rotate-180': paxOpen }"
+          />
+        </button>
+
+        <div
+          v-if="paxOpen"
+          role="dialog"
+          aria-label="Viajeros"
+          class="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
+        >
+          <!-- No per-unit hint on adults: the price beside this button already
+               says it. The child row keeps its own — that price is nowhere else. -->
           <TourQuantityStepper
             v-model="adults"
             :label="`Adultos${adultAgeLabel ? ' ' + adultAgeLabel : ''}`"
             :min="1"
             :at-max="atMax"
-            :dense="!isInline"
           />
           <TourQuantityStepper
             v-if="hasChildPricing"
@@ -117,15 +140,23 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
             :hint="children > 0 ? `${fmt(childPrice)} c/u` : 'Opcional'"
             :min="0"
             :at-max="atMax"
-            :dense="!isInline"
           />
+          <p v-if="atMax" class="text-[11px] font-semibold text-slate-500">
+            {{ t('booking_max_pax', { n: maxPax }) }}
+          </p>
+          <button
+            type="button"
+            @click="paxOpen = false"
+            class="w-full rounded-lg bg-slate-100 hover:bg-slate-200 py-2 text-sm font-bold text-slate-700 transition-colors"
+          >
+            Listo
+          </button>
         </div>
-        <!-- Why the + is disabled -->
-        <p v-if="atMax" class="mt-1.5 text-[11px] font-semibold text-slate-500">
-          {{ t('booking_max_pax', { n: maxPax }) }}
-        </p>
+        <div v-if="paxOpen" class="fixed inset-0 z-40" @click="paxOpen = false"></div>
       </div>
+    </div>
 
+    <div class="p-4 pt-3 space-y-1.5">
       <!-- Date + Time: one labeled row, two fields side by side. As stacked
            blocks with their own labels this pair cost ~180px of a phone's
            booking panel; the short placeholders keep the half-width fields
