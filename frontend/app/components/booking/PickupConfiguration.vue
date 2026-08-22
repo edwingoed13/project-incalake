@@ -181,8 +181,13 @@
           <Icon name="material-symbols:location-on-outline" class="text-primary text-2xl" />
           Punto de encuentro
         </h4>
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p class="text-blue-800 text-sm font-semibold">{{ tourConfig.meeting_point_description }}</p>
+        <!-- Only when there is something to say. This box rendered whatever
+             meeting_point_description held, and on a tour that never filled it
+             in that was an empty blue rectangle. The first reference point's
+             own description is the next best answer — it is the line that
+             names the place ("Parque De La Cultura - Jr. Cahuide 204"). -->
+        <div v-if="meetingPointSummary" class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p class="text-blue-800 text-sm font-semibold">{{ meetingPointSummary }}</p>
         </div>
 
         <!-- Reference photos. A map pin tells you where the spot is; the photo
@@ -194,12 +199,18 @@
             :key="i"
             class="rounded-xl overflow-hidden border border-slate-200"
           >
-            <img
-              :src="point.url"
-              :alt="point.label || 'Referencia del punto de encuentro'"
-              class="w-full h-44 sm:h-56 object-cover bg-slate-100"
-              loading="lazy"
-            />
+            <!-- Contained, not cropped. object-cover on a fixed short box
+                 assumed every photo was wide: a square or portrait shot of the
+                 meeting point lost its top and bottom, which is exactly the
+                 part that lets someone recognise a building. -->
+            <div class="flex items-center justify-center bg-slate-100 h-48 sm:h-60">
+              <img
+                :src="point.url"
+                :alt="point.label || 'Referencia del punto de encuentro'"
+                class="max-h-full max-w-full object-contain"
+                loading="lazy"
+              />
+            </div>
             <p v-if="point.label" class="text-xs text-slate-600 font-medium px-3 py-2">
               {{ point.label }}
             </p>
@@ -207,6 +218,38 @@
         </div>
 
         <div ref="meetingMapContainer" class="w-full h-48 sm:h-64 rounded-xl border border-slate-200 mt-3"></div>
+
+        <!-- Getting there is the next thing anyone does with a meeting point,
+             and until now the map was a picture they could not act on. -->
+        <div v-if="meetingPointCoords" class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <a
+            :href="`https://www.google.com/maps/dir/?api=1&destination=${meetingPointCoords.lat},${meetingPointCoords.lng}`"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:border-primary/50 hover:text-primary transition-colors"
+          >
+            <Icon name="material-symbols:directions-outline" class="size-4" />
+            Cómo llegar
+          </a>
+          <a
+            :href="`https://wa.me/?text=${encodeURIComponent((meetingPointSummary ? meetingPointSummary + ' — ' : '') + mapsLink)}`"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:border-primary/50 hover:text-primary transition-colors"
+          >
+            <Icon name="material-symbols:share-outline" class="size-4" />
+            Compartir
+          </a>
+          <button
+            type="button"
+            @click="copyMapsLink"
+            class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold transition-colors"
+            :class="linkCopied ? 'border-trust text-trust' : 'text-slate-700 hover:border-primary/50 hover:text-primary'"
+          >
+            <Icon :name="linkCopied ? 'material-symbols:check-circle' : 'material-symbols:link'" class="size-4" />
+            {{ linkCopied ? 'Copiado' : 'Copiar enlace' }}
+          </button>
+        </div>
         <button
           @click="confirmMeetingPoint"
           :disabled="isSaving"
@@ -290,6 +333,37 @@ const meetingPointPhotos = computed(() => {
       label: p?.descriptions?.[locale.value] || p?.descriptions?.es || '',
     }))
 })
+
+// What to print above the photos. The tour-level description first; failing
+// that, the line attached to the first reference point, which is what actually
+// names the place on tours that left the description blank.
+const meetingPointSummary = computed(() => {
+  const own = String(tourConfig.value.meeting_point_description || '').trim()
+  if (own) return own
+  return meetingPointPhotos.value.find(p => p.label)?.label || ''
+})
+
+const meetingPointCoords = computed(() => {
+  const p = (tourConfig.value.meeting_points || []).find((x: any) => x?.lat && x?.lng)
+  return p ? { lat: p.lat, lng: p.lng } : null
+})
+
+const mapsLink = computed(() =>
+  meetingPointCoords.value
+    ? `https://www.google.com/maps/search/?api=1&query=${meetingPointCoords.value.lat},${meetingPointCoords.value.lng}`
+    : ''
+)
+
+const linkCopied = ref(false)
+async function copyMapsLink() {
+  try {
+    await navigator.clipboard.writeText(mapsLink.value)
+    linkCopied.value = true
+    setTimeout(() => { linkCopied.value = false }, 2000)
+  } catch {
+    // Clipboard is blocked in some in-app browsers; the other two buttons work.
+  }
+}
 
 const {
   hotelValidation, pickupChoice, isValidating, validationError,

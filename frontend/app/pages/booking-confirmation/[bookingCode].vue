@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 pt-20 md:pt-24 pb-8">
+  <div class="min-h-screen bg-slate-50 pt-20 md:pt-24 pb-8 print:hidden">
     <div class="max-w-3xl mx-auto px-3 sm:px-4">
 
       <!-- Error -->
@@ -509,6 +509,87 @@
         </Teleport>
       </div>
     </div>
+  </div>
+
+  <!-- Voucher. Printing used to send the whole confirmation page through the
+       browser — accordions, buttons, the pickup wizard — which came out looking
+       like a screenshot of a website rather than a document anyone would hand
+       to a guide. This is a separate layout that exists only on paper: it is
+       what the browser's "Save as PDF" turns into the customer's voucher. -->
+  <div v-if="booking" class="hidden print:block text-slate-900">
+    <div class="flex items-start justify-between gap-6 pb-4 border-b-2 border-slate-800">
+      <div>
+        <p class="text-2xl font-black tracking-tight">INCALAKE</p>
+        <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500">Tours &amp; Experiences</p>
+      </div>
+      <div class="text-right">
+        <p class="text-[11px] uppercase tracking-widest text-slate-500">Voucher de reserva</p>
+        <p class="text-xl font-black tabular-nums">{{ booking.booking_code }}</p>
+      </div>
+    </div>
+
+    <div class="flex gap-6 mt-5">
+      <div class="flex-1">
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Tour</p>
+        <p class="text-lg font-bold leading-snug">{{ booking.tour?.title }}</p>
+
+        <div class="grid grid-cols-2 gap-x-6 gap-y-3 mt-4">
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">Fecha</p>
+            <p class="font-semibold">{{ formatDate(booking.tour_date) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">Hora</p>
+            <p class="font-semibold">{{ formatTime(booking.tour_time) || '—' }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">Viajeros</p>
+            <p class="font-semibold">
+              {{ booking.participants?.adults || 0 }} adultos<template v-if="booking.participants?.children">, {{ booking.participants.children }} niños</template>
+            </p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500">Titular</p>
+            <p class="font-semibold">{{ booking.customer?.name }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- The code, machine-readable. Deliberately the code and not a link:
+           a printed voucher gets photographed and left on tables, and the URL
+           would carry the credentials that open the booking. -->
+      <div class="shrink-0 text-center">
+        <img v-if="qrDataUrl" :src="qrDataUrl" alt="" class="size-28" />
+        <p class="text-[9px] text-slate-500 mt-1">Presenta este código</p>
+      </div>
+    </div>
+
+    <div class="mt-5 pt-4 border-t border-slate-300 grid grid-cols-2 gap-6">
+      <div>
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Pago</p>
+        <p class="font-semibold">
+          <template v-if="paymentSummary?.is_partial">
+            Adelanto pagado {{ currencyStore.formatConverted(paymentSummary.paid_now) }}
+          </template>
+          <template v-else>Pagado {{ currencyStore.formatConverted(booking.pricing?.total || 0) }}</template>
+        </p>
+        <p v-if="paymentSummary?.is_partial && paymentSummary.balance_due > 0" class="text-sm mt-0.5">
+          Saldo el día del tour:
+          <span class="font-bold">{{ currencyStore.formatConverted(paymentSummary.balance_due) }}</span>
+          — en efectivo, al operador.
+        </p>
+      </div>
+      <div>
+        <p class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Contacto</p>
+        <p class="text-sm">reservas@incalake.com</p>
+        <p class="text-sm">WhatsApp +51 982 769 453</p>
+      </div>
+    </div>
+
+    <p class="mt-6 pt-3 border-t border-slate-300 text-[10px] leading-relaxed text-slate-500">
+      Presenta este voucher —impreso o en tu teléfono— al inicio del tour. Consérvalo hasta finalizar
+      la experiencia. Para cambios o cancelaciones, escríbenos citando el código de reserva.
+    </p>
   </div>
 </template>
 
@@ -1039,13 +1120,38 @@ function scheduleAutoSave() {
 }
 watch([travelers, travelersByTour], scheduleAutoSave, { deep: true })
 
-// Voucher = the printable confirmation page. window.print() lets the user
-// save it as PDF / print, and works on mobile (no backend PDF endpoint needed).
+// The voucher is the print-only block at the end of the template; window.print()
+// is what turns it into a PDF, on desktop and mobile alike, with no backend
+// endpoint and no PDF library shipped to every visitor.
 function downloadVoucher() {
   if (import.meta.client) window.print()
 }
+
+// QR of the booking code, drawn once the booking is known. Generated locally,
+// so nothing about the reservation is sent to a QR service to be rendered.
+const qrDataUrl = ref('')
+watch(booking, async (b) => {
+  if (!import.meta.client || !b?.booking_code || qrDataUrl.value) return
+  try {
+    const QR = await import('qrcode')
+    qrDataUrl.value = await QR.toDataURL(b.booking_code, {
+      margin: 0,
+      width: 240,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    })
+  } catch {
+    // No QR is better than a broken voucher: the code is printed beside it.
+  }
+}, { immediate: true })
 </script>
 
 <style>
-@media print { nav, footer, button { display: none !important; } }
+@media print {
+  /* The site chrome has no business on a voucher. The navbar is a <header>
+     and it is `fixed`, so leaving it in did not just add a strip of website to
+     the page — it sat on top of the voucher's own heading and hid it. */
+  header, nav, footer { display: none !important; }
+  @page { margin: 14mm; }
+  body { background: #fff !important; }
+}
 </style>
