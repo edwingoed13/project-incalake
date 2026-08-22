@@ -959,7 +959,7 @@ function getImageUrl(path: string) {
   if (path.startsWith('http')) return path
   // Derive the storage origin from the API base so a missing/wrong
   // NUXT_PUBLIC_STORAGE_BASE (which defaults to localhost) can't break images.
-  const origin = String(config.public.apiBase || '').replace(/\/api\/?$/, '')
+  const origin = sanitizeBaseUrl(config.public.apiBase).replace(/\/api$/, '')
   const clean = String(path).replace(/^\/+/, '').replace(/^storage\//, '')
   return `${origin}/storage/${clean}`
 }

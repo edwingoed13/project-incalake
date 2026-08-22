@@ -186,6 +186,7 @@ export default defineNuxtConfig({
     public: {
       // Public keys (cliente y servidor)
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8001/api',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://incalake.com',
       storageBase: process.env.NUXT_PUBLIC_STORAGE_BASE || 'http://localhost:8001/storage',
       culqiPublicKey: process.env.NUXT_PUBLIC_CULQI_KEY,
       paypalClientId: process.env.NUXT_PUBLIC_PAYPAL_CLIENT_ID,
@@ -335,8 +336,12 @@ export default defineNuxtConfig({
   },
 
   // Sitemap automático para SEO
+  // One source of truth for the public origin, and it follows the DNS rather
+  // than a deploy: the tour page hardcoded incalake.com while that domain still
+  // served the old WordPress site, so every canonical and schema URL pointed at
+  // something that is not this application.
   site: {
-    url: 'https://incalake.com',
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://incalake.com',
     name: 'Incalake Tours'
   },
 
@@ -344,6 +349,18 @@ export default defineNuxtConfig({
     // Static pages get localized variants automatically via the i18n
     // integration. Dynamic tour URLs come from the server source below.
     sources: ['/api/__sitemap__/urls'],
+    // The generated sitemap was listing /cart, /checkout, /payment and
+    // /booking-confirmation — every one of them robots:false elsewhere in this
+    // file. Submitting URLs you have told Google not to index spends crawl
+    // budget arguing with yourself, and the confirmation pages carry customer
+    // data in their URLs.
+    exclude: [
+      '/**/cart',
+      '/**/checkout',
+      '/**/saved',
+      '/*/payment/**',
+      '/*/booking-confirmation/**',
+    ],
   },
 
   // i18n configuration for multilang URLs.
@@ -352,7 +369,10 @@ export default defineNuxtConfig({
   // bundle; en/pt/fr/de/it fetch on demand when the user switches locale
   // or visits a /xx/* route. Cuts ~60-80KB from the homepage payload.
   i18n: {
-    baseUrl: 'https://incalake.com',
+    // Drives every hreflang URL, so it has to be the same origin as
+    // site.url — two sources of truth here is how a site ends up telling
+    // Google one thing in the canonical and another in the alternates.
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://incalake.com',
     lazy: true,
     langDir: 'locales',
     locales: [

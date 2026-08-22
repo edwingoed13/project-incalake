@@ -1096,6 +1096,44 @@ const totalPax = computed(() => adults.value + children.value)
 // Quantity +/- now lives in <TourQuantityStepper> (v-model + :at-max), so the
 // old increment/decrement handlers were removed as dead code.
 
+// ISO 8601 duration for schema.org — "10 hours" means nothing to a parser.
+const isoDuration = computed(() => {
+  const qty = Number(tour.value?.duration_quantity)
+  const unit = tour.value?.duration_unit
+  if (!Number.isFinite(qty) || qty <= 0) return ''
+  if (unit === 'days') return `P${qty}D`
+  if (unit === 'hours') return `PT${qty}H`
+  if (unit === 'minutes') return `PT${qty}M`
+  return ''
+})
+
+// BCP-47 codes for the languages the guide actually speaks (the ids the admin
+// stores), not the display names.
+const guideLanguageCodes = computed<string[]>(() => {
+  const map: Record<number, string> = { 1: 'es', 2: 'en', 3: 'fr', 4: 'de', 5: 'pt', 6: 'it' }
+  return (tour.value?.guide_languages || []).map((id: number) => map[id]).filter(Boolean)
+})
+
+// YouTube ids arrive in three shapes from the admin: watch?v=, youtu.be/ and
+// /shorts/ — the Uros tour uses a Short, which the naive parser missed.
+const videoSchema = computed(() => {
+  const raw = String(tour.value?.youtube_url || '').trim()
+  if (!raw) return null
+  const id = raw.match(/(?:v=|youtu\.be\/|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1]
+  if (!id) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: tour.value?.title,
+    description: tour.value?.short_description || tour.value?.title,
+    thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    embedUrl: `https://www.youtube.com/embed/${id}`,
+    contentUrl: raw,
+    // No uploadDate is emitted: the admin does not capture one, and inventing
+    // a date is the kind of thing that gets structured data distrusted.
+  }
+})
+
 const guideLanguageMap: Record<number, string> = { 1: 'Spanish', 2: 'English', 3: 'French', 4: 'German', 5: 'Portuguese', 6: 'Italian' }
 function getGuideLanguageNames(ids: number[]): string[] {
   return ids.map(id => guideLanguageMap[id] || `Lang ${id}`)
@@ -1244,7 +1282,9 @@ watchEffect(() => {
 // i18n.baseUrl, so we don't set a per-page canonical here (avoids duplicates)
 // — EXCEPT on child variant pages, where the canonical must point at the
 // parent activity to consolidate ranking signals (and the page is noindex'd).
-const siteUrl = 'https://incalake.com'
+// From runtime config, not a literal: this page builds the canonical, the
+// hreflang alternates and every schema URL from it.
+const siteUrl = (useRuntimeConfig().public.siteUrl as string) || 'https://incalake.com'
 const canonicalUrl = computed(() =>
   `${siteUrl}/${locale.value}/${tour.value?.city?.slug || citySlug}/${slug}`)
 const parentCanonicalUrl = computed(() =>
@@ -1301,7 +1341,7 @@ watchEffect(() => {
     script: [
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Product',
           name: tour.value.title,
@@ -1347,21 +1387,43 @@ watchEffect(() => {
           } : {}),
         }),
       },
+      // TouristTrip. The extra fields below are all data the page already
+      // holds and was not declaring: an assistant asked "how long is it, what
+      // language is the guide, where does it go" had to infer it from prose.
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'TouristTrip',
           name: tour.value.title,
           description: tour.value.short_description || tour.value.title,
           touristType: 'Tourist',
+          ...(isoDuration.value ? { duration: isoDuration.value } : {}),
+          ...(guideLanguageCodes.value.length ? { inLanguage: guideLanguageCodes.value } : {}),
+          ...(cityName ? {
+            itinerary: {
+              '@type': 'ItemList',
+              itemListElement: [{
+                '@type': 'ListItem',
+                position: 1,
+                item: { '@type': 'TouristDestination', name: cityName, address: { '@type': 'PostalAddress', addressLocality: cityName, addressCountry: 'PE' } },
+              }],
+            },
+          } : {}),
           offers: { '@type': 'Offer', price: tour.value.min_price || 0, priceCurrency: tour.value.currency || 'USD', url },
           provider: { '@type': 'TravelAgency', name: 'Incalake Tours', url: siteUrl },
         }),
       },
+      // VideoObject. The wizard captures a YouTube URL per language in step 3
+      // and the page embeds it, but nothing ever declared it — so the video was
+      // invisible to video search and to assistants summarising the tour.
+      ...(videoSchema.value ? [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(videoSchema.value),
+      }] : []),
       {
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
@@ -1377,7 +1439,7 @@ watchEffect(() => {
       // `faqItems`, so they can't drift.
       ...(faqItems.value.length ? [{
         type: 'application/ld+json',
-        children: JSON.stringify({
+        innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
           mainEntity: faqItems.value.map(f => ({

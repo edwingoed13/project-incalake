@@ -549,7 +549,10 @@ watch(selectedTagSlug, async (slug) => {
   }
 }, { immediate: true })
 
-const apiBase = () => useRuntimeConfig().public.apiBase
+// Scrubbed: the deployed value carries a trailing newline, which made this
+// build an invalid URL and the tag lookup fail without a trace. useApi()
+// already guards its own calls; this one bypassed it.
+const apiBase = () => sanitizeBaseUrl(useRuntimeConfig().public.apiBase)
 
 // Duration buckets aligned with the actual catalog:
 //   short  – up to 4 hours (Uros morning, city tour)
