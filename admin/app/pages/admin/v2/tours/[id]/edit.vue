@@ -293,6 +293,42 @@ const autosaveColor = computed<'warning' | 'success' | 'info' | 'neutral'>(() =>
  * steady state — the save badge in the top bar covers it, and the row is worth
  * more as working space.
  */
+/**
+ * Whether the form is long enough to scroll. The gutter arrows only earn their
+ * place when the bottom bar is out of reach: on a short step — every accordion
+ * collapsed, say — that bar is already on screen and the arrows just sat on top
+ * of its own Anterior/Siguiente buttons.
+ */
+const formScrollEl = ref<HTMLElement | null>(null)
+const formScrolls = ref(false)
+let formResizeObserver: ResizeObserver | null = null
+
+function measureFormScroll() {
+  const el = formScrollEl.value
+  // A couple of pixels of slack: sub-pixel rounding otherwise reports a scroll
+  // on a form that fits exactly.
+  formScrolls.value = !!el && el.scrollHeight - el.clientHeight > 8
+}
+
+onMounted(() => {
+  measureFormScroll()
+  if (typeof ResizeObserver === 'undefined') return
+  formResizeObserver = new ResizeObserver(measureFormScroll)
+  const el = formScrollEl.value
+  if (!el) return
+  // The container for viewport changes, its content for accordions opening and
+  // closing — the container's own height never moves when they do.
+  formResizeObserver.observe(el)
+  if (el.firstElementChild) formResizeObserver.observe(el.firstElementChild)
+})
+
+onBeforeUnmount(() => {
+  formResizeObserver?.disconnect()
+  formResizeObserver = null
+})
+
+watch(() => store.currentStep, () => nextTick(measureFormScroll))
+
 const bannerIsNews = computed(() =>
   store.hasPendingDraft
   || store.basicInfo.status !== 'published'
@@ -828,7 +864,7 @@ onBeforeUnmount(() => {
                nav bar (~56px) never covers it; scroll-pb-28 makes keyboard /
                programmatic scroll-into-view stop above the bar too. Fixes the
                recurring "dropdown / last input hidden behind the footer". -->
-          <div class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28 xl:pb-6 xl:scroll-pb-6">
+          <div ref="formScrollEl" class="flex-1 overflow-y-auto p-4 lg:p-6 pb-28 scroll-pb-28 xl:pb-6 xl:scroll-pb-6">
           <!-- 2xl+: en un monitor grande, 1024px de tope dejaban pasillos de
                margen muerto a ambos lados del formulario. -->
           <div class="max-w-5xl 2xl:max-w-7xl mx-auto">
@@ -921,7 +957,7 @@ onBeforeUnmount(() => {
                xl+ only: below that the bottom bar is still pinned and these
                would have no gutter to sit in. -->
           <button
-            v-if="store.currentStep > 1"
+            v-if="store.currentStep > 1 && formScrolls"
             type="button"
             class="hidden xl:flex absolute left-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
             title="Paso anterior"
@@ -931,7 +967,7 @@ onBeforeUnmount(() => {
             <UIcon name="i-lucide-chevron-left" class="size-5" />
           </button>
           <button
-            v-if="store.currentStep < store.totalSteps"
+            v-if="store.currentStep < store.totalSteps && formScrolls"
             type="button"
             class="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
             title="Paso siguiente"
