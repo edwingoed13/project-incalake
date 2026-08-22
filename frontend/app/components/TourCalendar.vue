@@ -348,7 +348,31 @@ function calendarDays(month: number, year: number): (CalDay | null)[] {
     })
   }
 
-  return days
+  return wrapToFiveRows(days, startDay)
+}
+
+/**
+ * Fold a sixth week back into the empty cells that open the first one.
+ *
+ * A month like August 2026 starts on a Saturday and runs to 31 days, so the
+ * 31st lands alone on a sixth row and costs the panel a whole week of height
+ * to show one date. Printed calendars have always solved this by putting that
+ * day in the gap at the top instead, and the move is weekday-safe rather than
+ * cosmetic: cell 35 falls in the Monday column, exactly where the leading gap
+ * begins, so each moved day keeps the column it belongs in — the 31st is a
+ * Monday and lands under "Lun". Since a month is at most 31 days there are
+ * never more overflow days than gap cells to take them.
+ */
+function wrapToFiveRows(days: (CalDay | null)[], startDay: number): (CalDay | null)[] {
+  if (days.length <= 35 || startDay === 0) return days
+
+  const overflow = days.slice(35)
+  const grid = days.slice(0, 35)
+  overflow.forEach((day, i) => {
+    if (day && i < startDay) grid[i] = day
+  })
+
+  return grid
 }
 
 function getDayClasses(day: CalDay): string {

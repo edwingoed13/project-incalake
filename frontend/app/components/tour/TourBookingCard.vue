@@ -237,9 +237,10 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       <!-- Partial payment: pay a deposit now, the rest on the tour day -->
       <div v-if="partialPct && !requiresInquiry" class="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
         <Icon name="material-symbols:payments-outline" class="size-4 text-amber-600 shrink-0 mt-0.5" />
-        <p class="text-xs text-amber-800 leading-snug">
-          <span class="font-bold">Reserva con el {{ partialPct }}% de adelanto.</span>
-          Pagas el resto el día del tour.
+        <!-- One line. "Pagas el resto el día del tour" is what a deposit
+             means; spelling it out cost a second row of the panel. -->
+        <p class="text-xs font-bold text-amber-800 leading-snug">
+          Reserva con el {{ partialPct }}% de adelanto
         </p>
       </div>
 
