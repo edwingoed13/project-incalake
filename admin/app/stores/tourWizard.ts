@@ -829,6 +829,11 @@ export const useTourWizardStore = defineStore('tourWizard', {
           }
           this.commercialRules.taxPercentage = data.tax_percentage ?? this.commercialRules.taxPercentage
           this.commercialRules.advancePaymentPercentage = data.advance_payment_percentage ?? this.commercialRules.advancePaymentPercentage
+          // The step 4 selector was never read back nor sent: it always
+          // opened on "Todos los métodos" and choosing "Solo PayPal" changed
+          // nothing a traveller would ever see. The column, the validation and
+          // the API field existed the whole time — only the wizard was silent.
+          this.commercialRules.paymentMethod = data.payment_method ?? this.commercialRules.paymentMethod
 
           // Map Step 5: Multimedia.
           // Normalize gallery_layout to one of the 4 admin options. Legacy /
@@ -1092,6 +1097,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         // Step 4 Commercial Rules / Pricing
         tax_percentage: this.commercialRules.taxPercentage,
         advance_payment_percentage: this.commercialRules.advancePaymentPercentage,
+        payment_method: this.commercialRules.paymentMethod || 'all',
         prices: this.commercialRules.ageStages.reduce((acc: Record<string, any>, stage) => {
           acc[stage.id] = {
             active: stage.active,

@@ -66,6 +66,33 @@ const customerCountry = ref('PE')
 const customerNotes = ref('')
 const pickupLocation = ref('')
 const paymentMethod = ref<'culqi' | 'paypal'>('culqi')
+
+// Which methods this checkout may offer. A tour can be restricted to one of
+// them in admin Step 4, and until now nothing here read that: a PayPal-only
+// tour still showed the card option and took card payments. With several tours
+// in the cart only what ALL of them accept can be offered.
+const ALL_METHODS: Array<'culqi' | 'paypal'> = ['culqi', 'paypal']
+const allowedMethods = computed<Array<'culqi' | 'paypal'>>(() => {
+  const perTour = cartStore.items.map((item) => {
+    const pm = tourDetails.value[item.tourId]?.payment_method
+    return pm === 'culqi' || pm === 'paypal' ? [pm] : ALL_METHODS
+  })
+  if (!perTour.length) return ALL_METHODS
+  return ALL_METHODS.filter(m => perTour.every(set => set.includes(m)))
+})
+
+// Two tours restricted to different methods leave nothing in common. Rather
+// than quietly charging by whichever one happens to be selected, say so and
+// stop — they have to be paid for separately.
+const methodsConflict = computed(() => cartStore.items.length > 0 && allowedMethods.value.length === 0)
+
+// Details load after mount, so the allowed set narrows a moment later. Move off
+// a method that turns out not to be allowed instead of submitting it.
+watch(allowedMethods, (methods) => {
+  if (methods.length && !methods.includes(paymentMethod.value)) {
+    paymentMethod.value = methods[0]!
+  }
+}, { immediate: true })
 const acceptedTerms = ref(false)
 
 const selectedDialCode = computed(() => getDialCode(customerCountry.value))
@@ -281,6 +308,7 @@ const modalTitle = computed(() => {
         </label>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label
+            v-if="allowedMethods.includes('culqi')"
             class="flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all"
             :class="paymentMethod === 'culqi' ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'"
           >
@@ -294,6 +322,7 @@ const modalTitle = computed(() => {
             </div>
           </label>
           <label
+            v-if="allowedMethods.includes('paypal')"
             class="flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all"
             :class="paymentMethod === 'paypal' ? 'border-[#0070ba] bg-[#0070ba]/5' : 'border-slate-200 hover:border-slate-300'"
           >
@@ -303,6 +332,10 @@ const modalTitle = computed(() => {
             <span class="text-[10px] text-slate-500 ml-auto truncate">{{ t('checkout.paypal_or_card') }}</span>
           </label>
         </div>
+        <p v-if="methodsConflict" class="mt-2 flex items-start gap-2 text-xs font-semibold text-red-700">
+          <Icon name="material-symbols:error-outline" class="size-4 shrink-0 mt-px" />
+          Los tours de tu carrito admiten formas de pago distintas. Resérvalos por separado.
+        </p>
       </div>
 
       <!-- Terms and Conditions Checkbox -->
@@ -334,7 +367,7 @@ const modalTitle = computed(() => {
            only LOOK disabled while staying clickable) -->
       <button
         type="submit"
-        :disabled="!acceptedTerms"
+        :disabled="!acceptedTerms || methodsConflict"
         class="btn-primary btn-lg w-full"
       >
         <Icon name="material-symbols:credit-card-outline" class="text-2xl" />
