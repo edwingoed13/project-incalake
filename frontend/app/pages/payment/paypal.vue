@@ -244,7 +244,17 @@ const bookingStore = useBookingStore()
 const cartStore = useCartStore()
 const currencyStore = useCurrencyStore()
 const localePath = useLocalePath()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// The booking pages showed every date in en-US regardless of the language the
+// customer booked in — "Thu, Sep 3, 2026" on a Spanish reservation. Map the
+// active locale to a real BCP-47 tag so the date speaks the same language as
+// the page around it.
+const INTL_LOCALES: Record<string, string> = {
+  es: 'es-ES', en: 'en-US', pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', it: 'it-IT',
+}
+const intlLocale = computed(() => INTL_LOCALES[String(locale.value)] || 'es-ES')
+
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -339,7 +349,7 @@ onMounted(async () => {
 const formatDate = (dateString: string) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(intlLocale.value, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

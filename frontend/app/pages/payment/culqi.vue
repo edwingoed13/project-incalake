@@ -97,19 +97,6 @@
             </div>
           </div>
 
-          <!-- Total -->
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <CheckoutOrderTotals
-              :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
-              :subtotal="subtotalAmount"
-              :tax="taxAmount"
-              :total="payNowAmount"
-              :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
-              :balance-label="t('balance_due_day')"
-              :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
-              :usd-approx="grandTotal"
-            />
-          </div>
         </div>
 
         <!-- Right: Payment (2 cols) -->
@@ -153,8 +140,24 @@
               </div>
             </div>
 
-            <!-- Pay Button -->
+            <!-- Totals sit in the same card as the button, directly above it.
+                 They used to live in the left column, a screen away from the
+                 action: the customer read a figure over there and pressed
+                 "Pagar" over here, with nothing tying the two together. What is
+                 being charged belongs next to the thing that charges it. -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
+              <CheckoutOrderTotals
+                class="mb-5"
+                :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
+                :subtotal="subtotalAmount"
+                :tax="taxAmount"
+                :total="payNowAmount"
+                :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
+                :balance-label="t('balance_due_day')"
+                :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
+                :usd-approx="grandTotal"
+              />
+
               <ClientOnly>
                 <PaymentCulqiCheckoutFixed
                   :public-key="paymentConfig?.culqi_public_key || 'pk_test_J0V01cM2W5eNlHNz'"
@@ -198,7 +201,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// The booking pages showed every date in en-US regardless of the language the
+// customer booked in — "Thu, Sep 3, 2026" on a Spanish reservation. Map the
+// active locale to a real BCP-47 tag so the date speaks the same language as
+// the page around it.
+const INTL_LOCALES: Record<string, string> = {
+  es: 'es-ES', en: 'en-US', pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', it: 'it-IT',
+}
+const intlLocale = computed(() => INTL_LOCALES[String(locale.value)] || 'es-ES')
+
 const currencyStore = useCurrencyStore()
 const localePath = useLocalePath()
 
@@ -272,7 +285,7 @@ function formatDate(dateString: string) {
   const clean = dateString.split('T')[0] // Remove time part from ISO datetime
   const [y, m, d] = clean.split('-').map(Number)
   const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  return date.toLocaleDateString(intlLocale.value, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 onMounted(async () => {
