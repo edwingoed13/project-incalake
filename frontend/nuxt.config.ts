@@ -258,6 +258,9 @@ export default defineNuxtConfig({
 
   // SSR + SPA + ISR Híbrido: Optimización por tipo de página
   routeRules: {
+    // Baseline for the whole site. The more specific payment rules below
+    // tighten it to no-referrer.
+    '/**': { headers: { 'Referrer-Policy': 'strict-origin-when-cross-origin' } },
     // SPA — páginas privadas (instant load, no SEO). Localized too: with i18n
     // strategy 'prefix' the real paths are /{locale}/cart, /{locale}/payment/…
     // so the unprefixed rules alone never matched. robots:false = noindex.
@@ -272,8 +275,22 @@ export default defineNuxtConfig({
     // they stay pure client-side SPA and read the token in the browser.
     '/**/cart': { ssr: false, robots: false, isr: false },
     '/**/checkout': { ssr: false, robots: false, isr: false },
-    '/*/payment/**': { ssr: false, robots: false, isr: false },
-    '/*/booking-confirmation/**': { ssr: false, robots: false, isr: false },
+    // no-referrer on the payment and confirmation pages: their URLs carry the
+    // customer's email as the credential that unlocks the booking, and the
+    // default policy hands the full URL to every third party the page talks to
+    // — the Culqi script included. Nothing here was setting a policy at all.
+    '/*/payment/**': {
+      ssr: false,
+      robots: false,
+      isr: false,
+      headers: { 'Referrer-Policy': 'no-referrer' },
+    },
+    '/*/booking-confirmation/**': {
+      ssr: false,
+      robots: false,
+      isr: false,
+      headers: { 'Referrer-Policy': 'no-referrer' },
+    },
     '/**/saved': { ssr: false, robots: false, isr: false },
 
     // ISR — páginas públicas con cache (revalida en background). Prod-only.

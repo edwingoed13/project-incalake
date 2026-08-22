@@ -521,8 +521,15 @@ const { api } = useApi()
 const config = useRuntimeConfig()
 
 const bookingCode = route.params.bookingCode as string
+// Read once, here, and then taken out of the address bar below: these are the
+// booking's credentials, and they otherwise stay in browser history, in
+// whatever the customer screenshots, and in every log the request passes.
 const email = route.query.email as string
 const token = route.query.token as string
+
+if (typeof window !== 'undefined' && window.history?.replaceState) {
+  window.history.replaceState({}, '', window.location.pathname)
+}
 // Proof of access appended to every /bookings/{id}/* confirmation call — the
 // backend gates those endpoints by token/email now (anti-IDOR).
 const { accessQs } = useBookingAccess()

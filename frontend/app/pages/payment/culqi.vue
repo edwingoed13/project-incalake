@@ -69,10 +69,15 @@
                        confirmed (shown on the confirmation page). -->
                 </div>
 
-                <!-- Price -->
-                <div class="text-right shrink-0">
-                  <p class="text-lg font-black text-slate-800">{{ currencyStore.formatConverted(b.pricing?.total || 0) }}</p>
-                  <p class="text-[10px] text-slate-400">{{ b.pricing?.currency || 'USD' }}</p>
+                <!-- Per-tour price, and only when there is more than one tour
+                     to break down. On a single booking this was the fourth
+                     place the same figure appeared — and the most confusing of
+                     them, because it showed the total WITH fees sitting right
+                     above a breakdown that separates them: $781.10 over
+                     "Subtotal $730.00". Now it shows the tour's own price, so
+                     the column adds up: tours → subtotal → + fees → total. -->
+                <div v-if="allBookings.length > 1" class="text-right shrink-0">
+                  <p class="text-base font-black text-slate-800">{{ currencyStore.formatConverted(b.pricing?.subtotal || b.pricing?.total || 0) }}</p>
                 </div>
               </div>
             </div>
@@ -287,6 +292,15 @@ onMounted(async () => {
     }
 
     if (allBookings.value.length === 0) throw new Error('No bookings found')
+
+    // The bookings are loaded, so the credentials in the query string have done
+    // their job — take the customer's email back out of the address bar. It
+    // otherwise sits in browser history, in whatever the customer screenshots
+    // or pastes to ask for help, and in every server log the request passes
+    // through. replaceState leaves no entry to go back to.
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
 
     // Load payment config
     const { api } = useApi()

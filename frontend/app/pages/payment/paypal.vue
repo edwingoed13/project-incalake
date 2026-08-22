@@ -277,11 +277,15 @@ const payNowAmount = computed(() =>
 )
 const balanceAmount = computed(() => Math.max(0, fullTotal.value - payNowAmount.value))
 
+// Kept out of the address bar once it has been used — see below.
+const verifiedEmail = ref('')
+
 onMounted(async () => {
   try {
     // Query param may be a single code or "BK-1,BK-2" for a multi-tour cart.
     const bookingParam = route.query.booking as string
     const email = route.query.email as string
+    verifiedEmail.value = email || ''
 
     if (!bookingParam) {
       throw new Error('Booking code is required')
@@ -298,6 +302,12 @@ onMounted(async () => {
 
     if (allBookings.value.length === 0) {
       throw new Error('Booking not found')
+    }
+
+    // Credentials have done their job: take the customer's email out of the
+    // address bar so it stops travelling through history, screenshots and logs.
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState({}, '', window.location.pathname)
     }
 
     // Primary booking drives display + customer fields (same as Culqi page).
@@ -362,7 +372,7 @@ const handlePaymentSuccess = async (orderId: string, paymentData: any) => {
 
     // One code in the URL — the confirmation page resolves the whole
     // multi-tour group from the payment record on the backend.
-    const email = route.query.email as string || booking.value.customer?.email || ''
+    const email = booking.value.customer?.email || verifiedEmail.value || ''
     router.push(`${localePath(`/booking-confirmation/${allBookings.value[0].booking_code}`)}?email=${encodeURIComponent(email)}`)
 
   } catch (err: any) {
