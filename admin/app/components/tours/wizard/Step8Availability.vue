@@ -71,11 +71,17 @@
               :class="[
                 'relative aspect-square rounded-lg flex items-center justify-center text-xs font-bold border transition-colors',
                 cell.outOfMonth ? 'border-transparent text-muted/30' : 'border-default',
-                cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth ? 'bg-primary/10 border-primary/40 text-primary' : '',
+                // Bookable days carry the fill. /10 was invisible on a dark
+                // background, so dark mode gets its own weight rather than the
+                // same value on both grounds.
+                cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth
+                  ? 'bg-primary/15 dark:bg-primary/25 border-primary/50 text-primary' : '',
                 cell.blocked && !cell.outOfMonth ? 'bg-error/10 border-error/40 text-error line-through' : '',
                 cell.isHoliday && !cell.outOfMonth ? 'ring-2 ring-error/40 ring-inset' : '',
                 cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
-                !cell.inAvailability && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
+                // A weekday the tour does not run is as unbookable as a date
+                // outside the range, and must not read as available.
+                (!cell.inAvailability || !cell.activeWeekday) && !cell.outOfMonth && !cell.blocked ? 'text-muted' : '',
               ]"
               :title="cell.tooltip"
             >
@@ -92,7 +98,7 @@
 
       <!-- Legend -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-3 border-t border-default text-[11px]">
-        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-primary/20 border border-primary/40" /><span class="text-muted">Disponible</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-primary/15 dark:bg-primary/25 border border-primary/50" /><span class="text-muted">Disponible</span></div>
         <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-error/10 border border-error/40" /><span class="text-muted">Bloqueado</span></div>
         <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm ring-2 ring-error/40 ring-inset" /><span class="text-muted">Feriado</span></div>
         <div class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-success" /><span class="text-muted">Con oferta</span></div>
@@ -610,7 +616,13 @@ const buildCells = (base: Date) => {
   // 6 rows × 7 cols = 42 cells covers any month.
   const cells: any[] = []
   const availStart = parseISO(store.availability.start)
-  const availEnd = parseISO(store.availability.end)
+  // "Este tour no caduca" stores end as '', which parsed to null and made
+  // every single day fall outside the range — so the preview painted the whole
+  // calendar as unavailable and the "Disponible" key in the legend pointed at
+  // a colour that never appeared. No end date means no upper bound, not an
+  // empty range.
+  const neverExpires = !!store.availability.neverExpires
+  const availEnd = neverExpires ? null : parseISO(store.availability.end)
   const activeDays: number[] = store.availability.activeDays || []
   const specialDays: string[] = store.availability.specialDays || []
   const blocks = store.availability.blocks || []
@@ -630,7 +642,7 @@ const buildCells = (base: Date) => {
     // concluded the whole feature was broken — while the real blocking worked.
     const mmdd = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
-    const inAvailability = !!(availStart && availEnd && d >= availStart && d <= availEnd)
+    const inAvailability = !!(availStart && d >= availStart && (neverExpires || (availEnd && d <= availEnd)))
     const activeWeekday = activeDays.includes(dow)
     const isHoliday = specialDays.includes(mmdd)
 
