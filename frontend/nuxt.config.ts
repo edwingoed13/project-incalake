@@ -294,11 +294,20 @@ export default defineNuxtConfig({
     '/fr': isr(900),
     '/de': isr(900),
     '/it': isr(900),
-    // Tour listing
-    '/**/tours': isr(900),
+    // Tour listing — cards carry prices and offer badges.
+    '/**/tours': isr(300),
     // Tour detail /{locale}/{city}/{slug}. The more-specific SPA rules above
     // (cart/payment/booking-confirmation) win over this 3-segment wildcard.
-    '/*/*/*': isr(900),
+    //
+    // 60s, far shorter than anything else here, because this page carries the
+    // booking-critical data: blocked dates, prices, whether the tour is still
+    // published. The on-demand purge only refreshes the edge region that
+    // receives it — measured: the API's region returns REVALIDATED while South
+    // America keeps serving the old copy — so the window, not the purge, is
+    // what bounds the wait for most travellers. It costs invocations, not
+    // speed: an expired page is still served instantly from cache while it
+    // regenerates behind the request.
+    '/*/*/*': isr(60),
     // Static copy: nothing here changes without a deploy, and a deploy clears
     // the cache anyway.
     '/**/about': isr(86400),
