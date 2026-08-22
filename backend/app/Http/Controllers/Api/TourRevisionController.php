@@ -38,20 +38,25 @@ class TourRevisionController extends Controller
         }
 
         // A draft written by an older wizard shape would restore garbage into
-        // fields that moved or vanished. Drop it and tell the client it's gone.
+        // fields that moved or vanished, so it must not be applied. It is NOT
+        // deleted here: this used to, and a GET that destroys data destroys it
+        // for every caller that gets the parameter wrong — a typo in the query
+        // string was enough to wipe an operator's parked work, silently, while
+        // returning 200. Reading is now read-only; the client is told the draft
+        // is unusable and DELETE remains the way to actually remove one.
         $expected = (string) $request->query('schema_version', 'v1');
         if ($revision->schema_version !== $expected) {
-            Log::info('Discarding stale tour draft', [
+            Log::info('Tour draft ignored: schema mismatch', [
                 'tour_id' => $tour->id,
                 'stored' => $revision->schema_version,
                 'expected' => $expected,
             ]);
-            $revision->delete();
 
             return response()->json([
                 'success' => true,
                 'data' => null,
-                'message' => 'El borrador guardado era de una versión anterior del editor y se descartó.',
+                'stale' => true,
+                'message' => 'El borrador guardado es de una versión anterior del editor y no se puede aplicar.',
             ]);
         }
 

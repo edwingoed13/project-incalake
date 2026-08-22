@@ -59,7 +59,7 @@
 
           <UFormField
             label="Palabras clave (SEO)"
-            hint="La principal (★) define el foco del tour; las demás son secundarias. Útiles para el contenido y futuras integraciones."
+            hint="Todas van al meta keywords. La principal (★) es la que debe aparecer en el meta título y la descripción."
           >
             <div class="space-y-2">
               <div class="flex gap-2">
@@ -98,6 +98,25 @@
                     <UIcon name="i-lucide-x" class="size-3.5" />
                   </button>
                 </span>
+              </div>
+
+              <!-- What the star is FOR. It set a flag nothing read: the operator
+                   was asked to choose a favourite and nothing anywhere changed,
+                   which is why the distinction read as arbitrary. The choice now
+                   drives a check — is the tour's focus actually written into the
+                   two lines Google shows? — which is the reason to have a
+                   primary keyword at all. -->
+              <div v-if="primaryKeyword" class="space-y-1 pt-1">
+                <p class="text-[11px] flex items-center gap-1.5" :class="primaryInTitle ? 'text-success' : 'text-warning'">
+                  <UIcon :name="primaryInTitle ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
+                  <span v-if="primaryInTitle">«{{ primaryKeyword }}» aparece en el meta título</span>
+                  <span v-else>«{{ primaryKeyword }}» no aparece en el meta título</span>
+                </p>
+                <p class="text-[11px] flex items-center gap-1.5" :class="primaryInDescription ? 'text-success' : 'text-warning'">
+                  <UIcon :name="primaryInDescription ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
+                  <span v-if="primaryInDescription">También en la meta descripción</span>
+                  <span v-else>Tampoco en la meta descripción</span>
+                </p>
               </div>
               <p v-else class="text-[11px] text-muted">Sin palabras clave aún. Recomendado: 3-6 (una principal).</p>
             </div>
@@ -227,6 +246,28 @@ const tourLanguages = computed(() => {
 const currentLangData = computed(() => {
   return store.contentSEO[store.currentLanguage]
 })
+
+// The primary keyword, and whether it actually made it into the two lines a
+// searcher sees. Accent- and case-insensitive: "Uyuni" and "uyuni" are the same
+// word to a person, and the operator should not be told otherwise.
+const norm = (v: string) =>
+  (v || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+const primaryKeyword = computed(() => {
+  const list = store.contentSEO[store.currentLanguage]?.keywords
+  if (!Array.isArray(list) || !list.length) return ''
+  return (list.find((k: any) => k?.is_primary) || list[0])?.keyword || ''
+})
+
+const primaryInTitle = computed(() =>
+  !!primaryKeyword.value
+  && norm(store.contentSEO[store.currentLanguage]?.metaTitle || '').includes(norm(primaryKeyword.value))
+)
+
+const primaryInDescription = computed(() =>
+  !!primaryKeyword.value
+  && norm(store.contentSEO[store.currentLanguage]?.metaDescription || '').includes(norm(primaryKeyword.value))
+)
 
 // --- SEO keywords (per language) ---
 const newKeyword = ref('')
