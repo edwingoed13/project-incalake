@@ -177,11 +177,7 @@ const resetFilters = () => {
 
 const togglePublished = async (review: Review) => {
   try {
-    await $fetch(`${config.public.apiUrl}/admin/reviews/${review.id}`, {
-      method: 'PUT',
-      headers: headers(),
-      body: { published: !review.published },
-    })
+    await apiWrite(`${config.public.apiUrl}/admin/reviews/${review.id}`, 'PUT', { published: !review.published })
     review.published = !review.published
     toast.add({
       title: review.published ? 'Reseña publicada' : 'Reseña oculta',
@@ -196,11 +192,7 @@ const togglePublished = async (review: Review) => {
 
 const toggleFeatured = async (review: Review) => {
   try {
-    await $fetch(`${config.public.apiUrl}/admin/reviews/${review.id}`, {
-      method: 'PUT',
-      headers: headers(),
-      body: { featured: !review.featured },
-    })
+    await apiWrite(`${config.public.apiUrl}/admin/reviews/${review.id}`, 'PUT', { featured: !review.featured })
     review.featured = !review.featured
     toast.add({
       title: review.featured ? 'Marcada como destacada' : 'Quitada de destacadas',
@@ -272,7 +264,7 @@ const deleteReview = async (review: Review) => {
   })
   if (!ok) return
   try {
-    await $fetch(`${config.public.apiUrl}/admin/reviews/${review.id}`, { method: 'DELETE', headers: headers() })
+    await apiWrite(`${config.public.apiUrl}/admin/reviews/${review.id}`, 'DELETE')
     toast.add({ title: 'Reseña eliminada', icon: 'i-lucide-circle-check', color: 'success' })
     fetchReviews(currentPage.value)
     fetchStats()

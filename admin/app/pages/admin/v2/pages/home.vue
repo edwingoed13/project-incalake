@@ -124,14 +124,10 @@ const save = async () => {
   if (!currentLang.value) return
   saving.value = true
   try {
-    const res: any = await $fetch(`${config.public.apiUrl}/admin/pages/home`, {
-      method: 'PUT',
-      headers: headers(),
-      body: {
-        language_id: currentLang.value.id,
-        content: form.value,
-        published: published.value,
-      },
+    const res: any = await apiWrite(`${config.public.apiUrl}/admin/pages/home`, 'PUT', {
+      language_id: currentLang.value.id,
+      content: form.value,
+      published: published.value,
     })
     if (res.success) {
       toast.add({

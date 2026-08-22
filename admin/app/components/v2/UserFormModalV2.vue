@@ -64,7 +64,6 @@ const handleSubmit = async () => {
     const url = props.user
       ? `${config.public.apiUrl}/admin/users/${props.user.id}`
       : `${config.public.apiUrl}/admin/users`
-    const method = props.user ? 'PUT' : 'POST'
 
     const payload: any = {
       name: form.value.name,
@@ -73,18 +72,10 @@ const handleSubmit = async () => {
     }
     if (form.value.password) payload.password = form.value.password
 
-    const response = await fetch(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-    if (!response.ok) {
-      const data = await response.json()
-      throw new Error(data.message || 'Error al guardar usuario')
-    }
+    // apiWrite, not a raw PUT: cPanel's mod_security answers 403 to PUT before
+    // Laravel ever sees it, so editing a user — and therefore changing any
+    // password — failed every single time from this screen.
+    await apiWrite(url, props.user ? 'PUT' : 'POST', payload)
     toast.add({
       title: props.user ? 'Usuario actualizado' : 'Usuario creado',
       icon: 'i-lucide-circle-check',

@@ -119,11 +119,7 @@ const deleteCategory = async (category: Category) => {
   })
   if (!ok) return
   try {
-    const response = await fetch(`${config.public.apiUrl}/admin/categories/${category.id}`, {
-      method: 'DELETE',
-      headers: authHeader(),
-    })
-    if (!response.ok) throw new Error()
+    await apiWrite(`${config.public.apiUrl}/admin/categories/${category.id}`, 'DELETE')
     toast.add({ title: 'Categoría eliminada', icon: 'i-lucide-circle-check', color: 'success' })
     await loadCategories()
   } catch {

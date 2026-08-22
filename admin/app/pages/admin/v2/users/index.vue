@@ -136,11 +136,9 @@ const deleteUser = async (user: User) => {
   })
   if (!ok) return
   try {
-    const response = await fetch(`${config.public.apiUrl}/admin/users/${user.id}`, {
-      method: 'DELETE',
-      headers: authHeader(),
-    })
-    if (!response.ok) throw new Error()
+    // DELETE is blocked by the host (403 before Laravel), so it travels as
+    // POST + _method — see useApiWrite.
+    await apiWrite(`${config.public.apiUrl}/admin/users/${user.id}`, 'DELETE')
     toast.add({ title: 'Usuario eliminado', icon: 'i-lucide-circle-check', color: 'success' })
     await loadUsers()
   } catch {

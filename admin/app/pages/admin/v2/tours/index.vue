@@ -355,7 +355,7 @@ const confirmDeleteTour = async (tour: Tour) => {
   if (!ok) return
 
   try {
-    const response: any = await $fetch(`${API_BASE_URL}/tours/${tour.id}`, { method: 'DELETE' })
+    const response: any = await apiWrite(`${API_BASE_URL}/tours/${tour.id}`, 'DELETE')
     if (response?.success) {
       toast.add({ title: 'Tour eliminado', description: `${tour.title} (${tour.code})`, icon: 'i-lucide-check-circle', color: 'success' })
       refreshData()
@@ -378,7 +378,7 @@ const confirmDeleteTranslation = async (tour: Tour, tr: Translation) => {
   })
   if (!ok) return
   try {
-    const response: any = await $fetch(`${API_BASE_URL}/tours/${tour.id}/translation/${tr.language_id}`, { method: 'DELETE', headers: authHeaders() })
+    const response: any = await apiWrite(`${API_BASE_URL}/tours/${tour.id}/translation/${tr.language_id}`, 'DELETE')
     if (response?.success) {
       toast.add({
         title: response.tour_deleted ? 'Tour eliminado' : 'Traducción eliminada',

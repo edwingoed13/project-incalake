@@ -146,14 +146,10 @@ const save = async () => {
   }
   saving.value = true
   try {
-    const res: any = await $fetch(`${config.public.apiUrl}/admin/pages/menu`, {
-      method: 'PUT',
-      headers: headers(),
-      body: {
-        language_id: currentLang.value.id,
-        content: form.value,
-        published: published.value,
-      },
+    const res: any = await apiWrite(`${config.public.apiUrl}/admin/pages/menu`, 'PUT', {
+      language_id: currentLang.value.id,
+      content: form.value,
+      published: published.value,
     })
     if (res.success) {
       toast.add({ title: 'Menú guardado', description: `Idioma: ${currentLang.value.country}`, icon: 'i-lucide-circle-check', color: 'success' })
