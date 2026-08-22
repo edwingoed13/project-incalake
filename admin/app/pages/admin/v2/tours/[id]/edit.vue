@@ -287,6 +287,17 @@ const autosaveColor = computed<'warning' | 'success' | 'info' | 'neutral'>(() =>
 // published tour pushes to the public site ~2s later with no confirmation.
 // This bar never scrolls away and says which of the two is happening.
 // Class strings are static so Tailwind's scanner keeps them.
+/**
+ * Whether the status bar is telling the operator something they need to act on,
+ * or just restating the situation. A published tour with nothing parked is the
+ * steady state — the save badge in the top bar covers it, and the row is worth
+ * more as working space.
+ */
+const bannerIsNews = computed(() =>
+  store.hasPendingDraft
+  || store.basicInfo.status !== 'published'
+)
+
 const statusBanner = computed(() => {
   // Parked edits win over plain "published": the operator needs to know the
   // site is NOT showing what's on screen, and that publishing is still pending.
@@ -737,8 +748,14 @@ onBeforeUnmount(() => {
             <USkeleton class="size-5 rounded-full" />
             <USkeleton class="h-3.5 w-64" />
           </div>
+          <!-- Only when it carries news. "Está en vivo, lo que edites se guarda
+               como borrador" is standing advice, not an alert: it was spending a
+               permanent 41px row — 4% of the window — restating something the
+               save badge in the top bar already reports. It comes back the
+               moment there is something unpublished, a draft, or an archived
+               tour, which is exactly when the operator must not miss it. -->
           <div
-            v-else
+            v-else-if="bannerIsNews"
             class="shrink-0 border-b px-4 lg:px-6 py-2.5 flex items-center gap-3"
             :class="statusBanner.wrapper"
           >
@@ -758,17 +775,6 @@ onBeforeUnmount(() => {
             >
               Descartar
             </UButton>
-            <div
-              class="shrink-0 flex items-center gap-1.5 text-sm font-semibold"
-              :class="saveState.class"
-            >
-              <UIcon
-                :name="saveState.icon"
-                class="size-4"
-                :class="saveState.spin ? 'animate-spin' : ''"
-              />
-              <span class="hidden sm:inline">{{ autosaveLabel }}</span>
-            </div>
           </div>
 
           <!-- Edit collision. Sits above the form, outside the scroll area,
@@ -865,7 +871,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Bottom navigation (always visible — sidebar is hidden below xl) -->
-          <div class="shrink-0 border-t border-default bg-default px-4 lg:px-6 py-3">
+          <div class="shrink-0 border-t border-default bg-default px-4 lg:px-6 py-2">
             <div class="max-w-5xl 2xl:max-w-7xl mx-auto flex items-center justify-between gap-3">
               <UButton
                 icon="i-lucide-arrow-left"
