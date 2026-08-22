@@ -71,7 +71,7 @@ class TourDraftAndVisibilityTest extends TestCase
             ->assertJsonPath('data.payload.basicInfo.title', 'Borrador pendiente');
     }
 
-    public function test_a_draft_from_an_older_editor_version_is_discarded(): void
+    public function test_a_draft_from_an_older_editor_version_is_not_applied(): void
     {
         $tour = Tour::factory()->create();
         TourRevision::create([
@@ -82,12 +82,40 @@ class TourDraftAndVisibilityTest extends TestCase
         Sanctum::actingAs($this->admin());
 
         // Restoring a v0 payload into a v1 wizard would put values in fields
-        // that no longer mean the same thing, so it's dropped instead.
+        // that no longer mean the same thing, so it is not handed back.
         $this->getJson("/api/admin/tours/{$tour->id}/revision?schema_version=v1")
+            ->assertOk()
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('stale', true);
+
+        // It used to be DELETED here, and this test asserted that. Not applying
+        // it is right; destroying it on a read is not. Any caller that gets the
+        // parameter wrong — a typo, an older tab, a script — wiped an
+        // operator's unpublished work and got a 200 for it, with no undo behind
+        // it. Removing a draft is what DELETE is for.
+        $this->assertDatabaseHas('tour_revisions', ['tour_id' => $tour->id]);
+    }
+
+    /** The read path must never be the thing that loses someone's work. */
+    public function test_reading_with_the_wrong_schema_version_leaves_the_draft_intact(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['basicInfo' => ['title' => 'trabajo sin publicar']],
+        ])->assertOk();
+
+        // '1' instead of 'v1' — the exact typo that cost a real draft.
+        $this->getJson("/api/admin/tours/{$tour->id}/revision?schema_version=1")
             ->assertOk()
             ->assertJsonPath('data', null);
 
-        $this->assertDatabaseMissing('tour_revisions', ['tour_id' => $tour->id]);
+        // And it is still there for the next correct read.
+        $this->getJson("/api/admin/tours/{$tour->id}/revision?schema_version=v1")
+            ->assertOk()
+            ->assertJsonPath('data.payload.basicInfo.title', 'trabajo sin publicar');
     }
 
     public function test_discarding_removes_the_draft(): void
