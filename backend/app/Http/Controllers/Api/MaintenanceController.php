@@ -447,6 +447,21 @@ class MaintenanceController extends Controller
         $url = $base . '/' . ($request->query('path') ?: 'es');
 
         try {
+            // A MISS on its own proves nothing: a page whose window has just
+            // expired answers MISS to any visitor, token or no token. So
+            // establish a cached baseline FIRST — up to three plain GETs — and
+            // only then judge whether the purge changed anything. Without this
+            // the check reports "works" on a deployment where every purge is
+            // being ignored, which is exactly how this stayed hidden.
+            $baseline = '';
+            for ($try = 0; $try < 3; $try++) {
+                $warm = Http::timeout(15)->get($url);
+                $baseline = strtoupper((string) $warm->header('x-vercel-cache'));
+                if ($baseline === 'HIT') {
+                    break;
+                }
+            }
+
             $res = Http::withHeaders(['x-prerender-revalidate' => $token])
                 ->timeout(15)
                 ->get($url);
@@ -457,10 +472,18 @@ class MaintenanceController extends Controller
             $out['probe'] = [
                 'url' => $url,
                 'http' => $res->status(),
+                'cache_antes_de_purgar' => $baseline ?: '(ausente)',
                 'x-vercel-cache' => $cache ?: '(ausente)',
                 'server' => $server ?: '(ausente)',
                 'age' => $res->header('age') ?: null,
             ];
+
+            if ($baseline !== 'HIT' && $server) {
+                // Never got a cached baseline, so nothing can be concluded.
+                $out['veredicto'] = 'No concluyente: la pagina no llego a quedar en cache, asi que un MISS no demuestra nada. Reintenta en un minuto.';
+
+                return response()->json(['success' => false] + $out);
+            }
 
             if ($cache === null || $cache === '') {
                 // No Vercel header at all: whatever answered is not the Vercel
