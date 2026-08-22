@@ -301,21 +301,24 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </div>
       </template>
 
-      <!-- Trust signals — inline variant only (the desktop sidebar keeps its own
-           separate trust card below the widget). -->
-      <div v-if="isInline" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100">
-        <div v-if="tour?.free_cancellation" class="flex items-center gap-1.5 text-xs">
-          <Icon name="material-symbols:check-circle" class="size-4 text-trust shrink-0" />
-          <span class="text-slate-600 font-medium">Cancelación gratuita</span>
-        </div>
-        <div class="flex items-center gap-1.5 text-xs">
-          <Icon name="material-symbols:schedule-outline" class="size-4 text-primary shrink-0" />
-          <span class="text-slate-600 font-medium">Confirmación instantánea</span>
-        </div>
-        <div class="flex items-center gap-1.5 text-xs">
-          <Icon name="material-symbols:verified-user-outline" class="size-4 text-primary shrink-0" />
-          <span class="text-slate-600 font-medium">Mejor precio</span>
-        </div>
+      <!-- Trust signals, both variants. The sidebar used to carry a second
+           bordered card below this one for the same three promises: 74px, its
+           own border and a gap, to repeat what the inline variant already said
+           in a strip. One strip, one card. Localized, unlike the booking
+           labels around it — these three keys already existed and worked. -->
+      <div class="flex flex-wrap gap-x-3 gap-y-1 pt-2.5 border-t border-slate-100 text-[11px] font-medium text-slate-600">
+        <span v-if="tour?.free_cancellation" class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:check-circle" class="size-3.5 text-trust shrink-0" />
+          {{ t('free_cancellation') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:schedule-outline" class="size-3.5 text-primary shrink-0" />
+          {{ t('trust_instant') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:verified-user-outline" class="size-3.5 text-primary shrink-0" />
+          {{ t('trust_best_price') }}
+        </span>
       </div>
     </div>
   </div>
