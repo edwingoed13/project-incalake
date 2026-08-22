@@ -287,6 +287,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.maintenance.clear-caches');
         Route::match(['get', 'post'], '/calendar-test', [\App\Http\Controllers\Api\MaintenanceController::class, 'calendarTest'])
             ->name('api.admin.maintenance.calendar-test');
+        // Says whether an on-demand ISR purge can actually reach the public
+        // site. Read-only and never echoes the token.
+        Route::match(['get', 'post'], '/revalidation-check', [\App\Http\Controllers\Api\MaintenanceController::class, 'revalidationCheck'])
+            ->name('api.admin.maintenance.revalidation-check');
         Route::match(['get', 'post'], '/seed-standard-tags', [\App\Http\Controllers\Api\MaintenanceController::class, 'seedStandardTags'])
             ->name('api.admin.maintenance.seed-standard-tags');
         Route::match(['get', 'post'], '/expand-anticipation-enum', [\App\Http\Controllers\Api\MaintenanceController::class, 'expandAnticipationEnum'])

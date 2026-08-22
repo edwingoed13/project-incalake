@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\Tour;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -100,5 +101,41 @@ class SharedSurfaceRevalidationTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('reviews', ['tour_id' => $tour->id, 'name' => 'Ana']);
+    }
+
+    /**
+     * A 200 does not mean the purge landed. Vercel answers normally when it
+     * rejects the token, and the old Apache site answers 200 to anything — so
+     * every edit silently failed to reach travellers while the log stayed
+     * clean. The x-vercel-cache header is the only honest signal.
+     */
+    public function test_a_purge_answered_from_cache_is_reported_as_ignored(): void
+    {
+        Log::spy();
+        Http::fake(['*' => Http::response('', 200, ['x-vercel-cache' => 'HIT'])]);
+        $tour = Tour::factory()->create();
+
+        Review::create([
+            'tour_id' => $tour->id, 'name' => 'Ana', 'rating' => 5,
+            'comment' => 'Excelente', 'published' => true,
+        ]);
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn ($message) => str_contains((string) $message, 'ACCEPTED BUT IGNORED'));
+    }
+
+    /** A genuine regeneration must NOT be reported as a problem. */
+    public function test_a_regenerated_page_is_not_reported(): void
+    {
+        Log::spy();
+        Http::fake(['*' => Http::response('', 200, ['x-vercel-cache' => 'MISS'])]);
+        $tour = Tour::factory()->create();
+
+        Review::create([
+            'tour_id' => $tour->id, 'name' => 'Ana', 'rating' => 5,
+            'comment' => 'Excelente', 'published' => true,
+        ]);
+
+        Log::shouldNotHaveReceived('error');
     }
 }

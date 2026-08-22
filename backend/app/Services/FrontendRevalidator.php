@@ -88,17 +88,39 @@ class FrontendRevalidator
             ));
 
             $failed = [];
+            $ignored = [];
             foreach ($responses as $i => $response) {
                 $ok = is_object($response)
                     && method_exists($response, 'successful')
                     && $response->successful();
                 if (!$ok) {
                     $failed[] = $urls[$i];
+                    continue;
+                }
+
+                // A 200 is NOT proof the purge landed. Vercel answers normally
+                // when it does not accept the token, and the old Apache site
+                // answers 200 to anything — so for a long time every edit
+                // failed to reach travellers while this logged nothing at all.
+                // The header is the only honest signal: a cached response means
+                // nothing was regenerated.
+                $cache = strtoupper((string) $response->header('x-vercel-cache'));
+                if ($cache === '' || $cache === 'HIT') {
+                    $ignored[] = $urls[$i] . ' [x-vercel-cache: ' . ($cache ?: 'ausente') . ']';
                 }
             }
 
             if ($failed) {
                 Log::warning('ISR revalidation failed for some URLs', $logContext + ['failed' => $failed]);
+            }
+
+            if ($ignored) {
+                Log::error(
+                    'ISR revalidation was ACCEPTED BUT IGNORED - the public site is serving stale pages. '
+                    . 'Check FRONTEND_PUBLIC_URL points at the Vercel deployment and that '
+                    . 'FRONTEND_REVALIDATE_TOKEN matches VERCEL_BYPASS_TOKEN.',
+                    $logContext + ['ignored' => $ignored]
+                );
             }
         } catch (\Throwable $e) {
             Log::warning('ISR revalidation threw', $logContext + ['error' => $e->getMessage()]);

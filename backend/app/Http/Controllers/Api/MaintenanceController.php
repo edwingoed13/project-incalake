@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 /**
  * One-shot maintenance endpoints that the admin UI can trigger when SSH /
@@ -412,5 +413,76 @@ class MaintenanceController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Report whether an on-demand ISR purge can actually reach the public site.
+     *
+     * A purge is a GET carrying `x-prerender-revalidate`. When the token is
+     * wrong, or the configured URL points somewhere that is not the Vercel
+     * deployment, Vercel (or whatever answers) still returns 200 — so
+     * FrontendRevalidator saw "success" and logged nothing while every edit
+     * quietly failed to reach travellers. This says out loud which of those is
+     * happening, without ever echoing the token back.
+     */
+    public function revalidationCheck(Request $request): JsonResponse
+    {
+        $base = rtrim((string) config('services.frontend.url'), '/');
+        $token = (string) config('services.frontend.revalidate_token');
+
+        $out = [
+            'frontend_url' => $base !== '' ? $base : '(sin configurar)',
+            'token_configurado' => $token !== '',
+            'token_longitud' => strlen($token),
+        ];
+
+        if ($base === '' || $token === '') {
+            $out['veredicto'] = 'Falta configuracion: FRONTEND_PUBLIC_URL y/o FRONTEND_REVALIDATE_TOKEN estan vacios en el .env de la API.';
+
+            return response()->json(['success' => false] + $out);
+        }
+
+        // Probe a page that always exists rather than a tour, so the check
+        // works even on a database with no published tours.
+        $url = $base . '/' . ($request->query('path') ?: 'es');
+
+        try {
+            $res = Http::withHeaders(['x-prerender-revalidate' => $token])
+                ->timeout(15)
+                ->get($url);
+
+            $cache = $res->header('x-vercel-cache');
+            $server = $res->header('server');
+
+            $out['probe'] = [
+                'url' => $url,
+                'http' => $res->status(),
+                'x-vercel-cache' => $cache ?: '(ausente)',
+                'server' => $server ?: '(ausente)',
+                'age' => $res->header('age') ?: null,
+            ];
+
+            if ($cache === null || $cache === '') {
+                // No Vercel header at all: whatever answered is not the Vercel
+                // deployment. Almost always FRONTEND_PUBLIC_URL pointing at the
+                // old Apache site.
+                $out['veredicto'] = 'La URL configurada NO es el despliegue de Vercel (no devuelve x-vercel-cache). Las purgas se estan perdiendo. Revisa FRONTEND_PUBLIC_URL.';
+                $ok = false;
+            } elseif (strtoupper((string) $cache) === 'HIT') {
+                // Vercel answered from cache despite the header: it did not
+                // accept the token.
+                $out['veredicto'] = 'Vercel respondio desde cache (HIT), asi que NO acepto el token. FRONTEND_REVALIDATE_TOKEN no coincide con VERCEL_BYPASS_TOKEN del proyecto en Vercel.';
+                $ok = false;
+            } else {
+                $out['veredicto'] = 'La purga funciona: Vercel regenero la pagina (' . $cache . ').';
+                $ok = true;
+            }
+        } catch (\Throwable $e) {
+            $out['probe'] = ['url' => $url, 'error' => $e->getMessage()];
+            $out['veredicto'] = 'No se pudo contactar con el frontend desde el servidor de la API (posible bloqueo de salida del hosting).';
+            $ok = false;
+        }
+
+        return response()->json(['success' => $ok] + $out);
     }
 }
