@@ -214,12 +214,24 @@
           <!-- Cancellation Policies -->
           <TourPolicies v-if="tour.cancellation_policy || tour.policies" :tour="tour" />
 
-          <!-- Custom additional sections (admin Step 3) -->
-          <section v-if="customSections.length" class="space-y-6">
-            <div v-for="section in customSections" :key="section.id || section.title" class="space-y-3">
-              <h3 class="section-title">{{ section.title }}</h3>
-              <div class="prose prose-sm md:prose-base max-w-none" v-html="sanitizeHtml(section.content)"></div>
-            </div>
+          <!-- Custom additional sections (admin Step 3).
+               Same shell as every built-in section — white card, rounded-2xl,
+               shadow, h2 with an icon — because a section an operator adds is
+               a section of this page, not an annex. Rendered bare, they broke
+               the rhythm of the page wherever anyone used one, and the content
+               inside had nothing to do with it. The icon is deliberately
+               generic: the title is whatever the operator typed, so no themed
+               glyph can be honest about it. -->
+          <section
+            v-for="section in customSections"
+            :key="section.id || section.title"
+            class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8"
+          >
+            <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+              <DocumentTextIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
+              {{ section.title }}
+            </h2>
+            <div class="prose md:prose-lg max-w-2xl text-slate-600" v-html="sanitizeHtml(section.content)"></div>
           </section>
 
           <!-- Tags chips -->
@@ -516,6 +528,7 @@
 import {
   MapPinIcon,
   ClockIcon,
+  DocumentTextIcon,
   ShareIcon,
   HeartIcon,
   TagIcon,
