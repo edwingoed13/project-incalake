@@ -7,9 +7,9 @@ use App\Models\Language;
 use App\Models\PageContent;
 use App\Models\Review;
 use App\Models\Tour;
+use App\Services\FrontendRevalidator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -104,38 +104,28 @@ class SharedSurfaceRevalidationTest extends TestCase
     }
 
     /**
-     * A 200 does not mean the purge landed. Vercel answers normally when it
-     * rejects the token, and the old Apache site answers 200 to anything — so
-     * every edit silently failed to reach travellers while the log stayed
-     * clean. The x-vercel-cache header is the only honest signal.
+     * A 200 is not proof the purge landed, and this is the rule that decides.
+     * Vercel returns HIT when it declines the token; a host that is not the
+     * Vercel deployment sends no such header at all while still answering 200.
+     *
+     * @dataProvider vercelCacheHeaders
      */
-    public function test_a_purge_answered_from_cache_is_reported_as_ignored(): void
+    public function test_only_a_regenerated_response_counts_as_a_landed_purge(?string $header, bool $expected): void
     {
-        Log::spy();
-        Http::fake(['*' => Http::response('', 200, ['x-vercel-cache' => 'HIT'])]);
-        $tour = Tour::factory()->create();
-
-        Review::create([
-            'tour_id' => $tour->id, 'name' => 'Ana', 'rating' => 5,
-            'comment' => 'Excelente', 'published' => true,
-        ]);
-
-        Log::shouldHaveReceived('error')
-            ->withArgs(fn ($message) => str_contains((string) $message, 'ACCEPTED BUT IGNORED'));
+        $this->assertSame($expected, FrontendRevalidator::purgeLanded($header));
     }
 
-    /** A genuine regeneration must NOT be reported as a problem. */
-    public function test_a_regenerated_page_is_not_reported(): void
+    public static function vercelCacheHeaders(): array
     {
-        Log::spy();
-        Http::fake(['*' => Http::response('', 200, ['x-vercel-cache' => 'MISS'])]);
-        $tour = Tour::factory()->create();
-
-        Review::create([
-            'tour_id' => $tour->id, 'name' => 'Ana', 'rating' => 5,
-            'comment' => 'Excelente', 'published' => true,
-        ]);
-
-        Log::shouldNotHaveReceived('error');
+        return [
+            'regenerada'              => ['MISS', true],
+            'revalidada'              => ['REVALIDATED', true],
+            'prerender bypass'        => ['BYPASS', true],
+            'servida de cache (token rechazado)' => ['HIT', false],
+            'minusculas'              => ['hit', false],
+            'sin cabecera (no es Vercel)'        => [null, false],
+            'cabecera vacia'          => ['', false],
+            'solo espacios'           => ['   ', false],
+        ];
     }
 }

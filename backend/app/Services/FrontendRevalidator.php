@@ -104,8 +104,8 @@ class FrontendRevalidator
                 // failed to reach travellers while this logged nothing at all.
                 // The header is the only honest signal: a cached response means
                 // nothing was regenerated.
-                $cache = strtoupper((string) $response->header('x-vercel-cache'));
-                if ($cache === '' || $cache === 'HIT') {
+                $cache = (string) $response->header('x-vercel-cache');
+                if (!self::purgeLanded($cache)) {
                     $ignored[] = $urls[$i] . ' [x-vercel-cache: ' . ($cache ?: 'ausente') . ']';
                 }
             }
@@ -125,6 +125,21 @@ class FrontendRevalidator
         } catch (\Throwable $e) {
             Log::warning('ISR revalidation threw', $logContext + ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Did a purge that answered 200 actually regenerate the page?
+     *
+     * Only `x-vercel-cache` can say. Vercel returns HIT when it declines the
+     * token, and a host that is not the Vercel deployment at all — the old
+     * Apache site, a proxy — sends no such header while still answering 200.
+     * Treating either as success is what let months of edits fail unnoticed.
+     */
+    public static function purgeLanded(?string $vercelCacheHeader): bool
+    {
+        $cache = strtoupper(trim((string) $vercelCacheHeader));
+
+        return $cache !== '' && $cache !== 'HIT';
     }
 
     /**
