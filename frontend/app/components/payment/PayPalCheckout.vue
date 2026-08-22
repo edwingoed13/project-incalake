@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-xl shadow-lg p-6">
+  <div>
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -7,10 +7,10 @@
       </div>
       <div>
         <h3 class="text-lg font-black text-primary-light">
-          Pay with PayPal
+          {{ t('paypal_pay_with') }}
         </h3>
         <p class="text-sm text-secondary-light">
-          Pay securely with your PayPal account
+          {{ t('paypal_pay_secure') }}
         </p>
       </div>
     </div>
@@ -26,13 +26,17 @@
     <!-- Trust Badge -->
     <div class="mt-4 flex items-center justify-center gap-2 text-xs text-secondary-light">
       <Icon name="material-symbols:verified-user-outline" class="text-green-600 text-base" />
-      <span>PayPal buyer protection included</span>
+      <span>{{ t('paypal_protection') }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+
+// These three were hardcoded English, so a Spanish checkout ended on "Pay with
+// PayPal". The keys now exist in all six locales.
+const { t } = useI18n()
 import { loadScript } from '@paypal/paypal-js'
 
 interface Props {

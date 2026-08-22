@@ -39,11 +39,11 @@
             {{ t('booking_details') }}          </h3>
 
           <div class="space-y-4">
-            <!-- Booking Code -->
-            <div class="pb-4 border-b border-slate-200">
-              <p class="text-xs text-secondary-light mb-1">{{ t('booking_code_label') }}</p>
-              <p class="text-lg font-black text-primary">{{ booking.booking_code }}</p>
-            </div>
+            <!-- No booking code here. It exists already — one has to, so the
+                 payment gateway has something to reference — but showing it
+                 before payment presents an unpaid, auto-expiring row as a
+                 confirmed reservation. The Culqi page has always withheld it
+                 until the payment clears; this one did not. -->
 
             <!-- Tour Info -->
             <div class="pb-4 border-b border-slate-200">
@@ -93,18 +93,6 @@
               </div>
             </div>
 
-            <!-- Total — shared breakdown block (same as cart + Culqi) -->
-            <CheckoutOrderTotals
-              class="pt-2"
-              :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
-              :subtotal="subtotalAmount"
-              :tax="taxAmount"
-              :total="payNowAmount"
-              :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
-              :balance-label="t('balance_due_day')"
-              :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
-              :usd-approx="payNowAmount"
-            />
           </div>
         </div>
 
@@ -161,6 +149,22 @@
               </button>
             </div>
           </div>
+          <!-- One card holding the amount and the button that charges it,
+               same as the Culqi page. The totals used to sit in the left
+               column, a screen away from the action. -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
+          <CheckoutOrderTotals
+            class="mb-5"
+            :items-label="`${t('subtotal')} (${allBookings.length} ${allBookings.length === 1 ? t('booking') : t('bookings')})`"
+            :subtotal="subtotalAmount"
+            :tax="taxAmount"
+            :total="payNowAmount"
+            :total-label="paymentMode === 'advance' && hasAdvanceOption ? t('pay_now_label') : t('total_to_pay')"
+            :balance-label="t('balance_due_day')"
+            :balance="paymentMode === 'advance' && hasAdvanceOption ? balanceAmount : null"
+            :usd-approx="grandTotal"
+          />
+
           <ClientOnly>
             <template v-if="paymentConfig?.paypal_client_id">
               <PaymentPayPalCheckout
@@ -194,6 +198,7 @@
               </div>
             </template>
           </ClientOnly>
+          </div>
         </div>
       </div>
     </div>
