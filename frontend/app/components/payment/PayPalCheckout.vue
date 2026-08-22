@@ -1,19 +1,8 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-        <Icon name="material-symbols:account-balance-wallet-outline" class="text-primary text-2xl" />
-      </div>
-      <div>
-        <h3 class="text-lg font-black text-primary-light">
-          {{ t('paypal_pay_with') }}
-        </h3>
-        <p class="text-sm text-secondary-light">
-          {{ t('paypal_pay_secure') }}
-        </p>
-      </div>
-    </div>
+    <!-- No "Pagar con PayPal" heading: PayPal's own button carries the brand
+         right below it, and the Culqi panel has no equivalent title either.
+         Two logos and a name for one action was a row of noise. -->
 
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">

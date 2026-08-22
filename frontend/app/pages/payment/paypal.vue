@@ -1,14 +1,6 @@
 <template>
   <div class="min-h-screen bg-background-light pt-24 pb-8 lg:pt-28 lg:pb-12">
-    <div class="container mx-auto px-4 lg:px-6 max-w-4xl">
-      <!-- Header -->
-      <div class="mb-8 text-center">
-        <h1 class="text-3xl lg:text-4xl font-black text-primary-light mb-2">
-          {{ t('payment_complete_title') }}        </h1>
-        <p class="text-secondary-light">
-          {{ t('payment_secure_paypal') }}        </p>
-      </div>
-
+    <div class="container mx-auto px-4 lg:px-6 max-w-6xl">
       <!-- Loading State -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
         <div class="spinner size-12 mb-4"></div>
@@ -32,72 +24,73 @@
       </div>
 
       <!-- Payment Content -->
-      <div v-else-if="booking" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Left Column: Booking Summary -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h3 class="text-xl font-black text-primary-light mb-4">
-            {{ t('booking_details') }}          </h3>
-
-          <div class="space-y-4">
-            <!-- No booking code here. It exists already — one has to, so the
-                 payment gateway has something to reference — but showing it
-                 before payment presents an unpaid, auto-expiring row as a
-                 confirmed reservation. The Culqi page has always withheld it
-                 until the payment clears; this one did not. -->
-
-            <!-- Tour Info -->
-            <div class="pb-4 border-b border-slate-200">
-              <p class="text-xs text-secondary-light mb-1">Tour</p>
-              <p class="font-bold text-primary-light">
-                {{ booking.tour?.title || 'Tour' }}
-              </p>
+      <div v-else-if="booking" class="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+        <!-- Left: Order Summary — same cards, in the same order, as the Culqi
+             page. This column used to be a single box of label/value rows,
+             which made the two payment pages look like different products. -->
+        <div class="lg:col-span-3 space-y-4">
+          <!-- Header -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
+            <div class="flex items-center gap-3 mb-1">
+              <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Icon name="material-symbols:receipt-long-outline" class="text-primary text-2xl" />
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">{{ t('order_summary') }}</h2>
+                <p class="text-xs text-slate-400">{{ allBookings.length }} {{ allBookings.length === 1 ? t('tour_selected') : t('tours_selected') }}</p>
+              </div>
             </div>
+          </div>
 
-            <!-- Date -->
-            <div class="pb-4 border-b border-slate-200">
-              <p class="text-xs text-secondary-light mb-1">{{ t('date') }}</p>
-              <p class="font-semibold text-primary-light">
-                {{ formatDate(booking.tour_date) }}
-              </p>
-            </div>
-
-            <!-- Participants -->
-            <div class="pb-4 border-b border-slate-200">
-              <p class="text-xs text-secondary-light mb-2">{{ t('travelers') }}</p>
-              <div class="space-y-1 text-sm">
-                <div v-if="booking.participants?.adults" class="flex justify-between">
-                  <span class="text-secondary-light">{{ t('adults') }}</span>
-                  <span class="font-semibold text-primary-light">
-                    {{ booking.participants.adults }}
-                  </span>
+          <!-- Tour Cards -->
+          <div
+            v-for="(b, idx) in allBookings"
+            :key="b.booking_code"
+            class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+          >
+            <div class="p-5">
+              <div class="flex gap-4">
+                <div class="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                  {{ idx + 1 }}
                 </div>
-                <div v-if="booking.participants?.children" class="flex justify-between">
-                  <span class="text-secondary-light">{{ t('children_label') }}</span>
-                  <span class="font-semibold text-primary-light">
-                    {{ booking.participants.children }}
-                  </span>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 mb-1">{{ b.tour?.title || 'Tour' }}</h3>
+                  <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                    <span class="flex items-center gap-1">
+                      <Icon name="material-symbols:calendar-today-outline" class="text-xs" />
+                      {{ formatDate(b.tour_date) }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <Icon name="material-symbols:group-outline" class="text-xs" />
+                      {{ b.participants?.adults || 0 }} {{ t('adults').toLowerCase() }}
+                      <template v-if="b.participants?.children">, {{ b.participants.children }} {{ t('children_label').toLowerCase() }}</template>
+                    </span>
+                  </div>
+                </div>
+                <div v-if="allBookings.length > 1" class="text-right shrink-0">
+                  <p class="text-base font-black text-slate-800">{{ currencyStore.formatConverted(b.pricing?.subtotal || b.pricing?.total || 0) }}</p>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Customer Info -->
-            <div class="pb-4 border-b border-slate-200">
-              <p class="text-xs text-secondary-light mb-2">{{ t('customer') }}</p>
-              <div class="space-y-1 text-sm">
-                <p class="font-semibold text-primary-light">
-                  {{ booking.customer?.name }}
-                </p>
-                <p class="text-secondary-light">
-                  {{ booking.customer?.email }}
-                </p>
+          <!-- Customer Info -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{{ t('customer') }}</h4>
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">
+                {{ getInitials(booking.customer?.name || '') }}
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ booking.customer?.name }}</p>
+                <p class="text-xs text-slate-500">{{ booking.customer?.email }}</p>
               </div>
             </div>
-
           </div>
         </div>
 
         <!-- Right Column: Payment Method -->
-        <div>
+        <div class="lg:col-span-2 space-y-4">
           <!-- Payment mode (deposit vs full) — only when the tour offers a deposit -->
           <div v-if="hasAdvanceOption" class="mb-4 bg-white rounded-xl border border-slate-200 p-4 space-y-2">
             <p class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ t('pay_mode_question') }}</p>
@@ -349,6 +342,16 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Initials for the customer avatar, same as the Culqi page.
+function getInitials(name: string) {
+  return (name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0]?.toUpperCase() || '')
+    .join('')
+}
 
 // Format date helper
 const formatDate = (dateString: string) => {
