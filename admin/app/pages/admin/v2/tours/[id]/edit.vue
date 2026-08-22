@@ -734,7 +734,7 @@ onBeforeUnmount(() => {
     <template #body>
       <div class="flex h-full min-h-0">
         <!-- Main content -->
-        <main class="flex-1 flex flex-col min-h-0">
+        <main class="relative flex-1 flex flex-col min-h-0">
           <!-- Persistent status bar. Sits OUTSIDE the scroll container below so
                it stays pinned while the operator moves through the form.
                While the tour is still loading it shows a neutral placeholder:
@@ -912,6 +912,34 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
+
+          <!-- Step arrows, carousel-style, parked in the gutters beside the
+               form. With the bottom bar flowing at the end of the page,
+               advancing meant scrolling to the bottom first — on a long step
+               that is a lot of wheel for one click. These sit at eye level and
+               never move, so the operator can move on from wherever they are.
+               xl+ only: below that the bottom bar is still pinned and these
+               would have no gutter to sit in. -->
+          <button
+            v-if="store.currentStep > 1"
+            type="button"
+            class="hidden xl:flex absolute left-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
+            title="Paso anterior"
+            aria-label="Paso anterior"
+            @click="store.prevStep"
+          >
+            <UIcon name="i-lucide-chevron-left" class="size-5" />
+          </button>
+          <button
+            v-if="store.currentStep < store.totalSteps"
+            type="button"
+            class="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
+            title="Paso siguiente"
+            aria-label="Paso siguiente"
+            @click="store.nextStep"
+          >
+            <UIcon name="i-lucide-chevron-right" class="size-5" />
+          </button>
         </main>
 
         <!-- Insights sidebar -->
