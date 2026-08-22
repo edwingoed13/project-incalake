@@ -294,7 +294,10 @@ const statusBanner = computed(() => {
     return {
       icon: 'i-lucide-file-clock',
       label: 'CAMBIOS SIN PUBLICAR',
-      text: 'El público sigue viendo la versión anterior. Pulsa Publicar para aplicarlos.',
+      // Name the button that is actually on screen: on a published tour it
+      // reads "Actualizar", not "Publicar", and telling the operator to press
+      // a button that isn't there is how edits sit unpublished for days.
+      text: 'El público sigue viendo la versión anterior. Pulsa «Actualizar» (arriba a la derecha) para aplicarlos.',
       wrapper: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-800',
       accent: 'text-indigo-700 dark:text-indigo-400',
       muted: 'text-indigo-800/90 dark:text-indigo-200/80',

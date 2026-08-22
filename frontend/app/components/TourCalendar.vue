@@ -1,5 +1,5 @@
 <template>
-  <div class="select-none relative">
+  <div ref="root" class="select-none relative">
     <!-- Trigger button — real button semantics + keyboard + aria-expanded -->
     <button
       type="button"
@@ -22,10 +22,16 @@
         role="dialog"
         aria-modal="true"
         :aria-label="t('select_date')"
-        class="bg-white border border-slate-200 shadow-2xl overflow-y-auto
-               fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]
-               lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-0 lg:mt-2 lg:rounded-2xl lg:overflow-hidden
-               lg:max-h-[calc(100vh-8rem)] lg:w-[560px] lg:max-w-[calc(100vw-2rem)]"
+        :class="[
+          'bg-white border border-slate-200 shadow-2xl overflow-y-auto',
+          'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]',
+          'lg:absolute lg:inset-x-auto lg:right-0 lg:rounded-2xl lg:w-[560px] lg:max-w-[calc(100vw-2rem)]',
+          // Flip above the field when the space under it is too short. Anchored
+          // downwards always, the panel ran off the bottom of the window on a
+          // 31-day month and the offer legend went with it.
+          dropUp ? 'lg:bottom-full lg:mb-2' : 'lg:bottom-auto lg:mt-2',
+        ]"
+        :style="panelStyle"
       >
         <!-- Mobile grab handle -->
         <div class="lg:hidden flex justify-center pt-3 pb-1">
@@ -171,6 +177,53 @@ const emit = defineEmits<{
 }>()
 
 const open = ref(false)
+
+// Where the panel goes on desktop. It used to hang below the field
+// unconditionally, so on the tour page — where the field sits low in the
+// booking card — a 6-row month pushed the bottom of the panel, legend
+// included, past the edge of the window. The traveller could not tell whether
+// a date carried an offer without scrolling the page. So: measure the room on
+// each side of the field, open towards the roomier one, and never let the
+// panel be taller than the room it has.
+const root = ref<HTMLElement | null>(null)
+const dropUp = ref(false)
+const isDesktop = ref(false)
+const panelMaxH = ref(0)
+
+// Two months side by side, six week rows: about 400px of panel.
+const NATURAL_H = 420
+const EDGE_GAP = 16
+const MIN_USABLE = 280
+
+function place() {
+  if (typeof window === 'undefined') return
+  isDesktop.value = window.matchMedia('(min-width: 1024px)').matches
+  // Mobile is a bottom sheet — nothing to measure.
+  if (!isDesktop.value || !open.value) return
+  const trigger = root.value?.querySelector('button')
+  if (!trigger) return
+  const r = trigger.getBoundingClientRect()
+  const below = window.innerHeight - r.bottom - EDGE_GAP
+  const above = r.top - EDGE_GAP
+  dropUp.value = below < NATURAL_H && above > below
+  panelMaxH.value = Math.max(MIN_USABLE, Math.floor(dropUp.value ? above : below))
+}
+
+const panelStyle = computed(() =>
+  isDesktop.value && panelMaxH.value ? { maxHeight: `${panelMaxH.value}px` } : undefined
+)
+
+watch(open, (v) => { if (v) nextTick(place) })
+
+onMounted(() => {
+  window.addEventListener('resize', place)
+  // Capture phase: the booking card scrolls inside its own container too.
+  window.addEventListener('scroll', place, true)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', place)
+  window.removeEventListener('scroll', place, true)
+})
 
 const today = new Date()
 const currentMonth = ref(today.getMonth())

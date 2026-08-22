@@ -309,7 +309,11 @@
 
         <!-- Right Column: Booking Widget - Sticky (OTA-style) -->
         <div class="hidden lg:block">
-          <div class="sticky top-24 space-y-3">
+          <!-- z-40 (over the z-30 section nav, under the z-[100] header): being
+               sticky, this column is its own stacking context, so the date
+               panel's z-50 is trapped inside it. Without this the section nav
+               painted straight over the calendar when it opens upwards. -->
+          <div class="sticky top-24 z-40 space-y-3">
             <!-- Booking widget (shared component) -->
             <TourBookingCard
               variant="sidebar"

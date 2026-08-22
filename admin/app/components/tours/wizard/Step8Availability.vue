@@ -16,13 +16,14 @@
       </div>
     </UCard>
 
-    <!-- Calendar + controls: side by side only on very wide screens (2xl).
-         Below that (tablets/laptops) they stack full-width so the calendar is
-         prominent and the controls/tabs aren't cramped. -->
-    <div class="grid grid-cols-1 2xl:grid-cols-5 gap-4 items-start">
+    <!-- Calendar + controls side by side from xl. It used to take 2xl, which
+         left every ordinary laptop stacking them — and a stacked full-height
+         preview meant the operator scrolled past the whole calendar before
+         reaching the Bloqueos and Ofertas tabs, or never found them. -->
+    <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 items-start">
 
     <!-- Live Calendar (LEFT) — 2-month preview -->
-    <UCard class="2xl:col-span-3 2xl:sticky 2xl:top-4" :ui="{ body: 'p-4 space-y-4' }">
+    <UCard class="xl:col-span-3 xl:sticky xl:top-4" :ui="{ body: 'p-4 space-y-4' }">
       <!-- Header: title + month navigation -->
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-2">
@@ -31,7 +32,7 @@
           </div>
           <div>
             <h3 class="text-base font-bold leading-tight">Vista previa del calendario</h3>
-            <p class="text-[11px] text-muted">Refleja en vivo lo que configuras a la derecha</p>
+            <p class="text-[11px] text-muted">Refleja en vivo los bloqueos y ofertas que configuras</p>
           </div>
         </div>
         <div class="flex items-center gap-1">
@@ -41,9 +42,18 @@
         </div>
       </div>
 
-      <!-- Two months side by side (stacked below xl) -->
-      <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <div v-for="month in months" :key="month.key" class="space-y-1.5">
+      <!-- Two months side by side, but only where they genuinely fit. Stacked,
+           the pair made the preview taller than the window on a 31-day month
+           and pushed the Bloqueos/Ofertas tabs off-screen — so below 2xl the
+           second month is dropped rather than stacked; the month arrows still
+           reach it. -->
+      <div class="grid grid-cols-1 2xl:grid-cols-2 gap-5">
+        <div
+          v-for="(month, mi) in months"
+          :key="month.key"
+          class="space-y-1.5"
+          :class="mi === 1 ? 'hidden 2xl:block' : ''"
+        >
           <p class="text-center text-xs font-black uppercase tracking-wider text-default capitalize">{{ month.label }}</p>
           <div class="grid grid-cols-7 gap-1 text-center">
             <div
@@ -102,7 +112,7 @@
     </UCard>
 
     <!-- Controls (RIGHT) -->
-    <UCard class="2xl:col-span-2" :ui="{ body: '!p-0' }">
+    <UCard class="xl:col-span-2" :ui="{ body: '!p-0' }">
       <div class="flex border-b border-default">
         <button
           v-for="tab in tabs"
@@ -403,7 +413,9 @@
         :loading="saving"
         @click="saveAvailability"
       >
-        {{ saving ? 'Guardando...' : 'Guardar disponibilidad' }}
+        <!-- On a live tour this only parks a draft, so it must not promise a
+             save that reaches travellers. -->
+        {{ saving ? 'Guardando...' : (store.isLiveTour() ? 'Guardar en borrador' : 'Guardar disponibilidad') }}
       </UButton>
     </div>
   </div>
