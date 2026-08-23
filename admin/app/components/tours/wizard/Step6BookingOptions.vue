@@ -318,13 +318,20 @@
                   </div>
                 </div>
 
-                <UTextarea
-                  :model-value="point.descriptions[store.currentLanguage] || ''"
-                  :placeholder="`Descripción en ${store.currentLanguage.toUpperCase()} (ej: Plaza de Armas de Puno)...`"
-                  :rows="2"
-                  class="w-full"
-                  @update:model-value="(v: string) => updatePointDescription(idx, v)"
-                />
+                <!-- Shown, not edited. This was a textarea sitting next to the
+                     address the map picker had just written, so retyping it by
+                     accident cost nothing and matched nothing — one of these
+                     ended up reading "pUERTA DE LA plaza" while its pin still
+                     said Parque De La Cultura. The place to change it is the
+                     map, where the name and the coordinates move together. -->
+                <div
+                  class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
+                  :class="point.descriptions[store.currentLanguage]
+                    ? 'bg-elevated/50 text-default'
+                    : 'bg-elevated/30 text-muted italic'"
+                >
+                  {{ point.descriptions[store.currentLanguage] || `Sin nombre en ${store.currentLanguage.toUpperCase()} — márcalo en el mapa` }}
+                </div>
 
                 <div class="flex items-center gap-2">
                   <UButton
@@ -379,12 +386,17 @@
 
           <Transition name="fade">
             <div v-if="store.bookingOptions.enableHotelPickup" class="px-3 pb-3 pt-2 border-t border-default space-y-2">
-              <UTextarea
-                v-model="currentBookingTexts.pickupLocationDescription"
-                placeholder="Ej: Hoteles del centro y alrededores..."
-                :rows="2"
-                class="w-full"
-              />
+              <!-- Same reasoning as the meeting points: the address is written
+                   by "Configurar radio" on the map, so an editable copy of it
+                   here only invites the two to disagree. -->
+              <div
+                class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
+                :class="currentBookingTexts.pickupLocationDescription
+                  ? 'bg-elevated/50 text-default'
+                  : 'bg-elevated/30 text-muted italic'"
+              >
+                {{ currentBookingTexts.pickupLocationDescription || 'Sin zona definida — configúrala en el mapa' }}
+              </div>
 
               <!-- Mode lives here, not only inside the map modal: from the
                    panel there was no sign the drawn option existed at all. -->
@@ -953,14 +965,6 @@ const moveMeetingPoint = (idx: number, delta: number) => {
   if (target < 0 || target >= arr.length) return
   const [item] = arr.splice(idx, 1)
   arr.splice(target, 0, item)
-  store.isDirty = true
-}
-
-const updatePointDescription = (idx: number, value: string) => {
-  const point = store.bookingOptions.meetingPoints[idx]
-  if (!point) return
-  if (!point.descriptions) point.descriptions = {}
-  point.descriptions[store.currentLanguage] = value
   store.isDirty = true
 }
 
