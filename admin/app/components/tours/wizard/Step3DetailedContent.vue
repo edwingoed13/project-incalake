@@ -461,6 +461,51 @@
         </div>
       </WizardSection>
 
+      <!-- FAQs live here, with the rest of the content. They were in the SEO
+           step because of what they feed — rich results and AI answers — but an
+           operator writing "¿Se duerme en el bus?" is writing content, and looks
+           for it beside the other sections they create, not under meta tags. -->
+      <WizardSection
+        collapsible
+        title="Preguntas frecuentes"
+        icon="i-lucide-message-circle-question"
+        :open="isSectionExpanded('faqs')"
+        @update:open="toggleSection('faqs')"
+      >
+        <template #actions>
+          <UBadge v-if="(seoData?.faqs?.length || 0) > 0" color="success" variant="subtle" size="xs">
+            {{ seoData?.faqs?.length }}
+          </UBadge>
+        </template>
+        <p class="text-xs text-muted mb-3">
+          Se editan por idioma. Alimentan los resultados enriquecidos de Google y las
+          respuestas de ChatGPT, Perplexity y AI Overviews.
+        </p>
+        <div class="space-y-3">
+              <div
+                v-for="(faq, i) in (seoData.faqs || [])"
+                :key="i"
+                class="rounded-lg border border-default p-3 space-y-2 bg-elevated/40"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[11px] font-black uppercase tracking-wider text-muted">Pregunta {{ i + 1 }}</span>
+                  <div class="flex items-center gap-1">
+                    <UButton icon="i-lucide-arrow-up" size="xs" color="neutral" variant="ghost" :disabled="i === 0" @click="moveFaq(i, -1)" />
+                    <UButton icon="i-lucide-arrow-down" size="xs" color="neutral" variant="ghost" :disabled="i === (seoData.faqs.length - 1)" @click="moveFaq(i, 1)" />
+                    <UButton icon="i-lucide-trash-2" size="xs" color="error" variant="ghost" @click="removeFaq(i)" />
+                  </div>
+                </div>
+                <UInput v-model="faq.question" placeholder="¿Pregunta? ej. ¿Cuánto dura el tour?" class="w-full" />
+                <UTextarea v-model="faq.answer" :rows="2" placeholder="Respuesta clara y directa (ideal para snippets e IA)." class="w-full" />
+              </div>
+              <UButton icon="i-lucide-plus" color="neutral" variant="subtle" size="sm" @click="addFaq">
+                Agregar pregunta
+              </UButton>
+              <p v-if="!(seoData.faqs?.length)" class="text-[11px] text-muted">Sin FAQ aún. Recomendado: 4-6 (duración, ubicación, qué llevar, cancelación, precio…).</p>
+            </div>
+      </WizardSection>
+
+
     </template>
   </div>
 </template>
@@ -498,6 +543,36 @@ const currentLangData = computed(() => {
 // Public title + short description live in contentSEO (not detailedContent),
 // so the "Título y resumen" fields bind here.
 const seoData = computed(() => store.contentSEO[store.currentLanguage])
+
+// --- FAQs (per language). They live in contentSEO because that is the shape the
+// API expects; the editor for them belongs here, with the rest of the content. ---
+function ensureFaqs(): Array<{ question: string; answer: string }> | undefined {
+  const d = store.contentSEO[store.currentLanguage]
+  if (!d) return undefined
+  if (!Array.isArray(d.faqs)) d.faqs = []
+  return d.faqs
+}
+
+function addFaq() {
+  const list = ensureFaqs()
+  if (!list) return
+  list.push({ question: '', answer: '' })
+}
+
+function removeFaq(i: number) {
+  const list = ensureFaqs()
+  if (!list) return
+  list.splice(i, 1)
+}
+
+function moveFaq(i: number, dir: number) {
+  const list = ensureFaqs()
+  if (!list) return
+  const j = i + dir
+  if (j < 0 || j >= list.length) return
+  const [item] = list.splice(i, 1)
+  list.splice(j, 0, item)
+}
 
 const addCustomSection = () => {
   if (!currentLangData.value) return

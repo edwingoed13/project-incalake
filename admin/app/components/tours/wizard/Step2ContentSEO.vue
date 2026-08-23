@@ -59,7 +59,7 @@
 
           <UFormField
             label="Palabras clave (SEO)"
-            hint="Todas van al meta keywords. La principal (★) es la que debe aparecer en el meta título y la descripción."
+            hint="Los términos por los que quieres que te encuentren. Al menos uno debería aparecer en el meta título."
           >
             <div class="space-y-2">
               <div class="flex gap-2">
@@ -79,20 +79,18 @@
                   Agregar
                 </UButton>
               </div>
+              <!-- Plain tags. There used to be a star on each one picking a
+                   "primary" keyword: it set a flag nothing anywhere read, and
+                   the unpicked ones wore a crossed-out star that reads as
+                   blocked rather than secondary. Ranking your own keywords is
+                   not a decision this tool should be asking for — they all go
+                   to the same place. -->
               <div v-if="currentLangData.keywords?.length" class="flex flex-wrap gap-1.5">
                 <span
                   v-for="(kw, i) in currentLangData.keywords"
                   :key="i"
-                  class="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-full text-xs border"
-                  :class="kw.is_primary ? 'bg-primary/10 border-primary/40 text-primary font-semibold' : 'bg-elevated border-default text-default'"
+                  class="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs border bg-elevated border-default text-default"
                 >
-                  <button
-                    type="button"
-                    :title="kw.is_primary ? 'Palabra clave principal' : 'Marcar como principal'"
-                    @click="setPrimaryKeyword(i)"
-                  >
-                    <UIcon :name="kw.is_primary ? 'i-lucide-star' : 'i-lucide-star-off'" class="size-3.5" :class="kw.is_primary ? '' : 'opacity-50'" />
-                  </button>
                   {{ kw.keyword }}
                   <button type="button" class="hover:text-red-500 opacity-60 hover:opacity-100" title="Quitar" @click="removeKeyword(i)">
                     <UIcon name="i-lucide-x" class="size-3.5" />
@@ -100,53 +98,22 @@
                 </span>
               </div>
 
-              <!-- What the star is FOR. It set a flag nothing read: the operator
-                   was asked to choose a favourite and nothing anywhere changed,
-                   which is why the distinction read as arbitrary. The choice now
-                   drives a check — is the tour's focus actually written into the
-                   two lines Google shows? — which is the reason to have a
-                   primary keyword at all. -->
-              <div v-if="primaryKeyword" class="space-y-1 pt-1">
-                <p class="text-[11px] flex items-center gap-1.5" :class="primaryInTitle ? 'text-success' : 'text-warning'">
-                  <UIcon :name="primaryInTitle ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
-                  <span v-if="primaryInTitle">«{{ primaryKeyword }}» aparece en el meta título</span>
-                  <span v-else>«{{ primaryKeyword }}» no aparece en el meta título</span>
+              <!-- The check that made the star worth having, without the star:
+                   it asks whether ANY keyword made it into the two lines Google
+                   shows, which needs no ranking to answer. -->
+              <div v-if="currentLangData.keywords?.length" class="space-y-1 pt-1">
+                <p class="text-[11px] flex items-center gap-1.5" :class="keywordInTitle ? 'text-success' : 'text-warning'">
+                  <UIcon :name="keywordInTitle ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
+                  <span v-if="keywordInTitle">«{{ keywordInTitle }}» aparece en el meta título</span>
+                  <span v-else>Ninguna palabra clave aparece en el meta título</span>
                 </p>
-                <p class="text-[11px] flex items-center gap-1.5" :class="primaryInDescription ? 'text-success' : 'text-warning'">
-                  <UIcon :name="primaryInDescription ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
-                  <span v-if="primaryInDescription">También en la meta descripción</span>
-                  <span v-else>Tampoco en la meta descripción</span>
+                <p class="text-[11px] flex items-center gap-1.5" :class="keywordInDescription ? 'text-success' : 'text-warning'">
+                  <UIcon :name="keywordInDescription ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'" class="size-3.5 shrink-0" />
+                  <span v-if="keywordInDescription">«{{ keywordInDescription }}» aparece en la meta descripción</span>
+                  <span v-else>Ninguna aparece en la meta descripción</span>
                 </p>
               </div>
-              <p v-else class="text-[11px] text-muted">Sin palabras clave aún. Recomendado: 3-6 (una principal).</p>
-            </div>
-          </UFormField>
-
-          <UFormField
-            label="Preguntas frecuentes (FAQ)"
-            hint="Mejoran el SEO (resultados enriquecidos) y ayudan a que el tour aparezca en respuestas de IA (ChatGPT/Perplexity/AI Overviews). Se editan por idioma."
-          >
-            <div class="space-y-3">
-              <div
-                v-for="(faq, i) in (currentLangData.faqs || [])"
-                :key="i"
-                class="rounded-lg border border-default p-3 space-y-2 bg-elevated/40"
-              >
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-[11px] font-black uppercase tracking-wider text-muted">Pregunta {{ i + 1 }}</span>
-                  <div class="flex items-center gap-1">
-                    <UButton icon="i-lucide-arrow-up" size="xs" color="neutral" variant="ghost" :disabled="i === 0" @click="moveFaq(i, -1)" />
-                    <UButton icon="i-lucide-arrow-down" size="xs" color="neutral" variant="ghost" :disabled="i === (currentLangData.faqs.length - 1)" @click="moveFaq(i, 1)" />
-                    <UButton icon="i-lucide-trash-2" size="xs" color="error" variant="ghost" @click="removeFaq(i)" />
-                  </div>
-                </div>
-                <UInput v-model="faq.question" placeholder="¿Pregunta? ej. ¿Cuánto dura el tour?" class="w-full" />
-                <UTextarea v-model="faq.answer" :rows="2" placeholder="Respuesta clara y directa (ideal para snippets e IA)." class="w-full" />
-              </div>
-              <UButton icon="i-lucide-plus" color="neutral" variant="subtle" size="sm" @click="addFaq">
-                Agregar pregunta
-              </UButton>
-              <p v-if="!(currentLangData.faqs?.length)" class="text-[11px] text-muted">Sin FAQ aún. Recomendado: 4-6 (duración, ubicación, qué llevar, cancelación, precio…).</p>
+              <p v-else class="text-[11px] text-muted">Sin palabras clave aún. Recomendado: 3-6.</p>
             </div>
           </UFormField>
 
@@ -247,27 +214,26 @@ const currentLangData = computed(() => {
   return store.contentSEO[store.currentLanguage]
 })
 
-// The primary keyword, and whether it actually made it into the two lines a
-// searcher sees. Accent- and case-insensitive: "Uyuni" and "uyuni" are the same
-// word to a person, and the operator should not be told otherwise.
+// Whether ANY keyword made it into the two lines a searcher sees, and which
+// one. Accent- and case-insensitive: "Uyuni" and "uyuni" are the same word to a
+// person, and the operator should not be told otherwise.
 const norm = (v: string) =>
   (v || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
-const primaryKeyword = computed(() => {
+const keywordsFor = (): string[] => {
   const list = store.contentSEO[store.currentLanguage]?.keywords
-  if (!Array.isArray(list) || !list.length) return ''
-  return (list.find((k: any) => k?.is_primary) || list[0])?.keyword || ''
-})
+  return Array.isArray(list) ? list.map((k: any) => k?.keyword).filter(Boolean) : []
+}
 
-const primaryInTitle = computed(() =>
-  !!primaryKeyword.value
-  && norm(store.contentSEO[store.currentLanguage]?.metaTitle || '').includes(norm(primaryKeyword.value))
-)
+// Returns the matching keyword (truthy) or '', so the template can name it.
+const firstMatchIn = (field: 'metaTitle' | 'metaDescription') => {
+  const haystack = norm((store.contentSEO[store.currentLanguage] as any)?.[field] || '')
+  if (!haystack) return ''
+  return keywordsFor().find(k => haystack.includes(norm(k))) || ''
+}
 
-const primaryInDescription = computed(() =>
-  !!primaryKeyword.value
-  && norm(store.contentSEO[store.currentLanguage]?.metaDescription || '').includes(norm(primaryKeyword.value))
-)
+const keywordInTitle = computed(() => firstMatchIn('metaTitle'))
+const keywordInDescription = computed(() => firstMatchIn('metaDescription'))
 
 // --- SEO keywords (per language) ---
 const newKeyword = ref('')
@@ -285,51 +251,17 @@ function addKeyword() {
   const list = ensureKeywords()
   if (!list) return
   if (list.some(k => k.keyword.toLowerCase() === word.toLowerCase())) { newKeyword.value = ''; return }
-  list.push({ keyword: word, is_primary: list.length === 0 }) // first one is primary by default
+  // is_primary stays on the row because the column still exists, but nothing
+  // reads it and the UI no longer asks anyone to set it.
+  list.push({ keyword: word, is_primary: list.length === 0 })
   newKeyword.value = ''
 }
 
 function removeKeyword(i: number) {
   const list = ensureKeywords()
   if (!list) return
-  const wasPrimary = list[i]?.is_primary
   list.splice(i, 1)
-  if (wasPrimary && list.length && !list.some(k => k.is_primary)) list[0].is_primary = true
-}
-
-function setPrimaryKeyword(i: number) {
-  const list = ensureKeywords()
-  if (!list) return
-  list.forEach((k, idx) => { k.is_primary = idx === i })
-}
-
-// --- FAQs (per language) ---
-function ensureFaqs(): Array<{ question: string; answer: string }> | undefined {
-  const d = store.contentSEO[store.currentLanguage]
-  if (!d) return undefined
-  if (!Array.isArray(d.faqs)) d.faqs = []
-  return d.faqs
-}
-
-function addFaq() {
-  const list = ensureFaqs()
-  if (!list) return
-  list.push({ question: '', answer: '' })
-}
-
-function removeFaq(i: number) {
-  const list = ensureFaqs()
-  if (!list) return
-  list.splice(i, 1)
-}
-
-function moveFaq(i: number, dir: number) {
-  const list = ensureFaqs()
-  if (!list) return
-  const j = i + dir
-  if (j < 0 || j >= list.length) return
-  const [item] = list.splice(i, 1)
-  list.splice(j, 0, item)
+  list.forEach((k, idx) => { k.is_primary = idx === 0 })
 }
 
 // Fetch city data to get slug
