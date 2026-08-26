@@ -41,10 +41,10 @@ jobs:
           # warming the old one just fills a cache the deploy will discard.
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Waiting for the new Vercel build to go live..."
-            before=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1)
+            before=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
             for i in $(seq 1 40); do
               sleep 30
-              now=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1)
+              now=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
               if [ -n "$now" ] && [ "$now" != "$before" ]; then
                 echo "New build live after $((i * 30))s"
                 break
@@ -97,7 +97,12 @@ jobs:
               sleep 15
               code=$(warm_one "$u")
             fi
-            state=$(grep -i '^x-vercel-cache' /tmp/h.txt 2>/dev/null | tr -d '\r' | awk '{print $2}')
+            # `|| true` is load-bearing: the runner's default shell is `bash -e`
+            # and this script sets pipefail, so a grep that finds nothing kills
+            # the job before the `exit 0` below ever runs. That is exactly the
+            # case the comment above describes as harmless, and it is what made
+            # this workflow go red roughly twice a day.
+            state=$(grep -i '^x-vercel-cache' /tmp/h.txt 2>/dev/null | tr -d '\r' | awk '{print $2}' || true)
             if [ "$code" = "200" ]; then
               ok=$((ok+1))
               if [ "$state" = "HIT" ]; then was_warm=$((was_warm+1)); else was_cold=$((was_cold+1)); fi
