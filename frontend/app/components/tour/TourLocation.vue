@@ -306,11 +306,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-primary-light mb-4 md:mb-6 flex items-center">
+  <!-- Open by default, and not only for consistency with the other primary
+       sections: the Google map sizes itself when it initialises, and a map
+       booted inside a display:none container comes up blank or zero-height.
+       Starting visible keeps that path unchanged; collapsing it afterwards is
+       harmless because it is already sized. -->
+  <TourSection title="Ubicación" title-class="text-primary-light" default-open>
+    <template #icon>
       <MapPinIcon class="size-6 md:size-8 text-primary mr-2 md:mr-3" aria-hidden="true" />
-      Ubicación
-    </h2>
+    </template>
 
     <!-- Map Container (solo cuando no hay timeline) -->
     <div v-if="hasMap && coordsValid && mapPoints.length <= 1" ref="mapContainer" class="rounded-xl overflow-hidden h-96 mb-4 border border-slate-200"></div>
@@ -423,7 +427,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
-  </section>
+  </TourSection>
 </template>
 
 <style scoped>

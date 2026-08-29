@@ -1,33 +1,20 @@
 <template>
-  <section class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+  <!-- The section header is the fold now. The old inner "Ver más" clamp did
+       the same job one level down, and stacking both put two different
+       expand controls in one card: the reader could not tell which one
+       governed what, and closing the outer one left the inner state stale. -->
+  <TourSection :title="t('description')" default-open>
+    <template #icon>
       <DocumentTextIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
-      {{ t('description') }}
-    </h2>
+    </template>
     <div class="prose md:prose-lg max-w-2xl min-w-0 text-slate-600">
-      <div
-        ref="contentEl"
-        class="min-w-0 max-w-full overflow-hidden relative transition-[max-height] duration-300"
-        :class="isLong && !expanded ? 'max-h-[300px]' : 'max-h-none'"
-        v-html="sanitizedDescription"
-      ></div>
-      <!-- Fade-out hint that there's more when collapsed -->
-      <div v-if="isLong && !expanded" class="h-12 -mt-12 relative bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+      <div class="min-w-0 max-w-full overflow-hidden" v-html="sanitizedDescription"></div>
     </div>
-    <button
-      v-if="isLong"
-      type="button"
-      @click="expanded = !expanded"
-      class="mt-3 text-sm font-bold text-primary hover:underline inline-flex items-center gap-1"
-    >
-      {{ expanded ? 'Ver menos' : 'Ver más' }}
-      <Icon name="material-symbols:expand-more" class="size-4 transition-transform" :class="{ '-rotate-180': expanded }" aria-hidden="true" />
-    </button>
-  </section>
+  </TourSection>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick } from 'vue'
+import { computed } from 'vue'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
 const { t } = useI18n()
 
@@ -38,18 +25,6 @@ interface Props {
 const props = defineProps<Props>()
 
 const sanitizedDescription = computed(() => sanitizeHtml(props.tour.long_description || props.tour.description || ''))
-
-// "Ver más" clamp: start clamped (avoids a flash on long text), then measure —
-// short descriptions drop the clamp + button entirely.
-const contentEl = ref<HTMLElement | null>(null)
-const expanded = ref(false)
-const isLong = ref(true)
-onMounted(() => {
-  nextTick(() => {
-    const el = contentEl.value
-    if (el) isLong.value = el.scrollHeight > 320
-  })
-})
 </script>
 
 <style scoped>

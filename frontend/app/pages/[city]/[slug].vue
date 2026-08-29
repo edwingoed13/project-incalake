@@ -222,17 +222,16 @@
                inside had nothing to do with it. The icon is deliberately
                generic: the title is whatever the operator typed, so no themed
                glyph can be honest about it. -->
-          <section
+          <TourSection
             v-for="section in customSections"
             :key="section.id || section.title"
-            class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8"
+            :title="section.title"
           >
-            <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+            <template #icon>
               <DocumentTextIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
-              {{ section.title }}
-            </h2>
+            </template>
             <div class="prose md:prose-lg max-w-2xl text-slate-600" v-html="sanitizeHtml(section.content)"></div>
-          </section>
+          </TourSection>
 
           <!-- Tags chips -->
           <section v-if="tour.tags && tour.tags.length" class="space-y-3">

@@ -1,9 +1,8 @@
 <template>
-  <section class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-primary-light mb-4 md:mb-6 flex items-center gap-2">
+  <TourSection :title="t('whats_included')" title-class="text-primary-light" default-open>
+    <template #icon>
       <ClipboardDocumentCheckIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
-      {{ t('whats_included') }}
-    </h2>
+    </template>
 
     <div class="space-y-3">
       <!-- Included Accordion -->
@@ -66,7 +65,7 @@
         </div>
       </div>
     </div>
-  </section>
+  </TourSection>
 </template>
 
 <script setup lang="ts">

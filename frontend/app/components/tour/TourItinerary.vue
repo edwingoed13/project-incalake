@@ -1,13 +1,12 @@
 <template>
-  <section class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+  <TourSection :title="t('detailed_itinerary')" default-open>
+    <template #icon>
       <MapIcon class="size-6 md:size-7 text-primary" aria-hidden="true" />
-      {{ t('detailed_itinerary') }}
-    </h2>
+    </template>
     <div class="prose md:prose-lg max-w-2xl min-w-0 text-slate-600">
       <div class="min-w-0 max-w-full overflow-hidden" v-html="sanitizedItinerary"></div>
     </div>
-  </section>
+  </TourSection>
 </template>
 
 <script setup lang="ts">
