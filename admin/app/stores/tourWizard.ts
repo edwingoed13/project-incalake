@@ -306,6 +306,28 @@ export interface TourStep8Availability {
   offers?: AvailabilityOffer[]
 }
 
+const LANGS = ['en', 'es', 'fr', 'de', 'pt', 'it'] as const
+
+/** Empty per-language SEO/content maps — the shape state() starts from, so a
+ *  fetch can return to it instead of layering one tour on top of another. */
+const emptyContentSEO = (): Record<string, any> =>
+  Object.fromEntries(LANGS.map(code => [code, {
+    title: '', shortDescription: '', metaTitle: '', metaDescription: '', slug: '',
+    youtubeUrl: '', keywords: [], faqs: [], mediaTexts: [],
+    bookingTexts: {
+      policyDescription: STANDARD_POLICY[code] || '',
+      policyDescriptionCustom: '', meetingPointDescription: '',
+      pickupLocationDescription: '', dropoffLocationDescription: '',
+    },
+  }]))
+
+const emptyDetailedContent = (): Record<string, any> =>
+  Object.fromEntries(LANGS.map(code => [code, {
+    itinerary: [], itineraryText: '', inclusions: '', exclusions: '',
+    detailedDescription: '', recommendations: '', thingsToBring: '',
+    generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [],
+  }]))
+
 export const useTourWizardStore = defineStore('tourWizard', {
   state: () => ({
     currentStep: 1,
@@ -724,6 +746,21 @@ export const useTourWizardStore = defineStore('tourWizard', {
           }
           
           // Map Step 2: Content & SEO (translations)
+          //
+          // Wipe the per-language maps first. This loop only ever overwrote the
+          // languages the FETCHED tour has, and left every other language
+          // holding whatever the previously opened tour had put there. Moving
+          // from one tour to another without a full page reload therefore
+          // carried the first tour's EN/FR/DE/PT/IT into the second one, and
+          // the next save wrote them as that tour's own translations — which is
+          // how tour ES235 (Uyuni, $365) came to publish ES007 (Uros, $39) in
+          // five languages, at the Uyuni price, live.
+          //
+          // resetWizard() did not cover this: it runs for /new only, and this is
+          // the path between two existing tours.
+          this.contentSEO = emptyContentSEO()
+          this.detailedContent = emptyDetailedContent()
+
           if (data.translations && Array.isArray(data.translations)) {
             data.translations.forEach((trans: any) => {
               const langCode = trans.language?.code?.toLowerCase() || 'es'
