@@ -114,6 +114,24 @@ const findTourByCode = (code?: string) => {
   fetchTours(1, code)
 }
 
+/**
+ * Languages the parked draft changes, as uppercase codes.
+ *
+ * null from the API means UNKNOWN, not "none": drafts parked before the wizard
+ * started recording this carry no summary, and an empty list would tell the
+ * operator no language is waiting — a confident lie about someone's work. Both
+ * callers below treat the empty result as "say nothing".
+ */
+const draftLanguages = (tour: Tour): string[] =>
+  ((tour as any).pending_draft_languages || []) as string[]
+
+const draftSections = (tour: Tour): string[] =>
+  ((tour as any).pending_draft_sections || []) as string[]
+
+/** Does this specific translation row have edits waiting to be published? */
+const hasDraftChanges = (tour: Tour, code?: string | null): boolean =>
+  !!code && draftLanguages(tour).includes(code.toUpperCase())
+
 const statusBadge = (s?: Tour['status']) => {
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
   if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
@@ -140,10 +158,22 @@ const languageFlags: Record<string, string> = {
 }
 const getLanguageFlag = (code: string) => languageFlags[code] || '🌐'
 
+/**
+ * The language this tour is authored in — the one whose title the row shows.
+ *
+ * This used to fall back to the first two letters of the tour CODE, which is a
+ * business code and not a language: "LAKE006" produced "LA" and "BR088" (a
+ * Portuguese tour) produced "BR", so the star landed on nothing and the row
+ * claimed a language that does not exist. Falling back through the tour's own
+ * translations keeps the answer inside real data.
+ */
 const getPrimaryLanguageCode = (tour: Tour) => {
   if (tour.primary_language?.code) return tour.primary_language.code
-  const match = tour.code?.match(/^([A-Z]{2})/)
-  return match ? match[1] : 'ES'
+  const codes = (tour.translations_summary || [])
+    .map(t => t.language_code)
+    .filter(Boolean) as string[]
+  if (codes.length === 1) return codes[0]!
+  return codes.includes('ES') ? 'ES' : (codes[0] || 'ES')
 }
 
 const getTourReferenceName = (tour: Tour) => {
@@ -785,9 +815,17 @@ onMounted(() => {
                         size="xs"
                         icon="i-lucide-file-clock"
                         class="shrink-0"
-                        :title="`Hay ediciones guardadas${(tour as any).pending_draft_at ? ' desde ' + timeAgo((tour as any).pending_draft_at) : ''} que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas. El borrador guarda el tour entero, así que no se puede saber desde aquí qué idioma o qué paso cambió.`"
+                        :title="`Hay ediciones guardadas${(tour as any).pending_draft_at ? ' desde ' + timeAgo((tour as any).pending_draft_at) : ''} que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas.`
+                          + (draftLanguages(tour).length || draftSections(tour).length
+                            ? ` Afecta a: ${[...draftLanguages(tour), ...draftSections(tour)].join(', ')}.`
+                            : ' Este borrador se guardó antes de que se registrara el detalle, así que no se sabe qué idioma cambió; ábrelo para verlo.')"
                       >
-                        Cambios sin publicar<span v-if="(tour as any).pending_draft_at"> · {{ timeAgo((tour as any).pending_draft_at) }}</span>
+                        Cambios sin publicar<!--
+                        Naming the languages is the whole point: with six of
+                        them, "algo cambió" left the operator opening each one.
+                        Silent when the API sends null (an older draft), which
+                        means unknown — not "nothing changed".
+                        --><span v-if="draftLanguages(tour).length"> en {{ draftLanguages(tour).join(', ') }}</span><span v-if="(tour as any).pending_draft_at"> · {{ timeAgo((tour as any).pending_draft_at) }}</span>
                       </UBadge>
                       <!-- A language whose title is byte-identical to another
                            tour's is a translation that was never rewritten
@@ -939,6 +977,21 @@ onMounted(() => {
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 min-w-0">
                         <p class="text-sm font-medium truncate">{{ tr.title || '(Sin título)' }}</p>
+                        <!-- The row the operator was looking for: which of the
+                             six languages is actually waiting to be published.
+                             Absent on older drafts, where the answer is
+                             unknown rather than "no". -->
+                        <UBadge
+                          v-if="hasDraftChanges(tour, tr.language_code)"
+                          color="info"
+                          variant="subtle"
+                          size="xs"
+                          icon="i-lucide-file-clock"
+                          class="shrink-0"
+                          :title="`Este idioma tiene cambios guardados que el público todavía no ve. Ábrelo y pulsa «Actualizar» para publicarlos.`"
+                        >
+                          Sin publicar
+                        </UBadge>
                         <!-- On the row, not only summarised above it: this is
                              where the operator can see WHICH title is repeated,
                              so it is where the warning belongs. -->

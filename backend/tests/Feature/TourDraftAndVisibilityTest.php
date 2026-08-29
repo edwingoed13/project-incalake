@@ -279,6 +279,83 @@ class TourDraftAndVisibilityTest extends TestCase
         $this->assertArrayNotHasKey('pending_draft_at', $row);
     }
 
+    public function test_listing_reports_which_languages_the_draft_changes(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['contentSEO' => ['en' => ['title' => 'New title']]],
+            'changed_languages' => ['EN', 'ES'],
+            'changed_sections' => ['Precios'],
+        ])->assertOk();
+
+        $row = collect($this->getJson('/api/tours')->json('data'))
+            ->firstWhere('id', $tour->id);
+
+        $this->assertSame(['EN', 'ES'], $row['pending_draft_languages']);
+        $this->assertSame(['Precios'], $row['pending_draft_sections']);
+    }
+
+    public function test_a_draft_saved_without_a_summary_reports_unknown_not_empty(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        // An older admin build, or any client that does not send the summary.
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['basicInfo' => ['title' => 'Parked']],
+        ])->assertOk();
+
+        $row = collect($this->getJson('/api/tours')->json('data'))
+            ->firstWhere('id', $tour->id);
+
+        // null, never []. An empty array would tell the operator "this draft
+        // changes no language", which is a confident lie about parked work —
+        // null lets the listing stay quiet instead.
+        $this->assertTrue($row['has_pending_draft']);
+        $this->assertNull($row['pending_draft_languages']);
+        $this->assertNull($row['pending_draft_sections']);
+    }
+
+    public function test_the_listing_does_not_load_the_draft_payload(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            // Payloads carry translated HTML for every language; pulling them
+            // into the listing would move megabytes to render a badge.
+            'payload' => ['basicInfo' => ['title' => str_repeat('x', 5000)]],
+        ])->assertOk();
+
+        $body = $this->getJson('/api/tours')->getContent();
+
+        $this->assertStringNotContainsString(str_repeat('x', 5000), $body);
+    }
+
+    public function test_listing_names_the_primary_language_instead_of_guessing_from_the_code(): void
+    {
+        // A Portuguese tour whose business code starts with "BR". Reading the
+        // language off the code produced "BR", which is not a language at all.
+        $language = \App\Models\Language::firstOrCreate(
+            ['code' => 'PT'],
+            ['country' => 'Brasil', 'name' => 'Portugues', 'active' => true]
+        );
+        $tour = Tour::factory()->create([
+            'code' => 'BR088',
+            'primary_language_id' => $language->id,
+        ]);
+
+        $row = collect($this->getJson('/api/tours')->json('data'))
+            ->firstWhere('id', $tour->id);
+
+        $this->assertSame('PT', $row['primary_language']['code']);
+    }
+
     // --- Public visibility ------------------------------------------------
 
     public function test_public_cannot_see_an_unpublished_tour(): void

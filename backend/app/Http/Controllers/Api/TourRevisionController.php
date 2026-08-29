@@ -92,6 +92,13 @@ class TourRevisionController extends Controller
             // only way to tell "my own save racing itself" from "someone at
             // another computer" — the 409 handler treats them very differently.
             'tab_id' => 'nullable|string|max:40',
+            // What this draft changes, worked out by the wizard — the only
+            // place holding the live tour and the draft in the same shape.
+            // Bounded so a malformed client cannot park unbounded strings.
+            'changed_languages' => 'nullable|array|max:20',
+            'changed_languages.*' => 'string|max:5',
+            'changed_sections' => 'nullable|array|max:20',
+            'changed_sections.*' => 'string|max:40',
         ]);
 
         $encoded = json_encode($data['payload']);
@@ -133,6 +140,11 @@ class TourRevisionController extends Controller
             [
                 'payload' => $data['payload'],
                 'schema_version' => $data['schema_version'] ?? 'v1',
+                // Left NULL by a client that does not send them, which the
+                // listing reads as "unknown" and stays quiet about. Writing []
+                // instead would claim the draft changes nothing.
+                'changed_languages' => $data['changed_languages'] ?? null,
+                'changed_sections' => $data['changed_sections'] ?? null,
                 'version' => ($existing?->version ?? 0) + 1,
                 'updated_by' => $request->user()?->id,
                 'updated_by_tab' => $data['tab_id'] ?? null,

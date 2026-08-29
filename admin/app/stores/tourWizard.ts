@@ -1511,6 +1511,12 @@ export const useTourWizardStore = defineStore('tourWizard', {
             schema_version: DRAFT_SCHEMA_VERSION,
             base_version: this.draftVersion,
             tab_id: this.tabId(),
+            // Travels with the draft so the tour LIST can name what is
+            // pending. It has to be computed here: this is the only place
+            // holding the live tour and the draft in the same shape, and the
+            // list has neither.
+            changed_languages: this.draftChangedLanguages,
+            changed_sections: this.draftChangedSections,
           },
         })
         if (!res?.success) throw new Error(res?.message || 'Respuesta inesperada del servidor')

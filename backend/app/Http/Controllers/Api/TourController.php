@@ -136,13 +136,19 @@ class TourController extends Controller
                     'tags',
                 ]);
                 // Lets the admin list flag "cambios sin publicar" per row
-                // without opening each tour. One EXISTS subquery, no join.
-                // The timestamp rides along so the badge can say HOW OLD the
-                // pending draft is: "hace 2 h" is what tells an operator
-                // whether it is their own unfinished edit or something a
-                // colleague left behind weeks ago.
-                $query->withExists('revision')
-                    ->withMax('revision as revision_updated_at', 'updated_at');
+                // without opening each tour: whether a draft exists, how old it
+                // is, and which languages/sections it touches.
+                //
+                // Explicit column list, because `payload` carries the whole
+                // wizard state including translated HTML — selecting it for
+                // every row would move megabytes to render a badge. One eager
+                // load replaces the pair of correlated subqueries this used.
+                $query->with('revision:id,tour_id,updated_at,changed_languages,changed_sections');
+                // The admin marks one language as the tour's primary (it is
+                // the title shown on each row). Without this the client had to
+                // guess it from the tour CODE, which is a business code, not a
+                // language: "BR088" is a Portuguese tour and yielded "BR".
+                $query->with('primaryLanguage:id,code,country');
             }
 
             // Status filtering used to apply ONLY when ?status= was passed, so

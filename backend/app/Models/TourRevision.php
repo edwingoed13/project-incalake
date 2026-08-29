@@ -15,6 +15,8 @@ class TourRevision extends Model
         'tour_id',
         'payload',
         'schema_version',
+        'changed_languages',
+        'changed_sections',
         'version',
         'updated_by',
         'updated_by_tab',
@@ -22,6 +24,8 @@ class TourRevision extends Model
 
     protected $casts = [
         'payload' => 'array',
+        'changed_languages' => 'array',
+        'changed_sections' => 'array',
         'version' => 'integer',
     ];
 

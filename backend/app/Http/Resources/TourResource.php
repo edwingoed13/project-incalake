@@ -68,6 +68,15 @@ class TourResource extends JsonResource
                     return $lang['code'] !== null;
                 })->values();
             }),
+            // Which language this tour is authored in. The admin listing shows
+            // that translation's title on the row, so it needs to say which one
+            // it is; guessing from the tour code got it wrong for any tour
+            // whose code does not happen to start with a language code.
+            'primary_language' => $this->whenLoaded('primaryLanguage', fn () => [
+                'id' => $this->primaryLanguage->id,
+                'code' => $this->primaryLanguage->code,
+                'country' => $this->primaryLanguage->country,
+            ]),
             // Detailed translation info for admin listing
             'translations_summary' => $this->whenLoaded('translations', function () {
                 return $this->translations->map(function ($translation) {
@@ -149,20 +158,32 @@ class TourResource extends JsonResource
             'difficulty' => $this->difficulty,
             'status' => $this->status,
             'active' => $this->active,
-            // Unpublished wizard edits. Present only when the listing asked
-            // for it (withExists), so other callers pay nothing.
+            // Unpublished wizard edits. Present only when the caller loaded the
+            // relation (the admin listing), so others pay nothing.
             'has_pending_draft' => $this->when(
-                isset($this->revision_exists),
-                fn () => (bool) $this->revision_exists
+                $this->resource->relationLoaded('revision'),
+                fn () => (bool) $this->resource->revision
             ),
-            // withMax() hands back the raw DB datetime ("2026-08-27 14:32:11"),
-            // not a cast Carbon like created_at/updated_at. Parsing it here is
-            // what makes it serialize as ISO-8601: the raw form is read as
-            // local time by some browsers and rejected outright by others, and
-            // the badge would silently degrade to a dash.
+            // How old the parked draft is — what separates your own unfinished
+            // edit from something a colleague left weeks ago.
             'pending_draft_at' => $this->when(
-                isset($this->revision_updated_at),
-                fn () => \Illuminate\Support\Carbon::parse($this->revision_updated_at)
+                $this->resource->relationLoaded('revision') && $this->resource->revision,
+                fn () => $this->resource->revision->updated_at
+            ),
+            // WHICH languages and sections that draft changes. Computed by the
+            // wizard, which is the only place holding the live tour and the
+            // draft in the same shape.
+            //
+            // null (not []) when the draft predates this feature: the listing
+            // must then say nothing rather than claim "no language changed",
+            // which would be a confident lie about work someone parked.
+            'pending_draft_languages' => $this->when(
+                $this->resource->relationLoaded('revision') && $this->resource->revision,
+                fn () => $this->resource->revision->changed_languages
+            ),
+            'pending_draft_sections' => $this->when(
+                $this->resource->relationLoaded('revision') && $this->resource->revision,
+                fn () => $this->resource->revision->changed_sections
             ),
             'duration_days' => $this->duration_days,
             'duration_hours' => $this->duration_hours,
