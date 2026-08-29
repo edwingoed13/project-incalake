@@ -86,33 +86,35 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
        a way a tall panel does not. So the card is as tall as its content and
        scrolls with the page, and the density work goes into keeping it short. -->
   <div class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col">
-    <!-- Price header — dominant, OTA pattern. -->
-    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-baseline gap-1.5 flex-wrap min-w-0">
-      <span
-        class="text-3xl font-black text-slate-900 tabular-nums tracking-tight leading-none"
-      >
-        {{ fmt(basePrice) }}
-      </span>
-      <span class="text-[11px] font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
-      <span class="text-[11px] text-slate-500 font-medium">por persona</span>
-    </div>
+    <!-- Price and party share one row: the price stacks its "por persona"
+         caption underneath itself, freeing the right half for the travellers
+         field. As two stacked rows the pair spent ~110px of card saying two
+         short things; both were half empty. -->
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-center justify-between gap-3">
+      <div class="shrink-0">
+        <div class="flex items-baseline gap-1">
+          <span
+            class="text-[26px] font-black text-slate-900 tabular-nums tracking-tight leading-none"
+          >
+            {{ fmt(basePrice) }}
+          </span>
+          <span class="text-[11px] font-semibold text-slate-500">{{ currencyStore.selectedCurrency }}</span>
+        </div>
+        <span class="block text-[11px] text-slate-500 font-medium mt-1">por persona</span>
+      </div>
 
-    <div class="p-4 pt-3 space-y-2">
-      <!-- Travellers as a labeled FIELD, not the icon chip it used to be. The
-           chip showed a bare "2" next to the price: technically the count,
-           but nothing on screen said what the 2 meant — the word "Viajeros"
-           only existed in the aria-label — and a party with children had no
-           visible breakdown at all. A field with a label and "2 adultos ·
-           1 niño" in words is readable at a glance (the Airbnb/GetYourGuide
-           pattern); the steppers stay behind a tap, which is what kept the
-           card short in the first place. -->
-      <div class="relative">
+      <!-- Travellers as a labeled FIELD, not the icon chip this once was: the
+           chip showed a bare "2" whose meaning only existed in the aria-label,
+           and a party with children had no visible breakdown. Label + words
+           ("2 adultos · 1 niño") reads at a glance; the steppers stay behind
+           a tap, which is what keeps the card short. -->
+      <div class="relative min-w-0">
         <button
           type="button"
           @click="paxOpen = !paxOpen"
           :aria-expanded="paxOpen"
           aria-haspopup="dialog"
-          class="w-full flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors text-left"
+          class="w-full flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors text-left"
         >
           <span class="flex items-center gap-2.5 min-w-0">
             <Icon name="material-symbols:group-outline" class="size-5 text-primary shrink-0" />
@@ -132,7 +134,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           v-if="paxOpen"
           role="dialog"
           aria-label="Viajeros"
-          class="absolute inset-x-0 top-full mt-2 z-50 rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
+          class="absolute right-0 top-full mt-2 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
         >
           <!-- No per-unit hint on adults: the price above already says it.
                The child row keeps its own — that price is nowhere else. -->
@@ -163,6 +165,9 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </div>
         <div v-if="paxOpen" class="fixed inset-0 z-40" @click="paxOpen = false"></div>
       </div>
+    </div>
+
+    <div class="p-4 pt-3 space-y-1.5">
       <!-- Date + Time: one labeled row, two fields side by side. As stacked
            blocks with their own labels this pair cost ~180px of a phone's
            booking panel; the short placeholders keep the half-width fields
