@@ -318,21 +318,10 @@
                   </div>
                 </div>
 
-                <!-- Shown, not edited. This was a textarea sitting next to the
-                     address the map picker had just written, so retyping it by
-                     accident cost nothing and matched nothing — one of these
-                     ended up reading "pUERTA DE LA plaza" while its pin still
-                     said Parque De La Cultura. The place to change it is the
-                     map, where the name and the coordinates move together. -->
-                <div
-                  class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
-                  :class="point.descriptions[store.currentLanguage]
-                    ? 'bg-elevated/50 text-default'
-                    : 'bg-elevated/30 text-muted italic'"
-                >
-                  {{ point.descriptions[store.currentLanguage] || `Sin nombre en ${store.currentLanguage.toUpperCase()} — márcalo en el mapa` }}
-                </div>
-
+                <!-- The map button leads, the name follows. Underneath the
+                     box it read as a footnote to a field, so the box looked
+                     like the thing to type into — and it is not editable at
+                     all. Action first, result below it. -->
                 <div class="flex items-center gap-2">
                   <UButton
                     icon="i-lucide-map-pin"
@@ -350,6 +339,21 @@
                     class="size-4 text-success"
                     :title="`Lat ${point.lat.toFixed(5)}, Lng ${point.lng.toFixed(5)}`"
                   />
+                </div>
+
+                <!-- Shown, not edited. This was a textarea sitting next to the
+                     address the map picker had just written, so retyping it by
+                     accident cost nothing and matched nothing — one of these
+                     ended up reading "pUERTA DE LA plaza" while its pin still
+                     said Parque De La Cultura. The place to change it is the
+                     map, where the name and the coordinates move together. -->
+                <div
+                  class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
+                  :class="point.descriptions[store.currentLanguage]
+                    ? 'bg-elevated/50 text-default'
+                    : 'bg-elevated/30 text-muted italic'"
+                >
+                  {{ point.descriptions[store.currentLanguage] || `Sin nombre en ${store.currentLanguage.toUpperCase()} — márcalo en el mapa` }}
                 </div>
               </div>
 
@@ -386,18 +390,6 @@
 
           <Transition name="fade">
             <div v-if="store.bookingOptions.enableHotelPickup" class="px-3 pb-3 pt-2 border-t border-default space-y-2">
-              <!-- Same reasoning as the meeting points: the address is written
-                   by "Configurar radio" on the map, so an editable copy of it
-                   here only invites the two to disagree. -->
-              <div
-                class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
-                :class="currentBookingTexts.pickupLocationDescription
-                  ? 'bg-elevated/50 text-default'
-                  : 'bg-elevated/30 text-muted italic'"
-              >
-                {{ currentBookingTexts.pickupLocationDescription || 'Sin zona definida — configúrala en el mapa' }}
-              </div>
-
               <!-- Mode lives here, not only inside the map modal: from the
                    panel there was no sign the drawn option existed at all. -->
               <div>
@@ -444,6 +436,19 @@
                 >
                   {{ store.bookingOptions.pickupAreaType === 'polygon' ? 'Editar zona dibujada' : 'Configurar radio' }}
                 </UButton>
+              </div>
+
+              <!-- Same reasoning as the meeting points, same order: this text
+                   is written by the map, never typed here, so it belongs below
+                   the button that produces it rather than above it where it
+                   looked like the field to fill in. -->
+              <div
+                class="w-full rounded-md border border-default px-3 py-2 text-sm leading-snug min-h-[2.75rem] flex items-center"
+                :class="currentBookingTexts.pickupLocationDescription
+                  ? 'bg-elevated/50 text-default'
+                  : 'bg-elevated/30 text-muted italic'"
+              >
+                {{ currentBookingTexts.pickupLocationDescription || 'Sin zona definida — configúrala en el mapa' }}
               </div>
               <!-- A drawn area with no shape covers nowhere, so it must not
                    read as configured. -->
