@@ -137,7 +137,12 @@ class TourController extends Controller
                 ]);
                 // Lets the admin list flag "cambios sin publicar" per row
                 // without opening each tour. One EXISTS subquery, no join.
-                $query->withExists('revision');
+                // The timestamp rides along so the badge can say HOW OLD the
+                // pending draft is: "hace 2 h" is what tells an operator
+                // whether it is their own unfinished edit or something a
+                // colleague left behind weeks ago.
+                $query->withExists('revision')
+                    ->withMax('revision as revision_updated_at', 'updated_at');
             }
 
             // Status filtering used to apply ONLY when ?status= was passed, so

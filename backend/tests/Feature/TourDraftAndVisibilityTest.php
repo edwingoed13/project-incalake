@@ -234,6 +234,51 @@ class TourDraftAndVisibilityTest extends TestCase
         ])->assertOk();
     }
 
+    // --- What the listing reports about a pending draft --------------------
+
+    public function test_listing_reports_when_the_pending_draft_was_saved(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['basicInfo' => ['title' => 'Parked']],
+        ])->assertOk();
+
+        $row = collect($this->getJson('/api/tours')->json('data'))
+            ->firstWhere('id', $tour->id);
+
+        $this->assertTrue($row['has_pending_draft']);
+
+        // The flag alone cannot tell an operator whether this is their own
+        // unfinished edit or something a colleague left weeks ago, which is
+        // the whole reason the timestamp rides along.
+        $this->assertArrayHasKey('pending_draft_at', $row);
+        $this->assertNotNull($row['pending_draft_at']);
+
+        // It must arrive as a date the browser can actually parse: withMax()
+        // returns the raw DB string, and "2026-08-27 14:32:11" is read as
+        // local time by some browsers and rejected by others.
+        $this->assertMatchesRegularExpression(
+            '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/',
+            $row['pending_draft_at']
+        );
+    }
+
+    public function test_listing_omits_the_draft_timestamp_when_there_is_no_draft(): void
+    {
+        $tour = Tour::factory()->create();
+
+        $row = collect($this->getJson('/api/tours')->json('data'))
+            ->firstWhere('id', $tour->id);
+
+        $this->assertFalse($row['has_pending_draft']);
+        // Absent rather than null: a date on a tour with no draft would make
+        // the badge render "guardado hace…" for something that never existed.
+        $this->assertArrayNotHasKey('pending_draft_at', $row);
+    }
+
     // --- Public visibility ------------------------------------------------
 
     public function test_public_cannot_see_an_unpublished_tour(): void

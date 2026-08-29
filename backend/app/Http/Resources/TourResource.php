@@ -155,6 +155,15 @@ class TourResource extends JsonResource
                 isset($this->revision_exists),
                 fn () => (bool) $this->revision_exists
             ),
+            // withMax() hands back the raw DB datetime ("2026-08-27 14:32:11"),
+            // not a cast Carbon like created_at/updated_at. Parsing it here is
+            // what makes it serialize as ISO-8601: the raw form is read as
+            // local time by some browsers and rejected outright by others, and
+            // the badge would silently degrade to a dash.
+            'pending_draft_at' => $this->when(
+                isset($this->revision_updated_at),
+                fn () => \Illuminate\Support\Carbon::parse($this->revision_updated_at)
+            ),
             'duration_days' => $this->duration_days,
             'duration_hours' => $this->duration_hours,
             'duration_quantity' => $this->duration_quantity,

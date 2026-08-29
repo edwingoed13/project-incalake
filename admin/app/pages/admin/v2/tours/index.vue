@@ -101,6 +101,19 @@ const clonedLanguages = (tour: Tour): string[] => Object.keys(duplicateTitles(to
 const duplicateOf = (tour: Tour, code?: string | null): string[] =>
   (code && duplicateTitles(tour)[code.toUpperCase()]) || []
 
+/**
+ * Jump to the tour a duplicated title collides with. The badge only carries
+ * that tour's CODE — the API compares titles across the whole catalogue, so it
+ * is usually not on the page in front of you. Searching by code is what makes
+ * the warning actionable instead of a dead end; the other tour carries the
+ * mirror-image warning, so you can bounce back and decide which one to fix.
+ */
+const findTourByCode = (code?: string) => {
+  if (!code) return
+  searchQuery.value = code
+  fetchTours(1, code)
+}
+
 const statusBadge = (s?: Tour['status']) => {
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
   if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
@@ -772,17 +785,19 @@ onMounted(() => {
                         size="xs"
                         icon="i-lucide-file-clock"
                         class="shrink-0"
-                        title="Hay ediciones guardadas que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas."
+                        :title="`Hay ediciones guardadas${(tour as any).pending_draft_at ? ' desde ' + timeAgo((tour as any).pending_draft_at) : ''} que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas. El borrador guarda el tour entero, así que no se puede saber desde aquí qué idioma o qué paso cambió.`"
                       >
-                        Cambios sin publicar
+                        Cambios sin publicar<span v-if="(tour as any).pending_draft_at"> · {{ timeAgo((tour as any).pending_draft_at) }}</span>
                       </UBadge>
-                      <!-- The slug suffix is not decoration: TourService only
-                           appends -1, -2 … when the title it generated from
-                           already belongs to another tour. So a language
-                           carrying one is a language whose title was never
-                           rewritten — the fingerprint of a copy left half
-                           finished, which is how a Uyuni tour ended up selling
-                           the Uros tour at the Uyuni price in five languages. -->
+                      <!-- A language whose title is byte-identical to another
+                           tour's is a translation that was never rewritten
+                           after a copy — which is how a Uyuni tour ended up
+                           selling the Uros tour at the Uyuni price in five
+                           languages. The summary names the languages; the
+                           expanded rows name the tour each collides with.
+                           Neither claims which side is the copy: both tours in
+                           a collision get flagged, and identical titles carry
+                           no direction. -->
                       <UBadge
                         v-if="clonedLanguages(tour).length"
                         color="warning"
@@ -790,9 +805,9 @@ onMounted(() => {
                         size="xs"
                         icon="i-lucide-copy"
                         class="shrink-0"
-                        :title="`Estos idiomas tienen exactamente el mismo título que otro tour: ${clonedLanguages(tour).map(l => l + ' = ' + duplicateOf(tour, l).join('/')).join(', ')}. Suele significar que este tour se copió y esas traducciones quedaron sin reescribir. Despliega el tour para verlas.`"
+                        :title="`Estas traducciones tienen exactamente el mismo título que otro tour: ${clonedLanguages(tour).map(l => l + ' = tour ' + duplicateOf(tour, l).join(' y ')).join('; ')}. Casi siempre es una copia que quedó sin reescribir. Despliega el tour para verlas.`"
                       >
-                        Mismo título que otro tour · {{ clonedLanguages(tour).join(', ') }}
+                        {{ clonedLanguages(tour).join(', ') }} sin reescribir
                       </UBadge>
                     </div>
                     <!-- The row had ~500px of dead space on a wide screen while
@@ -890,10 +905,25 @@ onMounted(() => {
                 leave-to-class="max-h-0 opacity-0"
               >
                 <div v-if="expandedTours.has(tour.id)" class="bg-elevated/30 border-t border-default">
+                  <!-- These rows used to open with no explanation at all, so
+                       they read as separate tours nested inside a tour — the
+                       single most common misreading of this screen. Say what
+                       they are, and where the big title above comes from, at
+                       the moment someone actually opens them. -->
+                  <div class="pl-16 pr-5 py-2 border-b border-default/60">
+                    <p class="text-[11px] text-muted">
+                      <span class="font-semibold uppercase tracking-wide text-default">Traducciones ({{ (tour.translations_summary || []).length }})</span>
+                      · el mismo tour en cada idioma, no son tours aparte. Arriba se muestra el título del idioma principal ({{ getPrimaryLanguageCode(tour) }}<UIcon name="i-lucide-star" class="size-3 inline-block align-text-bottom" />).
+                    </p>
+                  </div>
+
+                  <!-- The left rail makes the parent/child relationship
+                       structural instead of something you infer from
+                       indentation. Stacked rows form one continuous line. -->
                   <div
                     v-for="tr in (tour.translations_summary || [])"
                     :key="tr.translation_id"
-                    class="flex items-center gap-3 pl-16 pr-5 py-2.5 border-b border-default last:border-b-0 hover:bg-elevated/50 transition-colors group"
+                    class="flex items-center gap-3 ml-[38px] border-l-2 pl-6 pr-5 py-2.5 border-b border-default last:border-b-0 hover:bg-elevated/50 transition-colors group"
                   >
                     <span class="text-base">{{ getLanguageFlag(tr.language_code) }}</span>
 
@@ -918,10 +948,13 @@ onMounted(() => {
                           variant="subtle"
                           size="xs"
                           icon="i-lucide-copy"
-                          class="shrink-0"
-                          :title="`Este título es idéntico al de ${duplicateOf(tour, tr.language_code).join(', ')}. Reescríbelo o elimina esta traducción.`"
+                          as="button"
+                          type="button"
+                          class="shrink-0 cursor-pointer hover:bg-warning/20 transition-colors"
+                          :title="`Este título es idéntico, letra por letra, al del tour ${duplicateOf(tour, tr.language_code).join(' y ')}. Casi siempre significa que uno de los dos se copió del otro y esta traducción quedó sin reescribir. Haz clic para buscar ese tour y decidir cuál corregir.`"
+                          @click.stop="findTourByCode(duplicateOf(tour, tr.language_code)[0])"
                         >
-                          = {{ duplicateOf(tour, tr.language_code).join(', ') }}
+                          Mismo título que {{ duplicateOf(tour, tr.language_code).join(', ') }}
                         </UBadge>
                       </div>
                       <p class="text-[10px] text-muted font-mono truncate">
