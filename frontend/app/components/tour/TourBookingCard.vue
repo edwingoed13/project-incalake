@@ -79,13 +79,16 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
 </script>
 
 <template>
-  <!-- No inner scroll. Capping this to the viewport and scrolling the body was
-       tried: with the month open there is no height left for it, and the
-       calendar — the whole reason the panel exists — showed two rows out of
-       six. A nested scrollbar inside a sticky sidebar also reads as broken in
-       a way a tall panel does not. So the card is as tall as its content and
-       scrolls with the page, and the density work goes into keeping it short. -->
-  <div class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col">
+  <!-- The sidebar card is capped to the viewport. Pinned at top-24 with no
+       cap, anything taller than the window put "Reservar ahora" permanently
+       below the fold: on a 1366x768 laptop the button ended 126px past the
+       bottom edge and no amount of page scrolling reached it, because the
+       card is sticky. It fitted on a 1080p desktop, which is why it looked
+       fine here and broken on a laptop. -->
+  <div
+    class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col"
+    :class="isInline ? '' : 'lg:max-h-[calc(100dvh-7rem)]'"
+  >
     <!-- Price and party share one row: the price stacks its "por persona"
          caption underneath itself, freeing the right half for the travellers
          field. As two stacked rows the pair spent ~110px of card saying two
@@ -167,11 +170,12 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       </div>
     </div>
 
-    <div class="p-4 pt-3 space-y-1.5">
-      <!-- Date + Time: one labeled row, two fields side by side. As stacked
-           blocks with their own labels this pair cost ~180px of a phone's
-           booking panel; the short placeholders keep the half-width fields
-           readable. -->
+    <!-- Only the month scrolls when the window is short. Nothing scrolls on a
+         tall screen: max-height never binds there, so this is identical to
+         before. The time select deliberately does NOT live in here — its
+         dropdown is absolutely positioned and would be clipped by the
+         scroll container. -->
+    <div class="p-4 pt-3 min-h-0" :class="isInline ? '' : 'lg:overflow-y-auto lg:flex-1'">
       <div>
         <!-- No "Fecha y horario" label: a month grid announces itself, and the
              row cost height the calendar wanted. The timezone qualifies the
@@ -190,33 +194,33 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           :availability-start="tour?.availability_data?.start || ''"
           :availability-end="tour?.availability_data?.end || ''"
         />
-        <!-- Times only once there is a date. An empty time select next to an
-             empty date asks two questions at once and answers neither. -->
-        <div v-if="selectedDate" class="mt-2 flex items-center gap-2">
-          <TourTimeSelect
-            v-model="selectedTime"
-            :options="availableTimes"
-            placeholder="Horario"
-            class="flex-1"
-          />
-          <span
-            v-if="tzInfo"
-            class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 shrink-0"
-            :title="`${tzInfo.name} (${tzInfo.gmt})`"
-          >
-            <Icon name="material-symbols:language" class="size-3" />
-            {{ tzInfo.code }} ({{ tzInfo.gmt }})
-          </span>
-        </div>
         <!-- The free-cancellation promise lives in the trust card right below
              this one; saying it twice cost a row of the calendar. -->
       </div>
-
-
     </div>
 
-    <!-- Money and actions, grouped and set apart by the rule above them. -->
-    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5">
+    <!-- Money and actions, grouped and set apart by the rule above them.
+         shrink-0: this block is the one thing that must survive a short
+         window, so it never gives up height to the calendar above it. -->
+    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5 shrink-0">
+      <!-- Times only once there is a date. An empty time select next to an
+           empty date asks two questions at once and answers neither. -->
+      <div v-if="selectedDate" class="flex items-center gap-2">
+        <TourTimeSelect
+          v-model="selectedTime"
+          :options="availableTimes"
+          placeholder="Horario"
+          class="flex-1"
+        />
+        <span
+          v-if="tzInfo"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 shrink-0"
+          :title="`${tzInfo.name} (${tzInfo.gmt})`"
+        >
+          <Icon name="material-symbols:language" class="size-3" />
+          {{ tzInfo.code }} ({{ tzInfo.gmt }})
+        </span>
+      </div>
       <!-- The money and the button stay pinned together. A total that
            scrolls out of view while the traveller is picking a date asks
            them to commit without seeing what they are committing to. -->
