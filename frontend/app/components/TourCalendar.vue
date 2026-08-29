@@ -25,7 +25,7 @@
         :aria-label="inline ? undefined : t('select_date')"
         :class="[
           inline
-            ? 'bg-white rounded-xl border border-slate-200'
+            ? 'bg-white max-w-[300px] mx-auto'
             : 'bg-white border border-slate-200 shadow-2xl overflow-y-auto',
           inline ? '' : 'fixed inset-x-0 bottom-0 z-50 rounded-t-3xl max-h-[88vh]',
           inline ? '' : 'lg:absolute lg:inset-x-auto lg:right-0 lg:rounded-2xl lg:w-[560px] lg:max-w-[calc(100vw-2rem)]',
@@ -70,14 +70,14 @@
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
                   class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="[inline ? 'h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
+                  :class="[inline ? 'h-9 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else :class="inline ? 'h-8' : 'h-11'"></span>
+                <span v-else :class="inline ? 'h-9' : 'h-11'"></span>
               </template>
             </div>
           </div>
@@ -100,14 +100,14 @@
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
                   class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="[inline ? 'h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
+                  :class="[inline ? 'h-9 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else :class="inline ? 'h-8' : 'h-11'"></span>
+                <span v-else :class="inline ? 'h-9' : 'h-11'"></span>
               </template>
             </div>
           </div>
