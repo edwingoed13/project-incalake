@@ -936,6 +936,11 @@ class TourController extends Controller
                 ->with([
                     'translations:id,tour_id,language_id,h1_title',
                     'translations.language:id,code',
+                    // min_price is an accessor that falls back to two queries
+                    // per tour when `prices` is not loaded; preloading keeps
+                    // this list at a fixed query count however many variants
+                    // a parent has.
+                    'prices:id,tour_id,age_stage_id,amount,active',
                 ])
                 ->orderBy('id')
                 ->get();
@@ -949,6 +954,10 @@ class TourController extends Controller
                     'option_label' => $t->option_label,
                     'option_color' => $t->option_color,
                     'active' => (bool) $t->active,
+                    // The "Desde" figure the public option card shows for this
+                    // variant, so the wizard can preview the real card instead
+                    // of a coloured pill with no price on it.
+                    'min_price' => $t->min_price,
                 ];
             });
 

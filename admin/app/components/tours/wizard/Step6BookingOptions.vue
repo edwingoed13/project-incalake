@@ -708,15 +708,50 @@
             </div>
           </UFormField>
 
-          <!-- Preview -->
-          <div class="rounded-xl border border-default bg-elevated p-3">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-muted mb-2">Así verá el viajero la etiqueta</p>
-            <span
-              class="inline-block px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider"
-              :class="previewBadgeClass"
-            >
-              {{ store.bookingOptions.optionLabel || 'Sin nombre' }}
-            </span>
+          <!-- Preview.
+               It used to show the coloured pill on its own, which answered
+               what the label looks like and nothing about where it lands. The
+               operator was configuring a card they had never seen: hence
+               "¿dónde queda esto?". This mirrors the real widget — same
+               heading, same "Desde", same "Seleccionada" marker — and says
+               where on the page it sits. -->
+          <div class="rounded-xl border border-default bg-elevated p-3 space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-muted">Así lo verá el viajero</p>
+
+            <!-- Mock of the public "Elige tu opción" card -->
+            <div class="rounded-lg border border-default bg-default p-2.5">
+              <p class="text-[11px] font-black text-default flex items-center gap-1">
+                <UIcon name="i-lucide-sliders-horizontal" class="size-3 text-primary" />
+                Elige tu opción
+              </p>
+              <p class="text-[10px] text-muted mb-2">Esta actividad tiene varias modalidades. Elige la que mejor se adapte a ti.</p>
+
+              <div class="grid gap-1.5" :class="previewOptions.length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+                <div
+                  v-for="(opt, i) in previewOptions"
+                  :key="i"
+                  class="rounded-lg border-2 p-2 min-w-0"
+                  :class="opt.actual ? 'border-primary bg-primary/5' : 'border-default'"
+                >
+                  <div class="flex items-start justify-between gap-1">
+                    <span
+                      class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider"
+                      :class="opt.badge"
+                    >
+                      {{ opt.label }}
+                    </span>
+                    <span v-if="opt.actual" class="text-[9px] font-black text-primary shrink-0">✓ Seleccionada</span>
+                  </div>
+                  <p class="text-[9px] text-muted uppercase tracking-wider font-semibold mt-1.5">Desde</p>
+                  <p class="text-[11px] font-black" :class="opt.actual ? 'text-primary' : 'text-default'">{{ opt.price }}</p>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-muted leading-snug">
+              Aparece <strong>arriba de la página del tour</strong>, justo antes del panel de reserva. Al elegir otra
+              modalidad, el precio y el contenido cambian sin salir de la página.
+            </p>
           </div>
 
           <!-- PARENT mode only: manage the child variants attached to THIS
@@ -726,6 +761,19 @@
             <div>
               <p class="text-sm font-bold">Variantes vinculadas</p>
               <p class="text-[11px] text-muted">Tours que se muestran como opciones dentro de esta actividad.</p>
+              <!-- The consequence nobody expects: attaching a tour here takes
+                   it OUT of /tours. The public listing shows only the parent of
+                   each group, so a variant that used to appear on its own
+                   quietly stops doing so — findable afterwards only through
+                   this page or its direct link. Better said here than
+                   discovered when someone asks where their tour went. -->
+              <p class="text-[11px] text-warning mt-1 flex items-start gap-1">
+                <UIcon name="i-lucide-info" class="size-3.5 shrink-0 mt-px" />
+                <span>
+                  Al vincular un tour, <strong>deja de aparecer por su cuenta en el listado público</strong>:
+                  pasa a verse solo como opción dentro de este. Su enlace directo sigue funcionando.
+                </span>
+              </p>
             </div>
 
             <!-- Current children -->
@@ -1150,12 +1198,52 @@ function badgeClassFor(color?: string | null): string {
 }
 const previewBadgeClass = computed(() => badgeClassFor(store.bookingOptions.optionColor))
 
+/**
+ * The rows the public "Elige tu opción" card would show, as it would show
+ * them: this tour plus whatever is linked to it.
+ *
+ * Built from the same three inputs the site uses — label, colour and price —
+ * so the preview cannot quietly drift from the real card. The fallbacks match
+ * the frontend's own: an unnamed parent reads "Estándar", an unnamed variant
+ * reads "Variante".
+ */
+const previewOptions = computed(() => {
+  const precio = (v: any) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? `$ ${n.toFixed(2)}` : '—'
+  }
+  // Cheapest configured price for THIS tour, which is what "Desde" shows.
+  const propio = (store.commercialRules.ageStages || [])
+    .filter((st: any) => st.active)
+    .flatMap((st: any) => (st.nationalities || []).flatMap((n: any) => (n.ranges || []).map((r: any) => Number(r.price))))
+    .filter((n: number) => Number.isFinite(n) && n > 0)
+
+  const filas = [{
+    label: store.bookingOptions.optionLabel || (variantMode.value === 'parent' ? 'Estándar' : 'Variante'),
+    badge: badgeClassFor(store.bookingOptions.optionColor),
+    price: propio.length ? precio(Math.min(...propio)) : '—',
+    actual: true,
+  }]
+
+  if (variantMode.value === 'parent') {
+    for (const c of linkedChildren.value) {
+      filas.push({
+        label: c.option_label || 'Variante',
+        badge: badgeClassFor(c.option_color),
+        price: precio(c.min_price),
+        actual: false,
+      })
+    }
+  }
+  return filas
+})
+
 // ===== Child variants management (PARENT mode) ==========================
 // Build the option group from the parent: list linked children, search +
 // attach free tours, detach with one click. Each attach/detach is an
 // immediate API call (sets the CHILD's parent_tour_id), independent of this
 // tour's autosave.
-const linkedChildren = ref<{ id: number; h1_title: string; option_label: string | null; option_color: string | null; active: boolean }[]>([])
+const linkedChildren = ref<{ id: number; h1_title: string; option_label: string | null; option_color: string | null; active: boolean; min_price?: number | string | null }[]>([])
 const childrenLoading = ref(false)
 const childSearchQuery = ref('')
 const childDropdownOpen = ref(false)
