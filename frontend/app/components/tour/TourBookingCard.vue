@@ -52,6 +52,13 @@ const paxSummary = computed(() => {
   return parts.join(' · ')
 })
 const atMax = computed(() => props.totalPax >= props.maxPax)
+// Children's second line carries both the age band and its status: which price
+// applies once there is one, "Opcional" while there is none. The age comes
+// first — it is what decides whether a given child belongs on this row at all.
+const childHint = computed(() => {
+  const estado = children.value > 0 ? `${fmt(props.childPrice)} c/u` : 'Opcional'
+  return props.childAgeLabel ? `${props.childAgeLabel} · ${estado}` : estado
+})
 // Tours flagged require_availability replace instant booking with an inquiry.
 const requiresInquiry = computed(() => !!props.tour?.require_availability)
 // Partial payment: the tour takes a deposit now (advance %) and the rest on the
@@ -137,21 +144,25 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           v-if="paxOpen"
           role="dialog"
           aria-label="Viajeros"
-          class="absolute right-0 top-full mt-2 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
+          class="absolute right-0 top-full mt-2 z-50 w-[21rem] max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
         >
-          <!-- No per-unit hint on adults: the price above already says it.
-               The child row keeps its own — that price is nowhere else. -->
+          <!-- The age band goes on its own line under each row. Appended to
+               the label it read as part of the word ("Adultos (16-99)") and
+               was the first thing to be truncated on a narrow popover, so the
+               one piece of information that answers "does my 9-year-old count
+               as a child here?" was the piece that disappeared. -->
           <TourQuantityStepper
             v-model="adults"
-            :label="`Adultos${adultAgeLabel ? ' ' + adultAgeLabel : ''}`"
+            label="Adultos"
+            :hint="adultAgeLabel || undefined"
             :min="1"
             :at-max="atMax"
           />
           <TourQuantityStepper
             v-if="hasChildPricing"
             v-model="children"
-            :label="`Niños${childAgeLabel ? ' ' + childAgeLabel : ''}`"
-            :hint="children > 0 ? `${fmt(childPrice)} c/u` : 'Opcional'"
+            label="Niños"
+            :hint="childHint"
             :min="0"
             :at-max="atMax"
           />

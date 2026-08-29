@@ -888,14 +888,17 @@ const adultStage = computed(() => priceStages.value[0] || null)
 const childStage = computed(() => priceStages.value[1] || null)
 const hasChildPricing = computed(() => !!childStage.value)
 
-// "(16-99)" age-range labels from the admin's age stages; empty when unset.
+// "12 – 65 años" age-range labels from the admin's age stages; empty when
+// unset. Spelled out rather than a parenthetical "(12-65)": these now sit on
+// their own line under each traveller row, where a bare pair of numbers reads
+// as a price range or a quantity as easily as an age.
 function ageRangeLabel(stage: { minAge: number | null; maxAge: number | null } | null): string {
   if (!stage) return ''
   const min = stage.minAge, max = stage.maxAge
   if (min == null && max == null) return ''
-  if (min != null && max != null) return `(${min}-${max})`
-  if (min != null) return `(${min}+)`
-  return `(0-${max})`
+  if (min != null && max != null) return `${min} – ${max} años`
+  if (min != null) return `${min} años o más`
+  return `hasta ${max} años`
 }
 // The same legacy data that mislabels stage descriptions also carries junk
 // age ranges (e.g. the adult/primary stage saying "0-3" and the child one
