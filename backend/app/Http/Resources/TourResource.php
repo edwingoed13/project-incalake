@@ -84,6 +84,57 @@ class TourResource extends JsonResource
                     return $t['language_code'] !== null;
                 })->values();
             }),
+            // Languages whose title also belongs to a DIFFERENT tour.
+            //
+            // A tour copied and then only partly rewritten is invisible in the
+            // listing: it shows its own code, its own price and a healthy green
+            // "Publicado", while five of its languages still sell the tour it
+            // was copied from. That is not hypothetical — the Uyuni tour was
+            // serving the Uros tour in EN, FR, DE, PT and IT at the Uyuni price.
+            //
+            // The comparison is on the title itself, not on a slug suffix: a
+            // suffix only records that a collision happened once, possibly with
+            // a tour since deleted or renamed, which flagged half the catalogue
+            // when tried. Two tours sharing a title today is the actual problem.
+            // Behind a flag: this costs a query per tour, and the same
+            // resource serves the public listing, which the sitemap source
+            // fetches 1000 rows from at a time. Only the admin listing asks.
+            'duplicate_title_languages' => $this->when(
+                $request->boolean('with_duplicates') && $this->relationLoaded('translations'),
+                function () {
+                $titles = $this->translations
+                    ->filter(fn ($t) => filled($t->h1_title) && $t->language_id)
+                    ->map(fn ($t) => [
+                        'language_id' => $t->language_id,
+                        'code' => $t->language->code ?? null,
+                        'title' => $t->h1_title,
+                    ])
+                    ->filter(fn ($t) => $t['code'] !== null);
+
+                if ($titles->isEmpty()) {
+                    return [];
+                }
+
+                $clashes = \DB::table('tour_translations')
+                    ->where('tour_id', '!=', $this->id)
+                    ->whereIn('language_id', $titles->pluck('language_id')->unique()->all())
+                    ->whereIn('h1_title', $titles->pluck('title')->unique()->all())
+                    ->get(['language_id', 'h1_title']);
+
+                if ($clashes->isEmpty()) {
+                    return [];
+                }
+
+                $taken = $clashes->map(fn ($c) => $c->language_id . '|' . $c->h1_title)->all();
+
+                return $titles
+                    ->filter(fn ($t) => in_array($t['language_id'] . '|' . $t['title'], $taken, true))
+                    ->pluck('code')
+                    ->unique()
+                    ->values()
+                    ->all();
+                }
+            ),
             'difficulty' => $this->difficulty,
             'status' => $this->status,
             'active' => $this->active,

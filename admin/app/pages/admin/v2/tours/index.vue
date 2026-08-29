@@ -82,6 +82,18 @@ const currentPage = ref(1)
 const expandedTours = ref<Set<number>>(new Set())
 const statusCounts = ref<Record<string, number>>({ all: 0, draft: 0, published: 0, archived: 0 })
 
+// Languages whose title also belongs to another tour — the API works this out
+// across the whole catalogue, which a single page of ten rows cannot.
+//
+// The first attempt read it off the slug: TourService appends -1, -2 … when a
+// generated slug is taken, so a suffix looked like a reliable fingerprint of a
+// copy. It was not. A suffix only records that a collision happened once, maybe
+// with a tour since renamed or deleted, and it flagged five of the first ten
+// tours — while the catalogue actually holds 13 duplicated titles. A badge that
+// fires on half the list teaches people to ignore it.
+const clonedLanguages = (tour: Tour): string[] =>
+  ((tour as any).duplicate_title_languages || []).map((c: string) => c.toUpperCase())
+
 const statusBadge = (s?: Tour['status']) => {
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
   if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
@@ -288,6 +300,9 @@ const fetchTours = async (page = 1, search = '') => {
       search,
       sort_by: sortBy || 'created_at',
       sort_order: sortOrder || 'desc',
+      // Costs a query per row, so only this listing asks for it — the public
+      // one fetches a thousand tours at a time.
+      with_duplicates: '1',
     })
     if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
     if (cityFilter.value !== 'all') params.set('city_slug', cityFilter.value)
@@ -737,7 +752,12 @@ onMounted(() => {
                         Sin contenido
                       </UBadge>
                       <!-- "Publiqué y no se ve" suele ser esto: el borrador
-                           quedó sin publicar. Visible sin abrir el tour. -->
+                           quedó sin publicar. Visible sin abrir el tour.
+                           It used to read "Sin publicar", which sat next to a
+                           green "Publicado" and looked like a flat
+                           contradiction: one is the tour's status, the other is
+                           whether its latest EDITS have been published. Naming
+                           the changes is what separates them. -->
                       <UBadge
                         v-if="(tour as any).has_pending_draft"
                         color="info"
@@ -745,8 +765,27 @@ onMounted(() => {
                         size="xs"
                         icon="i-lucide-file-clock"
                         class="shrink-0"
+                        title="Hay ediciones guardadas que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas."
                       >
-                        Sin publicar
+                        Cambios sin publicar
+                      </UBadge>
+                      <!-- The slug suffix is not decoration: TourService only
+                           appends -1, -2 … when the title it generated from
+                           already belongs to another tour. So a language
+                           carrying one is a language whose title was never
+                           rewritten — the fingerprint of a copy left half
+                           finished, which is how a Uyuni tour ended up selling
+                           the Uros tour at the Uyuni price in five languages. -->
+                      <UBadge
+                        v-if="clonedLanguages(tour).length"
+                        color="warning"
+                        variant="subtle"
+                        size="xs"
+                        icon="i-lucide-copy"
+                        class="shrink-0"
+                        :title="`El título en ${clonedLanguages(tour).join(', ')} es idéntico al de otro tour. Suele significar que este tour se copió y esas traducciones quedaron sin reescribir.`"
+                      >
+                        Título repetido · {{ clonedLanguages(tour).join(', ') }}
                       </UBadge>
                     </div>
                     <!-- The row had ~500px of dead space on a wide screen while
