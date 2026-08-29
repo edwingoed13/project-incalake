@@ -165,6 +165,14 @@ Route::get('/payment/config', [BookingController::class, 'paymentConfig'])->name
 // AI Translation Settings — admin-gated: exposes/edits the AI provider api_key
 // and the test endpoint spends paid AI calls.
 Route::middleware(['auth:sanctum', 'admin.api'])->group(function () {
+    // Age bands are GLOBAL — one set shared by every tour — so reading and
+    // writing them is admin-only even though the screen they are edited from
+    // (the tour wizard's pricing step) looks per-tour.
+    Route::get('/admin/age-stages', [\App\Http\Controllers\Api\AgeStageController::class, 'index'])
+        ->name('api.admin.age-stages.index');
+    Route::post('/admin/age-stages', [\App\Http\Controllers\Api\AgeStageController::class, 'bulkUpdate'])
+        ->name('api.admin.age-stages.update');
+
     Route::prefix('ai-translation-settings')->group(function () {
         Route::get('/', [AITranslationSettingsController::class, 'index'])->name('api.ai-translation-settings.index');
         Route::post('/', [AITranslationSettingsController::class, 'store'])->name('api.ai-translation-settings.store');

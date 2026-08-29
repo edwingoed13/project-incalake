@@ -187,6 +187,8 @@ export interface AgeStagePrice {
   maxAge: number
   active: boolean
   nationalities: NationalityPrice[]
+  /** False for bands the business has locked; the server enforces it too. */
+  editable?: boolean
 }
 
 export interface Coupon {
@@ -402,6 +404,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
     // against CURRENT state (rather than once, at load) means the answer stays
     // right as they keep editing instead of going stale after the first save.
     liveSnapshot: null as Record<string, any> | null,
+    // Signature of the age bands as last written, so a tour save only touches
+    // that global table when a name or range actually changed.
+    ageStagesSaved: '' as string,
     publishing: false,
     
     // Step 1 Data ...
@@ -731,10 +736,96 @@ export const useTourWizardStore = defineStore('tourWizard', {
       }]
     },
 
+    /**
+     * Replace the wizard's built-in age bands with the ones actually stored.
+     *
+     * They used to be hardcoded here ("Adulto 16-99", "Niño 3-11") while the
+     * database held its own, global, set. The screen therefore showed ranges
+     * nobody could rely on, and the public site — which reads the stored rows —
+     * printed something else entirely. Read the real thing, so what an operator
+     * sees is what a traveller gets.
+     *
+     * Best-effort: an older API has no such endpoint, and failing to read the
+     * bands must not stop a tour from opening.
+     */
+    async loadAgeStages(): Promise<void> {
+      const auth = useAuthStore()
+      if (!auth.token) return
+      const config = useRuntimeConfig()
+      try {
+        const res: any = await $fetch(`${config.public.apiUrl}/admin/age-stages`, {
+          headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+        })
+        const rows: any[] = res?.data || []
+        if (!rows.length) return
+        this.commercialRules.ageStages = rows.map((row) => {
+          const existing = this.commercialRules.ageStages.find(s => String(s.id) === String(row.id))
+          return {
+            // Keep whatever prices are already loaded for this band; only the
+            // identity and the range come from the server.
+            ...(existing || { active: false, nationalities: [] }),
+            id: String(row.id),
+            description: row.description,
+            minAge: row.min_age,
+            maxAge: row.max_age,
+            editable: row.editable !== false,
+          } as any
+        })
+        // Baseline: what we just read is what the server already has, so a
+        // tour saved without touching the bands writes nothing to them.
+        this.ageStagesSaved = JSON.stringify(
+          rows.filter((r: any) => r.editable !== false).map((r: any) => ({
+            id: Number(r.id),
+            description: String(r.description || '').slice(0, 45),
+            min_age: Number(r.min_age),
+            max_age: Number(r.max_age),
+          }))
+        )
+      } catch {
+        // Keep the built-in defaults; the pricing rows below still load.
+      }
+    },
+
+    /**
+     * Write the age bands back. Global data, so this deliberately runs only
+     * when a range or a name actually changed — a tour save should not touch
+     * the whole catalogue's bands just by being a tour save.
+     */
+    async saveAgeStages(): Promise<void> {
+      const auth = useAuthStore()
+      if (!auth.token) return
+      const stages = (this.commercialRules.ageStages || []).filter((s: any) => (s as any).editable !== false)
+      if (!stages.length) return
+
+      const payload = stages.map((s: any) => ({
+        id: Number(s.id),
+        description: String(s.description || '').slice(0, 45),
+        min_age: Number(s.minAge),
+        max_age: Number(s.maxAge),
+      })).filter(s => Number.isFinite(s.id) && Number.isFinite(s.min_age) && Number.isFinite(s.max_age))
+      if (!payload.length) return
+
+      const firma = JSON.stringify(payload)
+      if (firma === this.ageStagesSaved) return
+
+      const config = useRuntimeConfig()
+      try {
+        await $fetch(`${config.public.apiUrl}/admin/age-stages`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          body: { stages: payload },
+        })
+        this.ageStagesSaved = firma
+      } catch {
+        // An older API has no endpoint here. Don't fail the tour save over it.
+      }
+    },
+
     async fetchTourData(id: string) {
       this.loading = true
       console.log(`[Store] Fetching data for tour ID: ${id}...`)
       try {
+        await this.loadAgeStages()
         const config = useRuntimeConfig()
         const defaultApiUrl = config.public.apiUrl
         // Authenticated: /tours/{id} 404s for anonymous callers when the tour
@@ -1392,6 +1483,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
         })
 
         if (response.success) {
+          // The age bands live in their own global table, so the tour payload
+          // cannot carry them. Persist them alongside — otherwise "Edad mín /
+          // Edad máx" stays a field that looks editable and silently isn't.
+          await this.saveAgeStages()
           this.isDirty = false
           this.lastSavedAt = Date.now()
           this.autosaveError = null

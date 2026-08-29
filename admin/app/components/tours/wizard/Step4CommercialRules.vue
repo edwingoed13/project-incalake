@@ -59,6 +59,19 @@
         description="Los rangos no pueden solaparse ni duplicarse dentro de la misma nacionalidad. Ejemplo válido: 1-1, 2-5, 6-20. Resuelve los rangos resaltados antes de guardar."
       />
 
+      <!-- The ranges are shared, and this screen looks per-tour. Saying so is
+           what stops someone widening "Niño" for one tour and moving it on all
+           290 — which is how the stored bands drifted from what this screen
+           showed in the first place. -->
+      <div class="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mb-3">
+        <UIcon name="i-lucide-globe" class="size-4 text-amber-600 shrink-0 mt-0.5" />
+        <p class="text-xs text-amber-800 leading-snug">
+          El <span class="font-bold">nombre y las edades</span> de cada etapa son comunes a todos los tours:
+          si los cambias aquí, cambian en el catálogo entero. Los <span class="font-bold">precios</span> sí
+          son solo de este tour.
+        </p>
+      </div>
+
       <!-- Add Age Stage -->
       <div class="flex items-center justify-between gap-3 flex-wrap pb-2">
         <p class="text-sm font-semibold">
