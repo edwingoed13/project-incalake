@@ -774,7 +774,7 @@ export const useTourWizardStore = defineStore('tourWizard', {
         // Baseline: what we just read is what the server already has, so a
         // tour saved without touching the bands writes nothing to them.
         this.ageStagesSaved = JSON.stringify(
-          rows.filter((r: any) => r.editable !== false).map((r: any) => ({
+          rows.map((r: any) => ({
             id: Number(r.id),
             description: String(r.description || '').slice(0, 45),
             min_age: Number(r.min_age),
@@ -794,7 +794,9 @@ export const useTourWizardStore = defineStore('tourWizard', {
     async saveAgeStages(): Promise<void> {
       const auth = useAuthStore()
       if (!auth.token) return
-      const stages = (this.commercialRules.ageStages || []).filter((s: any) => (s as any).editable !== false)
+      // Every band is sent: `editable` is the seeder's marker on base rows,
+      // not a write lock, and filtering on it skipped the only rows that exist.
+      const stages = this.commercialRules.ageStages || []
       if (!stages.length) return
 
       const payload = stages.map((s: any) => ({

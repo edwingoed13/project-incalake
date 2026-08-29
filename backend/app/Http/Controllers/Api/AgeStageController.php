@@ -62,11 +62,13 @@ class AgeStageController extends Controller
             if (!$stage) {
                 continue;
             }
-            // `editable` is the flag protecting bands the business does not
-            // want moved; honour it instead of trusting the client to hide them.
-            if ($stage->editable === false) {
-                continue;
-            }
+            // `editable` is NOT treated as a write lock. It reads like one, and
+            // it was honoured here at first — but the seeder stamps false on
+            // every base row it creates (age stages and nationalities alike),
+            // and nothing in the application had ever enforced it. Respecting
+            // it would have made this endpoint unable to edit the only rows
+            // that exist, while the pricing screen went on showing the ranges
+            // as editable fields. It stays in the response as information.
             $stage->update([
                 'description' => $row['description'],
                 'min_age' => $row['min_age'],

@@ -104,20 +104,23 @@ class AgeStageTest extends TestCase
         $this->assertSame(16, $ok->fresh()->min_age);
     }
 
-    public function test_a_band_marked_not_editable_is_left_alone(): void
+    public function test_a_seeded_band_can_still_be_corrected(): void
     {
-        $locked = $this->stage(['description' => 'Adulto Mayor', 'min_age' => 66, 'max_age' => 99, 'editable' => false]);
+        // The seeder stamps editable=false on every base row it creates, so
+        // production's only two bands carry it. Treating that as a write lock
+        // made this endpoint unable to edit anything that actually exists,
+        // while the pricing screen still showed the ranges as editable fields.
+        $seeded = $this->stage(['description' => 'Niño', 'min_age' => 0, 'max_age' => 3, 'editable' => false]);
         Sanctum::actingAs($this->admin());
 
         $this->postJson('/api/admin/age-stages', [
             'stages' => [
-                ['id' => $locked->id, 'description' => 'Cambiado', 'min_age' => 1, 'max_age' => 2],
+                ['id' => $seeded->id, 'description' => 'Adulto', 'min_age' => 16, 'max_age' => 99],
             ],
         ])->assertOk();
 
-        // The flag is enforced here, not left to the client to respect.
-        $this->assertSame('Adulto Mayor', $locked->fresh()->description);
-        $this->assertSame(66, $locked->fresh()->min_age);
+        $this->assertSame('Adulto', $seeded->fresh()->description);
+        $this->assertSame(16, $seeded->fresh()->min_age);
     }
 
     public function test_a_customer_cannot_change_the_bands(): void
