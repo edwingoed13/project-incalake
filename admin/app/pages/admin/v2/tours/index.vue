@@ -82,8 +82,9 @@ const currentPage = ref(1)
 const expandedTours = ref<Set<number>>(new Set())
 const statusCounts = ref<Record<string, number>>({ all: 0, draft: 0, published: 0, archived: 0 })
 
-// Languages whose title also belongs to another tour — the API works this out
-// across the whole catalogue, which a single page of ten rows cannot.
+// Which languages share their title with another tour, and with which one. The
+// API works this out across the whole catalogue, which a single page of ten
+// rows cannot.
 //
 // The first attempt read it off the slug: TourService appends -1, -2 … when a
 // generated slug is taken, so a suffix looked like a reliable fingerprint of a
@@ -91,8 +92,14 @@ const statusCounts = ref<Record<string, number>>({ all: 0, draft: 0, published: 
 // with a tour since renamed or deleted, and it flagged five of the first ten
 // tours — while the catalogue actually holds 13 duplicated titles. A badge that
 // fires on half the list teaches people to ignore it.
-const clonedLanguages = (tour: Tour): string[] =>
-  ((tour as any).duplicate_title_languages || []).map((c: string) => c.toUpperCase())
+const duplicateTitles = (tour: Tour): Record<string, string[]> =>
+  ((tour as any).duplicate_title_languages || {}) as Record<string, string[]>
+
+const clonedLanguages = (tour: Tour): string[] => Object.keys(duplicateTitles(tour))
+
+/** The tours a given language collides with, e.g. ["ES007"]. */
+const duplicateOf = (tour: Tour, code?: string | null): string[] =>
+  (code && duplicateTitles(tour)[code.toUpperCase()]) || []
 
 const statusBadge = (s?: Tour['status']) => {
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
@@ -783,9 +790,9 @@ onMounted(() => {
                         size="xs"
                         icon="i-lucide-copy"
                         class="shrink-0"
-                        :title="`El título en ${clonedLanguages(tour).join(', ')} es idéntico al de otro tour. Suele significar que este tour se copió y esas traducciones quedaron sin reescribir.`"
+                        :title="`Estos idiomas tienen exactamente el mismo título que otro tour: ${clonedLanguages(tour).map(l => l + ' = ' + duplicateOf(tour, l).join('/')).join(', ')}. Suele significar que este tour se copió y esas traducciones quedaron sin reescribir. Despliega el tour para verlas.`"
                       >
-                        Título repetido · {{ clonedLanguages(tour).join(', ') }}
+                        Mismo título que otro tour · {{ clonedLanguages(tour).join(', ') }}
                       </UBadge>
                     </div>
                     <!-- The row had ~500px of dead space on a wide screen while
@@ -900,7 +907,23 @@ onMounted(() => {
                     </UBadge>
 
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium truncate">{{ tr.title || '(Sin título)' }}</p>
+                      <div class="flex items-center gap-2 min-w-0">
+                        <p class="text-sm font-medium truncate">{{ tr.title || '(Sin título)' }}</p>
+                        <!-- On the row, not only summarised above it: this is
+                             where the operator can see WHICH title is repeated,
+                             so it is where the warning belongs. -->
+                        <UBadge
+                          v-if="duplicateOf(tour, tr.language_code).length"
+                          color="warning"
+                          variant="subtle"
+                          size="xs"
+                          icon="i-lucide-copy"
+                          class="shrink-0"
+                          :title="`Este título es idéntico al de ${duplicateOf(tour, tr.language_code).join(', ')}. Reescríbelo o elimina esta traducción.`"
+                        >
+                          = {{ duplicateOf(tour, tr.language_code).join(', ') }}
+                        </UBadge>
+                      </div>
                       <p class="text-[10px] text-muted font-mono truncate">
                         /{{ tr.language_code?.toLowerCase() }}/{{ tr.slug || '...' }}
                       </p>

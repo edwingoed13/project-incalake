@@ -115,24 +115,35 @@ class TourResource extends JsonResource
                     return [];
                 }
 
-                $clashes = \DB::table('tour_translations')
-                    ->where('tour_id', '!=', $this->id)
-                    ->whereIn('language_id', $titles->pluck('language_id')->unique()->all())
-                    ->whereIn('h1_title', $titles->pluck('title')->unique()->all())
-                    ->get(['language_id', 'h1_title']);
+                // Carry the other tour's CODE, not just the language. "EN is
+                // duplicated" leaves the operator hunting; "EN is the same
+                // title as ES007" is the whole answer, and ES007 is what they
+                // read on the row above.
+                $clashes = \DB::table('tour_translations as tt')
+                    ->join('tours as t', 't.id', '=', 'tt.tour_id')
+                    ->where('tt.tour_id', '!=', $this->id)
+                    ->whereIn('tt.language_id', $titles->pluck('language_id')->unique()->all())
+                    ->whereIn('tt.h1_title', $titles->pluck('title')->unique()->all())
+                    ->get(['tt.language_id', 'tt.h1_title', 't.code']);
 
                 if ($clashes->isEmpty()) {
                     return [];
                 }
 
-                $taken = $clashes->map(fn ($c) => $c->language_id . '|' . $c->h1_title)->all();
+                $byKey = [];
+                foreach ($clashes as $c) {
+                    $byKey[$c->language_id . '|' . $c->h1_title][] = $c->code;
+                }
 
-                return $titles
-                    ->filter(fn ($t) => in_array($t['language_id'] . '|' . $t['title'], $taken, true))
-                    ->pluck('code')
-                    ->unique()
-                    ->values()
-                    ->all();
+                $out = [];
+                foreach ($titles as $t) {
+                    $key = $t['language_id'] . '|' . $t['title'];
+                    if (isset($byKey[$key])) {
+                        $out[$t['code']] = array_values(array_unique($byKey[$key]));
+                    }
+                }
+
+                return $out;
                 }
             ),
             'difficulty' => $this->difficulty,
