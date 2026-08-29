@@ -432,6 +432,22 @@ onMounted(async () => {
     // live version and re-doing the work.
     if (store.isLiveTour()) {
       const restored = await store.loadDraft()
+      // Re-arm dirty tracking against the data that is now on screen.
+      //
+      // The baseline is otherwise captured 300ms after `loading` flips, and
+      // this draft fetch is a network call that usually lands later. The
+      // applied draft then looked like the operator typing: the tour went
+      // dirty on its own, autosave re-saved the draft nobody had touched, and
+      // the list reported it as edited seconds ago — erasing the very "hace
+      // 2 h" that tells you whether the work is yours or a colleague's. It
+      // also bumped the version, so another open tab's next save could be
+      // rejected as a conflict that never happened.
+      armDirtyTracking(300)
+      // And clear the flag the watcher may already have set: its deep watch
+      // flushes on a microtask, so it can run between loadDraft() mutating
+      // state and this line. Re-arming alone suppresses future firings but
+      // does not undo one that already happened.
+      store.isDirty = false
       if (restored) {
         toast.add({
           title: 'Borrador restaurado',

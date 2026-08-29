@@ -356,6 +356,67 @@ class TourDraftAndVisibilityTest extends TestCase
         $this->assertSame('PT', $row['primary_language']['code']);
     }
 
+    public function test_an_older_draft_can_be_annotated_without_being_touched(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['contentSEO' => ['en' => ['title' => 'Parked work']]],
+        ])->assertOk();
+
+        $before = TourRevision::where('tour_id', $tour->id)->firstOrFail();
+        // Age it, so a bumped timestamp would be unmistakable.
+        $before->timestamps = false;
+        $before->updated_at = now()->subDays(9);
+        $before->save();
+        $stamp = $before->fresh()->updated_at;
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision/summary", [
+            'changed_languages' => ['EN'],
+            'changed_sections' => [],
+        ])->assertOk();
+
+        $after = TourRevision::where('tour_id', $tour->id)->firstOrFail();
+
+        $this->assertSame(['EN'], $after->changed_languages);
+        // The parked work itself is untouched...
+        $this->assertSame(['contentSEO' => ['en' => ['title' => 'Parked work']]], $after->payload);
+        // ...its version does not move, or another tab's next save would be
+        // rejected as a conflict it never caused...
+        $this->assertSame($before->version, $after->version);
+        // ...and it does not look freshly edited: updated_at is what the list
+        // renders as "hace 9 días", and annotating is not editing.
+        $this->assertSame($stamp->toDateTimeString(), $after->updated_at->toDateTimeString());
+    }
+
+    public function test_annotating_requires_an_admin(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->customer());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision/summary", [
+            'changed_languages' => ['EN'],
+        ])->assertForbidden();
+    }
+
+    public function test_reading_a_draft_says_whether_it_carries_a_summary(): void
+    {
+        $tour = Tour::factory()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/revision", [
+            'schema_version' => 'v1',
+            'payload' => ['basicInfo' => ['title' => 'Parked']],
+        ])->assertOk();
+
+        // null is the signal the wizard uses to decide it should fill this in.
+        $this->getJson("/api/admin/tours/{$tour->id}/revision?schema_version=v1")
+            ->assertOk()
+            ->assertJsonPath('data.changed_languages', null);
+    }
+
     // --- Public visibility ------------------------------------------------
 
     public function test_public_cannot_see_an_unpublished_tour(): void

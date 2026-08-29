@@ -65,6 +65,10 @@ class TourRevisionController extends Controller
             'data' => [
                 'payload' => $revision->payload,
                 'schema_version' => $revision->schema_version,
+                // null means this draft predates the summary, which is how the
+                // wizard knows to work it out and fill it in.
+                'changed_languages' => $revision->changed_languages,
+                'changed_sections' => $revision->changed_sections,
                 // The client echoes this back on save so a write built on a
                 // stale copy can be rejected instead of erasing someone.
                 'version' => $revision->version,
@@ -159,6 +163,55 @@ class TourRevisionController extends Controller
                 'updated_at' => $revision->updated_at,
                 'updated_by' => $revision->updated_by,
             ],
+        ]);
+    }
+
+    /**
+     * Record WHAT a parked draft changes, without touching the draft itself.
+     *
+     * Drafts saved before the wizard started reporting this have no summary,
+     * so the tour list cannot name their languages and stays blank until
+     * somebody happens to edit them again. The wizard works the summary out
+     * every time it opens a tour, so it can fill the gap in — but only if
+     * doing so is harmless.
+     *
+     * Hence metadata only: `payload` is never written, and `version` is NOT
+     * bumped. Re-posting the payload to carry two small lists would put the
+     * parked work back through a write it did not need, and moving the version
+     * would make another tab's next save look like a conflict.
+     */
+    public function summary(Request $request, $id): JsonResponse
+    {
+        $tour = Tour::findOrFail($id);
+
+        $data = $request->validate([
+            'changed_languages' => 'nullable|array|max:20',
+            'changed_languages.*' => 'string|max:5',
+            'changed_sections' => 'nullable|array|max:20',
+            'changed_sections.*' => 'string|max:40',
+        ]);
+
+        $revision = TourRevision::where('tour_id', $tour->id)->first();
+
+        if (!$revision) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No hay borrador que anotar.',
+            ]);
+        }
+
+        // Timestamps off: `updated_at` is what the list turns into "hace 2 h",
+        // and it answers "when did someone last touch this work". Annotating a
+        // draft is not touching it, and letting this bump the clock would make
+        // every old draft look freshly edited the moment it was opened.
+        $revision->timestamps = false;
+        $revision->changed_languages = $data['changed_languages'] ?? null;
+        $revision->changed_sections = $data['changed_sections'] ?? null;
+        $revision->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Resumen del borrador actualizado.',
         ]);
     }
 

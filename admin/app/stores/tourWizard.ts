@@ -1571,6 +1571,34 @@ export const useTourWizardStore = defineStore('tourWizard', {
     },
 
     /**
+     * Tell the server which languages/sections the parked draft changes.
+     *
+     * Only for drafts saved before the wizard reported this. It writes nothing
+     * but those two lists — not the payload, not the version, not the
+     * timestamp — so it cannot disturb the parked work or look like an edit.
+     */
+    async backfillDraftSummary(): Promise<void> {
+      if (!this.tourId || this.tourId === 'new') return
+      const auth = useAuthStore()
+      if (!auth.token) return
+
+      const config = useRuntimeConfig()
+      try {
+        await $fetch(`${config.public.apiUrl}/admin/tours/${this.tourId}/revision/summary`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' },
+          body: {
+            changed_languages: this.draftChangedLanguages,
+            changed_sections: this.draftChangedSections,
+          },
+        })
+      } catch {
+        // Deliberately silent. An older API returns 404 here, and a listing
+        // badge that stays vague is not worth an error in the operator's face.
+      }
+    },
+
+    /**
      * Load the pending draft over the freshly-fetched live data. Call AFTER
      * fetchTourData — it overwrites the slices it covers.
      */
@@ -1622,6 +1650,16 @@ export const useTourWizardStore = defineStore('tourWizard', {
         this.draftError = null
         // Restoring a saved draft is not an unsaved edit.
         this.isDirty = false
+
+        // Drafts parked before the wizard started reporting what they change
+        // carry no summary, so the tour list cannot name their languages. We
+        // have just worked it out to render this screen; hand it over so the
+        // list stops saying "algo cambió" about work we can already describe.
+        // Fire and forget: it is an annotation, and failing to write it must
+        // not disturb an editing session.
+        if (!Array.isArray(draft.changed_languages)) {
+          this.backfillDraftSummary()
+        }
         return true
       } catch (e: any) {
         // Reading a draft is best-effort: no endpoint (404) simply means this

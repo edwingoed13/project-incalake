@@ -268,6 +268,12 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.tours.revision.show');
         Route::post('/{id}/revision', [\App\Http\Controllers\Api\TourRevisionController::class, 'store'])
             ->name('api.admin.tours.revision.store');
+        // Metadata only: records WHICH languages/sections a draft changes,
+        // without touching the payload or bumping the version. Lets a draft
+        // parked before that summary existed fill it in when someone opens the
+        // tour, instead of staying blank in the list until it is next edited.
+        Route::post('/{id}/revision/summary', [\App\Http\Controllers\Api\TourRevisionController::class, 'summary'])
+            ->name('api.admin.tours.revision.summary');
         Route::match(['delete', 'post'], '/{id}/revision/delete', [\App\Http\Controllers\Api\TourRevisionController::class, 'destroy'])
             ->name('api.admin.tours.revision.destroy');
     });
