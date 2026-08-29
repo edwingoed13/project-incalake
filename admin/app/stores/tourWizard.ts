@@ -328,6 +328,33 @@ const emptyDetailedContent = (): Record<string, any> =>
     generalPolicies: '', cancellationPolicy: '', customSections: [], mapPoints: [],
   }]))
 
+/**
+ * Canonical JSON for comparing a draft slice against the live one.
+ *
+ * Object key order is NOT stable across the round trip — the draft comes back
+ * from the API and gets spread into fresh objects — so a plain JSON.stringify
+ * reports differences that do not exist. Keys are sorted; array order is left
+ * alone because in this data it carries meaning (itinerary steps, gallery
+ * order). null and '' are folded together: the wizard writes '' into fields the
+ * API returns as null, and treating that as an edit would flag every language.
+ */
+const canonical = (value: any): string => {
+  const walk = (v: any): any => {
+    if (v === null || v === undefined || v === '') return null
+    if (Array.isArray(v)) return v.map(walk)
+    if (typeof v === 'object') {
+      return Object.keys(v).sort().reduce((acc: Record<string, any>, k) => {
+        acc[k] = walk(v[k])
+        return acc
+      }, {})
+    }
+    return v
+  }
+  return JSON.stringify(walk(value))
+}
+
+const sameContent = (a: any, b: any): boolean => canonical(a) === canonical(b)
+
 export const useTourWizardStore = defineStore('tourWizard', {
   state: () => ({
     currentStep: 1,
@@ -365,6 +392,16 @@ export const useTourWizardStore = defineStore('tourWizard', {
     draftUpdatedAt: null as string | null,
     draftUpdatedByName: null as string | null,
     draftError: null as string | null,
+    // The tour exactly as the public sees it, captured at the end of
+    // fetchTourData() and BEFORE any parked draft is overlaid.
+    //
+    // "Cambios sin publicar" on its own cannot say WHERE the changes are — the
+    // draft is one opaque snapshot of the whole wizard — so an operator facing
+    // six languages and nine steps had nowhere to start looking. Keeping the
+    // live copy is what makes the difference computable, and computing it
+    // against CURRENT state (rather than once, at load) means the answer stays
+    // right as they keep editing instead of going stale after the first save.
+    liveSnapshot: null as Record<string, any> | null,
     publishing: false,
     
     // Step 1 Data ...
@@ -511,6 +548,45 @@ export const useTourWizardStore = defineStore('tourWizard', {
   }),
 
   getters: {
+    /**
+     * Languages whose content differs from what the public sees, as uppercase
+     * codes. Empty when nothing is parked, when the live snapshot is missing
+     * (a brand-new tour), or once the changes are published.
+     *
+     * Whole per-language slices are compared, not a hand-picked field or two:
+     * a language stays silent only when genuinely nothing in it differs, so
+     * the absence of a mark can be trusted.
+     */
+    draftChangedLanguages(): string[] {
+      const live = (this as any).liveSnapshot
+      if (!live) return []
+      const out: string[] = []
+      for (const code of LANGS) {
+        const seoChanged = !sameContent((this as any).contentSEO?.[code], live.contentSEO?.[code])
+        const detailChanged = !sameContent((this as any).detailedContent?.[code], live.detailedContent?.[code])
+        if (seoChanged || detailChanged) out.push(code.toUpperCase())
+      }
+      return out
+    },
+
+    /** Non-language parts of the tour that differ from the published version. */
+    draftChangedSections(): string[] {
+      const live = (this as any).liveSnapshot
+      if (!live) return []
+      const pairs: [string, string][] = [
+        ['basicInfo', 'Información básica'],
+        ['commercialRules', 'Precios'],
+        ['multimedia', 'Multimedia'],
+        ['bookingOptions', 'Reservas'],
+        ['availability', 'Calendario'],
+        ['selectedCategories', 'Categorías'],
+        ['selectedTags', 'Etiquetas'],
+      ]
+      return pairs
+        .filter(([key]) => !sameContent((this as any)[key], live[key]))
+        .map(([, label]) => label)
+    },
+
     // Per-step "essential data present?" status, surfaced as a dot on the
     // stepper so the operator sees at a glance which core steps still need
     // work — without opening each one. Only the publish-critical steps
@@ -760,6 +836,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
           // the path between two existing tours.
           this.contentSEO = emptyContentSEO()
           this.detailedContent = emptyDetailedContent()
+          // Same reason, and it must not survive a fetch that throws later:
+          // a snapshot left over from the previous tour would have the editor
+          // reporting another tour's differences against this one.
+          this.liveSnapshot = null
 
           if (data.translations && Array.isArray(data.translations)) {
             data.translations.forEach((trans: any) => {
@@ -993,6 +1073,13 @@ export const useTourWizardStore = defineStore('tourWizard', {
           console.log('[Store] Updated basicInfo:', this.basicInfo)
           console.log('[Store] Updated contentSEO:', this.contentSEO)
           console.log('[Store] Updated multimedia:', this.multimedia)
+
+          // Freeze what the public currently sees, before loadDraft() overlays
+          // any parked edits. Everything the operator changes from here on is
+          // measured against this, which is what lets the editor answer "what
+          // exactly is unpublished, and in which language?" — a question the
+          // draft itself cannot answer, being one opaque snapshot.
+          this.liveSnapshot = JSON.parse(JSON.stringify(this.draftSlices()))
         }
       } catch (error) {
         console.error('[Store] Error fetching tour data:', error)
@@ -1506,9 +1593,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
           return false
         }
 
+        const p = draft.payload
+
         // Assign per slice rather than wholesale, so a draft written before a
         // slice existed restores what it has and leaves the rest as loaded.
-        const p = draft.payload
         if (p.basicInfo) this.basicInfo = { ...this.basicInfo, ...p.basicInfo }
         if (p.contentSEO) this.contentSEO = { ...this.contentSEO, ...p.contentSEO }
         if (p.detailedContent) this.detailedContent = { ...this.detailedContent, ...p.detailedContent }
@@ -1669,6 +1757,10 @@ export const useTourWizardStore = defineStore('tourWizard', {
           this.draftError = 'Los cambios se publicaron, pero el borrador no se pudo borrar. Recarga la página.'
           return false
         }
+        // What is on screen is now what the public sees, so it becomes the new
+        // baseline — otherwise the editor would keep reporting the changes it
+        // just published as still pending.
+        this.liveSnapshot = JSON.parse(JSON.stringify(this.draftSlices()))
         return true
       } finally {
         this.publishing = false

@@ -813,6 +813,40 @@ onBeforeUnmount(() => {
             </UButton>
           </div>
 
+          <!-- WHAT is unpublished. The banner above only says that something
+               is parked; with six languages and nine steps, that left the
+               operator opening every one to find it. The languages are
+               buttons because the next thing you want is to go there. -->
+          <div
+            v-if="store.hasPendingDraft && (store.draftChangedLanguages.length || store.draftChangedSections.length)"
+            class="shrink-0 border-b border-indigo-200 dark:border-indigo-900 bg-indigo-50/60 dark:bg-indigo-950/20 px-4 lg:px-6 py-2 flex items-center gap-2 flex-wrap"
+          >
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-indigo-700/80 dark:text-indigo-400/80">
+              Falta publicar en
+            </span>
+            <UButton
+              v-for="code in store.draftChangedLanguages"
+              :key="code"
+              size="xs"
+              color="info"
+              :variant="store.currentLanguage === code.toLowerCase() ? 'solid' : 'subtle'"
+              class="font-mono"
+              :title="`Ver el contenido en ${code}`"
+              @click="store.currentLanguage = code.toLowerCase()"
+            >
+              {{ code }}
+            </UButton>
+            <UBadge
+              v-for="section in store.draftChangedSections"
+              :key="section"
+              color="info"
+              variant="outline"
+              size="xs"
+            >
+              {{ section }}
+            </UBadge>
+          </div>
+
           <!-- Edit collision. Sits above the form, outside the scroll area,
                and stays until resolved: autosave is stopped while it shows, so
                anything typed now is going nowhere. -->

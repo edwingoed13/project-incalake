@@ -16,9 +16,18 @@
               :color="store.currentLanguage === lang ? 'primary' : 'neutral'"
               :variant="store.currentLanguage === lang ? 'solid' : 'subtle'"
               class="uppercase font-black tracking-wider"
+              :title="store.draftChangedLanguages.includes(lang.toUpperCase())
+                ? `${lang.toUpperCase()} tiene cambios sin publicar`
+                : undefined"
               @click="store.currentLanguage = lang"
             >
               {{ lang }}
+              <span
+                v-if="store.draftChangedLanguages.includes(lang.toUpperCase())"
+                class="size-1.5 rounded-full shrink-0"
+                :class="store.currentLanguage === lang ? 'bg-white' : 'bg-info-500'"
+                aria-label="con cambios sin publicar"
+              />
             </UButton>
           </div>
         </div>
