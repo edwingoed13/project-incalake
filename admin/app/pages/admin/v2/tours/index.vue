@@ -128,6 +128,61 @@ const draftLanguages = (tour: Tour): string[] =>
 const draftSections = (tour: Tour): string[] =>
   ((tour as any).pending_draft_sections || []) as string[]
 
+/**
+ * A list of language codes as an alert reads it: named while you can hold them
+ * in your head, counted once you cannot. Six codes spelled out ran longer than
+ * the tour title they sat beside.
+ */
+const resumenIdiomas = (codes: string[]): string =>
+  codes.length <= 2 ? codes.join(', ') : `${codes.length} idiomas`
+
+/** The alerts a row carries, in severity order. Empty means a healthy tour. */
+const rowAlerts = (tour: Tour) => {
+  const alerts: { key: string; color: 'error' | 'warning' | 'info'; icon: string; text: string; title: string }[] = []
+  const sinContenido = !(tour.translations_summary || []).length
+
+  if (sinContenido) {
+    alerts.push({
+      key: 'vacio',
+      color: tour.status === 'published' ? 'error' : 'warning',
+      icon: 'i-lucide-triangle-alert',
+      text: 'Sin contenido',
+      title: tour.status === 'published'
+        ? 'Publicado y sin ninguna traducción: en la web sale una tarjeta con el código y sin enlace. Agrega el idioma principal o despublícalo.'
+        : 'Todavía no tiene ninguna traducción.',
+    })
+  }
+
+  const cambios = draftLanguages(tour)
+  if ((tour as any).has_pending_draft) {
+    const cuando = (tour as any).pending_draft_at ? ` · ${timeAgo((tour as any).pending_draft_at)}` : ''
+    alerts.push({
+      key: 'borrador',
+      color: 'info',
+      icon: 'i-lucide-file-clock',
+      text: cambios.length
+        ? `Sin publicar en ${resumenIdiomas(cambios)}${cuando}`
+        : `Cambios sin publicar${cuando}`,
+      title: cambios.length
+        ? `Hay ediciones guardadas que el público todavía no ve, en: ${cambios.join(', ')}${draftSections(tour).length ? ' y ' + draftSections(tour).join(', ') : ''}. Ábrelo y pulsa «Actualizar» para aplicarlas.`
+        : 'Hay ediciones guardadas que el público todavía no ve. Este borrador se guardó antes de que se registrara el detalle, así que no se sabe qué idioma cambió; ábrelo para verlo.',
+    })
+  }
+
+  const copiados = clonedLanguages(tour)
+  if (copiados.length) {
+    alerts.push({
+      key: 'copiado',
+      color: 'warning',
+      icon: 'i-lucide-copy',
+      text: `${resumenIdiomas(copiados)} sin reescribir`,
+      title: `Estas traducciones tienen exactamente el mismo título que otro tour: ${copiados.map(l => l + ' = tour ' + duplicateOf(tour, l).join(' y ')).join('; ')}. Casi siempre es una copia que quedó sin reescribir. Despliega el tour para verlas.`,
+    })
+  }
+
+  return alerts
+}
+
 /** Does this specific translation row have edits waiting to be published? */
 const hasDraftChanges = (tour: Tour, code?: string | null): boolean =>
   !!code && draftLanguages(tour).includes(code.toUpperCase())
@@ -147,6 +202,12 @@ const statusBadge = (tour: Tour) => {
   const sinContenido = !(tour.translations_summary || []).length
   if (s === 'published' && sinContenido) {
     return { label: 'Publicado · sin contenido', color: 'error' as const, icon: 'i-lucide-triangle-alert' }
+  }
+  // "Publicado" (visibility) and "Cambios sin publicar" (version) used to sit
+  // at opposite ends of the row, ~900px apart, and read as a contradiction.
+  // One badge, one place, both facts.
+  if (s === 'published' && (tour as any).has_pending_draft) {
+    return { label: 'Publicado · cambios pendientes', color: 'info' as const, icon: 'i-lucide-file-clock' }
   }
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
   if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
@@ -862,65 +923,6 @@ onMounted(() => {
                     <div class="flex items-center gap-2 min-w-0">
                       <p class="text-sm font-bold truncate">{{ getTourReferenceName(tour) }}</p>
                       <UBadge color="neutral" variant="subtle" size="xs" class="font-mono shrink-0">{{ tour.code }}</UBadge>
-                      <!-- Shell tours (zero translations) used to be invisible
-                           here; now that they list, say what's wrong with them
-                           instead of showing a row with a code and nothing else. -->
-                      <UBadge
-                        v-if="!(tour.translations_summary || []).length"
-                        color="warning"
-                        variant="subtle"
-                        size="xs"
-                        icon="i-lucide-triangle-alert"
-                        class="shrink-0"
-                      >
-                        Sin contenido
-                      </UBadge>
-                      <!-- "Publiqué y no se ve" suele ser esto: el borrador
-                           quedó sin publicar. Visible sin abrir el tour.
-                           It used to read "Sin publicar", which sat next to a
-                           green "Publicado" and looked like a flat
-                           contradiction: one is the tour's status, the other is
-                           whether its latest EDITS have been published. Naming
-                           the changes is what separates them. -->
-                      <UBadge
-                        v-if="(tour as any).has_pending_draft"
-                        color="info"
-                        variant="subtle"
-                        size="xs"
-                        icon="i-lucide-file-clock"
-                        class="shrink-0"
-                        :title="`Hay ediciones guardadas${(tour as any).pending_draft_at ? ' desde ' + timeAgo((tour as any).pending_draft_at) : ''} que el público todavía no ve. Ábrelo y pulsa «Actualizar» para aplicarlas.`
-                          + (draftLanguages(tour).length || draftSections(tour).length
-                            ? ` Afecta a: ${[...draftLanguages(tour), ...draftSections(tour)].join(', ')}.`
-                            : ' Este borrador se guardó antes de que se registrara el detalle, así que no se sabe qué idioma cambió; ábrelo para verlo.')"
-                      >
-                        Cambios sin publicar<!--
-                        Naming the languages is the whole point: with six of
-                        them, "algo cambió" left the operator opening each one.
-                        Silent when the API sends null (an older draft), which
-                        means unknown — not "nothing changed".
-                        --><span v-if="draftLanguages(tour).length"> en {{ draftLanguages(tour).join(', ') }}</span><span v-if="(tour as any).pending_draft_at"> · {{ timeAgo((tour as any).pending_draft_at) }}</span>
-                      </UBadge>
-                      <!-- A language whose title is byte-identical to another
-                           tour's is a translation that was never rewritten
-                           after a copy — which is how a Uyuni tour ended up
-                           selling the Uros tour at the Uyuni price in five
-                           languages. The summary names the languages; the
-                           expanded rows name the tour each collides with.
-                           Neither claims which side is the copy: both tours in
-                           a collision get flagged, and identical titles carry
-                           no direction. -->
-                      <UBadge
-                        v-if="clonedLanguages(tour).length"
-                        color="warning"
-                        variant="subtle"
-                        size="xs"
-                        icon="i-lucide-copy"
-                        class="shrink-0"
-                        :title="`Estas traducciones tienen exactamente el mismo título que otro tour: ${clonedLanguages(tour).map(l => l + ' = tour ' + duplicateOf(tour, l).join(' y ')).join('; ')}. Casi siempre es una copia que quedó sin reescribir. Despliega el tour para verlas.`"
-                      >
-                        {{ clonedLanguages(tour).join(', ') }} sin reescribir
-                      </UBadge>
                     </div>
                     <!-- The row had ~500px of dead space on a wide screen while
                          the data an operator needs to triage 290 tours (where,
@@ -934,6 +936,26 @@ onMounted(() => {
                       <span>{{ (tour.translations_summary || []).length }} {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}</span>
                       <span class="hidden sm:inline"> · editado {{ timeAgo(tour.updated_at) }}</span>
                     </p>
+
+                    <!-- Incidents get their own line, and only when there are
+                         any. Beside the title they competed with it for the
+                         eye and pushed it into truncation; here a healthy tour
+                         stays two lines and a tour needing work visibly grows,
+                         which is the signal worth having. -->
+                    <div v-if="rowAlerts(tour).length" class="flex items-center gap-1.5 flex-wrap mt-1">
+                      <UBadge
+                        v-for="alerta in rowAlerts(tour)"
+                        :key="alerta.key"
+                        :color="alerta.color"
+                        variant="subtle"
+                        size="xs"
+                        :icon="alerta.icon"
+                        :title="alerta.title"
+                        class="shrink-0"
+                      >
+                        {{ alerta.text }}
+                      </UBadge>
+                    </div>
                   </div>
                 </div>
 
@@ -976,16 +998,40 @@ onMounted(() => {
                 >
                   {{ (tour.available_languages || []).length }}
                 </UBadge>
-                <div class="hidden md:flex gap-1 max-w-[200px] flex-wrap">
+                <!-- The chips answered "which languages exist" and nothing
+                     else: one with parked edits and one carrying another
+                     tour's title looked identical to a healthy one, so the
+                     operational question — which language needs me — could
+                     only be answered by expanding every row. Each marker is a
+                     shape as well as a colour (dot, dashed ring, star), and
+                     every one of them says the same thing in its tooltip. -->
+                <div class="hidden md:flex gap-1 max-w-[220px] flex-wrap">
                   <UBadge
                     v-for="lang in tour.available_languages || []"
                     :key="lang.id"
-                    color="primary"
-                    variant="subtle"
+                    :color="duplicateOf(tour, lang.code).length ? 'warning' : (hasDraftChanges(tour, lang.code) ? 'info' : 'primary')"
+                    :variant="duplicateOf(tour, lang.code).length ? 'outline' : 'subtle'"
                     size="xs"
-                    :title="lang.country"
+                    :class="duplicateOf(tour, lang.code).length ? 'border-dashed' : ''"
+                    :title="[
+                      lang.country,
+                      lang.code === getPrimaryLanguageCode(tour) ? 'Idioma principal del tour' : null,
+                      hasDraftChanges(tour, lang.code) ? 'Tiene cambios sin publicar' : null,
+                      duplicateOf(tour, lang.code).length ? `Mismo título que ${duplicateOf(tour, lang.code).join(' y ')}` : null,
+                    ].filter(Boolean).join(' · ')"
                   >
                     {{ lang.code }}
+                    <UIcon
+                      v-if="lang.code === getPrimaryLanguageCode(tour)"
+                      name="i-lucide-star"
+                      class="size-2.5 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span
+                      v-if="hasDraftChanges(tour, lang.code)"
+                      class="size-1.5 rounded-full bg-info-500 shrink-0"
+                      aria-hidden="true"
+                    />
                   </UBadge>
                 </div>
 
