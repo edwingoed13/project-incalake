@@ -82,6 +82,19 @@ class TourController extends Controller
         ]);
 
         $tour = Tour::findOrFail($id);
+
+        // A tour with no translations has no title, no slug and no content, so
+        // publishing it puts a card on the public listing that shows its CODE
+        // and links nowhere. Twenty-three tours reached that state before this
+        // guard existed. Refuse rather than warn: there is no case where an
+        // empty tour should be live.
+        if ($data['status'] === 'published' && $tour->translations()->count() === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este tour no tiene ninguna traducción, así que no tendría título ni contenido en la web. Agrega al menos el idioma principal antes de publicarlo.',
+            ], 422);
+        }
+
         $tour->update([
             'status' => $data['status'],
             'active' => $data['status'] === 'published',

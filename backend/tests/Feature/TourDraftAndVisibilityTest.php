@@ -417,6 +417,49 @@ class TourDraftAndVisibilityTest extends TestCase
             ->assertJsonPath('data.changed_languages', null);
     }
 
+    // --- Publishing guards --------------------------------------------------
+
+    public function test_a_tour_with_no_translations_cannot_be_published(): void
+    {
+        // No title, no slug, no content: the public listing renders a card
+        // bearing the tour's CODE that links nowhere. Twenty-three tours were
+        // live in that state before this guard existed.
+        $tour = Tour::factory()->draft()->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/status", ['status' => 'published'])
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        $this->assertSame('draft', $tour->fresh()->status);
+        $this->assertFalse((bool) $tour->fresh()->active);
+    }
+
+    public function test_a_tour_with_a_translation_publishes_normally(): void
+    {
+        $tour = Tour::factory()->draft()->withTranslation('ES', 'tour-con-contenido')->create();
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/status", ['status' => 'published'])
+            ->assertOk()
+            ->assertJsonPath('status', 'published');
+
+        $this->assertSame('published', $tour->fresh()->status);
+    }
+
+    public function test_an_empty_tour_can_still_be_unpublished(): void
+    {
+        // The guard must not trap the 23 tours already live: taking one down
+        // is the fix, so draft/archived have to stay reachable.
+        $tour = Tour::factory()->create(['status' => 'published', 'active' => true]);
+        Sanctum::actingAs($this->admin());
+
+        $this->postJson("/api/admin/tours/{$tour->id}/status", ['status' => 'draft'])
+            ->assertOk();
+
+        $this->assertSame('draft', $tour->fresh()->status);
+    }
+
     // --- Public visibility ------------------------------------------------
 
     public function test_public_cannot_see_an_unpublished_tour(): void

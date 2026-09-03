@@ -132,7 +132,22 @@ const draftSections = (tour: Tour): string[] =>
 const hasDraftChanges = (tour: Tour, code?: string | null): boolean =>
   !!code && draftLanguages(tour).includes(code.toUpperCase())
 
-const statusBadge = (s?: Tour['status']) => {
+/**
+ * The tour's state, including the one case that has to shout.
+ *
+ * Takes the whole tour, not just `status`: a PUBLISHED tour with zero
+ * translations has no title, no slug and no content, so the public listing
+ * shows a card bearing its CODE that links nowhere. Twenty-three tours were in
+ * that state, and every one of them wore the same reassuring green as a
+ * healthy tour — the listing was actively hiding the problem. A draft with no
+ * translations is just a tour being built, so it stays neutral.
+ */
+const statusBadge = (tour: Tour) => {
+  const s = tour.status
+  const sinContenido = !(tour.translations_summary || []).length
+  if (s === 'published' && sinContenido) {
+    return { label: 'Publicado · sin contenido', color: 'error' as const, icon: 'i-lucide-triangle-alert' }
+  }
   if (s === 'published') return { label: 'Publicado', color: 'success' as const, icon: 'i-lucide-circle-check' }
   if (s === 'archived') return { label: 'Archivado', color: 'neutral' as const, icon: 'i-lucide-archive' }
   return { label: 'Borrador', color: 'warning' as const, icon: 'i-lucide-file-text' }
@@ -866,12 +881,12 @@ onMounted(() => {
                 <!-- pl aligns the second line with the title above (40px thumb + 12px gap) -->
                 <div class="flex items-center gap-2 flex-wrap pl-[52px] sm:pl-0 sm:shrink-0" @click.stop="toggleExpand(tour.id)">
                 <UBadge
-                  :color="statusBadge(tour.status).color"
+                  :color="statusBadge(tour).color"
                   variant="subtle"
                   size="sm"
-                  :icon="statusBadge(tour.status).icon"
+                  :icon="statusBadge(tour).icon"
                 >
-                  {{ statusBadge(tour.status).label }}
+                  {{ statusBadge(tour).label }}
                 </UBadge>
 
                 <UButton
@@ -925,11 +940,26 @@ onMounted(() => {
                   />
                 </UDropdownMenu>
 
-                <UIcon
-                  name="i-lucide-chevron-down"
-                  class="size-4 text-muted transition-transform"
-                  :class="{ 'rotate-180': expandedTours.has(tour.id) }"
-                />
+                <!-- A real button, and one that says what it opens.
+                     This was a bare <UIcon> inside a div with @click: it could
+                     not be reached or activated by keyboard, announced nothing
+                     to a screen reader, and gave a sighted operator no way to
+                     tell it apart from the ⋮ beside it other than by guessing
+                     what a chevron means here. The count doubles as the answer
+                     to "how many languages does this tour have". -->
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  :aria-expanded="expandedTours.has(tour.id)"
+                  :aria-controls="`traducciones-${tour.id}`"
+                  :title="expandedTours.has(tour.id) ? 'Ocultar los idiomas' : 'Ver los idiomas de este tour'"
+                  trailing-icon="i-lucide-chevron-down"
+                  :ui="{ trailingIcon: expandedTours.has(tour.id) ? 'rotate-180 transition-transform' : 'transition-transform' }"
+                  @click.stop="toggleExpand(tour.id)"
+                >
+                  <span class="hidden sm:inline">{{ (tour.translations_summary || []).length }} {{ (tour.translations_summary || []).length === 1 ? 'idioma' : 'idiomas' }}</span>
+                </UButton>
                 </div>
               </div>
 
@@ -942,7 +972,7 @@ onMounted(() => {
                 leave-from-class="max-h-[600px] opacity-100"
                 leave-to-class="max-h-0 opacity-0"
               >
-                <div v-if="expandedTours.has(tour.id)" class="bg-elevated/30 border-t border-default">
+                <div v-if="expandedTours.has(tour.id)" :id="`traducciones-${tour.id}`" class="bg-elevated/30 border-t border-default">
                   <!-- These rows used to open with no explanation at all, so
                        they read as separate tours nested inside a tour — the
                        single most common misreading of this screen. Say what
