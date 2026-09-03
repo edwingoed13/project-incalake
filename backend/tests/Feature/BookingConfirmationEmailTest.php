@@ -70,13 +70,17 @@ class BookingConfirmationEmailTest extends TestCase
         $this->assertStringContainsString('Confirmacion de Reserva', $client);
     }
 
-    public function test_partial_payment_shows_paid_now_and_balance(): void
+    public function test_partial_payment_says_what_is_still_owed_and_to_whom(): void
     {
         $html = (new BookingConfirmationEmail($this->booking(), false, 90.85))->render();
 
         $this->assertStringContainsString('Pagado ahora', $html);
         $this->assertStringContainsString('90.85', $html);
-        $this->assertStringContainsString('Saldo pendiente', $html);
+        // "Saldo" is the word a bank uses for money you HAVE, so the deposit
+        // email read like credit waiting at the desk rather than a debt.
+        $this->assertStringContainsString('A pagar el dia del tour', $html);
+        $this->assertStringNotContainsString('Saldo pendiente', $html);
+        $this->assertStringContainsString('Se paga en efectivo al operador', $html);
     }
 
     public function test_group_email_renders_both_variants_with_every_tour(): void
