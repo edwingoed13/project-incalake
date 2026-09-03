@@ -234,13 +234,13 @@
                       </tr>
                       @if($cliRemaining > 0.009)
                       <tr>
-                        <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309;">Saldo pendiente</td>
+                        <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309;">A pagar el dia del tour</td>
                         <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309; text-align:right;">{{ $booking->currency }} {{ number_format($cliRemaining, 2) }}</td>
                       </tr>
                       @endif
                     </table>
                     <p style="margin:8px 0 0; font-size:11px; color:#94a3b8;">
-                      Metodo: {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; ID: {{ $booking->transaction_id }}@endif{{ $cliRemaining > 0.009 ? ' · El saldo se paga el dia del tour.' : '' }}
+                      Metodo: {{ strtoupper($booking->payment_method ?? '-') }}@if($booking->transaction_id) &middot; ID: {{ $booking->transaction_id }}@endif{{ $cliRemaining > 0.009 ? ' · Se paga en efectivo al operador.' : '' }}
                     </p>
                   </td>
                 </tr>

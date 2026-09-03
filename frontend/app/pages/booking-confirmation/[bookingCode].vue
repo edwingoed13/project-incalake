@@ -169,7 +169,7 @@
             <div v-if="bookingState.active && paymentSummary?.is_partial && paymentSummary.paid_now > 0" class="border-t border-slate-100 px-3 py-2.5 bg-amber-50/60 flex items-center justify-between gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1.5 text-xs text-slate-600">
                 <Icon name="material-symbols:payments-outline" class="text-amber-600 text-sm" />
-                Pagaste <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
+                {{ t('you_paid') }} <span class="font-bold text-slate-800">{{ currencyStore.formatConverted(paymentSummary.paid_now) }}</span>
               </span>
               <span class="text-xs text-right">
                 <span class="text-slate-500">{{ t('balance_on_tour_day') }}</span>
@@ -574,7 +574,7 @@
           <template v-else>Pagado {{ currencyStore.formatConverted(booking.pricing?.total || 0) }}</template>
         </p>
         <p v-if="paymentSummary?.is_partial && paymentSummary.balance_due > 0" class="text-sm mt-0.5">
-          Saldo el día del tour:
+          A pagar el día del tour:
           <span class="font-bold">{{ currencyStore.formatConverted(paymentSummary.balance_due) }}</span>
           — en efectivo, al operador.
         </p>

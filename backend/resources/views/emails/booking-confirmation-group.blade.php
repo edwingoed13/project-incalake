@@ -222,13 +222,13 @@
                     </tr>
                     @if($groupRemaining > 0.009)
                     <tr>
-                      <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309;">Saldo pendiente</td>
+                      <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309;">A pagar el dia del tour</td>
                       <td style="padding:3px 0; font-size:14px; font-weight:800; color:#b45309; text-align:right;">{{ $currency }} {{ number_format($groupRemaining, 2) }}</td>
                     </tr>
                     @endif
                   </table>
                   <p style="margin:8px 0 0; font-size:11px; color:#94a3b8;">
-                    Metodo: {{ strtoupper($primary->payment_method ?? '-') }}@if($primary->transaction_id) &middot; ID: {{ $primary->transaction_id }}@endif{{ $groupRemaining > 0.009 ? ' · El saldo se paga el dia del tour.' : '' }}
+                    Metodo: {{ strtoupper($primary->payment_method ?? '-') }}@if($primary->transaction_id) &middot; ID: {{ $primary->transaction_id }}@endif{{ $groupRemaining > 0.009 ? ' · Se paga en efectivo al operador.' : '' }}
                   </p>
                 </td></tr>
               </table>
