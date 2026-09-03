@@ -6,16 +6,27 @@ name: Warm public cache
 # 0.4s once warm — and a sample of 10 tour pages found 10 cold. That first
 # visitor is a real traveller, so this job volunteers to be first instead.
 #
-# Two triggers, same work:
-#  - after a push to master, once Vercel has served the new build (a deploy is
-#    exactly when everything is cold);
-#  - hourly, matching the 1h ISR window, so a page nobody visited in the last
-#    hour is warm before someone does.
+# Runs after a push to master, once Vercel has served the new build — a deploy
+# is exactly when everything is cold, and that is the case this job was written
+# for.
+#
+# The hourly cron that used to sit here is GONE, for two measured reasons:
+#
+#  1. It was justified as "matching the 1h ISR window". That window no longer
+#     exists: the landings are isr(900), the listings isr(300) and the tour
+#     pages isr(60). Warming a page whose cache lives 60 seconds, once an hour,
+#     leaves it cold for 59 minutes out of 60 — the warming was ~98% wasted on
+#     exactly the pages it fetched most.
+#  2. It was almost the entire Vercel bill. 207 pages per run, and the run
+#     count tracks the bandwidth chart day by day: ~22 runs/day over Aug 18-26
+#     read as 0.8-1.1 GB/day, and the two days it ran twice (Aug 27-28) are the
+#     valley in that same chart.
+#
+# Run it by hand (workflow_dispatch) after a bulk content change if you want the
+# full 200-page pass.
 on:
   push:
     branches: [master]
-  schedule:
-    - cron: '7 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -26,8 +37,8 @@ concurrency:
 jobs:
   warm:
     runs-on: ubuntu-latest
-    # The hourly pass walks ~200 pages at one every 4s; the default 6h ceiling
-    # is plenty, but a stuck curl should not hold a runner all day.
+    # A manual full pass walks ~200 pages at one every 4s; the default 6h
+    # ceiling is plenty, but a stuck curl should not hold a runner all day.
     timeout-minutes: 30
     steps:
       - name: Warm the pages travellers actually land on
@@ -41,10 +52,10 @@ jobs:
           # warming the old one just fills a cache the deploy will discard.
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "Waiting for the new Vercel build to go live..."
-            before=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
+            before=$(curl -s --compressed "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
             for i in $(seq 1 40); do
               sleep 30
-              now=$(curl -s "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
+              now=$(curl -s --compressed "$SITE/es" --max-time 60 | grep -o '/_nuxt/[A-Za-z0-9_-]*\.js' | head -1 || true)
               if [ -n "$now" ] && [ "$now" != "$before" ]; then
                 echo "New build live after $((i * 30))s"
                 break
@@ -53,10 +64,9 @@ jobs:
           fi
 
           # After a push everything is cold and the sooner the top pages are
-          # back the better, so warm the best sellers only (~2 min). The hourly
-          # run has no such hurry and covers EVERY Spanish tour page, because
-          # "the tour nobody warmed" is exactly the one a traveller opens from
-          # a Google result — measured cold at ~1.9s versus 0.3s warm.
+          # back the better, so warm the best sellers only (~2 min). A manual
+          # run has no such hurry and covers EVERY Spanish tour page, for when
+          # a bulk content change has invalidated more than the top sellers.
           if [ "${{ github.event_name }}" = "push" ]; then
             es_count=20
           else
@@ -83,8 +93,13 @@ jobs:
           # error page was ever served to a traveller, but those pages simply
           # did not get warmed. One page every 4s keeps the whole job under
           # the limit and still finishes in ~3 minutes.
+          # --compressed is not cosmetic: without it curl sends no
+          # Accept-Encoding, Vercel answers with raw HTML, and a tour page costs
+          # 192 KB instead of 30 KB. The page is warmed identically either way,
+          # so those 162 KB bought nothing — 6x the bandwidth for the same
+          # effect, on every page of every run.
           warm_one() {
-            curl -s -o /dev/null -D /tmp/h.txt -w '%{http_code}' "$SITE$1" --max-time 90 || echo 000
+            curl -s --compressed -o /dev/null -D /tmp/h.txt -w '%{http_code}' "$SITE$1" --max-time 90 || echo 000
           }
 
           ok=0; failed=0; was_cold=0; was_warm=0
