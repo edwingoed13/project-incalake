@@ -570,59 +570,72 @@
       </template>
 
       <div class="space-y-4">
+        <!-- Two questions in order, not three equally-weighted cards.
+             "Does this tour sell in several forms?" is NO for most of the
+             catalogue — 50 of 290 tours are unattached — so that answer ends
+             the section in one click. Only then does the second question
+             appear, and it is the one that carries a consequence. -->
         <p class="text-xs text-muted">
-          Si este tour se vende en varias modalidades (por ejemplo <em>Compartido</em>, <em>+Guía Privado</em>, <em>Privado</em>),
-          cada modalidad es un tour aparte y aquí se agrupan. <strong>El viajero las verá como opciones para elegir dentro de la página del tour principal.</strong>
+          Un mismo producto puede venderse de varias formas — <em>Compartido</em>, <em>Privado</em>, <em>+ Guía Privado</em>.
+          Cada forma es un tour aparte; aquí se agrupan para que el viajero las vea como
+          <strong>opciones dentro de una sola página</strong>.
         </p>
 
-        <!-- Tipo: 3 modos -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <button
-            type="button"
-            :class="modeBtnClass('standalone')"
-            @click="setMode('standalone')"
-          >
-            <div :class="modeRadioClass('standalone')">
-              <div v-if="variantMode === 'standalone'" class="size-2 bg-white rounded-full" />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'standalone' ? 'text-primary' : ''">Tour único</span>
-              <span class="text-[11px] text-muted">No tiene modalidades. Se muestra solo en el listado público.</span>
-            </div>
-          </button>
-          <button
-            type="button"
-            :class="modeBtnClass('parent')"
-            @click="setMode('parent')"
-          >
-            <div :class="modeRadioClass('parent')">
-              <div v-if="variantMode === 'parent'" class="size-2 bg-white rounded-full" />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'parent' ? 'text-primary' : ''">Tour principal</span>
-              <span class="text-[11px] text-muted">Es la página que ve el viajero. Las demás modalidades se muestran dentro de ella.</span>
-            </div>
-          </button>
-          <button
-            type="button"
-            :class="modeBtnClass('child')"
-            @click="setMode('child')"
-          >
-            <div :class="modeRadioClass('child')">
-              <div v-if="variantMode === 'child'" class="size-2 bg-white rounded-full" />
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="text-sm font-bold" :class="variantMode === 'child' ? 'text-primary' : ''">Modalidad de otro tour</span>
-              <span class="text-[11px] text-muted">Aparece como opción dentro del tour principal. No sale en el listado.</span>
-            </div>
-          </button>
+        <label class="flex items-start gap-3 rounded-xl border border-default p-3 cursor-pointer hover:border-primary/50 transition-colors">
+          <USwitch
+            :model-value="variantMode !== 'standalone'"
+            @update:model-value="onToggleModalidades"
+          />
+          <span class="min-w-0">
+            <span class="block text-sm font-bold">Este tour se vende en varias modalidades</span>
+            <span class="block text-[11px] text-muted">
+              Apagado: aparece por su cuenta en el listado público, como un tour normal.
+            </span>
+          </span>
+        </label>
+
+        <div v-if="variantMode !== 'standalone'" class="space-y-2">
+          <p class="text-[10px] font-black uppercase tracking-widest text-muted">¿Qué es este tour dentro del grupo?</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              type="button"
+              :class="modeBtnClass('parent')"
+              @click="setMode('parent')"
+            >
+              <div :class="modeRadioClass('parent')">
+                <div v-if="variantMode === 'parent'" class="size-2 bg-white rounded-full" />
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-sm font-bold" :class="variantMode === 'parent' ? 'text-primary' : ''">El tour principal</span>
+                <span class="text-[11px] text-muted">Su página es la que ve el viajero. Las demás modalidades se eligen dentro de ella.</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              :class="modeBtnClass('child')"
+              @click="setMode('child')"
+            >
+              <div :class="modeRadioClass('child')">
+                <div v-if="variantMode === 'child'" class="size-2 bg-white rounded-full" />
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-sm font-bold" :class="variantMode === 'child' ? 'text-primary' : ''">Una modalidad de otro tour</span>
+                <!-- The consequence belongs on the card that causes it. It used
+                     to live only in the parent's linked-modalities list — that
+                     is, on the other tour — so the person making this exact
+                     choice never saw it. -->
+                <span class="text-[11px] text-warning font-semibold">Dejará de aparecer por su cuenta en el listado público.</span>
+                <span class="text-[11px] text-muted">Se elegirá dentro de la página del principal. Su enlace directo sigue funcionando.</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         <!-- Config: padre/variante necesitan etiqueta y color; sólo variante necesita el padre -->
         <div v-if="variantMode !== 'standalone'" class="space-y-4 pt-2 border-t border-default">
 
           <!-- Padre selector (solo para 'child') -->
-          <UFormField v-if="variantMode === 'child'" label="Tour principal" hint="Busca el tour principal al que pertenece esta modalidad" required>
+          <UFormField v-if="variantMode === 'child'" label="¿De qué tour es modalidad?" hint="Busca el tour principal cuya página mostrará esta modalidad" required>
             <div ref="parentSearchWrapperEl" class="relative" @keydown.esc="parentDropdownOpen = false">
               <UInput
                 v-model="parentSearchQuery"
@@ -677,7 +690,7 @@
               </div>
             </div>
             <p v-if="store.bookingOptions.parentTourId && currentParentLabel" class="text-[11px] text-muted mt-1">
-              Padre seleccionado: <strong>{{ currentParentLabel }}</strong>
+              Tour principal: <strong>{{ currentParentLabel }}</strong>
             </p>
             <p v-else-if="parentSearchQuery && !parentSearching && parentCandidates.length === 0" class="text-[11px] text-muted mt-1">
               Sin resultados para "{{ parentSearchQuery }}".
@@ -685,8 +698,23 @@
           </UFormField>
 
           <!-- Etiqueta -->
-          <UFormField label="Nombre de esta modalidad" hint="Texto corto que verá el viajero (por ejemplo: Compartido, Privado, + Guía Privado)" required>
+          <UFormField
+            label="Nombre que verá el viajero"
+            hint="Texto corto: Compartido, Privado, + Guía Privado…"
+            required
+            :error="nombreModalidadError"
+          >
             <UInput v-model="store.bookingOptions.optionLabel" placeholder="Ej: Compartido / + Guía Privado / Privado" maxlength="50" />
+            <!-- The fallback is announced instead of injected. The field used
+                 to be pre-filled with "Estándar" the moment you picked a mode,
+                 so an operator saw a value nobody typed and could ship it
+                 believing it was theirs — which is why tour 306 shows
+                 "ESTÁNDAR" on the public page today. -->
+            <template #help>
+              <span v-if="!String(store.bookingOptions.optionLabel || '').trim()" class="text-[11px] text-muted">
+                Si lo dejas vacío, el viajero verá «{{ variantMode === 'parent' ? 'Estándar' : 'Variante' }}».
+              </span>
+            </template>
           </UFormField>
 
           <!-- Color -->
@@ -754,13 +782,34 @@
             </p>
           </div>
 
+          <!-- The two rhythms, stated once for the whole section. -->
+          <p class="text-[11px] text-muted flex items-start gap-1.5">
+            <UIcon name="i-lucide-info" class="size-3.5 shrink-0 mt-px" />
+            <span>
+              El <strong>nombre y el color</strong> se aplican al pulsar «Actualizar», como el resto del tour.
+              <strong>Vincular o quitar modalidades es inmediato</strong> y no se deshace al descartar el borrador.
+            </span>
+          </p>
+
           <!-- PARENT mode only: manage the child variants attached to THIS
                tour. Lets the operator build the whole group from the parent
                instead of editing each child separately. -->
           <div v-if="variantMode === 'parent'" class="space-y-3 pt-4 border-t border-default">
             <div>
-              <p class="text-sm font-bold">Variantes vinculadas</p>
-              <p class="text-[11px] text-muted">Tours que se muestran como opciones dentro de esta actividad.</p>
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <p class="text-sm font-bold">Modalidades de este tour</p>
+                <!-- Two save rhythms live in one section and nothing said so.
+                     Linking or removing a modality is an immediate API call —
+                     it reaches the public site at once, even on a published
+                     tour — while the name and colour park in the draft until
+                     «Actualizar». The trap that follows: link one, rename it,
+                     see "Cambios sin publicar", press «Descartar» believing it
+                     undoes everything, and the link is still there, live. -->
+                <UBadge color="warning" variant="subtle" size="xs" icon="i-lucide-zap">
+                  Se aplican al instante
+                </UBadge>
+              </div>
+              <p class="text-[11px] text-muted">Tours que se muestran como opciones dentro de este tour principal.</p>
               <!-- The consequence nobody expects: attaching a tour here takes
                    it OUT of /tours. The public listing shows only the parent of
                    each group, so a variant that used to appear on its own
@@ -806,7 +855,7 @@
             <div ref="childSearchWrapperEl" class="relative" @keydown.esc="childDropdownOpen = false">
               <UInput
                 v-model="childSearchQuery"
-                placeholder="Buscar tour para agregar como modalidad…"
+                placeholder="Buscar un tour para agregar como modalidad…"
                 icon="i-lucide-search"
                 :loading="childSearching"
                 @focus="childDropdownOpen = true"
@@ -868,6 +917,8 @@ import WizardSection from './WizardSection.vue'
 import { ref, computed } from 'vue'
 
 const store = useTourWizardStore()
+// Unlinking modalities is immediate and public, so it goes through a confirm.
+const { confirm } = useConfirm()
 
 // Collapsible sections — state persisted in localStorage so F5 keeps each open/closed.
 const { toggleSection, isSectionExpanded } = useCollapsibles('wizard:step6')
@@ -1328,6 +1379,29 @@ async function detachChild(c: { id: number }) {
   }
 }
 
+/**
+ * Unlink every modality at once, so "this tour has no modalities" is true in
+ * the database and not just on screen. Returns the ids it could not detach —
+ * a half-applied change is what leaves orphans behind.
+ */
+async function detachAllChildren(): Promise<number[]> {
+  const fallidos: number[] = []
+  for (const c of [...linkedChildren.value]) {
+    try {
+      await $fetch(`${apiBase}/admin/tours/${c.id}/set-parent`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: { parent_tour_id: null },
+      })
+    } catch (e) {
+      console.error('detach child failed', c.id, e)
+      fallidos.push(c.id)
+    }
+  }
+  await loadChildren()
+  return fallidos
+}
+
 function closeChildDropdownOnOutsideClick(e: MouseEvent) {
   if (!childDropdownOpen.value) return
   const el = childSearchWrapperEl.value
@@ -1394,7 +1468,36 @@ watch(
   { immediate: true }
 )
 
-function setMode(m: VariantMode) {
+async function setMode(m: VariantMode) {
+  // Turning a parent back into a standalone tour used to clear only THIS
+  // tour's label. `parent_tour_id` lives on the children, so they kept
+  // pointing here: deriveMode() saw them on the next load and put the screen
+  // back to "Tour principal", silently undoing what the operator chose. Either
+  // the links go too, or the choice cannot be made.
+  if (m === 'standalone' && variantMode.value === 'parent' && linkedChildren.value.length > 0) {
+    const n = linkedChildren.value.length
+    const ok = await confirm({
+      title: `Este tour tiene ${n} ${n === 1 ? 'modalidad vinculada' : 'modalidades vinculadas'}`,
+      description: `Al quitarlas, ${n === 1 ? 'volverá' : 'volverán'} a aparecer por su cuenta en el listado público, cada una como un tour aparte. Esto se aplica de inmediato, no al pulsar «Actualizar».`,
+      confirmLabel: n === 1 ? 'Quitar la modalidad' : `Quitar las ${n} modalidades`,
+      cancelLabel: 'Cancelar',
+      confirmColor: 'warning',
+      icon: 'i-lucide-unlink',
+      iconColor: 'warning',
+    })
+    if (!ok) return
+    const fallidos = await detachAllChildren()
+    if (fallidos.length) {
+      useToast().add({
+        title: 'No se pudieron quitar todas las modalidades',
+        description: `Quedaron vinculadas ${fallidos.length}. Vuelve a intentarlo.`,
+        color: 'error',
+        icon: 'i-lucide-circle-alert',
+      })
+      return
+    }
+  }
+
   variantMode.value = m
   // Switching modes re-enables auto-color: a fresh variant should follow
   // the site standard until the operator deliberately overrides again.
@@ -1405,9 +1508,10 @@ function setMode(m: VariantMode) {
     store.bookingOptions.optionColor = 'blue'
   } else if (m === 'parent') {
     store.bookingOptions.parentTourId = null
-    if (!store.bookingOptions.optionLabel) {
-      store.bookingOptions.optionLabel = 'Estándar'
-    }
+    // Deliberately NOT pre-filling "Estándar" here. Doing so put a value in
+    // the field that nobody chose, which is how tour 306 came to publish
+    // "ESTÁNDAR" as its option name. The fallback is now stated under the
+    // field instead, so an empty box reads as empty.
   } else if (m === 'child') {
     // Reveal the search UI; parent_tour_id stays null until the user picks
     // one (backend validates exists:tours,id on save).
@@ -1434,11 +1538,43 @@ function modeRadioClass(m: VariantMode): string {
   ].join(' ')
 }
 
+/**
+ * The first question: does this tour have modalities at all?
+ *
+ * On, it defaults to "the main tour" — the common case, and the one that
+ * cannot orphan anything. Off routes through setMode('standalone'), which
+ * carries the guard that unlinks the children first.
+ */
+async function onToggleModalidades(on: boolean) {
+  await setMode(on ? 'parent' : 'standalone')
+}
+
+/**
+ * Flagged only for a MODALITY. Both fallbacks are silent today, but they are
+ * not equally bad: an unnamed main tour shows "Estándar", which is a fair
+ * default for the base option, while an unnamed modality shows "Variante" —
+ * a word that tells a traveller nothing about what they are choosing.
+ * Blocking the main tour too would have locked tour 306 out of saving over a
+ * field that reads fine on its public page.
+ */
+const nombreModalidadError = computed(() =>
+  variantMode.value === 'child' && !String(store.bookingOptions.optionLabel || '').trim()
+    ? 'Ponle un nombre; sin él el viajero lee «Variante», que no dice nada.'
+    : undefined
+)
+
 const variantBadgeColor = computed(() => variantMode.value === 'standalone' ? 'neutral' as const : 'primary' as const)
 const variantBadgeLabel = computed(() => {
-  if (variantMode.value === 'parent') return 'Actividad principal'
-  if (variantMode.value === 'child') return 'Modalidad'
-  return 'Tour independiente'
+  // The collapsed header is the only clue this section exists. "Tour
+  // independiente" said the least of the three; a count says what is inside.
+  if (variantMode.value === 'parent') {
+    const n = linkedChildren.value.length
+    return n ? `Principal · ${n} ${n === 1 ? 'modalidad' : 'modalidades'}` : 'Tour principal'
+  }
+  if (variantMode.value === 'child') {
+    return currentParentLabel.value ? `Modalidad de ${currentParentLabel.value}` : 'Modalidad'
+  }
+  return 'Sin modalidades'
 })
 
 // ---- Parent search (replaces the broken USelectMenu integration) ----
