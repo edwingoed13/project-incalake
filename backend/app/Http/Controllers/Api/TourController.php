@@ -71,6 +71,55 @@ class TourController extends Controller
     }
 
     /**
+     * Narrow a query to the tours that need editorial work.
+     *
+     * The admin list could show these states but never filter by them, so
+     * finding the tours that need attention meant paging the whole catalogue —
+     * which is how 23 tours stayed published with no content at all. One shared
+     * helper, used by both the listing and its counter, so the number on the
+     * chip can never disagree with the rows behind it.
+     *
+     *   no_content       published and empty: a live card with no title, no
+     *                    slug and nowhere to click
+     *   pending_draft    edits parked and not published
+     *   duplicate_titles a title byte-identical to another tour's in the same
+     *                    language — the fingerprint of a copy left unrewritten
+     */
+    private function applyAttentionFilter($query, string $kind): void
+    {
+        $sinContenido = fn ($q) => $q->where('status', 'published')->doesntHave('translations');
+        $conBorrador = fn ($q) => $q->has('revision');
+        $tituloDuplicado = fn ($q) => $q->whereHas('translations', function ($t) {
+            $t->whereRaw("h1_title <> ''")->whereExists(function ($sub) {
+                $sub->selectRaw('1')
+                    ->from('tour_translations as otra')
+                    ->whereColumn('otra.language_id', 'tour_translations.language_id')
+                    ->whereColumn('otra.h1_title', 'tour_translations.h1_title')
+                    ->whereColumn('otra.tour_id', '<>', 'tour_translations.tour_id');
+            });
+        });
+
+        switch ($kind) {
+            case 'no_content':
+                $sinContenido($query);
+                break;
+            case 'pending_draft':
+                $conBorrador($query);
+                break;
+            case 'duplicate_titles':
+                $tituloDuplicado($query);
+                break;
+            case 'any':
+                $query->where(function ($q) use ($sinContenido, $conBorrador, $tituloDuplicado) {
+                    $q->where($sinContenido)
+                      ->orWhere($conBorrador)
+                      ->orWhere($tituloDuplicado);
+                });
+                break;
+        }
+    }
+
+    /**
      * Quick status change from the admin list (publish / archive / restore to
      * draft) without opening the wizard. Keeps `active` in sync so publishing
      * actually makes the tour visible.
@@ -233,6 +282,22 @@ class TourController extends Controller
                 });
             }
 
+            // The mirror of the filter above: which tours are MISSING a
+            // language. "Who still needs Italian?" was unanswerable — the only
+            // language filter told you who already had it.
+            if ($request->filled('missing_language')) {
+                $lang = strtoupper($request->missing_language);
+                $query->whereDoesntHave('translations.language', function ($q) use ($lang) {
+                    $q->where('code', $lang);
+                });
+            }
+
+            // Editorial triage. Admin-only: it exists to find broken tours, and
+            // `no_content` would hand the public a list of empty ones.
+            if ($request->filled('attention') && $this->callerIsAdmin()) {
+                $this->applyAttentionFilter($query, (string) $request->attention);
+            }
+
             // filled(), not has(): the admin list always sends `search`, empty
             // when nobody typed anything. has() accepted that empty string and
             // ran whereHas(translations, LIKE '%%'), which quietly required a
@@ -320,6 +385,15 @@ class TourController extends Controller
                     'archived' => $archivedCount,
                     'draft' => $allCount - $publishedCount - $archivedCount,
                 ];
+
+                // How many tours need editorial work, alongside the status
+                // tabs. Counted through the same helper the filter uses, so
+                // the number on the chip and the rows behind it cannot drift.
+                if ($this->callerIsAdmin()) {
+                    $atencion = Tour::query();
+                    $this->applyAttentionFilter($atencion, 'any');
+                    $statusCounts['attention'] = (int) $atencion->count();
+                }
             }
 
             $perPage = $request->get('per_page', 15);

@@ -261,6 +261,26 @@ const sortKey = ref<string>(localStorage.getItem('tours:sort') || 'created_at:de
 // option value (it reserves it for "cleared / show placeholder").
 const cityFilter = ref<string>('all')
 const languageFilter = ref<string>('all')
+// Editorial triage. The list could always SHOW that a tour was empty, had
+// parked edits, or carried a copied title — but never filter by it, so finding
+// them meant paging 29 pages. That is how 23 tours stayed published with no
+// content at all.
+const attentionFilter = ref<string>('all')
+const attentionOptions = [
+  { label: 'Todo el catálogo', value: 'all' },
+  { label: 'Necesita atención', value: 'any' },
+  { label: '· Publicado sin contenido', value: 'no_content' },
+  { label: '· Con cambios sin publicar', value: 'pending_draft' },
+  { label: '· Título copiado de otro tour', value: 'duplicate_titles' },
+]
+
+
+/** One click filters to the work waiting; another click clears it. */
+const toggleAttention = () => {
+  attentionFilter.value = attentionFilter.value === 'all' ? 'any' : 'all'
+  onFilterChange()
+}
+
 const cities = ref<Array<{ id: number; name: string; slug: string }>>([])
 
 const cityOptions = computed(() => [
@@ -372,6 +392,7 @@ const fetchTours = async (page = 1, search = '') => {
     if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
     if (cityFilter.value !== 'all') params.set('city_slug', cityFilter.value)
     if (languageFilter.value !== 'all') params.set('language', languageFilter.value)
+    if (attentionFilter.value !== 'all') params.set('attention', attentionFilter.value)
     // Authenticated: /tours only returns published tours to anonymous callers
     // now, so without the token the admin list would show no drafts at all.
     const response: any = await $fetch(`${API_BASE_URL}/tours?${params}`, { headers: authHeaders() })
@@ -643,6 +664,18 @@ onMounted(() => {
               icon="i-lucide-languages"
               @update:model-value="onFilterChange"
             />
+            <!-- The question the list could not answer: "what needs work?".
+                 Coloured when active, because leaving it set silently filters
+                 the catalogue and the next person wonders where the tours went. -->
+            <USelect
+              v-model="attentionFilter"
+              :items="attentionOptions"
+              size="lg"
+              class="w-56"
+              icon="i-lucide-triangle-alert"
+              :color="attentionFilter !== 'all' ? 'warning' : undefined"
+              @update:model-value="onFilterChange"
+            />
             <!-- 290 tours de 10 en 10 eran 29 páginas de clics: orden y tamaño
                  de página, recordados por navegador. -->
             <USelect
@@ -701,6 +734,32 @@ onMounted(() => {
               :class="statusFilter === tab.id ? 'bg-primary/15 text-primary' : 'bg-elevated text-muted'"
             >
               {{ statusCounts[tab.id] ?? 0 }}
+            </span>
+          </button>
+
+          <!-- Not a status: a shortcut to the work waiting. It sits with the
+               tabs because it answers the same kind of question ("show me a
+               slice of the catalogue"), and apart from them — separated, in
+               amber — because it filters ACROSS statuses instead of by one.
+               Hidden at zero: a permanent "0 · Necesita atención" trains
+               people to stop reading it. -->
+          <button
+            v-if="(statusCounts.attention ?? 0) > 0"
+            type="button"
+            class="ml-auto px-3 py-2 text-xs font-bold flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap"
+            :class="attentionFilter !== 'all'
+              ? 'border-warning text-warning'
+              : 'border-transparent text-muted hover:text-warning'"
+            :title="`${statusCounts.attention} tours con contenido vacío, cambios sin publicar o títulos copiados`"
+            @click="toggleAttention()"
+          >
+            <UIcon name="i-lucide-triangle-alert" class="size-3.5" />
+            Necesita atención
+            <span
+              class="text-[10px] font-bold rounded-full px-1.5 min-w-[18px] text-center"
+              :class="attentionFilter !== 'all' ? 'bg-warning/15 text-warning' : 'bg-elevated text-muted'"
+            >
+              {{ statusCounts.attention }}
             </span>
           </button>
         </div>
