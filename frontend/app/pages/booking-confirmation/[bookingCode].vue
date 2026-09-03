@@ -786,11 +786,9 @@ const tourMax = (tr: any) => Math.max(1, (tr?.adults || 0) + (tr?.children || 0)
 const filledCount = (id: number) => (travelersByTour.value[id] || []).filter((x: any) => x.full_name?.trim()).length
 const isTourTravelersDone = (tr: any) => filledCount(tr.id) >= 1
 const toursTravelersDone = computed(() => purchaseTours.value.filter((tr: any) => isTourTravelersDone(tr)).length)
-// "Complete" = the lead traveler has a name AND all admin-required fields filled.
-const isTourComplete = (tr: any) => {
-  const leader = (travelersByTour.value[tr.id] || [])[0]
-  return !!leader?.full_name?.trim() && firstMissingLeaderExtra(leader, tr) === null
-}
+// "Complete" = whoever the tour asks for has a name AND every field it wants.
+const isTourComplete = (tr: any) =>
+  firstMissingTraveler(travelersByTour.value[tr.id] || [], tr, tourMax(tr)) === null
 
 // Compact summary for the pre-submit review modal.
 const reviewGroups = computed(() => {
@@ -818,6 +816,23 @@ function seedTravelers(adults: number, children: number, leaderName?: string) {
     nationality: '', doc_type: 'passport', doc_number: '',
     age_group: i < a ? 'adult' : 'child', special_needs: '', extra_data: {}, is_leader: i === 0,
   }))
+}
+
+// The autosave only stores travelers who already have a name, so a booking
+// left half-filled came back with fewer cards than seats — the passengers who
+// had not been typed in yet simply disappeared from the form. Put them back.
+function padTravelers(list: any[], adults: number, children: number) {
+  const seats = Math.max(1, (adults || 0) + (children || 0))
+  const out = list.slice(0, seats)
+  for (let i = out.length; i < seats; i++) {
+    out.push({
+      full_name: '', nationality: '', doc_type: 'passport', doc_number: '',
+      age_group: i < (adults || 0) ? 'adult' : 'child', special_needs: '',
+      extra_data: {}, is_leader: false,
+    })
+  }
+  if (out[0]) out[0].is_leader = true
+  return out
 }
 
 function mapTraveler(tr: any) {
@@ -889,13 +904,36 @@ async function applyTravelersToAllTours(sourceTourId: number) {
   }
 }
 
-// Lead-traveler validation: the admin-configured fields are required only for
-// the leader (other pax stay optional). Returns the first missing field's
-// label, or null when complete.
-function firstMissingLeaderExtra(leader: any, configSrc: any): string | null {
-  for (const key of travelerFieldsFor(configSrc)) {
-    if (!travelerFieldValue(leader, key).trim()) {
-      return te(`traveler_field_${key}`) ? t(`traveler_field_${key}`) : TRAVELER_FIELD_DEFS[key].label
+// The field's name as the traveler reads it.
+function travelerFieldLabel(key: string): string {
+  return te(`traveler_field_${key}`) ? t(`traveler_field_${key}`) : TRAVELER_FIELD_DEFS[key].label
+}
+
+// What the tour asked for, against what is filled in. "Solo lider" asks the
+// first traveler; "todos los pasajeros" asks every seat that was paid for.
+// Until now both settings behaved the same — they changed which fields were
+// SHOWN and nothing else, so a passenger left blank was dropped from the
+// payload instead of blocking it. Returns the first gap, or null.
+function firstMissingTraveler(list: any[], configSrc: any, seats: number): { who: number; message: string } | null {
+  const asked = travelerApplyAll(configSrc) ? Math.max(1, seats) : 1
+  for (let i = 0; i < asked; i++) {
+    const tr = list[i]
+    if (!String(tr?.full_name ?? '').trim()) {
+      return {
+        who: i,
+        message: i === 0 ? t('leader_required') : t('missing_traveler_name', { n: i + 1 }),
+      }
+    }
+    for (const key of travelerFieldsFor(configSrc)) {
+      if (!travelerFieldValue(tr, key).trim()) {
+        const field = travelerFieldLabel(key)
+        return {
+          who: i,
+          message: i === 0
+            ? t('missing_field_leader', { field })
+            : t('missing_field_traveler', { field, n: i + 1 }),
+        }
+      }
     }
   }
   return null
@@ -921,12 +959,16 @@ watch(booking, async (b) => {
         const res: any = await api(`/bookings/${tr.id}/travelers${accessQs}`)
         const existing = res?.data || []
         if (existing.length) {
-          travelersByTour.value[tr.id] = existing.map(mapTraveler)
+          travelersByTour.value[tr.id] = padTravelers(existing.map(mapTraveler), tr.adults, tr.children)
           anySaved = true
         }
       } catch {}
     }))
-    if (anySaved) completedSteps.value.add(2)
+    // Saved is not the same as complete: a partial autosave used to tick this
+    // step off and skip the customer straight past it.
+    if (anySaved && purchaseTours.value.every((tr: any) => isTourComplete(tr))) {
+      completedSteps.value.add(2)
+    }
     return
   }
 
@@ -936,8 +978,10 @@ watch(booking, async (b) => {
     const data = (details as any)?.data || details
 
     if (data?.travelers?.length) {
-      travelers.value = data.travelers.map(mapTraveler)
-      completedSteps.value.add(2)
+      travelers.value = padTravelers(data.travelers.map(mapTraveler), b.participants?.adults || 1, b.participants?.children || 0)
+      if (firstMissingTraveler(travelers.value, b.tour, maxTravelers.value) === null) {
+        completedSteps.value.add(2)
+      }
     } else {
       travelers.value = seedTravelers(b.participants?.adults || 1, b.participants?.children || 0, b.customer?.name)
     }
@@ -1004,23 +1048,18 @@ function failTour(id: number) {
   }
 }
 
-// Lead-traveler-only validation. On failure sets the message + inline highlights
-// and returns false; returns true when every required field is complete.
+// On failure sets the message + inline highlights and returns false; true when
+// the submission satisfies what each tour asks for.
 function validateTravelers(): boolean {
   travelerError.value = null
 
   if (isMultiTour.value) {
     for (const tr of purchaseTours.value) {
-      const list = travelersByTour.value[tr.id] || []
-      if (!list[0]?.full_name?.trim()) {
-        travelerError.value = `Falta el responsable en "${tr.tour_title}"`
-        failTour(tr.id)
-        return false
-      }
-      const missing = firstMissingLeaderExtra(list[0], tr)
+      const missing = firstMissingTraveler(travelersByTour.value[tr.id] || [], tr, tourMax(tr))
       if (missing) {
-        travelerError.value = `Completa "${missing}" del responsable en "${tr.tour_title}"`
+        travelerError.value = `${missing.message} — ${tr.tour_title}`
         failTour(tr.id)
+        showErrors.value = true
         return false
       }
     }
@@ -1028,19 +1067,9 @@ function validateTravelers(): boolean {
   }
 
   // SINGLE TOUR
-  if (!travelers.value[0]?.full_name?.trim()) {
-    travelerError.value = t('leader_required')
-    showErrors.value = true
-    return false
-  }
-  const missingSingle = firstMissingLeaderExtra(travelers.value[0], booking.value?.tour)
+  const missingSingle = firstMissingTraveler(travelers.value, booking.value?.tour, maxTravelers.value)
   if (missingSingle) {
-    travelerError.value = `Completa "${missingSingle}" del responsable`
-    showErrors.value = true
-    return false
-  }
-  if (travelers.value.filter(tr => tr.full_name?.trim()).length === 0) {
-    travelerError.value = t('traveler_required')
+    travelerError.value = missingSingle.message
     showErrors.value = true
     return false
   }
@@ -1059,15 +1088,18 @@ async function commitTravelers() {
   savingTravelers.value = true
   try {
     const ids: number[] = []
+    // `finalize` tells the backend this is the submit, not the autosave, so it
+    // checks the list against what the tour asks for. The browser checked the
+    // same thing a moment ago; the server is the one a direct API call meets.
     if (isMultiTour.value) {
       for (const tr of purchaseTours.value) {
         const valid = (travelersByTour.value[tr.id] || []).filter((x: any) => x.full_name?.trim())
-        await api(`/bookings/${tr.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid } })
+        await api(`/bookings/${tr.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid, finalize: true } })
         if (tr.id) ids.push(tr.id)
       }
     } else {
       const valid = travelers.value.filter(tr => tr.full_name?.trim())
-      await api(`/bookings/${booking.value.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid } })
+      await api(`/bookings/${booking.value.id}/travelers${accessQs}`, { method: 'POST', body: { travelers: valid, finalize: true } })
       if (booking.value?.id) ids.push(booking.value.id)
     }
     completedSteps.value.add(2)
@@ -1080,7 +1112,20 @@ async function commitTravelers() {
       api(`/bookings/${id}/notify-completed${accessQs}`, { method: 'POST' }).catch(() => {})
     }
   } catch (e: any) {
-    travelerError.value = t('error_saving')
+    // A 422 is the server rejecting the submission for the tour's own reasons.
+    // It sends the field CODE, not a label — the names live here, translated.
+    const falta = e?.data?.missing
+    if (falta?.field) {
+      const quien = Number(falta.traveler) || 1
+      const field = falta.field === 'full_name' ? t('traveler_full_name') : travelerFieldLabel(falta.field)
+      travelerError.value = quien === 1
+        ? t('missing_field_leader', { field })
+        : t('missing_field_traveler', { field, n: quien })
+      showErrors.value = true
+      currentStep.value = 2
+    } else {
+      travelerError.value = t('error_saving')
+    }
   } finally {
     savingTravelers.value = false
   }

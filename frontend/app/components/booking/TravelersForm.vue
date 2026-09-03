@@ -43,16 +43,19 @@ const fieldLabel = (key: string) =>
 const canAdd = computed(() => props.modelValue.length < props.maxTravelers)
 const showExtras = (traveler: any) => !!traveler?.is_leader || props.applyToAllPax
 
-// Inline validation: required fields are enforced on the lead traveler only.
-// `showErrors` is flipped on by the parent when a submit attempt fails.
+// Inline validation. Who gets asked follows the tour's setting: with "solo
+// lider" the first traveler, with "todos los pasajeros" everyone the form shows
+// the fields to — which is what that setting says and, until now, not what it
+// did. `showErrors` is flipped on by the parent when a submit attempt fails.
 function fieldEmpty(traveler: any, key: string): boolean {
   const v = key === 'nationality' ? traveler?.nationality : traveler?.extra_data?.[key]
   return !String(v ?? '').trim()
 }
+const isAsked = (traveler: any) => !!traveler?.is_leader || props.applyToAllPax
 const fieldInvalid = (traveler: any, key: string) =>
-  props.showErrors && !!traveler?.is_leader && fieldEmpty(traveler, key)
+  props.showErrors && isAsked(traveler) && fieldEmpty(traveler, key)
 const nameInvalid = (traveler: any) =>
-  props.showErrors && !!traveler?.is_leader && !String(traveler?.full_name ?? '').trim()
+  props.showErrors && isAsked(traveler) && !String(traveler?.full_name ?? '').trim()
 
 // Guarantee every traveler has an extra_data object so v-model on its keys is
 // reactive, and prefill the lead traveler's email/phone from the purchase.
@@ -116,7 +119,7 @@ function remove(idx: number) {
         <!-- Full name: always collected; required for the lead traveler -->
         <div class="md:col-span-2">
           <label class="form-label">
-            {{ t('full_name') }}<span v-if="traveler.is_leader"> *</span>
+            {{ t('full_name') }}<span v-if="isAsked(traveler)"> *</span>
           </label>
           <input v-model="traveler.full_name" type="text" autocomplete="name" autocapitalize="words" :placeholder="t('traveler_full_name')"
             class="w-full px-3 py-2.5 rounded-lg border text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -128,7 +131,7 @@ function remove(idx: number) {
         <template v-if="showExtras(traveler)">
           <div v-for="key in fields" :key="key" :class="FIELD_DEFS[key].type === 'country' ? 'md:col-span-2' : ''">
             <label class="form-label">
-              {{ fieldLabel(key) }}<span v-if="traveler.is_leader"> *</span>
+              {{ fieldLabel(key) }}<span v-if="isAsked(traveler)"> *</span>
             </label>
 
             <div v-if="FIELD_DEFS[key].type === 'country'" class="rounded-lg" :class="fieldInvalid(traveler, key) ? 'ring-1 ring-red-300' : ''">

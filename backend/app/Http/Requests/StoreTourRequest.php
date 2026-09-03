@@ -47,6 +47,11 @@ class StoreTourRequest extends FormRequest
             'booking_anticipation_hours' => 'nullable|integer|min:0',
             'payment_method' => 'nullable|in:paypal,culqi,all',
             'data_requirement' => 'nullable|integer|in:1,2,3',
+            // The wizard sends these next to data_requirement. Without a rule
+            // here validated() dropped them, so a tour created with fields
+            // ticked was born with none until the operator saved it again.
+            'operational_info_required' => 'nullable|array',
+            'personal_info_required' => 'nullable|array',
 
             'index_status' => 'nullable|in:index,noindex',
             'follow_status' => 'nullable|in:follow,nofollow',

@@ -321,6 +321,9 @@ export default {
       // Booking confirmation
       booking_confirmed: '¡Reserva Confirmada!',
       code: 'Código',
+      missing_traveler_name: 'Falta el nombre del pasajero {n}',
+      missing_field_leader: 'Completa "{field}" del responsable',
+      missing_field_traveler: 'Completa "{field}" del pasajero {n}',
       step_summary: 'Resumen',
       step_pickup: 'Recojo',
       step_travelers: 'Viajeros',

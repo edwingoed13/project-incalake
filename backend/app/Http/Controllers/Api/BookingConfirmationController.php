@@ -359,12 +359,31 @@ class BookingConfirmationController extends Controller
             // weight, etc.), keyed by the tour's required-field codes.
             'travelers.*.extra_data' => 'nullable|array',
             'travelers.*.extra_data.*' => 'nullable|string|max:255',
+            // The page autosaves every keystroke so a customer can close the tab
+            // and come back, which means most calls here are deliberately
+            // partial. Only the final submit sets this, and only it is checked
+            // against what the tour actually asks for.
+            'finalize' => 'nullable|boolean',
         ]);
 
         try {
             $booking = Booking::findOrFail($bookingId);
             if (!$this->authorizeBookingAccess($request, $booking)) {
                 return $this->denyBookingAccess();
+            }
+
+            if ($request->boolean('finalize')) {
+                $falta = $this->firstMissingTravelerRequirement($booking, $request->travelers);
+                if ($falta !== null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $falta['message'],
+                        // The label registry lives in the frontend (and the admin);
+                        // a third copy here would be the one that drifts. It gets
+                        // the code and renders the name it already owns.
+                        'missing' => $falta['missing'],
+                    ], 422);
+                }
             }
 
             // Delete existing travelers and recreate
@@ -402,6 +421,72 @@ class BookingConfirmationController extends Controller
                 'message' => 'Error saving travelers: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * What the tour asked for, checked against what actually arrived.
+     *
+     * The wizard's "Datos requeridos del cliente" decided which fields the
+     * traveler form SHOWS, and nothing else: the browser only ever nagged the
+     * lead traveler, a passenger left blank was quietly dropped from the
+     * payload instead of blocking it, and this endpoint accepted whatever it
+     * was handed. On one tour set to "todos los pasajeros", 18 of 20 bookings
+     * came back with fewer travelers than seats or a leader missing the very
+     * fields the operator ticked.
+     *
+     * Returns null when the submission satisfies the configuration, or the
+     * first thing missing: a message for a bare API caller, and the field code
+     * for the page, which owns the human labels.
+     */
+    private function firstMissingTravelerRequirement(Booking $booking, array $travelers): ?array
+    {
+        $tour = $booking->tour;
+        if (!$tour) {
+            return null;
+        }
+
+        // first_name/last_name are covered by full_name, which is required of
+        // every traveler anyway; nationality has its own column.
+        $codigos = array_values(array_diff(
+            array_merge(
+                $tour->personal_info_required ?? [],
+                $tour->operational_info_required ?? []
+            ),
+            ['first_name', 'last_name']
+        ));
+
+        $todos = (int) ($tour->data_requirement ?? 1) === 2;
+
+        // The seats paid for, matching the cap the form offers (infants excluded).
+        $plazas = max(1, (int) $booking->adults + (int) $booking->children);
+        if ($todos && count($travelers) < $plazas) {
+            return [
+                'message' => "Este tour pide los datos de cada pasajero: faltan " .
+                    ($plazas - count($travelers)) . " de {$plazas}.",
+                'missing' => ['traveler' => count($travelers) + 1, 'field' => 'full_name'],
+            ];
+        }
+
+        foreach ($travelers as $i => $viajero) {
+            // Outside "todos los pasajeros" only the lead traveler is asked.
+            if (!$todos && $i > 0) {
+                break;
+            }
+            foreach ($codigos as $codigo) {
+                $valor = $codigo === 'nationality'
+                    ? ($viajero['nationality'] ?? null)
+                    : ($viajero['extra_data'][$codigo] ?? null);
+                if (trim((string) $valor) === '') {
+                    $quien = $i === 0 ? 'del responsable' : 'del pasajero ' . ($i + 1);
+                    return [
+                        'message' => "Faltan datos {$quien} (campo: {$codigo}).",
+                        'missing' => ['traveler' => $i + 1, 'field' => $codigo],
+                    ];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
