@@ -1070,28 +1070,19 @@ class BookingController extends Controller
 
                 // Derived payment state from the AMOUNT ACTUALLY CHARGED
                 // (payment_data), not the tour's advance config — Culqi charges
-                // the full total, only PayPal may charge an advance.
-                $pd = is_array($b->payment_data ?? null) ? $b->payment_data : [];
-                $paid = null;
-                if (isset($pd['group_total_charged'])) {
-                    $paid = round(((float) $pd['group_total_charged']) / 100, 2); // Culqi cents
-                } elseif (isset($pd['group_total_captured'])) {
-                    $paid = round((float) $pd['group_total_captured'], 2);          // PayPal units
-                } elseif (isset($pd['charge_data']['amount'])) {
-                    $paid = round(((float) $pd['charge_data']['amount']) / 100, 2);
-                } elseif (isset($pd['amount_cents'])) {
-                    $paid = round(((float) $pd['amount_cents']) / 100, 2);
-                }
-
+                // the full total, only PayPal may charge an advance. The
+                // derivation lives on the model so the operator emails, which
+                // used to just print "Pagado", read the same numbers.
                 $expectedFull = $b->is_group ? (float) $b->group_total : (float) $b->total;
 
                 if ($b->payment_status === 'refunded') {
                     $b->payment_state = 'refunded';
                 } elseif ($b->payment_status === 'paid') {
-                    if ($paid !== null && $expectedFull > 0 && $paid < ($expectedFull - 0.5)) {
+                    $remaining = $b->outstandingAgainst($expectedFull);
+                    if ($remaining > 0) {
                         $b->payment_state = 'partial';
-                        $b->amount_paid = $paid;
-                        $b->amount_remaining = round($expectedFull - $paid, 2);
+                        $b->amount_paid = $b->chargedAmount();
+                        $b->amount_remaining = $remaining;
                     } else {
                         $b->payment_state = 'full';
                     }

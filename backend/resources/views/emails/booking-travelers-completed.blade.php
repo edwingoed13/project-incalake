@@ -43,13 +43,39 @@
                     {{ $booking->adults ?? 0 }} {{ ($booking->adults ?? 0) === 1 ? 'adulto' : 'adultos' }}@if(($booking->children ?? 0) > 0), {{ $booking->children }} {{ $booking->children === 1 ? 'niño' : 'niños' }}@endif
                   </td>
                 </tr>
+                @php
+                  // "Pagado" was printed whenever a charge had gone through, so a
+                  // PayPal deposit showed the operator the FULL total as settled on
+                  // the very booking where they still have to collect the rest in
+                  // cash. The amount charged is what tells them apart.
+                  $moneda   = $booking->currency ?? 'USD';
+                  $metodo   = strtoupper((string) ($booking->payment_method ?? ''));
+                  $cobrado  = $booking->chargedAmount();
+                  $porCobrar = $booking->outstandingAmount();
+                  $esGrupo  = count($booking->groupBookingIds()) > 0;
+                @endphp
                 <tr>
                   <td style="color:#64748b;padding:3px 0">Estado de pago</td>
                   <td style="color:#0f172a;font-weight:600;padding:3px 0">
-                    {{ $booking->payment_status === 'paid' ? '✓ Pagado' : ucfirst($booking->payment_status ?? '—') }}
-                    @if($booking->total) · {{ $booking->currency ?? 'USD' }} {{ number_format($booking->total, 2) }} @endif
+                    @if($booking->payment_status !== 'paid')
+                      {{ ucfirst($booking->payment_status ?? '—') }}
+                    @elseif($porCobrar > 0)
+                      <span style="color:#b45309">Adelanto pagado</span>
+                      @if($cobrado !== null) · {{ $moneda }} {{ number_format($cobrado, 2) }} @endif
+                    @else
+                      ✓ Pagado · {{ $moneda }} {{ number_format($booking->total, 2) }}
+                    @endif
+                    @if($metodo) · <span style="color:#475569">{{ $metodo }}</span> @endif
                   </td>
                 </tr>
+                @if($porCobrar > 0)
+                <tr>
+                  <td style="color:#64748b;padding:3px 0">A cobrar el día del tour</td>
+                  <td style="color:#b45309;font-weight:700;padding:3px 0">
+                    {{ $moneda }} {{ number_format($porCobrar, 2) }} en efectivo @if($esGrupo) · <span style="font-weight:400;color:#64748b">de toda la compra</span>@endif
+                  </td>
+                </tr>
+                @endif
               </table>
             </td>
           </tr>

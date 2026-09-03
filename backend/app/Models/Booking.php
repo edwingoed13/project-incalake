@@ -230,6 +230,94 @@ class Booking extends Model
      * Confirm the booking. Also used to re-activate a previously cancelled
      * booking (clears the cancellation fields).
      */
+    /**
+     * How much the gateway actually took, in currency units, or null when the
+     * payment record does not say.
+     *
+     * `payment_status` only ever reads "paid" here: it records that a charge
+     * went through, not that the booking is settled. Culqi takes the full
+     * total; PayPal may take an advance and leave the rest to be paid in cash
+     * on the day. The amount is the only thing that tells them apart, and it
+     * sits in payment_data under four different keys depending on the gateway
+     * and whether the purchase covered several tours.
+     */
+    public function chargedAmount(): ?float
+    {
+        $pd = is_array($this->payment_data ?? null) ? $this->payment_data : [];
+
+        if (isset($pd['group_total_charged'])) {
+            return round(((float) $pd['group_total_charged']) / 100, 2);   // Culqi, cents
+        }
+        if (isset($pd['group_total_captured'])) {
+            return round((float) $pd['group_total_captured'], 2);          // PayPal, units
+        }
+        if (isset($pd['charge_data']['amount'])) {
+            return round(((float) $pd['charge_data']['amount']) / 100, 2);
+        }
+        if (isset($pd['amount_cents'])) {
+            return round(((float) $pd['amount_cents']) / 100, 2);
+        }
+
+        return null;
+    }
+
+    /** Booking ids of the purchase this one belongs to, when it covered several tours. */
+    public function groupBookingIds(): array
+    {
+        $ids = is_array($this->payment_data ?? null)
+            ? ($this->payment_data['group_booking_ids'] ?? null)
+            : null;
+
+        return is_array($ids) && count($ids) >= 2 ? array_map('intval', $ids) : [];
+    }
+
+    /**
+     * What the charge was meant to cover: this booking's total, or the whole
+     * purchase when several tours were paid in one go — the charged amount is
+     * recorded for the group, so comparing it against one tour would read as a
+     * huge overpayment.
+     */
+    public function expectedTotal(): float
+    {
+        $ids = $this->groupBookingIds();
+        if ($ids) {
+            return (float) static::whereIn('id', $ids)->sum('total');
+        }
+
+        return (float) $this->total;
+    }
+
+    /**
+     * What the traveller still owes, collected in cash by the operator on the
+     * day. Zero when the booking is settled or the amount cannot be derived.
+     *
+     * The half-dollar margin absorbs currency rounding between the gateway and
+     * our own total; anything smaller is not a balance, it is noise.
+     */
+    public function outstandingAmount(): float
+    {
+        return $this->outstandingAgainst($this->expectedTotal());
+    }
+
+    /**
+     * Same, against a total the caller already has — the admin listing works
+     * out the purchase total to show a "N tours" badge, and should not pay for
+     * the sibling lookup twice on every row.
+     */
+    public function outstandingAgainst(float $esperado): float
+    {
+        if ($this->payment_status !== 'paid') {
+            return 0.0;
+        }
+
+        $cobrado = $this->chargedAmount();
+        if ($cobrado === null || $esperado <= 0 || $cobrado >= ($esperado - 0.5)) {
+            return 0.0;
+        }
+
+        return round($esperado - $cobrado, 2);
+    }
+
     public function confirm()
     {
         $this->update([
