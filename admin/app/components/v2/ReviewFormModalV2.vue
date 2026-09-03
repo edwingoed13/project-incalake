@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import StarRatingV2 from '~/components/v2/StarRatingV2.vue'
 
 interface Props {
   review?: any
@@ -161,23 +162,9 @@ const handleSubmit = async () => {
 
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="Calificación" required>
-              <div class="flex gap-1">
-                <button
-                  v-for="i in 5"
-                  :key="i"
-                  type="button"
-                  class="p-1 transition-transform hover:scale-110"
-                  @click="form.rating = i"
-                >
-                  <UIcon
-                    name="i-lucide-star"
-                    :class="[
-                      'size-7 transition-colors',
-                      i <= form.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted',
-                    ]"
-                  />
-                </button>
-                <span class="text-sm font-bold tabular-nums ml-2 self-center">{{ form.rating }}/5</span>
+              <div class="flex items-center">
+                <StarRatingV2 v-model="form.rating" size="size-7" />
+                <span class="text-sm font-bold tabular-nums ml-2">{{ form.rating }}/5</span>
               </div>
             </UFormField>
             <UFormField label="Idioma">

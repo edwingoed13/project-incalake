@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import ReviewFormModalV2 from '~/components/v2/ReviewFormModalV2.vue'
 import ReviewDetailModalV2 from '~/components/v2/ReviewDetailModalV2.vue'
+import StarRatingV2 from '~/components/v2/StarRatingV2.vue'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
@@ -432,14 +433,7 @@ onMounted(() => {
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <p class="text-sm font-bold truncate">{{ review.name }}</p>
-                  <div class="flex items-center gap-0.5 shrink-0">
-                    <UIcon
-                      v-for="i in 5"
-                      :key="i"
-                      name="i-lucide-star"
-                      :class="['size-3', i <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted']"
-                    />
-                  </div>
+                  <StarRatingV2 :model-value="review.rating" readonly size="size-3" class="shrink-0" />
                 </div>
                 <p class="text-xs text-muted truncate mt-0.5">
                   {{ review.title || review.comment }}

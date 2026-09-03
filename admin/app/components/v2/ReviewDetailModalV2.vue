@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StarRatingV2 from '~/components/v2/StarRatingV2.vue'
+
 interface Review {
   id: number
   name: string
@@ -59,14 +61,7 @@ const getInitials = (name: string) => {
             <div>
               <h2 class="text-lg font-bold">{{ review.name }}</h2>
               <div class="flex items-center gap-2 mt-1">
-                <div class="flex items-center gap-0.5">
-                  <UIcon
-                    v-for="i in 5"
-                    :key="i"
-                    name="i-lucide-star"
-                    :class="['size-4', i <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted']"
-                  />
-                </div>
+                <StarRatingV2 :model-value="review.rating" readonly size="size-4" />
                 <span class="text-sm font-bold tabular-nums">{{ review.rating }}/5</span>
               </div>
             </div>
