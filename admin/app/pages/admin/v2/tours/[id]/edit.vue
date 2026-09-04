@@ -252,9 +252,86 @@ const stepMenuItems = computed(() => [
     label: `${s.id}. ${s.title}`,
     icon: s.id === store.currentStep ? 'i-lucide-circle-dot' : undefined,
     color: s.id === store.currentStep ? ('primary' as const) : undefined,
-    onSelect: () => store.goToStep(s.id),
+    onSelect: () => irAPaso(s.id),
   })),
 ])
+
+// Cambiar de paso con trabajo sin guardar ya no se avisa con una etiqueta en
+// la barra: se pregunta, y no se avanza hasta que el operador decide. La
+// etiqueta estaba, y no la veia nadie — pasar de paso es justo el momento en
+// que se deja de mirar arriba.
+const saltarAutoguardadoUnaVez = ref(false)
+
+async function guardarAntesDeAvanzar(): Promise<boolean> {
+  if (autosaveTimer) {
+    clearTimeout(autosaveTimer)
+    autosaveTimer = null
+  }
+  const esNuevo = !store.tourId || store.tourId === 'new'
+  if (esNuevo) {
+    await store.saveCurrentProgress({ silent: true })
+    const nuevoId = store.tourId
+    if (nuevoId && nuevoId !== 'new') {
+      await router.replace({ path: `/admin/v2/tours/${nuevoId}/edit`, query: route.query })
+    }
+    return !store.isDirty
+  }
+  await store.autosave()
+  if (store.autosaveError) {
+    toast.add({
+      title: 'No se pudo guardar',
+      description: store.autosaveError,
+      color: 'error',
+      icon: 'i-lucide-circle-alert',
+      duration: 8000,
+    })
+    return false
+  }
+  return true
+}
+
+async function irAPaso(destino: number) {
+  if (destino < 1 || destino > store.totalSteps || destino === store.currentStep) return
+
+  if (!store.isDirty) {
+    store.goToStep(destino)
+    return
+  }
+
+  const salida = await confirm({
+    title: 'Tienes cambios sin guardar',
+    description: (!store.tourId || store.tourId === 'new')
+      ? 'Este tour todavía no existe en el servidor: lo que escribiste vive solo en esta pestaña.'
+      : 'Se guardarán como borrador. La versión publicada no cambia hasta que publiques.',
+    icon: 'i-lucide-triangle-alert',
+    iconColor: 'warning',
+    confirmLabel: 'Guardar y continuar',
+    confirmIcon: 'i-lucide-save',
+    confirmColor: 'primary',
+    altLabel: 'Continuar sin guardar',
+    cancelLabel: 'Quedarme aquí',
+  })
+
+  if (salida === false) return
+
+  if (salida === true) {
+    const ok = await guardarAntesDeAvanzar()
+    // Un guardado fallido no debe llevarse por delante el paso: el operador se
+    // queda donde estaba, con su trabajo y con el motivo en pantalla.
+    if (!ok) return
+  } else {
+    // "Continuar sin guardar" tiene que significar eso, y guardaban dos: el
+    // vigilante del cambio de paso y el autoguardado con retardo, ya en cola
+    // desde la ultima tecla. Se desarman los dos.
+    if (autosaveTimer) {
+      clearTimeout(autosaveTimer)
+      autosaveTimer = null
+    }
+    saltarAutoguardadoUnaVez.value = true
+  }
+
+  store.goToStep(destino)
+}
 
 const autosaveLabel = computed(() => {
   if (store.autosaving) return 'Guardando...'
@@ -488,6 +565,11 @@ watch(() => store.currentStep, (newStep) => {
   // ~2s), still confirm — silence read as "did it save?".
   // `toast` viene del setup (línea superior) — llamar useToast() dentro del
   // watcher pierde el contexto de Nuxt y el aviso nunca aparecía.
+  if (saltarAutoguardadoUnaVez.value) {
+    saltarAutoguardadoUnaVez.value = false
+    return
+  }
+
   if (store.tourId && store.tourId !== 'new') {
     if (store.isDirty && !store.autosaving) {
       if (autosaveTimer) {
@@ -949,7 +1031,7 @@ onBeforeUnmount(() => {
                 <div class="flex flex-col items-center text-center py-12 gap-3">
                   <UIcon name="i-lucide-hammer" class="size-12 text-muted" />
                   <p class="text-base font-bold">Paso {{ store.currentStep }} en construcción</p>
-                  <UButton variant="ghost" size="sm" @click="store.prevStep">Regresar al paso anterior</UButton>
+                  <UButton variant="ghost" size="sm" @click="irAPaso(store.currentStep - 1)">Regresar al paso anterior</UButton>
                 </div>
               </UCard>
             </Transition>
@@ -967,7 +1049,7 @@ onBeforeUnmount(() => {
                   color="neutral"
                   variant="ghost"
                   :disabled="store.currentStep <= 1"
-                  @click="store.prevStep"
+                  @click="irAPaso(store.currentStep - 1)"
                 >
                   Anterior
                 </UButton>
@@ -986,7 +1068,7 @@ onBeforeUnmount(() => {
                   v-if="store.currentStep < store.totalSteps"
                   trailing-icon="i-lucide-arrow-right"
                   color="primary"
-                  @click="store.nextStep"
+                  @click="irAPaso(store.currentStep + 1)"
                 >
                   Siguiente
                 </UButton>
@@ -1012,7 +1094,7 @@ onBeforeUnmount(() => {
             class="hidden xl:flex absolute left-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
             title="Paso anterior"
             aria-label="Paso anterior"
-            @click="store.prevStep"
+            @click="irAPaso(store.currentStep - 1)"
           >
             <UIcon name="i-lucide-chevron-left" class="size-5" />
           </button>
@@ -1022,7 +1104,7 @@ onBeforeUnmount(() => {
             class="hidden xl:flex absolute right-1 top-1/2 -translate-y-1/2 z-20 size-10 items-center justify-center rounded-full border border-default bg-default/90 backdrop-blur shadow-md text-muted hover:text-primary hover:border-primary/50 transition-colors"
             title="Paso siguiente"
             aria-label="Paso siguiente"
-            @click="store.nextStep"
+            @click="irAPaso(store.currentStep + 1)"
           >
             <UIcon name="i-lucide-chevron-right" class="size-5" />
           </button>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { state, accept, cancel } = useConfirm()
+const { state, accept, cancel, alt } = useConfirm()
 
 // Gate the confirm button when the dialog requires typed confirmation.
 const confirmDisabled = computed(() =>
@@ -62,6 +62,16 @@ const iconColorClass = computed(() => {
         <div class="px-6 py-4 bg-elevated/30 border-t border-default flex justify-end gap-2">
           <UButton color="neutral" variant="ghost" :disabled="state.loading" @click="cancel">
             {{ state.cancelLabel }}
+          </UButton>
+          <UButton
+            v-if="state.altLabel"
+            color="neutral"
+            variant="outline"
+            :icon="state.altIcon"
+            :disabled="state.loading"
+            @click="alt"
+          >
+            {{ state.altLabel }}
           </UButton>
           <UButton
             :color="state.confirmColor"
