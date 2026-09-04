@@ -260,9 +260,12 @@ const stepMenuItems = computed(() => [
 // la barra: se pregunta, y no se avanza hasta que el operador decide. La
 // etiqueta estaba, y no la veia nadie — pasar de paso es justo el momento en
 // que se deja de mirar arriba.
-const saltarAutoguardadoUnaVez = ref(false)
+// Estado del paso actual: como llego y si se toco algo desde entonces.
+const editadoEnEstePaso = ref(false)
+let instantaneaPaso = ''
 
-async function guardarAntesDeAvanzar(): Promise<boolean> {
+
+async function guardarAntesDeAvanzar(forzar = false): Promise<boolean> {
   if (autosaveTimer) {
     clearTimeout(autosaveTimer)
     autosaveTimer = null
@@ -276,6 +279,17 @@ async function guardarAntesDeAvanzar(): Promise<boolean> {
     }
     return !store.isDirty
   }
+  // autosave() se rinde en silencio si ya hay otro en vuelo — y entonces esto
+  // devolvia "guardado" sin haber escrito nada. Esperamos al que corre.
+  for (let i = 0; i < 60 && store.autosaving; i++) {
+    await new Promise(r => setTimeout(r, 100))
+  }
+  // Y hay que volver a marcarlo DESPUES de esa espera: el guardado en vuelo
+  // apaga isDirty al terminar, y autosave() se rinde en silencio cuando lo ve
+  // apagado. Marcarlo antes de esperar era pedir que no escribiera nada — que
+  // es exactamente lo que pasaba al descartar: la reversion no se guardaba y
+  // esto devolvia «guardado» igualmente.
+  if (forzar) store.isDirty = true
   await store.autosave()
   if (store.autosaveError) {
     toast.add({
@@ -293,43 +307,32 @@ async function guardarAntesDeAvanzar(): Promise<boolean> {
 async function irAPaso(destino: number) {
   if (destino < 1 || destino > store.totalSteps || destino === store.currentStep) return
 
-  if (!store.isDirty) {
+  if (!editadoEnEstePaso.value && !store.isDirty) {
     store.goToStep(destino)
     return
   }
 
   const salida = await confirm({
-    title: 'Tienes cambios sin guardar',
+    title: 'Cambiaste algo en este paso',
     description: (!store.tourId || store.tourId === 'new')
-      ? 'Este tour todavía no existe en el servidor: lo que escribiste vive solo en esta pestaña.'
-      : 'Se guardarán como borrador. La versión publicada no cambia hasta que publiques.',
+      ? '¿Lo conservas? Este tour todavía no existe en el servidor: lo que escribiste vive solo en esta pestaña.'
+      : '¿Lo conservas? Se guarda como borrador; la versión publicada no cambia hasta que publiques.',
     icon: 'i-lucide-triangle-alert',
     iconColor: 'warning',
-    confirmLabel: 'Guardar y continuar',
+    confirmLabel: 'Guardar cambios',
     confirmIcon: 'i-lucide-save',
     confirmColor: 'primary',
-    altLabel: 'Continuar sin guardar',
     cancelLabel: 'Quedarme aquí',
   })
 
-  if (salida === false) return
+  if (salida !== true) return
 
-  if (salida === true) {
-    const ok = await guardarAntesDeAvanzar()
-    // Un guardado fallido no debe llevarse por delante el paso: el operador se
-    // queda donde estaba, con su trabajo y con el motivo en pantalla.
-    if (!ok) return
-  } else {
-    // "Continuar sin guardar" tiene que significar eso, y guardaban dos: el
-    // vigilante del cambio de paso y el autoguardado con retardo, ya en cola
-    // desde la ultima tecla. Se desarman los dos.
-    if (autosaveTimer) {
-      clearTimeout(autosaveTimer)
-      autosaveTimer = null
-    }
-    saltarAutoguardadoUnaVez.value = true
-  }
+  const ok = await guardarAntesDeAvanzar(true)
+  // Un guardado fallido no debe llevarse por delante el paso: el operador se
+  // queda donde estaba, con su trabajo y con el motivo en pantalla.
+  if (!ok) return
 
+  editadoEnEstePaso.value = false
   store.goToStep(destino)
 }
 
@@ -565,11 +568,6 @@ watch(() => store.currentStep, (newStep) => {
   // ~2s), still confirm — silence read as "did it save?".
   // `toast` viene del setup (línea superior) — llamar useToast() dentro del
   // watcher pierde el contexto de Nuxt y el aviso nunca aparecía.
-  if (saltarAutoguardadoUnaVez.value) {
-    saltarAutoguardadoUnaVez.value = false
-    return
-  }
-
   if (store.tourId && store.tourId !== 'new') {
     if (store.isDirty && !store.autosaving) {
       if (autosaveTimer) {
@@ -650,6 +648,13 @@ function armDirtyTracking(delayMs: number) {
   if (armTimer) clearTimeout(armTimer)
   armTimer = setTimeout(() => {
     baselineJson = slicesJson()
+    // Como llegaba el paso. isDirty no sirve para preguntar al salir: el
+    // autoguardado lo apaga 1,5 s despues de la ultima tecla, asi que cuando
+    // el operador pulsa «Siguiente» ya casi nunca queda nada «sin guardar» —
+    // y la pregunta no salia nunca. Esto compara contra la entrada al paso, no
+    // contra el ultimo guardado, y sobrevive al autoguardado.
+    instantaneaPaso = baselineJson
+    editadoEnEstePaso.value = false
     suppressDirty = false
   }, delayMs)
 }
@@ -661,8 +666,11 @@ watch(
     store.selectedCategories, store.selectedTags, store.availability,
   ],
   () => {
-    if (suppressDirty || store.loading || store.isDirty) return
-    if (slicesJson() !== baselineJson) store.isDirty = true
+    if (suppressDirty || store.loading) return
+    const ahora = slicesJson()
+    if (instantaneaPaso && ahora !== instantaneaPaso) editadoEnEstePaso.value = true
+    if (store.isDirty) return
+    if (ahora !== baselineJson) store.isDirty = true
   },
   { deep: true }
 )
