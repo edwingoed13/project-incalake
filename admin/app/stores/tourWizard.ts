@@ -357,6 +357,16 @@ const canonical = (value: any): string => {
 
 const sameContent = (a: any, b: any): boolean => canonical(a) === canonical(b)
 
+/**
+ * La pagina del asistente registra aqui su pregunta de "tienes cambios sin
+ * guardar". Vive fuera del state porque es una funcion, no datos: no debe
+ * viajar en instantaneas ni en el borrador.
+ */
+let stepGuard: ((step: number) => void) | null = null
+export function setWizardStepGuard(fn: ((step: number) => void) | null) {
+  stepGuard = fn
+}
+
 export const useTourWizardStore = defineStore('tourWizard', {
   state: () => ({
     currentStep: 1,
@@ -654,21 +664,29 @@ export const useTourWizardStore = defineStore('tourWizard', {
     },
     
     nextStep() {
-      if (this.currentStep < this.totalSteps) {
-        this.currentStep++
-      }
-    },
-    
-    prevStep() {
-      if (this.currentStep > 1) {
-        this.currentStep--
-      }
+      this.goToStep(this.currentStep + 1)
     },
 
-    goToStep(step: number) {
-      if (step >= 1 && step <= this.totalSteps) {
-        this.currentStep = step
+    prevStep() {
+      this.goToStep(this.currentStep - 1)
+    },
+
+    /**
+     * El unico sitio por el que se cambia de paso.
+     *
+     * La guardia vivia en la pagina y envolvia los botones que conocia — y la
+     * barra de pasos del navbar llamaba aqui directamente, asi que saltar del 2
+     * al 3 desde arriba se la saltaba entera: el operador solo veia el toast del
+     * autoguardado. Puesta aqui, cualquier camino pasa por ella, incluidos los
+     * que alguien anada manana.
+     */
+    goToStep(step: number, opciones: { sinGuardia?: boolean } = {}) {
+      if (step < 1 || step > this.totalSteps || step === this.currentStep) return
+      if (stepGuard && !opciones.sinGuardia) {
+        stepGuard(step)
+        return
       }
+      this.currentStep = step
     },
 
     updateBasicInfo(data: Partial<TourStep1>) {

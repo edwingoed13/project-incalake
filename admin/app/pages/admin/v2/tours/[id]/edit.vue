@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTourWizardStore, setWizardErrorNotifier } from '~/stores/tourWizard'
+import { useTourWizardStore, setWizardErrorNotifier, setWizardStepGuard } from '~/stores/tourWizard'
 import { useRoute, useRouter } from 'vue-router'
 import { computed, onMounted, onBeforeUnmount, watch, ref } from 'vue'
 
@@ -308,7 +308,7 @@ async function irAPaso(destino: number) {
   if (destino < 1 || destino > store.totalSteps || destino === store.currentStep) return
 
   if (!editadoEnEstePaso.value && !store.isDirty) {
-    store.goToStep(destino)
+    store.goToStep(destino, { sinGuardia: true })
     return
   }
 
@@ -333,7 +333,7 @@ async function irAPaso(destino: number) {
   if (!ok) return
 
   editadoEnEstePaso.value = false
-  store.goToStep(destino)
+  store.goToStep(destino, { sinGuardia: true })
 }
 
 const autosaveLabel = computed(() => {
@@ -680,6 +680,11 @@ watch(() => store.loading, (loading, wasLoading) => {
 })
 // New tours never enter loading — arm shortly after mount instead.
 onMounted(() => armDirtyTracking(1500))
+
+// Cualquier cambio de paso — los botones de abajo, el menu de salto y la barra
+// del navbar, que llamaba al store por su cuenta — pasa por la pregunta.
+onMounted(() => setWizardStepGuard((destino) => { void irAPaso(destino) }))
+onBeforeUnmount(() => setWizardStepGuard(null))
 
 // Store actions lose the Nuxt context after awaits; give the store a
 // context-ful toast so validation/save errors stop falling back to alert().
