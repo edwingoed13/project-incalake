@@ -316,11 +316,14 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           {{ tzInfo.code }} ({{ tzInfo.gmt }})
         </span>
       </div>
-      <!-- The money and the button stay pinned together. A total that
-           scrolls out of view while the traveller is picking a date asks
-           them to commit without seeing what they are committing to. -->
-      <!-- Subtotal -->
-      <div class="rounded-lg bg-slate-50 px-3 py-2.5 space-y-1.5">
+      <!-- The amount and the cart describe an order that does not exist yet
+           while the month is open, and their 142px are exactly what the
+           calendar was missing — that was the scroll. They step aside until
+           there is a date, and come back with it. (They cannot simply live
+           inside the scrolling area instead: the travellers popover and the
+           time dropdown are absolutely positioned and would be clipped by its
+           edge, which is why the footer sits outside it in the first place.) -->
+      <div v-if="!showMonth" class="rounded-lg bg-slate-50 px-3 py-2.5 space-y-1.5">
         <div class="flex justify-between text-xs text-slate-600">
           <span>{{ fmt(adultPrice) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
           <span class="tabular-nums font-medium">{{ fmt(adultPrice * adults) }}</span>
@@ -362,7 +365,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           Este tour requiere confirmar disponibilidad
         </p>
       </template>
-      <template v-else>
+      <template v-else-if="!showMonth">
         <div class="flex items-stretch gap-2">
           <button
             @click="$emit('add-to-cart')"
