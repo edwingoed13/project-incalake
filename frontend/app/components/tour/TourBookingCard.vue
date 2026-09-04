@@ -189,19 +189,20 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           <span :class="stepClass(!!selectedDate)">1</span>
           <span class="text-[11px] font-bold text-slate-600">Elige la fecha</span>
         </div>
-        <button
-          v-else
-          type="button"
-          @click="monthOpen = true"
-          class="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
-        >
+        <div v-else class="flex items-center gap-2">
           <span :class="stepClass(true)">1</span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Fecha</span>
-            <span class="block text-sm font-bold text-slate-800 truncate mt-0.5 first-letter:uppercase">{{ chosenDateLabel }}</span>
-          </span>
-          <span class="text-[11px] font-bold text-primary shrink-0">Cambiar</span>
-        </button>
+          <button
+            type="button"
+            @click="monthOpen = true"
+            class="min-w-0 flex-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+          >
+            <span class="min-w-0 flex-1">
+              <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Fecha</span>
+              <span class="block text-sm font-bold text-slate-800 truncate mt-0.5 first-letter:uppercase">{{ chosenDateLabel }}</span>
+            </span>
+            <span class="text-[11px] font-bold text-primary shrink-0">Cambiar</span>
+          </button>
+        </div>
         <TourCalendar
           v-if="showMonth"
           v-model="selectedDate"
