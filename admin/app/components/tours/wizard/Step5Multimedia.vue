@@ -129,8 +129,8 @@
       @update:open="toggleSection('gallery')"
     >
       <template #actions>
-        <UBadge color="neutral" variant="subtle" size="sm">
-          {{ store.multimedia.images.length }} / 20 imágenes
+        <UBadge :color="galeriaLlena ? 'warning' : 'neutral'" variant="subtle" size="sm">
+          {{ store.multimedia.images.length }} / {{ MAX_IMAGENES }} imágenes
         </UBadge>
       </template>
 
@@ -143,7 +143,7 @@
             ? 'border-primary bg-primary/5 scale-[0.99]'
             : 'border-default hover:border-primary/40 hover:bg-elevated/40 bg-elevated/20',
         ]"
-        @dragover.prevent="!isUploading && (isDragging = true)"
+        @dragover.prevent="!isUploading && !galeriaLlena && (isDragging = true)"
         @dragleave.prevent="isDragging = false"
         @drop.prevent="handleDrop"
       >
@@ -151,7 +151,7 @@
           type="file"
           multiple
           accept="image/*"
-          :disabled="isUploading"
+          :disabled="isUploading || galeriaLlena"
           class="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-default"
           @change="handleFileChange"
         />
@@ -556,10 +556,17 @@ const { confirm } = useConfirm()
 const isDragging = ref(false)
 
 // Upload progress — drives the drop-area spinner + per-tile skeletons.
+// A tour with more than fifty photos is not a gallery, it is an archive, and
+// the public viewer loads every one of them. The badge already claimed a cap
+// of 20 but nothing enforced it — ES235 sits at 25 today. The real number the
+// business wants is 50, and now it is one.
+const MAX_IMAGENES = 50
+
 const uploadingCount = ref(0) // uploads currently in flight
 const uploadTotal = ref(0)    // total queued in the active batch(es)
 const uploadDone = ref(0)     // finished (ok or failed) in the active batch(es)
 const isUploading = computed(() => uploadingCount.value > 0)
+const galeriaLlena = computed(() => store.multimedia.images.length >= MAX_IMAGENES)
 
 const editingIndex = ref<number | null>(null)
 const editForm = ref({
@@ -972,12 +979,38 @@ const addFiles = async (files: File[]) => {
   }
   if (images.length === 0) return
 
+  // The cap was a label and nothing else: the badge read "/ 20" while nothing
+  // stopped the 21st, and ES235 quietly reached 25. Counting what is already
+  // in flight too, so a drag of forty files cannot slip past while the first
+  // ones are still uploading.
+  const hueco = MAX_IMAGENES - store.multimedia.images.length - uploadingCount.value
+  if (hueco <= 0) {
+    toast.add({
+      title: `La galería ya tiene ${MAX_IMAGENES} imágenes`,
+      description: 'Elimina alguna si quieres subir otra.',
+      icon: 'i-lucide-triangle-alert',
+      color: 'warning',
+    })
+    return
+  }
+
+  const aSubir = images.slice(0, hueco)
+  const fuera = images.length - aSubir.length
+  if (fuera > 0) {
+    toast.add({
+      title: fuera === 1 ? 'Quedó 1 imagen fuera' : `Quedaron ${fuera} imágenes fuera`,
+      description: `El tope son ${MAX_IMAGENES}; se subieron ${aSubir.length}.`,
+      icon: 'i-lucide-triangle-alert',
+      color: 'warning',
+    })
+  }
+
   // Track the batch so the UI shows "Subiendo X de N…" + skeleton tiles.
-  uploadTotal.value += images.length
-  uploadingCount.value += images.length
+  uploadTotal.value += aSubir.length
+  uploadingCount.value += aSubir.length
 
   // Upload in parallel; each call decrements the counters in its finally block.
-  await Promise.all(images.map(file => uploadOne(file)))
+  await Promise.all(aSubir.map(file => uploadOne(file)))
 }
 
 const removeImage = async (index: number) => {

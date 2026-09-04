@@ -120,6 +120,31 @@ class StoreTourRequest extends FormRequest
         ];
     }
 
+    /** Hard ceiling for a tour's gallery, matching the wizard's own. */
+    public const MAX_GALLERY_IMAGES = 50;
+
+    /**
+     * The cap has to be checked across two fields, so no single rule can do it:
+     * `media_gallery` carries the images already saved and `temp_images` the
+     * ones just uploaded, and it is their sum a traveller's browser has to
+     * load. The wizard stops at fifty too; this is the half that a direct API
+     * call cannot talk its way past.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $total = count((array) $this->input('media_gallery', []))
+                   + count((array) $this->input('temp_images', []));
+
+            if ($total > self::MAX_GALLERY_IMAGES) {
+                $validator->errors()->add(
+                    'media_gallery',
+                    'La galería admite hasta ' . self::MAX_GALLERY_IMAGES . " imágenes; se enviaron {$total}."
+                );
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
