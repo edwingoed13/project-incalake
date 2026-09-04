@@ -106,12 +106,12 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
     class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col"
     :class="isInline ? '' : 'lg:max-h-[calc(100dvh-7rem)]'"
   >
-    <!-- Price and party share one row: the price stacks its "por persona"
-         caption underneath itself, freeing the right half for the travellers
-         field. As two stacked rows the pair spent ~110px of card saying two
-         short things; both were half empty. -->
-    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-center justify-between gap-3">
-      <div class="shrink-0">
+    <!-- The price alone, and nothing to do here. The travellers field used to
+         share this row, which put the first thing a visitor was numbered to
+         answer in the corner opposite the calendar — the one control the eye
+         actually lands on. It now sits where it is answered: after the date. -->
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0">
+      <div>
         <div class="flex items-baseline gap-1">
           <span
             class="text-[26px] font-black text-slate-900 tabular-nums tracking-tight leading-none"
@@ -123,12 +123,58 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <span class="block text-[11px] text-slate-500 font-medium mt-1">por persona</span>
       </div>
 
-      <!-- Travellers as a labeled FIELD, not the icon chip this once was: the
+    </div>
+
+    <!-- Only the month scrolls when the window is short. Nothing scrolls on a
+         tall screen: max-height never binds there, so this is identical to
+         before. The time select deliberately does NOT live in here — its
+         dropdown is absolutely positioned and would be clipped by the
+         scroll container. -->
+    <div class="p-4 pt-3 min-h-0" :class="isInline ? '' : 'lg:overflow-y-auto lg:flex-1'">
+      <div>
+        <!-- No "Fecha y horario" label: a month grid announces itself, and the
+             row cost height the calendar wanted. The timezone qualifies the
+             TIME, not the date, so it now travels with the time select. -->
+        <!-- The month sits open in the panel. Picking a date is the main job
+             of this widget, and a click to reveal the calendar was a step in
+             the way of it. -->
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span :class="stepClass(!!selectedDate)">1</span>
+          <span class="text-[11px] font-bold text-slate-600">Elige la fecha</span>
+        </div>
+        <TourCalendar
+          v-model="selectedDate"
+          inline
+          :min-date="minDate"
+          :offers="tour?.offers_data || []"
+          :blocks="tour?.blocks_data || []"
+          :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
+          :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
+          :availability-start="tour?.availability_data?.start || ''"
+          :availability-end="tour?.availability_data?.end || ''"
+        />
+        <!-- The free-cancellation promise lives in the trust card right below
+             this one; saying it twice cost a row of the calendar. -->
+      </div>
+    </div>
+
+    <!-- Money and actions, grouped and set apart by the rule above them.
+         shrink-0: this block is the one thing that must survive a short
+         window, so it never gives up height to the calendar above it. -->
+    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5 shrink-0">
+      <!-- Travellers, now under the calendar: party size changes the price
+           per person (quantity tiers and the group discount), so it is asked
+           where the money is, not beside a date nobody has picked yet. It is
+           not gated on the date — capacity is the tour's, not the day's.
+
+           And, as before, a labeled FIELD rather than the icon chip it was: the
            chip showed a bare "2" whose meaning only existed in the aria-label,
            and a party with children had no visible breakdown. Label + words
            ("2 adultos · 1 niño") reads at a glance; the steppers stay behind
            a tap, which is what keeps the card short. -->
-      <div class="relative min-w-0">
+      <div class="flex items-center gap-2">
+        <span :class="stepClass(true)">2</span>
+        <div class="relative min-w-0 flex-1">
         <button
           type="button"
           @click="paxOpen = !paxOpen"
@@ -139,10 +185,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           <span class="flex items-center gap-2.5 min-w-0">
             <Icon name="material-symbols:group-outline" class="size-5 text-primary shrink-0" />
             <span class="min-w-0">
-              <span class="flex items-center gap-1.5">
-                <span :class="stepClass(true)">1</span>
-                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{{ t('travelers_lc') }}</span>
-              </span>
+              <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{{ t('travelers_lc') }}</span>
               <span class="block text-sm font-bold text-slate-800 truncate mt-0.5">{{ paxSummary }}</span>
             </span>
           </span>
@@ -157,7 +200,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           v-if="paxOpen"
           role="dialog"
           aria-label="Viajeros"
-          class="absolute right-0 top-full mt-2 z-50 w-[21rem] max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
+          class="absolute right-0 bottom-full mb-2 z-50 w-[21rem] max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-3 space-y-2"
         >
           <!-- The age band goes on its own line under each row. Appended to
                the label it read as part of the word ("Adultos (16-99)") and
@@ -191,46 +234,8 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           </button>
         </div>
         <div v-if="paxOpen" class="fixed inset-0 z-40" @click="paxOpen = false"></div>
-      </div>
-    </div>
-
-    <!-- Only the month scrolls when the window is short. Nothing scrolls on a
-         tall screen: max-height never binds there, so this is identical to
-         before. The time select deliberately does NOT live in here — its
-         dropdown is absolutely positioned and would be clipped by the
-         scroll container. -->
-    <div class="p-4 pt-3 min-h-0" :class="isInline ? '' : 'lg:overflow-y-auto lg:flex-1'">
-      <div>
-        <!-- No "Fecha y horario" label: a month grid announces itself, and the
-             row cost height the calendar wanted. The timezone qualifies the
-             TIME, not the date, so it now travels with the time select. -->
-        <!-- The month sits open in the panel. Picking a date is the main job
-             of this widget, and a click to reveal the calendar was a step in
-             the way of it. -->
-        <div class="flex items-center gap-1.5 mb-1.5">
-          <span :class="stepClass(!!selectedDate)">2</span>
-          <span class="text-[11px] font-bold text-slate-600">Elige la fecha</span>
         </div>
-        <TourCalendar
-          v-model="selectedDate"
-          inline
-          :min-date="minDate"
-          :offers="tour?.offers_data || []"
-          :blocks="tour?.blocks_data || []"
-          :active-days="tour?.availability_data?.activeDays?.map(Number) || [0,1,2,3,4,5,6]"
-          :special-days="tour?.special_days || tour?.availability_data?.specialDays || []"
-          :availability-start="tour?.availability_data?.start || ''"
-          :availability-end="tour?.availability_data?.end || ''"
-        />
-        <!-- The free-cancellation promise lives in the trust card right below
-             this one; saying it twice cost a row of the calendar. -->
       </div>
-    </div>
-
-    <!-- Money and actions, grouped and set apart by the rule above them.
-         shrink-0: this block is the one thing that must survive a short
-         window, so it never gives up height to the calendar above it. -->
-    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5 shrink-0">
       <!-- Times only once there is a date. An empty time select next to an
            empty date asks two questions at once and answers neither. -->
       <div v-if="selectedDate" class="flex items-center gap-2">
