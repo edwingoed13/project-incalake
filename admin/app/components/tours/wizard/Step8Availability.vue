@@ -77,7 +77,6 @@
                 cell.inAvailability && cell.activeWeekday && !cell.blocked && !cell.outOfMonth && !cell.isPast
                   ? 'bg-primary/15 dark:bg-primary/25 border-primary/50 text-primary' : '',
                 cell.blocked && !cell.outOfMonth && !cell.isPast ? 'bg-error/10 border-error/40 text-error line-through' : '',
-                cell.isHoliday && !cell.outOfMonth && !cell.isPast ? 'ring-2 ring-error/40 ring-inset' : '',
                 cell.isToday ? 'ring-2 ring-primary ring-inset font-black' : '',
                 // A weekday the tour does not run is as unbookable as a date
                 // outside the range, and must not read as available.
@@ -99,8 +98,7 @@
       <!-- Legend -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-3 border-t border-default text-[11px]">
         <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-primary/15 dark:bg-primary/25 border border-primary/50" /><span class="text-muted">Disponible</span></div>
-        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-error/10 border border-error/40" /><span class="text-muted">Bloqueado</span></div>
-        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm ring-2 ring-error/40 ring-inset" /><span class="text-muted">Feriado</span></div>
+        <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-error/10 border border-error/40" /><span class="text-muted">Cerrado</span></div>
         <div class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-success" /><span class="text-muted">Con oferta</span></div>
         <div class="flex items-center gap-1.5"><span class="size-3 rounded-sm ring-2 ring-primary ring-inset" /><span class="text-muted">Hoy</span></div>
       </div>
@@ -216,8 +214,16 @@
             </div>
           </UFormField>
 
-          <!-- Holidays -->
-          <UFormField label="Bloquear feriados nacionales">
+        </div>
+
+        <!-- Blocks Tab -->
+        <!-- Feriados y bloqueos vivian en pestanas distintas y se pintaban
+             distinto, pero para el viajero son la misma cosa: el dia no se
+             puede reservar. Lo unico que de verdad los separa es que un feriado
+             se repite cada ano y un bloqueo ocurre una vez, y eso se dice en la
+             propia fila. Una sola pestana responde "que dias esta cerrado". -->
+        <div v-if="activeTab === 'blocks'" class="space-y-4">
+          <UFormField label="Feriados" hint="Se repiten cada año">
             <div class="grid grid-cols-2 gap-2">
               <button
                 v-for="holiday in holidays"
@@ -246,10 +252,6 @@
             </div>
           </UFormField>
 
-        </div>
-
-        <!-- Blocks Tab -->
-        <div v-if="activeTab === 'blocks'" class="space-y-4">
           <div class="p-4 rounded-lg border-2 border-dashed border-error/30 bg-error/5 space-y-3">
             <p class="text-xs font-black uppercase tracking-widest text-error flex items-center gap-1.5">
               <UIcon name="i-lucide-plus-circle" class="size-4" />
@@ -282,18 +284,19 @@
             </UButton>
           </div>
 
-          <!-- Blocks list -->
-          <div v-if="store.availability.blocks && store.availability.blocks.length > 0" class="space-y-1.5">
-            <p class="text-[10px] font-black uppercase tracking-widest text-muted">Bloqueos configurados ({{ store.availability.blocks.length }})</p>
+          <!-- One list for both. They were two, in two tabs, and answering
+               "what days is this tour closed?" meant looking in two places. -->
+          <div v-if="diasCerrados.length" class="space-y-1.5">
+            <p class="text-[10px] font-black uppercase tracking-widest text-muted">Días cerrados ({{ diasCerrados.length }})</p>
             <div
-              v-for="(block, index) in store.availability.blocks"
-              :key="block.id || index"
+              v-for="dia in diasCerrados"
+              :key="dia.clave"
               class="group flex items-center gap-2.5 px-3 py-2 rounded-lg border border-default hover:border-error/40 transition-all"
             >
-              <UIcon name="i-lucide-ban" class="size-4 text-error shrink-0" />
+              <UIcon :name="dia.icono" class="size-4 text-error shrink-0" />
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold truncate">{{ block.reason }}</p>
-                <p class="text-[10px] text-muted">{{ formatDate(block.startDate) }} → {{ formatDate(block.endDate) }}</p>
+                <p class="text-xs font-bold truncate">{{ dia.titulo }}</p>
+                <p class="text-[10px] text-muted truncate">{{ dia.detalle }}</p>
               </div>
               <UButton
                 icon="i-lucide-x"
@@ -301,7 +304,7 @@
                 variant="ghost"
                 size="xs"
                 class="opacity-100 can-hover:opacity-0 can-hover:group-hover:opacity-100 transition-opacity"
-                @click="removeBlock(index)"
+                @click="quitarDiaCerrado(dia)"
               />
             </div>
           </div>
@@ -310,8 +313,8 @@
             color="neutral"
             variant="subtle"
             icon="i-lucide-calendar-x"
-            title="Sin bloqueos"
-            description="Agrega rangos de fechas en las que el tour no estará disponible."
+            title="Sin días cerrados"
+            description="Marca un feriado arriba o agrega un rango de fechas en el que el tour no estará disponible."
           />
         </div>
 
@@ -470,6 +473,50 @@ const weekDays = [
   { label: 'Sab', value: 6 },
   { label: 'Dom', value: 0 },
 ]
+
+/**
+ * Feriados y bloqueos, en una sola lista.
+ *
+ * Son dos formas de decir lo mismo — el dia no se puede reservar — guardadas
+ * distinto: el feriado es un DD-MM que vuelve cada ano, el bloqueo un rango con
+ * fecha de inicio y fin. Esa diferencia si importa y por eso se conserva en los
+ * datos; lo que no tenia sentido era obligar a mirar en dos pestanas para saber
+ * que dias esta cerrado el tour.
+ */
+const diasCerrados = computed(() => {
+  const feriados = (store.availability.specialDays || []).map((valor: string) => {
+    const f = holidays.find(h => h.value === valor)
+    return {
+      clave: `feriado-${valor}`,
+      tipo: 'feriado' as const,
+      valor,
+      icono: f?.icon || 'i-lucide-calendar-heart',
+      titulo: f?.label || valor,
+      detalle: `${f?.date || valor} · cada año`,
+    }
+  })
+
+  const rangos = (store.availability.blocks || []).map((b: any, i: number) => ({
+    clave: `bloqueo-${b.id || i}`,
+    tipo: 'bloqueo' as const,
+    indice: i,
+    icono: 'i-lucide-ban',
+    titulo: b.reason || 'Bloqueado',
+    detalle: `${formatDate(b.startDate)} → ${formatDate(b.endDate)}`,
+  }))
+
+  return [...feriados, ...rangos]
+})
+
+/** El nombre del feriado para el tooltip; si no esta en la lista, su fecha. */
+function nombreFeriado(ddmm: string): string {
+  return holidays.find(h => h.value === ddmm)?.label || `feriado ${ddmm}`
+}
+
+function quitarDiaCerrado(dia: any) {
+  if (dia.tipo === 'feriado') toggleSpecialDay(dia.valor)
+  else removeBlock(dia.indice)
+}
 
 const holidays = [
   { label: 'Navidad', value: '25-12', date: '25 Dic', icon: 'i-lucide-gift' },
@@ -688,11 +735,11 @@ const buildCells = (base: Date) => {
     const tooltipParts: string[] = []
     tooltipParts.push(d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }))
     if (isPast) tooltipParts.push('Fecha pasada')
-    else if (blocked) tooltipParts.push(`Bloqueo: ${blockReason}`)
+    else if (blocked) tooltipParts.push(`Cerrado: ${blockReason}`)
+    else if (isHoliday) tooltipParts.push(`Cerrado: ${nombreFeriado(mmdd)}`)
     else if (!inAvailability) tooltipParts.push('Fuera del rango')
     else if (!activeWeekday) tooltipParts.push('Día semanal no activo')
     else tooltipParts.push('Disponible')
-    if (isHoliday) tooltipParts.push('Feriado bloqueado')
     if (offerLabel) tooltipParts.push(`Oferta: ${offerLabel}`)
 
     cells.push({
