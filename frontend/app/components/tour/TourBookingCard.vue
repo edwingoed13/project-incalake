@@ -106,12 +106,16 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
     class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col"
     :class="isInline ? '' : 'lg:max-h-[calc(100dvh-7rem)]'"
   >
-    <!-- The price alone, and nothing to do here. The travellers field used to
-         share this row, which put the first thing a visitor was numbered to
-         answer in the corner opposite the calendar — the one control the eye
-         actually lands on. It now sits where it is answered: after the date. -->
-    <div class="px-4 py-3 border-b border-slate-100 shrink-0">
-      <div>
+    <!-- Price left, promises right. Moving the travellers field down under the
+         calendar left this row half empty and cost the calendar 44px it did
+         not have: on a 1366x768 laptop the card wants 759px and gets 656, so
+         the month was the thing that scrolled, cut after the 27th as if
+         September ended there. The reassurances used to sit in a strip at the
+         very bottom, under the button — read after the decision, if at all.
+         Beside the price they are read before it, and their row is 40px the
+         calendar gets back. -->
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-start justify-between gap-3">
+      <div class="shrink-0">
         <div class="flex items-baseline gap-1">
           <span
             class="text-[26px] font-black text-slate-900 tabular-nums tracking-tight leading-none"
@@ -123,6 +127,21 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <span class="block text-[11px] text-slate-500 font-medium mt-1">por persona</span>
       </div>
 
+      <div class="flex flex-col items-end gap-0.5 text-[10px] font-semibold text-slate-600 text-right min-w-0">
+        <span v-if="tour?.free_cancellation" class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:check-circle" class="size-3.5 text-trust shrink-0" />
+          {{ t('free_cancellation') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:schedule-outline" class="size-3.5 text-primary shrink-0" />
+          {{ t('trust_instant') }}
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <Icon name="material-symbols:verified-user-outline" class="size-3.5 text-primary shrink-0" />
+          {{ t('trust_best_price') }}
+        </span>
+      </div>
+
     </div>
 
     <!-- Only the month scrolls when the window is short. Nothing scrolls on a
@@ -130,7 +149,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
          before. The time select deliberately does NOT live in here — its
          dropdown is absolutely positioned and would be clipped by the
          scroll container. -->
-    <div class="p-4 pt-3 min-h-0" :class="isInline ? '' : 'lg:overflow-y-auto lg:flex-1'">
+    <div class="relative px-4 pt-2 pb-2 min-h-0" :class="isInline ? '' : 'lg:overflow-y-auto lg:flex-1 tarjeta-scroll'">
       <div>
         <!-- No "Fecha y horario" label: a month grid announces itself, and the
              row cost height the calendar wanted. The timezone qualifies the
@@ -161,7 +180,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
     <!-- Money and actions, grouped and set apart by the rule above them.
          shrink-0: this block is the one thing that must survive a short
          window, so it never gives up height to the calendar above it. -->
-    <div class="p-4 pt-3 border-t border-slate-100 space-y-2.5 shrink-0">
+    <div class="p-4 pt-3 border-t border-slate-100 space-y-2 shrink-0">
       <!-- Travellers, now under the calendar: party size changes the price
            per person (quantity tiers and the group discount), so it is asked
            where the money is, not beside a date nobody has picked yet. It is
@@ -259,7 +278,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
            scrolls out of view while the traveller is picking a date asks
            them to commit without seeing what they are committing to. -->
       <!-- Subtotal -->
-      <div class="rounded-lg bg-slate-50 p-3 space-y-1.5">
+      <div class="rounded-lg bg-slate-50 px-3 py-2.5 space-y-1.5">
         <div class="flex justify-between text-xs text-slate-600">
           <span>{{ fmt(adultPrice) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
           <span class="tabular-nums font-medium">{{ fmt(adultPrice * adults) }}</span>
@@ -283,16 +302,13 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
           </span>
         </div>
-      </div>
-
-      <!-- Partial payment: pay a deposit now, the rest on the tour day -->
-      <div v-if="partialPct && !requiresInquiry" class="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
-        <Icon name="material-symbols:payments-outline" class="size-4 text-amber-600 shrink-0 mt-0.5" />
-        <!-- One line. "Pagas el resto el día del tour" is what a deposit
-             means; spelling it out cost a second row of the panel. -->
-        <p class="text-xs font-bold text-amber-800 leading-snug">
+        <!-- The deposit was a bordered amber card of its own. It is a fact
+             about this amount, so it belongs inside the amount, and the border
+             it dropped is a row the calendar keeps. -->
+        <div v-if="partialPct && !requiresInquiry" class="flex items-center gap-1.5 pt-1.5 border-t border-slate-200 text-[11px] font-bold text-amber-700">
+          <Icon name="material-symbols:payments-outline" class="size-3.5 shrink-0" />
           Reserva con el {{ partialPct }}% de adelanto
-        </p>
+        </div>
       </div>
 
       <!-- Validation error (localized, inline) — only relevant to the instant
@@ -350,25 +366,31 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </div>
       </template>
 
-      <!-- Trust signals, both variants. The sidebar used to carry a second
-           bordered card below this one for the same three promises: 74px, its
-           own border and a gap, to repeat what the inline variant already said
-           in a strip. One strip, one card. Localized, unlike the booking
-           labels around it — these three keys already existed and worked. -->
-      <div class="flex flex-wrap gap-x-3 gap-y-1 pt-2.5 border-t border-slate-100 text-[11px] font-medium text-slate-600">
-        <span v-if="tour?.free_cancellation" class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:check-circle" class="size-3.5 text-trust shrink-0" />
-          {{ t('free_cancellation') }}
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:schedule-outline" class="size-3.5 text-primary shrink-0" />
-          {{ t('trust_instant') }}
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:verified-user-outline" class="size-3.5 text-primary shrink-0" />
-          {{ t('trust_best_price') }}
-        </span>
-      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* A month of six weeks cannot fit a 768px-tall laptop next to a price, a
+   travellers field and a button, and the button is the one thing that must
+   never leave the screen — so the calendar is what gives. The default
+   scrollbar made that read as damage: a fat grey rail beside a September that
+   appeared to end on the 27th. Thin, in the card's own grey, it reads as what
+   it is. Firefox gets the standard property; WebKit needs its own.
+   Literal hex rather than theme(): that helper is not available inside a
+   scoped block here and took the whole page down with a 500. */
+.tarjeta-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent; /* slate-300 */
+}
+.tarjeta-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.tarjeta-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tarjeta-scroll::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+</style>

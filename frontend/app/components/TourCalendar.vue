@@ -57,11 +57,11 @@
         <!-- Two month grid -->
         <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
           <!-- Month 1 -->
-          <div class="flex-1" :class="inline ? 'px-2 pb-2 pt-1' : 'p-4'">
+          <div class="flex-1" :class="inline ? 'px-2 pb-1 pt-1' : 'p-4'">
             <div class="grid grid-cols-7 gap-0 mb-2">
               <span v-for="d in dayHeaders" :key="d" class="text-xs font-bold text-slate-400 text-center py-1">{{ d }}</span>
             </div>
-            <div class="grid grid-cols-7 gap-1">
+            <div class="grid grid-cols-7 gap-1 lg:gap-0.5">
               <template v-for="(day, i) in calendarDays(currentMonth, currentYear)" :key="'m1-'+i">
                 <button
                   v-if="day"
@@ -70,14 +70,14 @@
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
                   class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="[inline ? 'h-9 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
+                  :class="[inline ? 'h-9 lg:h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else :class="inline ? 'h-9' : 'h-11'"></span>
+                <span v-else :class="inline ? 'h-9 lg:h-8' : 'h-11'"></span>
               </template>
             </div>
           </div>
@@ -91,7 +91,7 @@
             <div class="grid grid-cols-7 gap-0 mb-2">
               <span v-for="d in dayHeaders" :key="d" class="text-xs font-bold text-slate-400 text-center py-1">{{ d }}</span>
             </div>
-            <div class="grid grid-cols-7 gap-1">
+            <div class="grid grid-cols-7 gap-1 lg:gap-0.5">
               <template v-for="(day, i) in calendarDays(nextMonth, nextYear)" :key="'m2-'+i">
                 <button
                   v-if="day"
@@ -100,14 +100,14 @@
                   :aria-label="fullDateLabel(day)"
                   :aria-pressed="day.isSelected"
                   class="relative w-full font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  :class="[inline ? 'h-9 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
+                  :class="[inline ? 'h-9 lg:h-8 text-xs' : 'h-11 text-sm', getDayClasses(day)]"
                   :style="getDayStyle(day)"
                 >
                   {{ day.day }}
                   <!-- Offer marker: a legible colored dot (was an illegible 6px '%') -->
                   <span v-if="day.hasOffer" class="absolute top-1 right-1 size-1.5 rounded-full" :style="{ backgroundColor: day.offerColor }" aria-hidden="true"></span>
                 </button>
-                <span v-else :class="inline ? 'h-9' : 'h-11'"></span>
+                <span v-else :class="inline ? 'h-9 lg:h-8' : 'h-11'"></span>
               </template>
             </div>
           </div>
