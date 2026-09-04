@@ -39,11 +39,28 @@ const children = defineModel<number>('children', { required: true })
 const selectedDate = defineModel<string>('selectedDate', { required: true })
 const selectedTime = defineModel<string>('selectedTime', { required: true })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const currencyStore = useCurrencyStore()
 const fmt = (v: number) => currencyStore.formatConverted(v || 0)
 
 const isInline = computed(() => props.variant !== 'sidebar')
+
+// The month collapses once it has done its job. It is by far the tallest thing
+// in the card, and leaving it open afterwards is what pushed the time select,
+// the total and the button off a laptop screen — the scroll the traveller then
+// had to fight while the calendar was still the only thing they could see.
+const monthOpen = ref(false)
+const showMonth = computed(() => !selectedDate.value || monthOpen.value)
+watch(selectedDate, (d) => { if (d) monthOpen.value = false })
+
+const chosenDateLabel = computed(() => {
+  const raw = String(selectedDate.value || '').split('T')[0]
+  const [y, m, d] = raw.split('-').map(Number)
+  if (!y || !m || !d) return ''
+  return new Date(y, m - 1, d).toLocaleDateString(locale.value || 'es', {
+    weekday: 'short', day: 'numeric', month: 'long',
+  })
+})
 // Party size lives behind the header count.
 const paxOpen = ref(false)
 const paxSummary = computed(() => {
@@ -106,15 +123,14 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
     class="bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col"
     :class="isInline ? '' : 'lg:max-h-[calc(100dvh-7rem)]'"
   >
-    <!-- Price left, promises right. Moving the travellers field down under the
-         calendar left this row half empty and cost the calendar 44px it did
-         not have: on a 1366x768 laptop the card wants 759px and gets 656, so
-         the month was the thing that scrolled, cut after the 27th as if
-         September ended there. The reassurances used to sit in a strip at the
-         very bottom, under the button — read after the decision, if at all.
-         Beside the price they are read before it, and their row is 40px the
-         calendar gets back. -->
-    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-start justify-between gap-3">
+    <!-- Price and action on one row, in the one part of the card that never
+         scrolls. Every version of this panel so far has fought the same
+         constraint — a sticky card capped to the window, a calendar taller
+         than what is left, and a button that had to stay reachable. Putting
+         the button up here settles it: it cannot be pushed off by anything
+         below, and the height that was being reserved for it downstairs goes
+         to the month. -->
+    <div class="px-4 py-3 border-b border-slate-100 shrink-0 flex items-center justify-between gap-3">
       <div class="shrink-0">
         <div class="flex items-baseline gap-1">
           <span
@@ -127,21 +143,32 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <span class="block text-[11px] text-slate-500 font-medium mt-1">por persona</span>
       </div>
 
-      <div class="flex flex-col items-end gap-0.5 text-[10px] font-semibold text-slate-600 text-right min-w-0">
-        <span v-if="tour?.free_cancellation" class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:check-circle" class="size-3.5 text-trust shrink-0" />
-          {{ t('free_cancellation') }}
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:schedule-outline" class="size-3.5 text-primary shrink-0" />
-          {{ t('trust_instant') }}
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:verified-user-outline" class="size-3.5 text-primary shrink-0" />
-          {{ t('trust_best_price') }}
-        </span>
-      </div>
+      <button
+        v-if="requiresInquiry"
+        @click="$emit('inquire')"
+        class="btn-primary shrink-0 hover:shadow-xl hover:shadow-primary/30"
+      >
+        Consultar
+        <Icon name="material-symbols:event-available-outline" class="size-5" />
+      </button>
+      <button
+        v-else
+        @click="$emit('book')"
+        class="btn-primary shrink-0 hover:shadow-xl hover:shadow-primary/30"
+      >
+        Reservar
+        <Icon name="material-symbols:arrow-forward" class="size-5" />
+      </button>
+    </div>
 
+    <!-- The error belongs with the button that raises it. Both CTAs produce the
+         same one ("elige una fecha"), and this row is always on screen, so it
+         is read wherever the traveller clicked from. -->
+    <div v-if="error" class="px-4 pt-2.5 shrink-0" role="alert">
+      <div class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+        <Icon name="material-symbols:error-outline" class="size-4 text-red-500 shrink-0" />
+        <span class="text-[11px] font-semibold text-red-700">{{ error }}</span>
+      </div>
     </div>
 
     <!-- Only the month scrolls when the window is short. Nothing scrolls on a
@@ -154,14 +181,29 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <!-- No "Fecha y horario" label: a month grid announces itself, and the
              row cost height the calendar wanted. The timezone qualifies the
              TIME, not the date, so it now travels with the time select. -->
-        <!-- The month sits open in the panel. Picking a date is the main job
-             of this widget, and a click to reveal the calendar was a step in
-             the way of it. -->
-        <div class="flex items-center gap-1.5 mb-1.5">
+        <!-- The month is open until it is answered, then it folds to this line.
+             Picking a date is the main job of this widget, so it starts open;
+             once it is done, the 300px it occupies belong to the questions
+             that come after it. -->
+        <div v-if="showMonth" class="flex items-center gap-1.5 mb-1.5">
           <span :class="stepClass(!!selectedDate)">1</span>
           <span class="text-[11px] font-bold text-slate-600">Elige la fecha</span>
         </div>
+        <button
+          v-else
+          type="button"
+          @click="monthOpen = true"
+          class="w-full flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+        >
+          <span :class="stepClass(true)">1</span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Fecha</span>
+            <span class="block text-sm font-bold text-slate-800 truncate mt-0.5 first-letter:uppercase">{{ chosenDateLabel }}</span>
+          </span>
+          <span class="text-[11px] font-bold text-primary shrink-0">Cambiar</span>
+        </button>
         <TourCalendar
+          v-if="showMonth"
           v-model="selectedDate"
           inline
           :min-date="minDate"
@@ -311,49 +353,24 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </div>
       </div>
 
-      <!-- Validation error (localized, inline) — only relevant to the instant
-           booking flow, not the availability inquiry. -->
-      <div v-if="error && !requiresInquiry" class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg" role="alert">
-        <Icon name="material-symbols:error-outline" class="size-4 text-red-500 shrink-0" />
-        <span class="text-[11px] font-semibold text-red-700">{{ error }}</span>
-      </div>
-
-      <!-- CTAs — tours that require availability verification can't be booked
-           instantly; they capture a lead via the inquiry modal instead. -->
+      <!-- Reservar now lives in the header, where it cannot be scrolled away
+           from. What stays here is the cart: a second tour goes in from this
+           button, and it belongs beside the amount it is adding. -->
       <template v-if="requiresInquiry">
-        <button
-          @click="$emit('inquire')"
-          class="btn-primary btn-lg w-full hover:shadow-xl hover:shadow-primary/30"
-        >
-          Consultar disponibilidad
-          <Icon name="material-symbols:event-available-outline" class="size-5" />
-        </button>
-        <p class="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+        <p class="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
           <Icon name="material-symbols:info-outline" class="size-4 text-primary shrink-0" />
           Este tour requiere confirmar disponibilidad
         </p>
       </template>
       <template v-else>
-        <!-- One row, both named. The cart used to be a bare icon box: obvious
-             only to people who already knew what it did, which is a poor bet
-             for the control that lets someone book two tours in one go. It
-             stays the secondary action — outline against filled, and it takes
-             only the width its own label needs. -->
         <div class="flex items-stretch gap-2">
           <button
-            @click="$emit('book')"
-            class="btn-primary btn-lg flex-1 min-w-0 whitespace-nowrap hover:shadow-xl hover:shadow-primary/30"
-          >
-            Reservar
-            <Icon name="material-symbols:arrow-forward" class="size-5" />
-          </button>
-          <button
             @click="$emit('add-to-cart')"
-            class="btn-outline-primary btn-lg shrink-0 !px-4 whitespace-nowrap"
+            class="btn-outline-primary w-full whitespace-nowrap"
             title="Agregar al carrito"
           >
             <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
-            Agregar
+            Agregar al carrito
           </button>
         </div>
         <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
