@@ -260,9 +260,13 @@ const stepMenuItems = computed(() => [
 // la barra: se pregunta, y no se avanza hasta que el operador decide. La
 // etiqueta estaba, y no la veia nadie — pasar de paso es justo el momento en
 // que se deja de mirar arriba.
-// Estado del paso actual: como llego y si se toco algo desde entonces.
-const editadoEnEstePaso = ref(false)
+// Como llego el paso. La pregunta compara contra esto en el momento de salir,
+// no lleva una bandera: si el operador escribe " test" y luego lo borra, el paso
+// vuelve a ser identico al de la entrada y no hay nada que preguntar. Una
+// bandera se habria quedado encendida y le habria preguntado por un cambio que
+// ya no existe.
 let instantaneaPaso = ''
+const hayCambioEnEstePaso = () => !!instantaneaPaso && slicesJson() !== instantaneaPaso
 
 
 async function guardarAntesDeAvanzar(forzar = false): Promise<boolean> {
@@ -307,7 +311,7 @@ async function guardarAntesDeAvanzar(forzar = false): Promise<boolean> {
 async function irAPaso(destino: number) {
   if (destino < 1 || destino > store.totalSteps || destino === store.currentStep) return
 
-  if (!editadoEnEstePaso.value && !store.isDirty) {
+  if (!hayCambioEnEstePaso()) {
     store.goToStep(destino, { sinGuardia: true })
     return
   }
@@ -332,7 +336,6 @@ async function irAPaso(destino: number) {
   // queda donde estaba, con su trabajo y con el motivo en pantalla.
   if (!ok) return
 
-  editadoEnEstePaso.value = false
   store.goToStep(destino, { sinGuardia: true })
 }
 
@@ -654,7 +657,6 @@ function armDirtyTracking(delayMs: number) {
     // y la pregunta no salia nunca. Esto compara contra la entrada al paso, no
     // contra el ultimo guardado, y sobrevive al autoguardado.
     instantaneaPaso = baselineJson
-    editadoEnEstePaso.value = false
     suppressDirty = false
   }, delayMs)
 }
@@ -667,10 +669,8 @@ watch(
   ],
   () => {
     if (suppressDirty || store.loading) return
-    const ahora = slicesJson()
-    if (instantaneaPaso && ahora !== instantaneaPaso) editadoEnEstePaso.value = true
     if (store.isDirty) return
-    if (ahora !== baselineJson) store.isDirty = true
+    if (slicesJson() !== baselineJson) store.isDirty = true
   },
   { deep: true }
 )
