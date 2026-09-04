@@ -299,22 +299,30 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       </div>
       <!-- Times only once there is a date. An empty time select next to an
            empty date asks two questions at once and answers neither. -->
-      <div v-if="selectedDate" class="flex items-center gap-2">
-        <span :class="stepClass(!!selectedTime)">3</span>
-        <TourTimeSelect
-          v-model="selectedTime"
-          :options="availableTimes"
-          placeholder="Horario"
-          class="flex-1"
-        />
-        <span
-          v-if="tzInfo"
-          class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 shrink-0"
-          :title="`${tzInfo.name} (${tzInfo.gmt})`"
-        >
-          <Icon name="material-symbols:language" class="size-3" />
-          {{ tzInfo.code }} ({{ tzInfo.gmt }})
-        </span>
+      <div v-if="selectedDate" class="flex items-start gap-2">
+        <span :class="stepClass(!!selectedTime)" class="mt-3">3</span>
+        <!-- The timezone sits under the time, not beside it. Beside it, it was
+             the third thing competing for one row with a badge and a select
+             whose chosen label runs to "7:00 AM - Duración 10 horas"; the
+             select had no min-w-0, so it refused to shrink and pushed
+             "Perú (GMT-5)" straight out through the side of the card. It
+             qualifies the time, so under it is also where it reads. -->
+        <div class="min-w-0 flex-1">
+          <TourTimeSelect
+            v-model="selectedTime"
+            :options="availableTimes"
+            placeholder="Horario"
+            class="w-full"
+          />
+          <span
+            v-if="tzInfo"
+            class="mt-1 flex items-center gap-1 text-[11px] font-bold text-slate-500"
+            :title="`${tzInfo.name} (${tzInfo.gmt})`"
+          >
+            <Icon name="material-symbols:language" class="size-3 shrink-0" />
+            <span class="truncate">{{ tzInfo.code }} ({{ tzInfo.gmt }})</span>
+          </span>
+        </div>
       </div>
       <!-- The amount and the cart describe an order that does not exist yet
            while the month is open, and their 142px are exactly what the
