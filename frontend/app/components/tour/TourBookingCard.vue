@@ -52,6 +52,16 @@ const paxSummary = computed(() => {
   return parts.join(' · ')
 })
 const atMax = computed(() => props.totalPax >= props.maxPax)
+
+// Numbered steps. The card asks for three things in a fixed order — who is
+// travelling, which day, which departure — but nothing said so, and the two
+// that matter most looked like decoration next to a calendar that fills the
+// panel. The number answers "what do I fill first"; the colour answers "what
+// is left", so the next pending step is the one that still reads grey.
+const stepClass = (done: boolean) => [
+  'inline-flex items-center justify-center size-[18px] rounded-full text-[10px] font-black shrink-0 leading-none',
+  done ? 'bg-primary text-white' : 'bg-slate-200 text-slate-500',
+]
 // Children's second line carries both the age band and its status: which price
 // applies once there is one, "Opcional" while there is none. The age comes
 // first — it is what decides whether a given child belongs on this row at all.
@@ -129,7 +139,10 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
           <span class="flex items-center gap-2.5 min-w-0">
             <Icon name="material-symbols:group-outline" class="size-5 text-primary shrink-0" />
             <span class="min-w-0">
-              <span class="block text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{{ t('travelers_lc') }}</span>
+              <span class="flex items-center gap-1.5">
+                <span :class="stepClass(true)">1</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{{ t('travelers_lc') }}</span>
+              </span>
               <span class="block text-sm font-bold text-slate-800 truncate mt-0.5">{{ paxSummary }}</span>
             </span>
           </span>
@@ -194,6 +207,10 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         <!-- The month sits open in the panel. Picking a date is the main job
              of this widget, and a click to reveal the calendar was a step in
              the way of it. -->
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span :class="stepClass(!!selectedDate)">2</span>
+          <span class="text-[11px] font-bold text-slate-600">Elige la fecha</span>
+        </div>
         <TourCalendar
           v-model="selectedDate"
           inline
@@ -217,6 +234,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       <!-- Times only once there is a date. An empty time select next to an
            empty date asks two questions at once and answers neither. -->
       <div v-if="selectedDate" class="flex items-center gap-2">
+        <span :class="stepClass(!!selectedTime)">3</span>
         <TourTimeSelect
           v-model="selectedTime"
           :options="availableTimes"
@@ -235,7 +253,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
       <!-- The money and the button stay pinned together. A total that
            scrolls out of view while the traveller is picking a date asks
            them to commit without seeing what they are committing to. -->
-      <!-- Total -->
+      <!-- Subtotal -->
       <div class="rounded-lg bg-slate-50 p-3 space-y-1.5">
         <div class="flex justify-between text-xs text-slate-600">
           <span>{{ fmt(adultPrice) }} × {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}</span>
@@ -254,7 +272,7 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </div>
         <!-- The transaction fee moved to checkout, where it is charged. -->
         <div class="flex justify-between items-baseline pt-1.5 border-t border-slate-200">
-          <span class="text-sm font-bold text-slate-900">Total</span>
+          <span class="text-sm font-bold text-slate-900">Subtotal</span>
           <span class="text-lg font-black text-slate-900 tabular-nums">
             {{ fmt(total) }}
             <span class="text-xs font-semibold text-slate-500 ml-0.5">{{ currencyStore.selectedCurrency }}</span>
@@ -295,26 +313,26 @@ const totalWithFee = computed(() => props.total + feeAmount.value)
         </p>
       </template>
       <template v-else>
-        <!-- One row: the cart is a secondary action and does not need to match
-             the width of the primary one. It keeps a real button box and its
-             full name in the tooltip and the aria-label, because a bare icon
-             is only obvious to people who already know what it does — and the
-             cart is how someone books two tours in one go. -->
+        <!-- One row, both named. The cart used to be a bare icon box: obvious
+             only to people who already knew what it did, which is a poor bet
+             for the control that lets someone book two tours in one go. It
+             stays the secondary action — outline against filled, and it takes
+             only the width its own label needs. -->
         <div class="flex items-stretch gap-2">
           <button
             @click="$emit('book')"
-            class="btn-primary btn-lg flex-1 hover:shadow-xl hover:shadow-primary/30"
+            class="btn-primary btn-lg flex-1 min-w-0 whitespace-nowrap hover:shadow-xl hover:shadow-primary/30"
           >
-            Reservar ahora
+            Reservar
             <Icon name="material-symbols:arrow-forward" class="size-5" />
           </button>
           <button
             @click="$emit('add-to-cart')"
-            class="btn-outline-primary shrink-0 !px-0 w-14"
+            class="btn-outline-primary btn-lg shrink-0 !px-4 whitespace-nowrap"
             title="Agregar al carrito"
-            aria-label="Agregar al carrito"
           >
             <Icon name="material-symbols:shopping-cart-outline" class="size-5" />
+            Agregar
           </button>
         </div>
         <div v-if="cartFeedback === 'added'" class="mt-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-trust">
