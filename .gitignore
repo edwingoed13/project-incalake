@@ -115,3 +115,85 @@ missing_tables.sql
 laravel_export.sql
 languages_export.sql
 vendor-prod-actualizado.zip
+
+# Proyecto PRIVADO con su propio repo (edwingoed13/incalake-laravel).
+# Este repo es publico: la carpeta no debe entrar aqui jamas.
+laravel-incalake/
+
+# --- Copia local de la cuenta cPanel ---
+# Este repo es PUBLICO y la carpeta que lo contiene es un espejo de /home/inc0910d/,
+# con claves SSH, credenciales de MySQL (.my.cnf), certificados y correo. Nada de eso
+# ha estado nunca en el historial; estas reglas estan para que un "git add -A" desde
+# la raiz no pueda publicarlo. Tambien se excluyen los proyectos con repo propio.
+.ssh/
+.my.cnf
+.htpasswds/
+.subaccounts/
+ssl/
+mail/
+public_ftp/
+public_html/
+apps-incalake/
+web/
+newsletter/
+logs/
+etc/
+var/
+tmp/
+cache/
+bin/
+php/
+perl/
+perl5/
+.trash/
+wordpress-backups/
+softaculous_backups/
+cpanelbranding/
+auditoria-hugo/
+incalake-api/
+candelaria-astro/
+busticket.incalake.com/
+hotelesyvuelos.incalake.com/
+www.freewalkingtourspuno.com/
+.cpanel/
+.cpaddons/
+.cphorde/
+.softaculous/
+.fantasticodata/
+.sitepad/
+.spamassassin/
+.sqmaildata/
+.attracta/
+.caldav/
+.razor/
+.rvskin/
+.pki/
+.jbm/
+.HttpRequest/
+.fontconfig/
+.wp-cli/
+
+# Restos de la cuenta cPanel y estado local de herramientas.
+.claude/
+.bashrc
+.bash_logout
+.bash_profile
+.zshrc
+.emacs
+.gemrc
+.pearrc
+.contactemail
+.contactsavetime
+.cpaddons_notify
+.developer
+.dns
+.ftpquota
+.lastlogin
+.imunify_patch_id
+.myimunify_id
+.rvadminaccress
+.rvlastlogin
+.wp-toolkit-identifier
+.spamassassinboxenable
+.spamassassinenable
+cpbackup-exclude.conf
